@@ -1,0 +1,75 @@
+# bot settings
+#
+bot:
+
+    # bot name should match the one associated with token
+    #
+    name: "dee"
+
+    # software version
+    #
+    version: "0.1 alpha"
+
+    # custom commands
+    #
+    commands:
+        - custom.exception.state
+        - custom.exception.next
+
+process:
+    states:
+        - T100
+        - T200
+        - T300
+
+    initial: T100
+
+# Cisco Spark settings
+#
+spark:
+
+    # the name of the Cisco Spark room handled by this bot
+    #
+    room: "Green Button"
+
+    # pre-defined moderators
+    #
+    moderators:
+      - bernard.paques@dimensiondata.com
+
+    # pre-defined participants
+    #
+#    participants:
+#      - anastasios.dados@dimensiondata.com
+#      - frederic.munster@dimensiondata.com
+
+    # 'webhook' - let Cisco Spark transmit new messages
+    # 'pull' - check new messages by ourself
+    #
+    mode: 'webhook'
+
+    # the token that has been created for this bot should normally be set in
+    # the environment but you can override the configuration below
+    #
+    # CISCO_SPARK_PLUMBERY_BOT: "<token here hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY>"
+
+    # the token of a human being, that allow the bot to get all messages
+    # and not only those mentioning the bot itself
+    # this should normally be set in the environment
+    # but you can override the configuration below
+    #
+    # CISCO_SPARK_TOKEN: "<token here hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY>"
+
+# server settings
+#
+server:
+
+    # the port from which this bot is getting requests from the internet
+    #
+    port: 8080
+
+    # the url that is used to access this server remotely, e.g. with ngrok
+    #
+    #url: "http://73a1e282.ngrok.io"
+    url: "http://c9b238b0.ngrok.io"
+

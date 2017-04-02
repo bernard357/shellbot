@@ -1,0 +1,5 @@
+bottle
+paste
+PyYAML
+requests
+requests_toolbelt
