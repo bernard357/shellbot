@@ -24,9 +24,9 @@ class State(Command):
         """
         Displays software version
         """
-        state = self.shell.context.get('process.current')
+        state = self.context.get('process.current')
         if state is None:
-            state = self.shell.context.get('process.initial')
+            state = self.context.get('process.initial')
         if state is None:
             state = '*unknown*'
         self.shell.say("Current state: {}".format(state))

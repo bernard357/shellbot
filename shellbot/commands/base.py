@@ -20,6 +20,7 @@ class Command(object):
 
     def __init__(self, shell):
         self.shell = shell
+        self.context = shell.context
 
     def execute(self, arguments=None):
         """

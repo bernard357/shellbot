@@ -16,13 +16,18 @@ class CommandsTests(unittest.TestCase):
 
     def test_base(self):
 
-        context = Context()
+        settings = {
+            'hello': 'world',
+        }
+        context = Context(settings)
         mouth = Queue()
         shell = Shell(context, mouth)
 
         from shellbot.commands.base import Command
 
         c = Command(shell)
+
+        self.assertEqual(c.context.get('general.hello'), 'world')
 
         with self.assertRaises(NotImplementedError):
             c.keyword

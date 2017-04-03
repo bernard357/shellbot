@@ -24,19 +24,19 @@ class Next(Command):
         """
         Displays software version
         """
-        state = self.shell.context.get('process.current')
+        state = self.context.get('process.current')
         if state is None:
-            state = self.shell.context.get('process.initial')
+            state = self.context.get('process.initial')
         if state is None:
             state = '*unknown*'
 
-        states = self.shell.context.get('process.states')
+        states = self.context.get('process.states')
         while len(states):
             if states[0] == state:
                 states.pop(0)
                 if len(states):
                     state = states.pop(0)
-                    self.shell.context.set('process.current', state)
+                    self.context.set('process.current', state)
                 break
             states.pop(0)
 
