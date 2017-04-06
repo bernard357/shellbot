@@ -17,12 +17,142 @@ from shellbot.bot import ShellBot
 
 class BotTests(unittest.TestCase):
 
+    def test_init(self):
+
+        print('*** Init test ***')
+
+        context = Context()
+
+        bot = ShellBot(context=context)
+
+        self.assertEqual(bot.context, context)
+        self.assertTrue(bot.store is None)
+        self.assertTrue(bot.mouth is not None)
+        self.assertTrue(bot.inbox is not None)
+        self.assertTrue(bot.ears is not None)
+        self.assertTrue(bot.shell is not None)
+        self.assertTrue(bot.sender is not None)
+        self.assertTrue(bot.worker is not None)
+        self.assertTrue(bot.listener is not None)
+
+        bot = ShellBot(context=context,
+                       mouth='m',
+                       inbox='i',
+                       ears='e',
+                       store='s')
+
+        self.assertEqual(bot.context, context)
+        self.assertEqual(bot.store, 's')
+        self.assertEqual(bot.mouth, 'm')
+        self.assertEqual(bot.inbox, 'i')
+        self.assertEqual(bot.ears, 'e')
+        self.assertTrue(bot.shell is not None)
+        self.assertTrue(bot.sender is not None)
+        self.assertTrue(bot.worker is not None)
+        self.assertTrue(bot.listener is not None)
+
+    def test_configuration(self):
+
+        print('*** Configuration test ***')
+
+        context = Context()
+
+        bot = ShellBot(context=context)
+
+        with self.assertRaises(KeyError):
+            bot.configure_from_dict({})
+
+        with self.assertRaises(KeyError):
+            settings = {'missing': 'bot' }
+            bot.configure_from_dict(settings)
+
+        with self.assertRaises(KeyError):
+            settings = { 'bot': {'missing': 'name'} }
+            bot.configure_from_dict(settings)
+
+        with self.assertRaises(KeyError):
+            settings = {
+                'bot': {'name': 'testy'},
+                'missing': 'spark',
+            }
+            bot.configure_from_dict(settings)
+
+        with self.assertRaises(KeyError):
+            settings = {
+                'bot': {'name': 'testy'},
+                'spark': {'missing': 'space'},
+            }
+            bot.configure_from_dict(settings)
+
+        with self.assertRaises(KeyError):
+            settings = {
+                'bot': {'name': 'testy'},
+                'spark': {
+                    'space': 'space name',
+                    'missing': 'moderators',
+                },
+            }
+            bot.configure_from_dict(settings)
+
+        with self.assertRaises(KeyError):
+            settings = {
+                'bot': {'name': 'testy'},
+                'spark': {
+                    'space': 'space name',
+                    'moderators': 'space name',
+                },
+                'missing': 'server',
+            }
+            bot.configure_from_dict(settings)
+
+        with self.assertRaises(KeyError):
+            settings = {
+                'bot': {'name': 'testy'},
+                'spark': {
+                    'space': 'space name',
+                    'moderators': 'space name',
+                },
+                'server': {'missing': 'url'},
+            }
+            bot.configure_from_dict(settings)
+
+        settings = {
+            'bot': {'name': 'testy'},
+            'spark': {
+                'space': 'space name',
+                'moderators': 'foo.bar@acme.com',
+            },
+            'server': {'url': 'http://to.no.where/'},
+        }
+        bot.configure_from_dict(settings)
+        self.assertEqual(bot.context.get('bot.name'), 'testy')
+        self.assertEqual(bot.context.get('spark.space'), 'space name')
+        self.assertEqual(bot.context.get('spark.moderators'),
+                         'foo.bar@acme.com')
+        self.assertEqual(bot.context.get('server.url'), 'http://to.no.where/')
+
+        bot.configure_from_path('test_settings/regular.yaml')
+        self.assertEqual(bot.context, context)
+        self.assertTrue(bot.store is None)
+        self.assertTrue(bot.mouth is not None)
+        self.assertTrue(bot.inbox is not None)
+        self.assertTrue(bot.ears is not None)
+        self.assertTrue(bot.shell is not None)
+        self.assertTrue(bot.sender is not None)
+        self.assertTrue(bot.worker is not None)
+        self.assertTrue(bot.listener is not None)
+
     def test_static(self):
 
         print('*** Static test ***')
 
         context = Context()
-        bot = ShellBot(context)
+        bot = ShellBot(context=context,
+                       mouth=None,
+                       inbox=None,
+                       ears=None,
+                       store=None)
+
         bot.start()
 
         time.sleep(1.0)
@@ -37,7 +167,11 @@ class BotTests(unittest.TestCase):
         print('*** Dynamic test ***')
 
         context = Context()
-        bot = ShellBot(context)
+        bot = ShellBot(context=context,
+                       mouth=None,
+                       inbox=None,
+                       ears=None,
+                       store=None)
         bot.start()
 
         bot.ears.put('hello world')
