@@ -65,14 +65,17 @@ class Worker(object):
         try:
             if verb in self.shell.commands.keys():
                 command = self.shell.commands[verb]
-                command.execute(arguments)
+                command.execute(verb, arguments)
+
+            elif '*' in self.shell.commands.keys():
+                command = self.shell.commands['*']
+                command.execute(verb, arguments)
 
             else:
                 self.shell.say(
                     "Sorry, I do not know how to handle '{}'".format(verb))
 
         except Exception as feedback:
-            raise
-
             self.shell.say(
                 "Sorry, I do not know how to handle '{}'".format(verb))
+            raise

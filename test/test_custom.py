@@ -37,7 +37,7 @@ class CustomTests(unittest.TestCase):
         self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
-        self.assertTrue(c.execute(''))
+        self.assertTrue(c.execute(c.keyword, ''))
         self.assertEqual(mouth.get(), 'Current state: T100')
         with self.assertRaises(Exception):
             mouth.get_nowait()
@@ -65,7 +65,7 @@ class CustomTests(unittest.TestCase):
         self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
-        self.assertTrue(c.execute(''))
+        self.assertTrue(c.execute(c.keyword, ''))
         self.assertEqual(mouth.get(), 'Current state: T200')
         with self.assertRaises(Exception):
             mouth.get_nowait()
@@ -93,7 +93,7 @@ class CustomTests(unittest.TestCase):
         self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
-        self.assertTrue(c.execute(''))
+        self.assertTrue(c.execute(c.keyword, ''))
         self.assertEqual(mouth.get(), 'New state: T300')
         with self.assertRaises(Exception):
             mouth.get_nowait()
@@ -117,42 +117,42 @@ class CustomTests(unittest.TestCase):
         s = State(shell)
         n = Next(shell)
 
-        self.assertTrue(s.execute(''))
+        self.assertTrue(s.execute(s.keyword, ''))
         self.assertEqual(mouth.get(), 'Current state: T100')
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
-        self.assertTrue(n.execute(''))
+        self.assertTrue(n.execute(n.keyword, ''))
         self.assertEqual(mouth.get(), 'New state: T200')
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
-        self.assertTrue(s.execute(''))
+        self.assertTrue(s.execute(s.keyword, ''))
         self.assertEqual(mouth.get(), 'Current state: T200')
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
-        self.assertTrue(n.execute(''))
+        self.assertTrue(n.execute(n.keyword, ''))
         self.assertEqual(mouth.get(), 'New state: T300')
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
-        self.assertTrue(s.execute(''))
+        self.assertTrue(s.execute(s.keyword, ''))
         self.assertEqual(mouth.get(), 'Current state: T300')
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
-        self.assertTrue(n.execute(''))
+        self.assertTrue(n.execute(n.keyword, ''))
         self.assertEqual(mouth.get(), 'New state: T300')
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
-        self.assertTrue(s.execute(''))
+        self.assertTrue(s.execute(s.keyword, ''))
         self.assertEqual(mouth.get(), 'Current state: T300')
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
-        self.assertTrue(n.execute(''))
+        self.assertTrue(n.execute(n.keyword, ''))
         self.assertEqual(mouth.get(), 'New state: T300')
         with self.assertRaises(Exception):
             mouth.get_nowait()

@@ -137,9 +137,9 @@ class ListenerTests(unittest.TestCase):
         with self.assertRaises(Exception):
             inbox.get_nowait()
         self.assertEqual(mouth.get(), 'Shelly version *unknown*')
+        self.assertEqual(mouth.get(), 'echo - Echoes input string.')
         self.assertEqual(mouth.get(), 'help - Lists available commands and related usage information.')
         self.assertEqual(mouth.get(), 'version - Displays software version.')
-        self.assertEqual(mouth.get(), 'echo - Echoes input string.')
         self.assertEqual(mouth.get(), 'help - Lists available commands and related usage information.')
         self.assertEqual(mouth.get(), 'usage:')
         self.assertEqual(mouth.get(), 'help <command>')

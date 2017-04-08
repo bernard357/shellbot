@@ -20,7 +20,7 @@ class Next(Command):
     Moves process to next state
     """
 
-    def execute(self, arguments=None):
+    def execute(self, verb=None, arguments=None):
         """
         Displays software version
         """

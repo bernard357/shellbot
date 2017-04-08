@@ -20,7 +20,7 @@ class State(Command):
     Displays process status
     """
 
-    def execute(self, arguments=None):
+    def execute(self, verb, arguments=None):
         """
         Displays software version
         """
