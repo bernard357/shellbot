@@ -20,7 +20,7 @@ class Version(Command):
     Displays software version
     """
 
-    def execute(self, arguments=None):
+    def execute(self, verb, arguments=None):
         """
         Displays software version
         """

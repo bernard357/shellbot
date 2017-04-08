@@ -36,7 +36,7 @@ class Help(Command):
     def do_help(self, arguments=None):
         self.shell.say({'markdown': help_markdown})
 
-    def execute(self, arguments=None):
+    def execute(self, verb, arguments=None):
         """
         Lists available commands and related usage information
         """

@@ -20,7 +20,7 @@ class Noop(Command):
     Does absolutely nothing
     """
 
-    def execute(self, arguments=None):
+    def execute(self, verb, arguments=None):
         """
         Does absolutely nothing
         """

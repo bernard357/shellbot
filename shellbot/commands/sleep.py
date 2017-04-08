@@ -22,7 +22,7 @@ class Sleep(Command):
     Sleeps for a while
     """
 
-    def execute(self, arguments):
+    def execute(self, verb, arguments):
         """
         Sleeps for a while
         """

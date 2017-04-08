@@ -20,7 +20,7 @@ class Echo(Command):
     Echoes input string
     """
 
-    def execute(self, arguments):
+    def execute(self, verb, arguments):
         """
         Echoes input string
         """
