@@ -200,7 +200,6 @@ class Shell(object):
                     "Sorry, I do not know how to handle '{}'".format(verb))
 
         except Exception as feedback:
-            raise
-
             self.say(
                 "Sorry, I do not know how to handle '{}'".format(verb))
+            raise
