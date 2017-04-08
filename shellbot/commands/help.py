@@ -56,7 +56,7 @@ class Help(Command):
                 self.shell.say("This command is unknown.")
 
         else:
-            for key in self.shell.commands.keys():
+            for key in sorted(self.shell.commands.keys()):
                 command = self.shell.commands[key]
                 if not command.is_hidden:
                     self.shell.say("{} - {}".format(
