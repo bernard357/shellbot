@@ -19,3 +19,4 @@ shellbot.egg-info/
 .settings
 .DS_Store
 .eggs/
+*.pyc
