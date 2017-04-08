@@ -42,6 +42,11 @@ class SpeakerTests(unittest.TestCase):
         shell.load_command('shellbot.commands.help')
         self.assertEqual(shell.commands.keys(), ['help'])
 
+        from shellbot.commands.help import Help
+        help = Help(shell)
+        shell.load_command(help)
+        self.assertEqual(shell.commands.keys(), ['help'])
+
     def test_load_commands(self):
 
         context = Context()
@@ -49,6 +54,14 @@ class SpeakerTests(unittest.TestCase):
 
         shell.load_commands(['shellbot.commands.help',
                              'shellbot.commands.noop'])
+        self.assertEqual(shell.commands.keys(), ['help', 'pass'])
+
+        from shellbot.commands.help import Help
+        help = Help(shell)
+        shell.load_command(help)
+        from shellbot.commands.noop import Noop
+        help = Noop(shell)
+        shell.load_command(help)
         self.assertEqual(shell.commands.keys(), ['help', 'pass'])
 
     def test_load_commands_via_settings(self):
@@ -86,14 +99,22 @@ class SpeakerTests(unittest.TestCase):
         shell = Shell(context, mouth, inbox)
         shell.load_default_commands()
 
+        self.assertEqual(shell.line, None)
+        self.assertEqual(shell.count, 0)
+
         shell.do('*unknown*')
-        self.assertEqual(mouth.get(), "Sorry, I do not know how to handle '*unknown*'")
+        self.assertEqual(shell.line, '*unknown*')
+        self.assertEqual(shell.count, 1)
+        self.assertEqual(mouth.get(),
+                         "Sorry, I do not know how to handle '*unknown*'")
         with self.assertRaises(Exception):
             mouth.get_nowait()
         with self.assertRaises(Exception):
             inbox.get_nowait()
 
         shell.do('echo hello world')
+        self.assertEqual(shell.line, 'echo hello world')
+        self.assertEqual(shell.count, 2)
         self.assertEqual(mouth.get(), 'hello world')
         with self.assertRaises(Exception):
             mouth.get_nowait()
@@ -101,7 +122,10 @@ class SpeakerTests(unittest.TestCase):
             inbox.get_nowait()
 
         shell.do('help help')
-        self.assertEqual(mouth.get(), 'help - Lists available commands and related usage information.')
+        self.assertEqual(shell.line, 'help help')
+        self.assertEqual(shell.count, 3)
+        self.assertEqual(mouth.get(),
+                         'help - Lists available commands and related usage information.')
         self.assertEqual(mouth.get(), 'usage:')
         self.assertEqual(mouth.get(), 'help <command>')
         with self.assertRaises(Exception):
@@ -110,14 +134,20 @@ class SpeakerTests(unittest.TestCase):
             inbox.get_nowait()
 
         shell.do('pass')
+        self.assertEqual(shell.line, 'pass')
+        self.assertEqual(shell.count, 4)
         with self.assertRaises(Exception):
             mouth.get_nowait()
         with self.assertRaises(Exception):
             inbox.get_nowait()
 
         shell.do('sleep 123')
+        self.assertEqual(shell.line, 'sleep 123')
+        self.assertEqual(shell.count, 5)
         context.set('worker.busy', True)
         shell.do('sleep 456')
+        self.assertEqual(shell.line, 'sleep 456')
+        self.assertEqual(shell.count, 6)
         context.set('worker.busy', False)
         self.assertEqual(mouth.get(), 'Ok, working on it')
         self.assertEqual(mouth.get(), 'Ok, will work on it as soon as possible')
@@ -133,6 +163,8 @@ class SpeakerTests(unittest.TestCase):
             inbox.get_nowait()
 
         shell.do('version')
+        self.assertEqual(shell.line, 'version')
+        self.assertEqual(shell.count, 7)
         self.assertEqual(mouth.get(), 'Shelly version *unknown*')
         with self.assertRaises(Exception):
             mouth.get_nowait()
@@ -140,9 +172,12 @@ class SpeakerTests(unittest.TestCase):
             inbox.get_nowait()
 
         shell.do('')
-        self.assertEqual(mouth.get(), 'help - Lists available commands and related usage information.')
-        self.assertEqual(mouth.get(), 'version - Displays software version.')
+        self.assertEqual(shell.line, '')
+        self.assertEqual(shell.count, 8)
         self.assertEqual(mouth.get(), 'echo - Echoes input string.')
+        self.assertEqual(mouth.get(),
+                         'help - Lists available commands and related usage information.')
+        self.assertEqual(mouth.get(), 'version - Displays software version.')
         with self.assertRaises(Exception):
             print(mouth.get_nowait())
         with self.assertRaises(Exception):

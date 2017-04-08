@@ -35,6 +35,9 @@ class Shell(object):
         self.commands = {}
         self.load_commands(context.get('shell.commands', []))
 
+        self.line=None
+        self.count=0
+
     @property
     def name(self):
         """
@@ -79,6 +82,7 @@ class Shell(object):
 
         """
         labels = [
+            'shellbot.commands.default',
             'shellbot.commands.echo',
             'shellbot.commands.help',
             'shellbot.commands.noop',
@@ -87,7 +91,7 @@ class Shell(object):
         ]
         self.load_commands(labels)
 
-    def load_commands(self, labels=[]):
+    def load_commands(self, commands=[]):
         """
         Loads commands for this shell
 
@@ -102,35 +106,45 @@ class Shell(object):
         as a command. Check ``base.py`` in ``shellbot.commands`` for
         a clear view of what it means to be a vaid command for this shell.
         """
-        for label in labels:
-            self.load_command(label)
+        for item in commands:
+            self.load_command(item)
 
-    def load_command(self, label):
+    def load_command(self, command):
         """
         Loads one command for this shell
 
         :param command: A command to load
-        :type command: str
+        :type command: str or command
+
+        If a string is provided, it should reference a python module that can
+        be used as a command. Check ``base.py`` in ``shellbot.commands`` for
+        a clear view of what it means to be a vaid command for this shell.
 
         Example:
-            >>>shell.load_commands('shellbot.commands.help')
+            >>>shell.load_command('shellbot.commands.help')
 
-        Label should reference a python module that can be used
-        as a command. Check ``base.py`` in ``shellbot.commands`` for
-        a clear view of what it means to be a vaid command for this shell.
+        If an object is provided, it should duck type the command defined
+        in ``base.py`` in ``shellbot.commands``.
+
+        Example:
+            >>>from shellbot.commands.version import Version
+            >>>command = Version()
+            >>>shell.load_command(command)
         """
-        try:
-            module = importlib.import_module(label)
-        except ImportError:
-            (dummy, label) = label.split('.', 1)
-            module = importlib.import_module(label)
+        if isinstance(command, str):
+            try:
+                module = importlib.import_module(command)
+            except ImportError:
+                (dummy, label) = command.split('.', 1)
+                module = importlib.import_module(label)
 
-        name = label.rsplit('.', 1)[1].capitalize()
-        cls = getattr(module, name)
-        command = cls(self)
-        for key in self.commands.keys():
-            if command.keyword == key:
-                raise KeyError("Duplicate command '{}'".format(key))
+            name = command.rsplit('.', 1)[1].capitalize()
+            cls = getattr(module, name)
+            command = cls(self)
+
+        if command.keyword in self.commands.keys():
+            logging.warning("Command '{}' has been replaced".format(
+                command.keyword))
 
         self.commands[ command.keyword ] = command
 
@@ -145,6 +159,9 @@ class Shell(object):
         the end user.
         """
         print("Handling: {}".format(line))
+        self.line = line
+        self.count += 1
+
         tokens = line.split(' ')
         verb = tokens.pop(0)
         if len(verb) < 1:
@@ -159,13 +176,24 @@ class Shell(object):
             if verb in self.commands.keys():
                 command = self.commands[verb]
                 if command.is_interactive:
-                    command.execute(arguments)
+                    command.execute(verb, arguments)
                 else:
                     if not self.context.get('worker.busy', False):
                         self.say("Ok, working on it")
                     else:
                         self.say("Ok, will work on it as soon as possible")
                     self.inbox.put((command.keyword, arguments))
+
+            elif '*' in self.commands.keys():
+                command = self.commands['*']
+                if command.is_interactive:
+                    command.execute(verb, arguments)
+                else:
+                    if not self.context.get('worker.busy', False):
+                        self.say("Ok, working on it")
+                    else:
+                        self.say("Ok, will work on it as soon as possible")
+                    self.inbox.put((verb, arguments))
 
             else:
                 self.say(
