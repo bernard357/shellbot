@@ -63,12 +63,12 @@ class Worker(object):
         (verb, arguments) = item
 
         try:
-            if verb in self.shell.commands.keys():
-                command = self.shell.commands[verb]
+            if verb in self.shell.commands:
+                command = self.shell.command(verb)
                 command.execute(verb, arguments)
 
-            elif '*' in self.shell.commands.keys():
-                command = self.shell.commands['*']
+            elif '*default' in self.shell.commands:
+                command = self.shell.command('*default')
                 command.execute(verb, arguments)
 
             else:

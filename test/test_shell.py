@@ -22,6 +22,7 @@ class SpeakerTests(unittest.TestCase):
         shell = Shell(context)
         self.assertEqual(shell.name, 'Shelly')
         self.assertEqual(shell.version, '*unknown*')
+        self.assertEqual(shell.commands, [])
 
     def test_set_properties(self):
 
@@ -40,12 +41,13 @@ class SpeakerTests(unittest.TestCase):
         shell = Shell(context)
 
         shell.load_command('shellbot.commands.help')
-        self.assertEqual(shell.commands.keys(), ['help'])
+        self.assertEqual(shell.commands, ['help'])
 
         from shellbot.commands.help import Help
         help = Help(shell)
         shell.load_command(help)
-        self.assertEqual(shell.commands.keys(), ['help'])
+        self.assertEqual(shell.commands, ['help'])
+        self.assertEqual(shell.command('help'), help)
 
     def test_load_commands(self):
 
@@ -54,15 +56,16 @@ class SpeakerTests(unittest.TestCase):
 
         shell.load_commands(['shellbot.commands.help',
                              'shellbot.commands.noop'])
-        self.assertEqual(shell.commands.keys(), ['help', 'pass'])
+        self.assertEqual(shell.commands, ['help', 'pass'])
 
         from shellbot.commands.help import Help
         help = Help(shell)
-        shell.load_command(help)
         from shellbot.commands.noop import Noop
-        help = Noop(shell)
-        shell.load_command(help)
-        self.assertEqual(shell.commands.keys(), ['help', 'pass'])
+        noop = Noop(shell)
+        shell.load_commands((help, noop))
+        self.assertEqual(shell.commands, ['help', 'pass'])
+        self.assertEqual(shell.command('help'), help)
+        self.assertEqual(shell.command('pass'), noop)
 
     def test_load_commands_via_settings(self):
 
@@ -74,7 +77,7 @@ class SpeakerTests(unittest.TestCase):
         context = Context(settings)
         shell = Shell(context)
 
-        self.assertEqual(shell.commands.keys(), ['help', 'pass'])
+        self.assertEqual(shell.commands, ['help', 'pass'])
 
     def test_say(self):
 
@@ -182,6 +185,29 @@ class SpeakerTests(unittest.TestCase):
             print(mouth.get_nowait())
         with self.assertRaises(Exception):
             inbox.get_nowait()
+
+    def test_empty(self):
+
+        mouth = Queue()
+
+        context = Context()
+        shell = Shell(context, mouth)
+
+        from shellbot.commands.empty import Empty
+
+        class Doc(Empty):
+            def execute(self, *args):
+                self.shell.say("What'up Doc?")
+
+        doc = Doc(shell)
+        shell.load_command(doc)
+
+        shell.do('')
+        self.assertEqual(shell.line, '')
+        self.assertEqual(shell.count, 1)
+        self.assertEqual(mouth.get(), "What'up Doc?")
+        with self.assertRaises(Exception):
+            print(mouth.get_nowait())
 
 if __name__ == '__main__':
     logging.getLogger('').setLevel(logging.DEBUG)

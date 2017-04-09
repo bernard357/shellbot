@@ -42,9 +42,22 @@ class Help(Command):
         """
         result = False
 
-        if arguments:
-            if str(arguments) in self.shell.commands.keys():
-                command = self.shell.commands[str(arguments)]
+        if self.shell.commands == []:
+            self.shell.say("No command has been found.")
+
+        elif arguments in (None, ''):
+            for key in self.shell.commands:
+                command = self.shell.command(key)
+                if not command.is_hidden:
+                    self.shell.say("{} - {}".format(
+                        command.keyword,
+                        str(command.information_message)))
+                result = True
+
+        else:
+            command = self.shell.command(arguments)
+
+            if command:
                 self.shell.say("{} - {}".format(
                     command.keyword,
                     str(command.information_message)))
@@ -52,20 +65,9 @@ class Help(Command):
                     self.shell.say("usage:")
                     self.shell.say(str(command.usage_message))
                 result = True
+
             else:
                 self.shell.say("This command is unknown.")
-
-        else:
-            for key in sorted(self.shell.commands.keys()):
-                command = self.shell.commands[key]
-                if not command.is_hidden:
-                    self.shell.say("{} - {}".format(
-                        command.keyword,
-                        str(command.information_message)))
-                result = True
-
-            if not result:
-                self.shell.say("No command has been found.")
 
         return result
 

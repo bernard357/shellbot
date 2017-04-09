@@ -15,17 +15,22 @@
 
 from base import Command
 
-class Default(Command):
+class Empty(Command):
     """
-    Handles unmatched command
+    Handles empty command
     """
 
-    def execute(self, verb, arguments):
+    def execute(self, *args):
         """
-        Handles unmatched command
+        Handles empty command
         """
-        self.shell.say(
-            "Sorry, I do not know how to handle '{}'".format(verb))
+        if not hasattr(self, 'help_command'):
+            self.help_command = self.shell.command('help')
+
+        if self.help_command is None:
+            return False
+
+        self.help_command.execute('help')
         return True
 
     @property
@@ -33,14 +38,14 @@ class Default(Command):
         """
         Retrieves the verb or token for this command
         """
-        return '*default'
+        return '*empty'
 
     @property
     def information_message(self):
         """
         Retrieves basic information for this command
         """
-        return 'Handles unmatched command.'
+        return 'Handles empty command.'
 
     @property
     def usage_message(self):

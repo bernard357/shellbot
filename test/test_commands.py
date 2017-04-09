@@ -157,9 +157,9 @@ class CommandsTests(unittest.TestCase):
             mouth.get_nowait()
 
         self.assertFalse(c.execute(c.keyword, "*unknown*command*"))
-        self.assertEqual(mouth.get(), 'This command is unknown.')
+        self.assertEqual(mouth.get(), 'No command has been found.')
         with self.assertRaises(Exception):
-            mouth.get_nowait()
+            print(mouth.get_nowait())
 
         shell.load_command('shellbot.commands.help')
 
@@ -224,8 +224,8 @@ class CommandsTests(unittest.TestCase):
 
         c = Default(shell)
 
-        self.assertEqual(c.keyword, '*')
-        self.assertEqual(c.information_message, 'Handles unmatched input string.')
+        self.assertEqual(c.keyword, '*default')
+        self.assertEqual(c.information_message, 'Handles unmatched command.')
         self.assertEqual(c.usage_message, None)
         self.assertTrue(c.is_interactive)
         self.assertTrue(c.is_hidden)
@@ -233,6 +233,31 @@ class CommandsTests(unittest.TestCase):
         self.assertTrue(c.execute('*unknown*', 'test of default command'))
         self.assertEqual(mouth.get(),
                          "Sorry, I do not know how to handle '*unknown*'")
+        with self.assertRaises(Exception):
+            mouth.get_nowait()
+
+    def test_empty(self):
+
+        context = Context()
+        mouth = Queue()
+        shell = Shell(context, mouth)
+
+        shell.load_command('shellbot.commands.help')
+
+        from shellbot.commands.empty import Empty
+
+        c = Empty(shell)
+
+        self.assertEqual(c.keyword, '*empty')
+        self.assertEqual(c.information_message, 'Handles empty command.')
+        self.assertEqual(c.usage_message, None)
+        self.assertTrue(c.is_interactive)
+        self.assertTrue(c.is_hidden)
+
+        self.assertTrue(c.execute('', 'should send same output than help'))
+        self.assertEqual(
+            mouth.get(),
+            'help - Lists available commands and related usage information.')
         with self.assertRaises(Exception):
             mouth.get_nowait()
 

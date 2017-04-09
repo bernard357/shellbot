@@ -32,7 +32,7 @@ class Shell(object):
         self.mouth = mouth
         self.inbox = inbox
 
-        self.commands = {}
+        self._commands = {}
         self.load_commands(context.get('shell.commands', []))
 
         self.line=None
@@ -73,6 +73,42 @@ class Shell(object):
         else:
             logging.info(str(message))
 
+    @property
+    def commands(self):
+        """
+        Lists available commands
+
+        :return: a list of verbs
+        :rtype: list of str
+
+        This function provides with a dynamic inventory of all capabilities
+        of this shell.
+
+        Example:
+        >>>print(shell.commands)
+        ['*default', '*empty', 'help']
+        """
+        return sorted(self._commands.keys())
+
+    def command(self, keyword):
+        """
+        Get one command
+
+        :param keyword: the keyword for this command
+        :type keyword: str
+
+        :return: the instance for this command
+        :rtype: command or None
+
+        Example:
+        >>>print(shell.command('help').information_message)
+        Lists available commands and related usage information.
+
+        """
+        if keyword in self._commands.keys():
+            return self._commands[keyword]
+        return None
+
     def load_default_commands(self):
         """
         Loads default commands for this shell
@@ -84,6 +120,7 @@ class Shell(object):
         labels = [
             'shellbot.commands.default',
             'shellbot.commands.echo',
+            'shellbot.commands.empty',
             'shellbot.commands.help',
             'shellbot.commands.noop',
             'shellbot.commands.sleep',
@@ -142,11 +179,11 @@ class Shell(object):
             cls = getattr(module, name)
             command = cls(self)
 
-        if command.keyword in self.commands.keys():
+        if command.keyword in self._commands.keys():
             logging.warning("Command '{}' has been replaced".format(
                 command.keyword))
 
-        self.commands[ command.keyword ] = command
+        self._commands[ command.keyword ] = command
 
     def do(self, line):
         """
@@ -165,7 +202,7 @@ class Shell(object):
         tokens = line.split(' ')
         verb = tokens.pop(0)
         if len(verb) < 1:
-            verb = 'help'
+            verb = '*empty'
 
         if len(tokens) > 0:
             arguments = ' '.join(tokens)
@@ -173,8 +210,8 @@ class Shell(object):
             arguments = ''
 
         try:
-            if verb in self.commands.keys():
-                command = self.commands[verb]
+            if verb in self._commands.keys():
+                command = self._commands[verb]
                 if command.is_interactive:
                     command.execute(verb, arguments)
                 else:
@@ -184,8 +221,8 @@ class Shell(object):
                         self.say("Ok, will work on it as soon as possible")
                     self.inbox.put((command.keyword, arguments))
 
-            elif '*' in self.commands.keys():
-                command = self.commands['*']
+            elif '*' in self._commands.keys():
+                command = self._commands['*']
                 if command.is_interactive:
                     command.execute(verb, arguments)
                 else:
