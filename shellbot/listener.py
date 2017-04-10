@@ -43,6 +43,35 @@ class Listener(object):
         self.tee = tee
 
     def work(self, context):
+        """
+        Continuously receives updates
+
+        :param context: the context shared across processes
+        :type context: context
+
+        This function is looping on items received from the queue, and
+        is handling them one by one in the background.
+
+        Processing should be handled in a separate background process, like
+        in the following example::
+
+            listener = Listener(ears=ears, shell=shell)
+
+            process = Process(target=listener.work, args=(context,))
+            process.daemon = True
+            process.start()
+
+        The recommended way for stopping the process is to change the
+        parameter ``general.switch`` in the context. For example::
+
+            context.set('general.switch', 'off')
+
+        Alternatively, the loop is also broken when an exception is pushed
+        to the queue. For example::
+
+            ears.put(Exception('EOQ'))
+
+        """
         print("Starting listener")
 
         self.context = context
@@ -61,6 +90,12 @@ class Listener(object):
     def process(self, item, counter):
         """
         Processes bits coming from Cisco Spark
+
+        :param item: the message received
+        :type item: dict
+
+        :param counter: number of items processed so far
+        :type counter: int
 
         This function listens for specific commands in the coming flow.
         When a command has been identified, it is acknowledged immediately.

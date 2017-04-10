@@ -20,7 +20,7 @@ import time
 
 class Worker(object):
     """
-    Takes activities from the inbox and puts reports in the outbox
+    Executes non-interactive commands
     """
 
     def __init__(self, inbox, shell):
@@ -28,6 +28,35 @@ class Worker(object):
         self.shell = shell
 
     def work(self, context):
+        """
+        Continuously processes commands
+
+        :param context: the context shared across processes
+        :type context: context
+
+        This function is looping on items received from the queue, and
+        is handling them one by one in the background.
+
+        Processing should be handled in a separate background process, like
+        in the following example::
+
+            worker = Worker(inbox=inbox, shell=shell)
+
+            process = Process(target=worker.work, args=(context,))
+            process.daemon = True
+            process.start()
+
+        The recommended way for stopping the process is to change the
+        parameter ``general.switch`` in the context. For example::
+
+            context.set('general.switch', 'off')
+
+        Alternatively, the loop is also broken when an exception is pushed
+        to the queue. For example::
+
+            inbox.put(Exception('EOQ'))
+
+        """
         print("Starting worker")
 
         self.context = context
