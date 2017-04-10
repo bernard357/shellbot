@@ -17,7 +17,7 @@ class SparkSpace(object):
 
     """
 
-    def __init__(self, context, bearer, ears=None):
+    def __init__(self, context, bearer=None, ears=None):
         """
         :param context: the general context for the full program
         :type context: Context
