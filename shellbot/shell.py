@@ -133,7 +133,7 @@ class Shell(object):
         Loads commands for this shell
 
         :param commands: A list of commands to load
-        :type commands: List of labels
+        :type commands: List of labels or list of commands
 
         Example:
             >>>commands = ['shellbot.commands.help']
@@ -142,6 +142,16 @@ class Shell(object):
         Each label should reference a python module that can be used
         as a command. Check ``base.py`` in ``shellbot.commands`` for
         a clear view of what it means to be a vaid command for this shell.
+
+        If objects are provided, they should duck type the command defined
+        in ``base.py`` in ``shellbot.commands``.
+
+        Example:
+            >>>from shellbot.commands.version import Version
+            >>>version = Version()
+            >>>from shellbot.commands.help import Help
+            >>>help = Help()
+            >>>shell.load_commands([version, help])
         """
         for item in commands:
             self.load_command(item)
@@ -192,9 +202,17 @@ class Shell(object):
         This function uses the first token as a verb, and looks for a command
         of the same name in the shell.
 
-        If the command does not exist, an error message will be given back to
-        the end user.
+        If the command does not exist, the command ``*default`` is used
+        instead. Default behavior is implemented in
+        ``shellbot.commands.default`` yet you can load a different command
+        for customization.
+
+        If an empty line is provided, the command ``*empty`` is triggered.
+        Default implementation is provided in ``shellbot.commands.empty``.
+
         """
+        line = '' if line is None else str(line)  # sanity check
+
         print("Handling: {}".format(line))
         self.line = line
         self.count += 1
@@ -221,8 +239,8 @@ class Shell(object):
                         self.say("Ok, will work on it as soon as possible")
                     self.inbox.put((command.keyword, arguments))
 
-            elif '*' in self._commands.keys():
-                command = self._commands['*']
+            elif '*default' in self._commands.keys():
+                command = self._commands['*default']
                 if command.is_interactive:
                     command.execute(verb, arguments)
                 else:

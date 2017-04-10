@@ -209,6 +209,42 @@ class SpeakerTests(unittest.TestCase):
         with self.assertRaises(Exception):
             print(mouth.get_nowait())
 
+        shell.do(None)
+        self.assertEqual(shell.line, '')
+        self.assertEqual(shell.count, 2)
+        self.assertEqual(mouth.get(), "What'up Doc?")
+        with self.assertRaises(Exception):
+            print(mouth.get_nowait())
+
+    def test_default(self):
+
+        mouth = Queue()
+
+        context = Context()
+        shell = Shell(context, mouth)
+
+        from shellbot.commands.default import Default
+
+        class Custom(Default):
+            def execute(self, verb, arguments):
+                self.shell.say("{}, really?".format(verb))
+
+        shell.load_command(Custom(shell))
+
+        shell.do(12345)
+        self.assertEqual(shell.line, '12345')
+        self.assertEqual(shell.count, 1)
+        self.assertEqual(mouth.get(), '12345, really?')
+        with self.assertRaises(Exception):
+            print(mouth.get_nowait())
+
+        shell.do('azerty')
+        self.assertEqual(shell.line, 'azerty')
+        self.assertEqual(shell.count, 2)
+        self.assertEqual(mouth.get(), 'azerty, really?')
+        with self.assertRaises(Exception):
+            print(mouth.get_nowait())
+
 if __name__ == '__main__':
     logging.getLogger('').setLevel(logging.DEBUG)
     sys.exit(unittest.main())
