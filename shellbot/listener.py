@@ -21,12 +21,26 @@ import time
 
 class Listener(object):
     """
-    Acknowledges commands and feeds the worker
+    Handles messages received from chat space
     """
 
-    def __init__(self, ears, shell):
+    def __init__(self, ears, shell, tee=None):
+        """
+        Handles messages received from chat space
+
+        :param ears: the queue of messages
+        :type ears: queue
+
+        :param shell: the shell that will handle commands
+        :type shell: shell
+
+        :param tee: if provided, messages received are duplicated there
+        :type tee: queue
+
+        """
         self.ears = ears
         self.shell = shell
+        self.tee = tee
 
     def work(self, context):
         print("Starting listener")
@@ -70,6 +84,9 @@ class Listener(object):
 
         """
         print('Listener is working on {}'.format(counter))
+
+        if self.tee:
+            self.tee.put(item)
 
         # sanity check
         #

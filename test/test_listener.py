@@ -48,9 +48,9 @@ class ListenerTests(unittest.TestCase):
 
         print('*** Dynamic test ***')
 
-        ears = Queue()
+        items = [
 
-        ears.put({
+            {
               "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
               "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
               "roomType" : "group",
@@ -63,9 +63,9 @@ class ListenerTests(unittest.TestCase):
               "personEmail" : "matt@example.com",
               "created" : "2015-10-18T14:26:16+00:00",
               "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
-            })
+            },
 
-        ears.put({
+            {
               "id" : "2_2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
               "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
               "roomType" : "group",
@@ -76,9 +76,9 @@ class ListenerTests(unittest.TestCase):
               "personEmail" : "matt@example.com",
               "created" : "2015-10-18T14:26:16+00:00",
               "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
-            })
+            },
 
-        ears.put({
+            {
               "id" : "3_2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
               "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
               "roomType" : "group",
@@ -89,9 +89,9 @@ class ListenerTests(unittest.TestCase):
               "personEmail" : "matt@example.com",
               "created" : "2015-10-18T14:26:16+00:00",
               "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
-            })
+            },
 
-        ears.put({
+            {
               "id" : "3_2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
               "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
               "roomType" : "group",
@@ -102,9 +102,9 @@ class ListenerTests(unittest.TestCase):
               "personEmail" : "matt@example.com",
               "created" : "2015-10-18T14:26:16+00:00",
               "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
-            })
+            },
 
-        ears.put({
+            {
               "id" : "4_2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
               "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
               "roomType" : "group",
@@ -117,17 +117,23 @@ class ListenerTests(unittest.TestCase):
               "personEmail" : "matt@example.com",
               "created" : "2015-10-18T14:26:16+00:00",
               "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
-            })
+            },
 
+        ]
+
+        ears = Queue()
+        for item in items:
+            ears.put(item)
         ears.put(Exception('EOQ'))
 
         mouth = Queue()
         inbox = Queue()
+        tee = Queue()
 
         context = Context()
         shell = Shell(context, mouth, inbox)
         shell.load_default_commands()
-        listener = Listener(ears, shell)
+        listener = Listener(ears, shell, tee=tee)
 
         listener.work(context)
 
@@ -145,6 +151,11 @@ class ListenerTests(unittest.TestCase):
         self.assertEqual(mouth.get(), 'help <command>')
         with self.assertRaises(Exception):
             print(mouth.get_nowait())
+
+        for item in items:
+            self.assertEqual(tee.get(), item)
+        with self.assertRaises(Exception):
+            print(tee.get_nowait())
 
 if __name__ == '__main__':
     logging.getLogger('').setLevel(logging.DEBUG)
