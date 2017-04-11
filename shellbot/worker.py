@@ -57,7 +57,7 @@ class Worker(object):
             inbox.put(Exception('EOQ'))
 
         """
-        print("Starting worker")
+        logging.info("Starting worker")
 
         self.context = context
         self.context.set('worker.counter', 0)
@@ -76,6 +76,7 @@ class Worker(object):
             except Empty:
                 pass
 
+        logging.info("Worker has been stopped")
 
     def process(self, item, counter):
         """
@@ -87,7 +88,7 @@ class Worker(object):
             ('version', '')
 
         """
-        print('Worker is working on {}'.format(counter))
+        logging.debug('Worker is working on {}'.format(counter))
 
         (verb, arguments) = item
 

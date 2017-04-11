@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import colorlog
 import json
 import logging
 import os
@@ -13,7 +14,8 @@ from bottle import route, run, request, abort
 from context import Context
 from shell import Shell
 from listener import Listener
-from sender import Sender
+from space import SparkSpace
+from speaker import Speaker
 from worker import Worker
 
 class ShellBot(object):
@@ -23,14 +25,18 @@ class ShellBot(object):
                  mouth=None,
                  inbox=None,
                  ears=None,
+                 space=None,
                  store=None):
 
         self.context = context
-        self.store = store
 
         self.mouth = mouth if mouth else Queue()
         self.inbox = inbox if inbox else Queue()
         self.ears = ears if ears else Queue()
+
+        self.space = space if space else SparkSpace(context=context,
+                                                    ears=ears)
+        self.store = store
 
         self.shell = Shell(self.context, self.mouth, self.inbox)
         self.shell.load_default_commands()
@@ -38,16 +44,16 @@ class ShellBot(object):
         if commands:
             self.shell.load_commands(commands)
 
-        self.sender = Sender(self.mouth)
+        self.speaker = Speaker(self.mouth, self.space)
         self.worker = Worker(self.inbox, self.shell)
         self.listener = Listener(self.ears, self.shell)
 
     def start(self):
-        print('Starting all threads')
-        p = Process(target=self.sender.work, args=(self.context,))
+        logging.info('Starting all threads')
+        p = Process(target=self.speaker.work, args=(self.context,))
         p.daemon = True
         p.start()
-        self.sender.process = p
+        self.speaker.process = p
 
         p = Process(target=self.worker.work, args=(self.context,))
         p.daemon = True
@@ -60,11 +66,11 @@ class ShellBot(object):
         self.listener.process = p
 
     def stop(self):
-        print('Stopping all threads')
+        logging.info('Stopping all threads')
         self.context.set('general.switch', 'off')
         self.listener.process.join()
         self.worker.process.join()
-        self.sender.process.join()
+        self.speaker.process.join()
 
     def configure_from_path(self, path="settings.yaml"):
         """
@@ -79,8 +85,8 @@ class ShellBot(object):
         Look at the file ``settings.yaml`` that is coming with this project
         """
 
-        print("Loading configuration")
-        print("- from '{}'".format(path))
+        logging.info("Loading configuration")
+        logging.info("- from '{}'".format(path))
         with open(path, 'r') as stream:
             self.configure_from_file(stream)
 
@@ -180,6 +186,30 @@ class ShellBot(object):
 #
 if __name__ == "__main__":
 
+    # handling logs
+    #
+    handler = colorlog.StreamHandler()
+    formatter = colorlog.ColoredFormatter(
+        "%(asctime)-2s %(log_color)s%(message)s",
+        datefmt='%H:%M:%S',
+        reset=True,
+        log_colors={
+            'DEBUG':    'cyan',
+            'INFO':     'green',
+            'WARNING':  'yellow',
+            'ERROR':    'red',
+            'CRITICAL': 'red,bg_white',
+        },
+        secondary_log_colors={},
+        style='%'
+    )
+    handler.setFormatter(formatter)
+
+    logging.getLogger('').handlers = []
+    logging.getLogger('').addHandler(handler)
+
+    logging.getLogger('').setLevel(level=logging.DEBUG)
+
     # the safe-thread store that is shared across components
     #
     context = Context()
@@ -217,7 +247,7 @@ if __name__ == "__main__":
 
     # ready to receive updates
     #
-    print("Starting web endpoint")
+    logging.info("Starting web endpoint")
     run(host='0.0.0.0',
         port=context.get('server.port'),
         debug=context.get('general.DEBUG'),

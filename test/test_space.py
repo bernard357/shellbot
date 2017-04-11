@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import colorlog
 import unittest
 import logging
 import mock
@@ -25,6 +26,112 @@ class SpaceTests(unittest.TestCase):
 
         with self.assertRaises(Exception):
             space.dispose('*unknown*space*')
+
+    def test_get_bot_id(self):
+
+        context=Context()
+        space = SparkSpace(context=context, bearer='*dummy')
+        space.room_id = '*roomId'
+
+        class Response(object):
+            def __init__(self, status=200):
+                self.status_code = status
+
+            def json(self):
+                return {'id': '*dummy_id'}
+
+        response_200 = Response(200)
+        response_401 = Response(401)
+
+        with mock.patch('requests.get',
+                        return_value=response_200) as mocked:
+
+            space.get_bot_id()
+            mocked.assert_called_with(
+                headers={'Authorization': 'Bearer *dummy'},
+                url='https://api.ciscospark.com/v1/people/me')
+
+        with mock.patch('requests.get',
+                        return_value=response_401) as mocked:
+
+            with self.assertRaises(Exception):
+                space.get_bot_id()
+
+    def test_add_moderators(self):
+
+        space = SparkSpace(context=None, bearer='*dummy')
+
+        with mock.patch.object(space,
+                               'add_moderator') as mocked:
+
+            space.add_moderators(persons=['foo.bar@acme.com'])
+            mocked.assert_called_with('foo.bar@acme.com')
+
+    def test_add_moderator(self):
+
+        space = SparkSpace(context=None, bearer='*dummy')
+
+        class Response(object):
+            def __init__(self, status=200):
+                self.status_code = status
+
+        response_200 = Response(200)
+        response_401 = Response(401)
+
+        with mock.patch('requests.post',
+                        return_value=response_200) as mocked:
+
+            space.add_moderator(person='foo.bar@acme.com')
+            mocked.assert_called_with(
+                data={'isModerator': 'true',
+                      'roomId': None,
+                      'personEmail': 'foo.bar@acme.com'},
+                headers={'Authorization': 'Bearer *dummy'},
+                url='https://api.ciscospark.com/v1/memberships')
+
+        with mock.patch('requests.post',
+                        return_value=response_401) as mocked:
+
+            with self.assertRaises(Exception):
+                space.add_moderator(person='foo.bar@acme.com')
+
+    def test_add_participants(self):
+
+        space = SparkSpace(context=None, bearer='*dummy')
+
+        with mock.patch.object(space,
+                               'add_participant') as mocked:
+
+            space.add_participants(persons=['foo.bar@acme.com'])
+            mocked.assert_called_with('foo.bar@acme.com')
+
+    def test_add_participant(self):
+
+        space = SparkSpace(context=None, bearer='*dummy')
+
+        class Response(object):
+            def __init__(self, status=200):
+                self.status_code = status
+
+        response_200 = Response(200)
+        response_401 = Response(401)
+
+        with mock.patch('requests.post',
+                        return_value=response_200) as mocked:
+
+            space.add_participant(person='foo.bar@acme.com')
+            mocked.assert_called_with(
+                data={'isModerator': 'false',
+                      'roomId': None,
+                      'personEmail': 'foo.bar@acme.com'},
+                headers={'Authorization': 'Bearer *dummy'},
+                url='https://api.ciscospark.com/v1/memberships')
+
+        with mock.patch('requests.post',
+                        return_value=response_401) as mocked:
+
+            with self.assertRaises(Exception):
+                space.add_participant(person='foo.bar@acme.com')
 
     def test_build_message(self):
 
@@ -250,13 +357,12 @@ class SpaceTests(unittest.TestCase):
 
             p.join(1.5)
             if p.is_alive():
-                print('Stopping puller')
+                logging.info('Stopping puller')
                 context.set('general.switch', 'off')
                 p.join()
 
             self.assertFalse(p.is_alive())
             self.assertEqual(context.get('puller.counter'), 2)
-
 
     def test_pull(self):
 
@@ -296,5 +402,27 @@ class SpaceTests(unittest.TestCase):
             space.pull()
 
 if __name__ == '__main__':
-    logging.getLogger('').setLevel(logging.DEBUG)
+
+    handler = colorlog.StreamHandler()
+    formatter = colorlog.ColoredFormatter(
+        "%(asctime)-2s %(log_color)s%(message)s",
+        datefmt='%H:%M:%S',
+        reset=True,
+        log_colors={
+            'DEBUG':    'cyan',
+            'INFO':     'green',
+            'WARNING':  'yellow',
+            'ERROR':    'red',
+            'CRITICAL': 'red,bg_white',
+        },
+        secondary_log_colors={},
+        style='%'
+    )
+    handler.setFormatter(formatter)
+
+    logging.getLogger('').handlers = []
+    logging.getLogger('').addHandler(handler)
+
+    logging.getLogger('').setLevel(level=logging.DEBUG)
+
     sys.exit(unittest.main())

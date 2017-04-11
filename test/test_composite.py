@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import colorlog
 import unittest
 import logging
 from mock import MagicMock
@@ -15,16 +16,18 @@ from shellbot.context import Context
 from shellbot.listener import Listener
 from shellbot.shell import Shell
 from shellbot.worker import Worker
-from shellbot.sender import Sender
+from shellbot.speaker import Speaker
+from shellbot.space import SparkSpace
 
 
 class CompositeTests(unittest.TestCase):
 
     def test_static(self):
 
-        print('*** Static test ***')
+        logging.info('*** Static test ***')
 
         context = Context()
+        space = SparkSpace(context=context)
 
         ears = Queue()
         mouth = Queue()
@@ -33,9 +36,9 @@ class CompositeTests(unittest.TestCase):
         shell = Shell(context, mouth, inbox)
         shell.load_default_commands()
 
-        sender = Sender(mouth)
-        sender_process = Process(target=sender.work, args=(context,))
-        sender_process.start()
+        speaker = Speaker(mouth, space)
+        speaker_process = Process(target=speaker.work, args=(context,))
+        speaker_process.start()
 
         worker = Worker(inbox, shell)
         worker_process = Process(target=worker.work, args=(context,))
@@ -47,21 +50,23 @@ class CompositeTests(unittest.TestCase):
 
         listener_process.join(1.0)
         if listener_process.is_alive():
-            print('Stopping all threads')
+            logging.info('Stopping all threads')
             context.set('general.switch', 'off')
             listener_process.join()
             worker_process.join()
-            sender_process.join()
+            speaker_process.join()
 
         self.assertEqual(context.get('listener.counter', 0), 0)
         self.assertEqual(context.get('worker.counter', 0), 0)
-        self.assertEqual(context.get('sender.counter', 0), 0)
+        self.assertEqual(context.get('speaker.counter', 0), 0)
 
     def test_dynamic(self):
 
-        print('*** Dynamic test ***')
+        logging.info('*** Dynamic test ***')
 
         context = Context()
+        space = SparkSpace(context=context, bearer='*dummy')
+        space.post_message = MagicMock()
 
         ears = Queue()
         mouth = Queue()
@@ -70,11 +75,10 @@ class CompositeTests(unittest.TestCase):
         shell = Shell(context, mouth, inbox)
         shell.load_default_commands()
 
-        sender = Sender(mouth)
-        sender.post_update = MagicMock()
-        sender_process = Process(target=sender.work, args=(context,))
-        sender_process.daemon = True
-        sender_process.start()
+        speaker = Speaker(mouth, space)
+        speaker_process = Process(target=speaker.work, args=(context,))
+        speaker_process.daemon = True
+        speaker_process.start()
 
         worker = Worker(inbox, shell)
         worker_process = Process(target=worker.work, args=(context,))
@@ -160,17 +164,39 @@ class CompositeTests(unittest.TestCase):
 
         listener_process.join(2.0)
         if listener_process.is_alive():
-            print('Stopping all threads')
+            logging.info('Stopping all threads')
             context.set('general.switch', 'off')
             listener_process.join()
             worker_process.join()
-            sender_process.join()
+            speaker_process.join()
 
         self.assertEqual(context.get('listener.counter', 0), 6)
         self.assertEqual(context.get('worker.counter', 0), 1)
-        self.assertEqual(context.get('sender.counter', 0), 5)
+        self.assertEqual(context.get('speaker.counter', 0), 5)
 
 
 if __name__ == '__main__':
-    logging.getLogger('').setLevel(logging.DEBUG)
+
+    handler = colorlog.StreamHandler()
+    formatter = colorlog.ColoredFormatter(
+        "%(asctime)-2s %(log_color)s%(message)s",
+        datefmt='%H:%M:%S',
+        reset=True,
+        log_colors={
+            'DEBUG':    'cyan',
+            'INFO':     'green',
+            'WARNING':  'yellow',
+            'ERROR':    'red',
+            'CRITICAL': 'red,bg_white',
+        },
+        secondary_log_colors={},
+        style='%'
+    )
+    handler.setFormatter(formatter)
+
+    logging.getLogger('').handlers = []
+    logging.getLogger('').addHandler(handler)
+
+    logging.getLogger('').setLevel(level=logging.DEBUG)
+
     sys.exit(unittest.main())

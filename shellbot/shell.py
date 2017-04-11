@@ -213,7 +213,7 @@ class Shell(object):
         """
         line = '' if line is None else str(line)  # sanity check
 
-        print("Handling: {}".format(line))
+        logging.debug("Handling: {}".format(line))
         self.line = line
         self.count += 1
 

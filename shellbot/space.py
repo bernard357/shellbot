@@ -93,18 +93,23 @@ class SparkSpace(object):
         logging.info("- done")
         self.room_id = response.json()['id']
 
-        logging.info("Adding moderators to the Cisco Spark space")
+        self.add_moderators(moderators)
 
-        for item in moderators:
-            logging.info("- {}".format(item))
-            self.add_person(self.room_id, person=item, isModerator='true')
+        self.add_participants(participants)
 
-        logging.info("Adding participants to the Cisco Spark space")
+        context.set('bot.id', self.get_bot_id())
 
-        for item in participants:
-            logging.info("- {}".format(item))
-            self.add_person(self.room_id, person=item)
+        if hook:
+            hook()
 
+    def get_bot_id(self):
+        """
+        Retrieves the id of this bot
+
+        :return: the bot id as returned from Cisco Spark
+        :rtype: str
+
+        """
         logging.info("Getting bot id")
 
         url = 'https://api.ciscospark.com/v1/people/me'
@@ -117,20 +122,27 @@ class SparkSpace(object):
                 response.status_code))
 
         logging.info("- done")
-        context.set('bot.id', response.json()['id'])
+        return response.json()['id']
 
-        if hook:
-            hook()
-
-    def add_person(self, person, isModerator='false'):
+    def add_moderators(self, persons):
         """
-        Adds a person to a space
+        Adds multiple moderators to a space
+
+        :param persons: e-mail addresses of persons to add
+        :type persons: list of str
+
+        """
+        logging.info("Adding moderators to the Cisco Spark space")
+        for person in persons:
+            logging.info("- {}".format(person))
+            self.add_moderator(person)
+
+    def add_moderator(self, person):
+        """
+        Adds a moderator to a space
 
         :param person: e-mail address of the person to add
         :type person: str
-
-        :param isModerator: for moderators
-        :type isModerator: bool
 
         """
 
@@ -138,7 +150,41 @@ class SparkSpace(object):
         headers = {'Authorization': 'Bearer '+self.bearer}
         payload = {'roomId': self.room_id,
                    'personEmail': person,
-                   'isModerator': isModerator }
+                   'isModerator': 'true' }
+        response = requests.post(url=url, headers=headers, data=payload)
+
+        if response.status_code != 200:
+            logging.error(response.json())
+            raise Exception("Received error code {}".format(
+                response.status_code))
+
+    def add_participants(self, persons):
+        """
+        Adds multiple participants to a space
+
+        :param persons: e-mail addresses of persons to add
+        :type persons: list of str
+
+        """
+        logging.info("Adding participants to the Cisco Spark space")
+        for person in persons:
+            logging.info("- {}".format(person))
+            self.add_participant(person)
+
+    def add_participant(self, person):
+        """
+        Adds a participant to a space
+
+        :param person: e-mail address of the person to add
+        :type person: str
+
+        """
+
+        url = 'https://api.ciscospark.com/v1/memberships'
+        headers = {'Authorization': 'Bearer '+self.bearer}
+        payload = {'roomId': self.room_id,
+                   'personEmail': person,
+                   'isModerator': 'false' }
         response = requests.post(url=url, headers=headers, data=payload)
 
         if response.status_code != 200:
@@ -317,7 +363,7 @@ class SparkSpace(object):
             raise Exception("Error on post: {}".format(
                 response.status_code))
 
-        print("- done")
+        logging.info("- done")
 
     def connect(self, webhook=None):
         """

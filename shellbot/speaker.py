@@ -70,7 +70,7 @@ class Speaker(object):
             mouth.put(Exception('EOQ'))
 
         """
-        print("Starting speaker")
+        logging.info("Starting speaker")
 
         self.context = context
 
@@ -85,6 +85,8 @@ class Speaker(object):
             except Empty:
                 pass
 
+        logging.info("Speaker has been stopped")
+
     def process(self, item, counter):
         """
         Sends one update to a business messaging space
@@ -97,7 +99,7 @@ class Speaker(object):
 
         """
 
-        print('Speaker is working on {}'.format(counter))
+        logging.debug('Speaker is working on {}'.format(counter))
 
         if self.space is not None:
             self.space.post_message(item)

@@ -72,7 +72,7 @@ class Listener(object):
             ears.put(Exception('EOQ'))
 
         """
-        print("Starting listener")
+        logging.info("Starting listener")
 
         self.context = context
 
@@ -86,6 +86,8 @@ class Listener(object):
                 self.process(item, counter)
             except Empty:
                 pass
+
+        logging.info("Listener has been stopped")
 
     def process(self, item, counter):
         """
@@ -118,7 +120,7 @@ class Listener(object):
             }
 
         """
-        print('Listener is working on {}'.format(counter))
+        logging.info('Listener is working on {}'.format(counter))
 
         if self.tee:
             self.tee.put(item)
@@ -126,18 +128,18 @@ class Listener(object):
         # sanity check
         #
         if not isinstance(item, dict) or 'personId' not in item.keys():
-            print("- not a dict, thrown away")
+            logging.info("- not a dict, thrown away")
             return
 
         input = item.get('text', '')
         if input is None:
-            print("- no input in this item, thrown away")
+            logging.info("- no input in this item, thrown away")
             return
 
         # my own messages
         #
         if item['personId'] == self.context.get('spark.bot_id'):
-            print("- sent by me, thrown away")
+            logging.info("- sent by me, thrown away")
             return
 
 #        print(item)
@@ -150,10 +152,10 @@ class Listener(object):
         bot = self.shell.name.lower()
         if not input.lower().startswith(bot):
             try:
-                print("- {}".format(input))
+                logging.info("- {}".format(input))
             except:
                 pass
-            print("- not for me, thrown away")
+            logging.info("- not for me, thrown away")
             return
 
         line = input[len(bot):].strip()

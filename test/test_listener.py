@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import colorlog
 import unittest
 import json
 import logging
@@ -20,7 +21,7 @@ class ListenerTests(unittest.TestCase):
 
     def test_static(self):
 
-        print('*** Static test ***')
+        logging.info('*** Static test ***')
 
         ears = Queue()
         mouth = Queue()
@@ -37,7 +38,7 @@ class ListenerTests(unittest.TestCase):
 
         listener_process.join(1.0)
         if listener_process.is_alive():
-            print('Stopping listener')
+            logging.info('Stopping listener')
             context.set('general.switch', 'off')
             listener_process.join()
 
@@ -46,7 +47,7 @@ class ListenerTests(unittest.TestCase):
 
     def test_dynamic(self):
 
-        print('*** Dynamic test ***')
+        logging.info('*** Dynamic test ***')
 
         items = [
 
@@ -158,5 +159,27 @@ class ListenerTests(unittest.TestCase):
             print(tee.get_nowait())
 
 if __name__ == '__main__':
-    logging.getLogger('').setLevel(logging.DEBUG)
+
+    handler = colorlog.StreamHandler()
+    formatter = colorlog.ColoredFormatter(
+        "%(asctime)-2s %(log_color)s%(message)s",
+        datefmt='%H:%M:%S',
+        reset=True,
+        log_colors={
+            'DEBUG':    'cyan',
+            'INFO':     'green',
+            'WARNING':  'yellow',
+            'ERROR':    'red',
+            'CRITICAL': 'red,bg_white',
+        },
+        secondary_log_colors={},
+        style='%'
+    )
+    handler.setFormatter(formatter)
+
+    logging.getLogger('').handlers = []
+    logging.getLogger('').addHandler(handler)
+
+    logging.getLogger('').setLevel(level=logging.DEBUG)
+
     sys.exit(unittest.main())

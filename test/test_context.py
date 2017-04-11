@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import colorlog
 import unittest
 import logging
 import os
@@ -12,8 +13,6 @@ from shellbot.context import Context
 class ContextTests(unittest.TestCase):
 
     def test_apply(self):
-
-        print('*** Apply test ***')
 
         context = Context()
 
@@ -34,8 +33,6 @@ class ContextTests(unittest.TestCase):
 
     def test_init(self):
 
-        print('*** Init test ***')
-
         settings = {
             'bot': {'name': 'testy', 'version': '17.4.1'},
         }
@@ -45,8 +42,6 @@ class ContextTests(unittest.TestCase):
         self.assertEqual(context.get('bot.version'), '17.4.1')
 
     def test_store(self):
-
-        print('*** Store test ***')
 
         context = Context()
 
@@ -65,8 +60,6 @@ class ContextTests(unittest.TestCase):
         self.assertEqual(context.get('hello', whatever), 'world')
 
     def test_gauge(self):
-
-        print('*** Gauge test ***')
 
         context = Context()
 
@@ -98,8 +91,6 @@ class ContextTests(unittest.TestCase):
 
     def test_concurrency(self):
 
-        print('*** Concurrency test ***')
-
         from multiprocessing import Process
         import random
         import time
@@ -109,27 +100,49 @@ class ContextTests(unittest.TestCase):
                 r = random.random()
                 time.sleep(r)
                 value = context.increment('gauge')
-                print('worker %d:counter=%d' % (id, value))
-            print('worker %d:done' % id)
+                logging.info('worker %d:counter=%d' % (id, value))
+            logging.info('worker %d:done' % id)
 
-        logging.debug('Creating a counter')
+        logging.info('Creating a counter')
         self.counter = Context()
 
-        print('Launching incrementing workers')
+        logging.info('Launching incrementing workers')
         workers = []
         for i in range(4):
             p = Process(target=worker, args=(i, self.counter,))
             p.start()
             workers.append(p)
 
-        print('Waiting for worker threads')
+        logging.info('Waiting for worker threads')
         for p in workers:
             p.join()
 
-        print('Counter: %d' % self.counter.get('gauge'))
+        logging.info('Counter: %d' % self.counter.get('gauge'))
         self.assertEqual(self.counter.get('gauge'), 16)
 
 
 if __name__ == '__main__':
-    logging.getLogger('').setLevel(logging.DEBUG)
+
+    handler = colorlog.StreamHandler()
+    formatter = colorlog.ColoredFormatter(
+        "%(asctime)-2s %(log_color)s%(message)s",
+        datefmt='%H:%M:%S',
+        reset=True,
+        log_colors={
+            'DEBUG':    'cyan',
+            'INFO':     'green',
+            'WARNING':  'yellow',
+            'ERROR':    'red',
+            'CRITICAL': 'red,bg_white',
+        },
+        secondary_log_colors={},
+        style='%'
+    )
+    handler.setFormatter(formatter)
+
+    logging.getLogger('').handlers = []
+    logging.getLogger('').addHandler(handler)
+
+    logging.getLogger('').setLevel(level=logging.DEBUG)
+
     sys.exit(unittest.main())

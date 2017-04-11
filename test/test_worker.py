@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import colorlog
 import unittest
 import logging
 import os
@@ -19,7 +20,7 @@ class WorkerTests(unittest.TestCase):
 
     def test_static(self):
 
-        print('*** Static test ***')
+        logging.info('*** Static test ***')
 
         mouth = Queue()
         inbox = Queue()
@@ -35,7 +36,7 @@ class WorkerTests(unittest.TestCase):
 
         worker_process.join(1.0)
         if worker_process.is_alive():
-            print('Stopping worker')
+            logging.info('Stopping worker')
             context.set('general.switch', 'off')
             worker_process.join()
 
@@ -44,7 +45,7 @@ class WorkerTests(unittest.TestCase):
 
     def test_dynamic(self):
 
-        print('*** Dynamic test ***')
+        logging.info('*** Dynamic test ***')
 
         mouth = Queue()
         inbox = Queue()
@@ -89,5 +90,27 @@ class WorkerTests(unittest.TestCase):
             inbox.get_nowait()
 
 if __name__ == '__main__':
-    logging.getLogger('').setLevel(logging.DEBUG)
+
+    handler = colorlog.StreamHandler()
+    formatter = colorlog.ColoredFormatter(
+        "%(asctime)-2s %(log_color)s%(message)s",
+        datefmt='%H:%M:%S',
+        reset=True,
+        log_colors={
+            'DEBUG':    'cyan',
+            'INFO':     'green',
+            'WARNING':  'yellow',
+            'ERROR':    'red',
+            'CRITICAL': 'red,bg_white',
+        },
+        secondary_log_colors={},
+        style='%'
+    )
+    handler.setFormatter(formatter)
+
+    logging.getLogger('').handlers = []
+    logging.getLogger('').addHandler(handler)
+
+    logging.getLogger('').setLevel(level=logging.DEBUG)
+
     sys.exit(unittest.main())

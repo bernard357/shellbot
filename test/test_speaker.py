@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import colorlog
 import unittest
 import logging
 import mock
@@ -20,7 +21,7 @@ class SpeakerTests(unittest.TestCase):
 
     def test_static(self):
 
-        print('*** Static test ***')
+        logging.info('*** Static test ***')
 
         context = Context()
         mouth = Queue()
@@ -33,7 +34,7 @@ class SpeakerTests(unittest.TestCase):
 
         speaker_process.join(1.0)
         if speaker_process.is_alive():
-            print('Stopping speaker')
+            logging.info('Stopping speaker')
             context.set('general.switch', 'off')
             speaker_process.join()
 
@@ -42,7 +43,7 @@ class SpeakerTests(unittest.TestCase):
 
     def test_dynamic(self):
 
-        print('*** Dynamic test ***')
+        logging.info('*** Dynamic test ***')
 
         mouth = Queue()
         mouth.put('hello')
@@ -68,5 +69,27 @@ class SpeakerTests(unittest.TestCase):
                 mouth.get_nowait()
 
 if __name__ == '__main__':
-    logging.getLogger('').setLevel(logging.DEBUG)
+
+    handler = colorlog.StreamHandler()
+    formatter = colorlog.ColoredFormatter(
+        "%(asctime)-2s %(log_color)s%(message)s",
+        datefmt='%H:%M:%S',
+        reset=True,
+        log_colors={
+            'DEBUG':    'cyan',
+            'INFO':     'green',
+            'WARNING':  'yellow',
+            'ERROR':    'red',
+            'CRITICAL': 'red,bg_white',
+        },
+        secondary_log_colors={},
+        style='%'
+    )
+    handler.setFormatter(formatter)
+
+    logging.getLogger('').handlers = []
+    logging.getLogger('').addHandler(handler)
+
+    logging.getLogger('').setLevel(level=logging.DEBUG)
+
     sys.exit(unittest.main())
