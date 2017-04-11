@@ -35,48 +35,7 @@ class SparkSpace(object):
 
         self.room_id = None
 
-    def dispose(self, space):
-        """
-        Deletes a Cisco Spark space by name
-
-        :param space: the name of the space to be deleted
-        :type space: str
-
-        This function is useful to restart a clean demo environment
-        """
-
-        print("Deleting Cisco Spark space '{}'".format(space))
-
-        url = 'https://api.ciscospark.com/v1/rooms'
-        headers = {'Authorization': 'Bearer '+self.bearer}
-        response = requests.get(url=url, headers=headers)
-
-        if response.status_code != 200:
-            print(response.json())
-            raise Exception("Received error code {}".format(
-                response.status_code))
-
-        actual = False
-        for item in response.json()['items']:
-
-            if space in item['title']:
-                print("- found it")
-                print("- DELETING IT")
-
-                url = 'https://api.ciscospark.com/v1/rooms/'+item['id']
-                headers = {'Authorization': 'Bearer '+self.bearer}
-                response = requests.delete(url=url, headers=headers)
-
-                if response.status_code != 204:
-                    raise Exception("Received error code {}".format(
-                        response.status_code))
-
-                actual = True
-
-        if not actual:
-            print("- no space with this name has been found")
-
-        self.room_id = None
+        self._last_message_id = 0
 
     def bond(self, space, teams=(), moderators=(), participants=(), hook=None):
         """
@@ -101,25 +60,25 @@ class SparkSpace(object):
         adds moderators and participants, then calls the optional hook.
         """
 
-        print("Looking for Cisco Spark space '{}'".format(space))
+        logging.info("Looking for Cisco Spark space '{}'".format(space))
 
         url = 'https://api.ciscospark.com/v1/rooms'
         headers = {'Authorization': 'Bearer '+self.bearer}
         response = requests.get(url=url, headers=headers)
 
         if response.status_code != 200:
-            print(response.json())
+            logging.error(response.json())
             raise Exception("Received error code {}".format(
                 response.status_code))
 
         for item in response.json()['items']:
             if space in item['title']:
-                print("- found it")
+                logging.info("- found it")
                 self.room_id = item['id']
                 return
 
-        print("- not found")
-        print("Creating Cisco Spark space'{}'".format(space))
+        logging.debug("- not found")
+        logging.info("Creating Cisco Spark space'{}'".format(space))
 
         url = 'https://api.ciscospark.com/v1/rooms'
         headers = {'Authorization': 'Bearer '+self.bearer}
@@ -127,43 +86,43 @@ class SparkSpace(object):
         response = requests.post(url=url, headers=headers, data=payload)
 
         if response.status_code != 200:
-            print(response.json())
+            logging.error(response.json())
             raise Exception("Received error code {}".format(
                 response.status_code))
 
-        print("- done")
+        logging.info("- done")
         self.room_id = response.json()['id']
 
-        print("Adding moderators to the Cisco Spark space")
+        logging.info("Adding moderators to the Cisco Spark space")
 
         for item in moderators:
-            print("- {}".format(item))
+            logging.info("- {}".format(item))
             self.add_person(self.room_id, person=item, isModerator='true')
 
-        print("Adding participants to the Cisco Spark space")
+        logging.info("Adding participants to the Cisco Spark space")
 
         for item in participants:
-            print("- {}".format(item))
+            logging.info("- {}".format(item))
             self.add_person(self.room_id, person=item)
 
-        print("Getting bot id")
+        logging.info("Getting bot id")
 
         url = 'https://api.ciscospark.com/v1/people/me'
         headers = {'Authorization': 'Bearer '+self.bearer}
         response = requests.get(url=url, headers=headers)
 
         if response.status_code != 200:
-            print(response.json())
+            logging.error(response.json())
             raise Exception("Received error code {}".format(
                 response.status_code))
 
-        print("- done")
+        logging.info("- done")
         context.set('bot.id', response.json()['id'])
 
         if hook:
             hook()
 
-    def add_person(self, person=None, isModerator='false'):
+    def add_person(self, person, isModerator='false'):
         """
         Adds a person to a space
 
@@ -183,10 +142,55 @@ class SparkSpace(object):
         response = requests.post(url=url, headers=headers, data=payload)
 
         if response.status_code != 200:
-            print(response.json())
+            logging.error(response.json())
             raise Exception("Received error code {}".format(
                 response.status_code))
 
+    def dispose(self, space):
+        """
+        Deletes a Cisco Spark space by name
+
+        :param space: the name of the space to be deleted
+        :type space: str
+
+        This function is useful to restart a clean demo environment
+        """
+
+        logging.info("Deleting Cisco Spark space '{}'".format(space))
+
+        url = 'https://api.ciscospark.com/v1/rooms'
+        headers = {'Authorization': 'Bearer '+self.bearer}
+        response = requests.get(url=url, headers=headers)
+
+        if response.status_code != 200:
+            logging.error(response.json())
+            raise Exception("Received error code {}".format(
+                response.status_code))
+
+        actual = False
+        for item in response.json()['items']:
+
+            if space in item['title']:
+                logging.info("- found it")
+                logging.info("- DELETING IT")
+
+                url = 'https://api.ciscospark.com/v1/rooms/'+item['id']
+                headers = {'Authorization': 'Bearer '+self.bearer}
+                response = requests.delete(url=url, headers=headers)
+
+                if response.status_code != 204:
+                    logging.error(response.json())
+                    raise Exception("Received error code {}".format(
+                        response.status_code))
+
+                actual = True
+
+        if not actual:
+            logging.info("- no space with this name has been found")
+
+        self.room_id = None
+
+    @classmethod
     def build_message(self,
                       markdown=None,
                       text=None,
@@ -197,10 +201,10 @@ class SparkSpace(object):
         Prepares a message for Cisco Spark
 
         :param markdown: content of the message as per Markdown
-        :type markdown: str or ``None``
+        :type markdown: str or list of str or ``None``
 
         :param text: content of the message is plain text
-        :type text: str or ``None``
+        :type text: str or list of str or ``None``
 
         :param file_path: location of file to be uploaded
         :type file_path: str or ``None``
@@ -212,59 +216,74 @@ class SparkSpace(object):
         :type file_type: str or ``None``
 
         :return: the message to be posted
-        :rtype: str or dict
+        :rtype: dict
 
-        Example message out of plain text:
+        Example message out of plain text::
 
         >>>space.build_message(text='hello world')
+        {'text': 'hello world'}
 
-        Example message with Markdown:
+        Lists of messages are combined as one::
+
+        >>>space.build_message(text=['hello', 'world'])
+        {'text': 'hello\nworld'}
+
+        Example message with Markdown::
 
         >>>space.build_message(markdown='this is a **bold** statement')
+        {'markdown': 'this is a **bold** statement'}
 
-        Example file upload:
-        >>>space.build_message(file_path='./my_file.pdf', file_label='pres')
+        Lists of Markdown messages are combined as one as well::
 
-        Of course, you can combine text with the upload of a file:
+        >>>space.build_message(markdown=['* line 1', '* line 2'])
+        {'markdown': '* line 1\n* line 2'}
 
-        >>>text = 'This is the presentation that was used for our meeting'
-        >>>file_path = './my_file.pdf'
-        >>>file_label = 'pres from Foo Bar'
-        >>>space.build_message(text=text, file_path=file_path, file_label=file_label)
+        Example file upload::
+
+            space.build_message(file_path='./my_file.pdf', file_label='pres')
+
+        Of course, you can combine text with the upload of a file::
+
+            text = 'This is the presentation that was used for our meeting'
+            space.build_message(text=text,
+                                file_path='./my_file.pdf',
+                                file_label='pres from Foo Bar')
+
         """
 
-        print("Building message")
+        logging.info("Building message")
 
         update = {}
 
-        # textual message
-        #
-        if markdown:
-
-            text = 'using markdown content'
-            update['markdown'] = markdown
+        if isinstance(text, (list, tuple)):
+            update['text'] = '\n'.join(text)
 
         elif text:
+            update['text'] = str(text)
 
-            text = "'{}".format(text)
-            update['text'] = text
+        if isinstance(markdown, (list, tuple)):
+            update['markdown'] = '\n'.join(markdown)
 
-        # file upload
-        #
+        elif markdown:
+            update['markdown'] = markdown
+
         if file_path:
 
-            print("- attaching file {}".format(file_path))
+            logging.info("- attaching file {}".format(file_path))
 
             if file_label is None:
                 file_label = file_path
 
             elif 'text' not in update:
-                update['text'] = "'{}'".format(file_label)
+                update['text'] = str(file_label)
 
             if file_type is None:
                 file_type = 'application/octet-stream'
 
             update['files'] = (file_label, open(file_path, 'rb'), file_type)
+
+        if update == {}:
+            update = {'text': ''}
 
         return update
 
@@ -279,7 +298,7 @@ class SparkSpace(object):
         Else if it a dictionary, it is encoded as MIME Multipart.
         """
 
-        print("Sending update to Cisco Spark room")
+        logging.info("Sending update to Cisco Spark room")
 
         url = 'https://api.ciscospark.com/v1/messages'
         headers = {'Authorization': 'Bearer '+self.bearer}
@@ -294,7 +313,11 @@ class SparkSpace(object):
         response = requests.post(url=url, headers=headers, data=payload)
 
         if response.status_code != 200:
-            print("Sender received error code {}".format(response.status_code))
+            logging.error(response.json())
+            raise Exception("Error on post: {}".format(
+                response.status_code))
+
+        print("- done")
 
     def connect(self, webhook=None):
         """
@@ -311,9 +334,9 @@ class SparkSpace(object):
             self.register_hook(webhook)
 
         else:
-            w = Process(target=self.pull_for_ever)
-            w.daemon = True
-            w.start()
+            p = Process(target=self.pull_for_ever)
+            p.daemon = True
+            p.start()
 
     def register_hook(self, webhook):
         """
@@ -324,8 +347,8 @@ class SparkSpace(object):
 
         """
 
-        print("Registering webhook to Cisco Spark")
-        print("- {}".format(url))
+        logging.info("Registering webhook to Cisco Spark")
+        logging.info("- {}".format(webhook))
 
         url = 'https://api.ciscospark.com/v1/webhooks'
         headers = {'Authorization': 'Bearer '+self.bearer}
@@ -337,11 +360,11 @@ class SparkSpace(object):
         response = requests.post(url=url, headers=headers, data=payload)
 
         if response.status_code != 200:
-            print(response.json())
-            raise Exception("Received error code {}".format(
+            logging.error(response.json())
+            raise Exception("Error on register: {}".format(
                 response.status_code))
 
-        print("- done")
+        logging.info("- done")
 
     def on_message():
         """
@@ -352,7 +375,7 @@ class SparkSpace(object):
 
         try:
 
-            print('Receiving data from webhook')
+            logging.info('Receiving data from webhook')
 
             # step 1 -- we got message id, but no content
             #
@@ -365,8 +388,8 @@ class SparkSpace(object):
             response = requests.get(url=url, headers=headers)
 
             if response.status_code != 200:
-                print("Received error code {}".format(response.status_code))
-                print(response.json())
+                logging.error("Received error code {}".format(response.status_code))
+                logging.error(response.json())
                 raise Exception
 
             # step 3 -- push it in the handling queue
@@ -376,7 +399,7 @@ class SparkSpace(object):
             return "OK\n"
 
         except Exception as feedback:
-            print("ABORTED: fatal error has been encountered")
+            logging.error("ABORTED: fatal error has been encountered")
             raise
 
     def pull_for_ever(self):
@@ -387,50 +410,56 @@ class SparkSpace(object):
         to a processing queue.
         """
 
-        print('Pulling messages pro-actively')
+        logging.info('Looping for new messages')
 
-        last_id = 0
-        while context.get('general.switch', 'on') == 'on':
+        self.context.set('puller.counter', 0)
+        while self.context.get('general.switch', 'on') == 'on':
 
+            self.pull()
             time.sleep(1)
 
-            try:
-                url = 'https://api.ciscospark.com/v1/messages'
-                headers = {'Authorization': 'Bearer '+self.bearer}
-                payload = {'roomId': self.room_id, 'max': 10 }
-                response = requests.get(url=url,
-                                        headers=headers,
-                                        params=payload)
 
-                if response.status_code == 403:
-                    print("Received error code {}".format(
-                        response.status_code))
-                    print(response.json())
-                    continue
+    def pull(self):
+        """
+        Fetches events from one Cisco Spark space
 
-                if response.status_code != 200:
-                    print("Received error code {}".format(
-                        response.status_code))
-                    print(response.json())
-                    raise Exception
+        This function senses most recent items, and pushes them
+        to a processing queue.
+        """
 
-                items = response.json()['items']
+        logging.info('Pulling messages pro-actively')
+        self.context.increment('puller.counter')
 
-                index = 0
-                while index < len(items):
-                    if items[index]['id'] == last_id:
-                        break
-                    index += 1
+        url = 'https://api.ciscospark.com/v1/messages'
+        headers = {'Authorization': 'Bearer '+self.bearer}
+        payload = {'roomId': self.room_id, 'max': 10 }
+        response = requests.get(url=url,
+                                headers=headers,
+                                params=payload)
 
-                if index > 0:
-                    print("Fetching {} new messages".format(index))
+        if response.status_code == 403:
+            logging.error("Error on pull: {}".format(
+                response.status_code))
+            logging.error(response.json())
+            return
 
-                while index > 0:
-                    index -= 1
-                    last_id = items[index]['id']
-                    self.ears.put(items[index])
+        if response.status_code != 200:
+            logging.error(response.json())
+            raise Exception("Error on pull: {}".format(
+                response.status_code))
 
-            except Exception as feedback:
-                print("ERROR: exception raised while fetching messages")
-                raise
+        items = response.json()['items']
 
+        index = 0
+        while index < len(items):
+            if items[index]['id'] == self._last_message_id:
+                break
+            index += 1
+
+        if index > 0:
+            logging.info("Fetching {} new messages".format(index))
+
+        while index > 0:
+            index -= 1
+            self._last_message_id = items[index]['id']
+            self.ears.put(items[index])

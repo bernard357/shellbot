@@ -46,6 +46,7 @@ class SpeakerTests(unittest.TestCase):
 
         mouth = Queue()
         mouth.put('hello')
+        mouth.put('world')
         mouth.put(Exception('EOQ'))
 
         context = Context()
@@ -60,7 +61,8 @@ class SpeakerTests(unittest.TestCase):
                                return_value=None) as mocked:
 
             speaker.work(context)
-            mocked.assert_called_with('hello')
+            mocked.assert_any_call('hello')
+            mocked.assert_called_with('world')
 
             with self.assertRaises(Exception):
                 mouth.get_nowait()
