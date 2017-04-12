@@ -19,6 +19,8 @@ class SparkSpace(object):
 
     def __init__(self, context, bearer=None, ears=None):
         """
+        Handles a Cisco Spark space
+
         :param context: the general context for the full program
         :type context: Context
 
@@ -30,36 +32,162 @@ class SparkSpace(object):
 
         """
         self.context = context
-        self.bearer = bearer
+        self.bearer = bearer if bearer else '*unknown*'
         self.ears = ears
 
+        self.reset()
+
+    def reset(self):
+        """
+        Resets a space
+
+        After a call to this function, ``bond()`` has to be invoked again to
+        return to normal mode of operation.
+        """
         self.room_id = None
+        self.room_title = '*unknown*'
+        self.team_id = None
 
         self._last_message_id = 0
 
-    def bond(self, space, teams=(), moderators=(), participants=(), hook=None):
+    def bond(self,
+             space,
+             team=None,
+             moderators=(),
+             participants=(),
+             hook=None):
         """
         Creates or binds to the named Cisco Spark space
 
         :param space: the name of the target space
         :type space: str
 
-        :param teams: the list of teams for this space
-        :type teams: list of str
+        :param team: the team to attach this space (optional)
+        :type team: str or dict
 
-        :param moderators: the list of initial moderators
+        :param moderators: the list of initial moderators (optional)
         :type moderators: list of str
 
-        :param participants: the list of initial participants
+        :param participants: the list of initial participants (optional)
         :type participants: list of str
 
-        :param hook: an optional hook to be called on space creation
-        :type hook: function
+        :param hook: an optional hook to be called on space creation (optional)
+        :type hook: callable
 
-        This function creates a new space if necessary. In that case it also
+        This function either bonds to an existing space, or creates a new space
+        if necessary. In later case it also
         adds moderators and participants, then calls the optional hook.
+
+        If a hook is provided, it is invoked with the id of the new space.
         """
 
+        item = self.get_space(space, team)
+        self.room_id = item['id']
+        self.room_title = item['title']
+        self.team_id = item['teamId'] if 'teamId' in item else None
+
+        self.add_moderators(moderators)
+        self.add_participants(participants)
+
+        if hook:
+            hook(self.room_id)
+
+    def get_space(self, space, team=None):
+        """
+        Gets a space by name
+
+        :param space: name of the target space
+        :type space: str
+
+        :param team: the team to attach this space (optional)
+        :type team: str or dict
+
+        :return: attributes of the space
+        :rtype: dict
+
+        This function either returns an existing space, or creates a new one.
+
+        >>>print(space.get_space("Hello World"))
+        {
+          "id" : "Y2lzY29zcGFyazJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+          "title" : "Hello World",
+          "type" : "group",
+          "isLocked" : true,
+          "teamId" : "Y2lzY29zcGlNDVhZTAtYzQ2Yi0xMWU1LTlkZjktMGQ0MWUzNDIxOTcz",
+          "lastActivity" : "2016-04-21T19:12:48.920Z",
+          "created" : "2016-04-21T19:01:55.966Z"
+        }
+
+        If the parameter ``team`` is provided, then it can be either a simple
+        name, or a complete set of attributes including the team id.
+
+        Note: when a space already exists, but belongs to a different team, then
+        only a warning message is generated in the log. This is not considered
+        as an error condition.
+        """
+        if team:
+            try:
+                team = team['id']
+            except:
+                team = self.get_team(team)['id']
+
+        item = self.lookup_space(space)
+        if item:
+
+            if team and ('teamId' in item) and (team != item['teamId']):
+                logging.warning("Unexpected team for this space")
+
+            return item
+
+        logging.info("Creating Cisco Spark space '{}'".format(space))
+
+        url = 'https://api.ciscospark.com/v1/rooms'
+        headers = {'Authorization': 'Bearer '+self.bearer}
+        payload = {'title': space }
+        if team:
+            payload['teamId'] = team
+        response = requests.post(url=url, headers=headers, data=payload)
+
+        if response.status_code != 200:
+            try:
+                logging.error(response.json())
+            except AttributeError:
+                pass
+            raise Exception("Error on space creation: {}".format(
+                response.status_code))
+
+        logging.info("- done")
+        item = response.json()
+
+        if team and ('teamId' in item) and (team != item['teamId']):
+            logging.warning("Unexpected team for this space")
+
+        return item
+
+    def lookup_space(self, space):
+        """
+        Looks for an existing space by name
+
+        :param space: name of the target space
+        :type space: str
+
+        :return: attributes of the space
+        :rtype: dict or None
+
+        This function returns either an existing space, or None.
+
+        >>>print(space.get_space("Hello World"))
+        {
+          "id" : "Y2lzY29zcGFyazJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+          "title" : "Hello World",
+          "type" : "group",
+          "isLocked" : true,
+          "teamId" : "Y2lzY29zcGlNDVhZTAtYzQ2Yi0xMWU1LTlkZjktMGQ0MWUzNDIxOTcz",
+          "lastActivity" : "2016-04-21T19:12:48.920Z",
+          "created" : "2016-04-21T19:01:55.966Z"
+        }
+
+        """
         logging.info("Looking for Cisco Spark space '{}'".format(space))
 
         url = 'https://api.ciscospark.com/v1/rooms'
@@ -67,62 +195,20 @@ class SparkSpace(object):
         response = requests.get(url=url, headers=headers)
 
         if response.status_code != 200:
-            logging.error(response.json())
-            raise Exception("Received error code {}".format(
+            try:
+                logging.error(response.json())
+            except AttributeError:
+                pass
+            raise Exception("Error on space list: {}".format(
                 response.status_code))
 
         for item in response.json()['items']:
-            if space in item['title']:
+            if space == item['title']:
                 logging.info("- found it")
-                self.room_id = item['id']
-                return
+                return item
 
-        logging.debug("- not found")
-        logging.info("Creating Cisco Spark space'{}'".format(space))
-
-        url = 'https://api.ciscospark.com/v1/rooms'
-        headers = {'Authorization': 'Bearer '+self.bearer}
-        payload = {'title': space }
-        response = requests.post(url=url, headers=headers, data=payload)
-
-        if response.status_code != 200:
-            logging.error(response.json())
-            raise Exception("Received error code {}".format(
-                response.status_code))
-
-        logging.info("- done")
-        self.room_id = response.json()['id']
-
-        self.add_moderators(moderators)
-
-        self.add_participants(participants)
-
-        context.set('bot.id', self.get_bot_id())
-
-        if hook:
-            hook()
-
-    def get_bot_id(self):
-        """
-        Retrieves the id of this bot
-
-        :return: the bot id as returned from Cisco Spark
-        :rtype: str
-
-        """
-        logging.info("Getting bot id")
-
-        url = 'https://api.ciscospark.com/v1/people/me'
-        headers = {'Authorization': 'Bearer '+self.bearer}
-        response = requests.get(url=url, headers=headers)
-
-        if response.status_code != 200:
-            logging.error(response.json())
-            raise Exception("Received error code {}".format(
-                response.status_code))
-
-        logging.info("- done")
-        return response.json()['id']
+        logging.warning("- not found")
+        return None
 
     def add_moderators(self, persons):
         """
@@ -154,8 +240,11 @@ class SparkSpace(object):
         response = requests.post(url=url, headers=headers, data=payload)
 
         if response.status_code != 200:
-            logging.error(response.json())
-            raise Exception("Received error code {}".format(
+            try:
+                logging.error(response.json())
+            except AttributeError:
+                pass
+            raise Exception("Error on adding membership: {}".format(
                 response.status_code))
 
     def add_participants(self, persons):
@@ -188,53 +277,125 @@ class SparkSpace(object):
         response = requests.post(url=url, headers=headers, data=payload)
 
         if response.status_code != 200:
-            logging.error(response.json())
-            raise Exception("Received error code {}".format(
+            try:
+                logging.error(response.json())
+            except AttributeError:
+                pass
+            raise Exception("Error on adding membership: {}".format(
                 response.status_code))
 
-    def dispose(self, space):
+    def dispose(self, space=None):
         """
-        Deletes a Cisco Spark space by name
+        Deletes a Cisco Spark space
 
-        :param space: the name of the space to be deleted
-        :type space: str
+        :param space: the space to be deleted
+        :type space: str or dict or None
 
-        This function is useful to restart a clean demo environment
+        This function is useful to restart a clean environment.
+        If no argument is provided, and if the space has been bonded
+        previously, then the underlying room id is used.
+
+        >>>space.dispose("Obsolete Space")
+
+        or:
+
+        >>>space.bond("Working Space")
+        ...
+        >>>space.dispose()
+
         """
+        if space:
+            try:
+                label = space['title']
+                space = space['id']
+            except:
+                space = self.lookup_space(space)
+                if space is None:
+                    return
+                label = space['title']
+                space = space['id']
 
-        logging.info("Deleting Cisco Spark space '{}'".format(space))
+        elif self.room_id:
+            label = self.room_title
+            space = self.room_id
 
-        url = 'https://api.ciscospark.com/v1/rooms'
+        else:
+            raise ValueError("Need to provide space to be disposed")
+
+        logging.info("Deleting Cisco Spark space '{}'".format(label))
+
+        url = 'https://api.ciscospark.com/v1/rooms/'+space
+        headers = {'Authorization': 'Bearer '+self.bearer}
+        response = requests.delete(url=url, headers=headers)
+
+        if response.status_code != 204:
+            try:
+                logging.error(response.json())
+            except AttributeError:
+                pass
+            raise Exception("Error on space deletion: {}".format(
+                response.status_code))
+
+        if space == self.room_id:
+            self.reset()
+
+    def get_team(self, team):
+        """
+        Gets a team by name
+
+        :param team: name of the target team
+        :type team: str
+
+        :return: attributes of the team
+        :rtype: dict
+
+        This function either returns an existing team, or creates a new one.
+
+        >>>print(space.get_team("Hello World"))
+        {
+          "id" : "Y2lzY29zcGFyazovL3VzL1RFQU0Yy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5",
+          "name" : "Hello World",
+          "created" : "2015-10-18T14:26:16+00:00"
+        }
+
+        """
+        logging.info("Looking for Cisco Spark team '{}'".format(team))
+
+        url = 'https://api.ciscospark.com/v1/teams'
         headers = {'Authorization': 'Bearer '+self.bearer}
         response = requests.get(url=url, headers=headers)
 
         if response.status_code != 200:
-            logging.error(response.json())
-            raise Exception("Received error code {}".format(
+            try:
+                logging.error(response.json())
+            except AttributeError:
+                pass
+            raise Exception("Error on team list: {}".format(
                 response.status_code))
 
-        actual = False
         for item in response.json()['items']:
-
-            if space in item['title']:
+            if team in item['name']:
                 logging.info("- found it")
-                logging.info("- DELETING IT")
+                return item
 
-                url = 'https://api.ciscospark.com/v1/rooms/'+item['id']
-                headers = {'Authorization': 'Bearer '+self.bearer}
-                response = requests.delete(url=url, headers=headers)
+        logging.warning("- not found")
+        logging.info("Creating Cisco Spark team'{}'".format(team))
 
-                if response.status_code != 204:
-                    logging.error(response.json())
-                    raise Exception("Received error code {}".format(
-                        response.status_code))
+        url = 'https://api.ciscospark.com/v1/teams'
+        headers = {'Authorization': 'Bearer '+self.bearer}
+        payload = {'name': team }
+        response = requests.post(url=url, headers=headers, data=payload)
 
-                actual = True
+        if response.status_code != 200:
+            try:
+                logging.error(response.json())
+            except AttributeError:
+                pass
+            raise Exception("Error on team creation: {}".format(
+                response.status_code))
 
-        if not actual:
-            logging.info("- no space with this name has been found")
-
-        self.room_id = None
+        logging.info("- done")
+        return(response.json())
 
     @classmethod
     def build_message(self,
@@ -359,7 +520,10 @@ class SparkSpace(object):
         response = requests.post(url=url, headers=headers, data=payload)
 
         if response.status_code != 200:
-            logging.error(response.json())
+            try:
+                logging.error(response.json())
+            except AttributeError:
+                pass
             raise Exception("Error on post: {}".format(
                 response.status_code))
 
@@ -406,7 +570,10 @@ class SparkSpace(object):
         response = requests.post(url=url, headers=headers, data=payload)
 
         if response.status_code != 200:
-            logging.error(response.json())
+            try:
+                logging.error(response.json())
+            except AttributeError:
+                pass
             raise Exception("Error on register: {}".format(
                 response.status_code))
 
@@ -434,8 +601,12 @@ class SparkSpace(object):
             response = requests.get(url=url, headers=headers)
 
             if response.status_code != 200:
-                logging.error("Received error code {}".format(response.status_code))
-                logging.error(response.json())
+                try:
+                    logging.error(response.json())
+                except AttributeError:
+                    pass
+                logging.error("Error on message: {}".format(
+                    response.status_code))
                 raise Exception
 
             # step 3 -- push it in the handling queue
@@ -464,7 +635,6 @@ class SparkSpace(object):
             self.pull()
             time.sleep(1)
 
-
     def pull(self):
         """
         Fetches events from one Cisco Spark space
@@ -484,13 +654,19 @@ class SparkSpace(object):
                                 params=payload)
 
         if response.status_code == 403:
+            try:
+                logging.error(response.json())
+            except AttributeError:
+                pass
             logging.error("Error on pull: {}".format(
                 response.status_code))
-            logging.error(response.json())
             return
 
         if response.status_code != 200:
-            logging.error(response.json())
+            try:
+                logging.error(response.json())
+            except AttributeError:
+                pass
             raise Exception("Error on pull: {}".format(
                 response.status_code))
 
@@ -509,3 +685,39 @@ class SparkSpace(object):
             index -= 1
             self._last_message_id = items[index]['id']
             self.ears.put(items[index])
+
+    def get_bot(self):
+        """
+        Retrieves attributes of this bot
+
+        :return: the attributes as returned from Cisco Spark
+        :rtype: dict
+
+        >>>print(space.get_bot())
+        {
+          'displayName': 'handy (bot)',
+          'created': '2016-10-15T14:55:54.739Z',
+          'emails': ['handy@sparkbot.io'],
+          'orgId': 'Y2lzY29zcGFyPTi8wMTk4ZjA4LTQ4NzEtYjU1ZS00ODYzY2NmNzIzZDU',
+          'avatar': 'https://2b571e19c5b5fd262.ssl.cf1.rackcdn.com/V1~6bg==~80',
+          'type': 'bot',
+          'id': 'Y2lzY29zcGFya3VzL1BFT1BMRSmI4LTQ1MDktYWRkMi0yNTEwNzdlOWUxZWM'
+        }
+
+        """
+        logging.info("Getting bot attributes")
+
+        url = 'https://api.ciscospark.com/v1/people/me'
+        headers = {'Authorization': 'Bearer '+self.bearer}
+        response = requests.get(url=url, headers=headers)
+
+        if response.status_code != 200:
+            try:
+                logging.error(response.json())
+            except AttributeError:
+                pass
+            raise Exception("Error on person details: {}".format(
+                response.status_code))
+
+        logging.info("- done")
+        return response.json()

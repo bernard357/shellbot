@@ -1,0 +1,53 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Authorization: [Bearer *dummy]
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.11.0]
+    method: GET
+    uri: https://api.ciscospark.com/v1/people/me
+  response:
+    body: {string: !!python/unicode ''}
+    headers:
+      content-length: ['0']
+      content-type: [text/plain; charset=utf-8]
+      date: ['Wed, 12 Apr 2017 22:02:00 GMT']
+      server: [Redacted]
+      trackingid: [NA_f735ee74-af79-4f62-a0d0-487fede523e3]
+      x-cf-requestid: [77da4412-7e04-496f-446c-78dbdd01a840]
+    status: {code: 401, message: Unauthorized}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Authorization: [Bearer NWMwM2U0MjgtZGRjYy00ZjQxLWExYWMtMzk2MjgwMzM5ODIzYTQ4ODQ4ZGQtM2E4]
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.11.0]
+    method: GET
+    uri: https://api.ciscospark.com/v1/people/me
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAAAHSQ0W6bMBSGX2Xy1SY1xDYYDFKlLSOZogZYA0kE0y6MjVMKFARWUlwtz16397s9
+        5//Pd/S9gVqAAOS41Tn2Nf+1mZnuLzv7qHdotcnQKtqnfhPrRhdZM+czeoq6rbPLHlEUNio/7Zuo
+        hnOcra+xFm1yOrwWpwjcgapjdTuB4A8olaVevk8DG5uyV1bdg793QNTT0LI5Zl1l8J+RL1/N+pup
+        sgtTbDTjJ6WGKVgucUk8VCGfE0mFLLGNPb6wkUdx5RKBCXYEEbAkUkCPIUgZwS62pqm1uETWyHjD
+        xYvF+255RDe3pAT6AnMHS5vyUvqEwkpKl1GMEbFvqVfAB8mj7Ofi4bJPXh+j8BSf7+9vFJrn+vG8
+        /a8x6Kd7uEnS47A6rtvfWU2vUdY4xfMPJ0+hTsLz1ZhzYr1W+fMBFSmESZibO3EX660uwoMh8LFi
+        qvpgYIjcBYILRDLkBIQExLE82y9MSM3Dp7hegX/vAQAA//8mKgRwxAEAAA==
+    headers:
+      cache-control: [no-cache]
+      content-encoding: [gzip]
+      content-length: ['385']
+      content-type: [application/json;charset=UTF-8]
+      date: ['Wed, 12 Apr 2017 22:02:01 GMT']
+      server: [Redacted]
+      trackingid: [NA_94b98e3e-7c14-4375-84b8-9a2e31e47858]
+      vary: [Accept-Encoding]
+      x-cf-requestid: [904bc5a3-5328-4075-53d0-223f1ed4c19f]
+    status: {code: 200, message: OK}
+version: 1
