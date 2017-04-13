@@ -8,6 +8,7 @@ from requests_toolbelt import MultipartEncoder
 import sys
 import time
 from bottle import route, run, request, abort
+from ciscosparkapi import CiscoSparkAPI
 
 from context import Context
 
@@ -32,7 +33,7 @@ class SparkSpace(object):
 
         """
         self.context = context
-        self.bearer = bearer if bearer else '*unknown*'
+        self.bearer = bearer if bearer else None
         self.ears = ears
 
         self.reset()
@@ -49,6 +50,8 @@ class SparkSpace(object):
         self.team_id = None
 
         self._last_message_id = 0
+
+        self.api = CiscoSparkAPI(access_token=self.bearer)
 
     def bond(self,
              space,
@@ -78,13 +81,12 @@ class SparkSpace(object):
         if necessary. In later case it also
         adds moderators and participants, then calls the optional hook.
 
-        If a hook is provided, it is invoked with the id of the new space.
+        If a hook is provided, it is invoked with the id of the target space.
         """
-
         item = self.get_space(space, team)
-        self.room_id = item['id']
-        self.room_title = item['title']
-        self.team_id = item['teamId'] if 'teamId' in item else None
+        self.room_id = item.id
+        self.room_title = item.title
+        self.team_id = item.teamId
 
         self.add_moderators(moderators)
         self.add_participants(participants)
@@ -119,47 +121,33 @@ class SparkSpace(object):
         }
 
         If the parameter ``team`` is provided, then it can be either a simple
-        name, or a complete set of attributes including the team id.
+        name, or a team object featuring an id.
 
         Note: when a space already exists, but belongs to a different team, then
         only a warning message is generated in the log. This is not considered
         as an error condition.
         """
+        teamId = None
         if team:
             try:
-                team = team['id']
+                teamId = team.id
             except:
-                team = self.get_team(team)['id']
+                teamId = self.get_team(team).id
 
         item = self.lookup_space(space)
         if item:
 
-            if team and ('teamId' in item) and (team != item['teamId']):
+            if teamId and item.teamId and (teamId != item.teamId):
                 logging.warning("Unexpected team for this space")
 
             return item
 
         logging.info("Creating Cisco Spark space '{}'".format(space))
-
-        url = 'https://api.ciscospark.com/v1/rooms'
-        headers = {'Authorization': 'Bearer '+self.bearer}
-        payload = {'title': space }
-        if team:
-            payload['teamId'] = team
-        response = requests.post(url=url, headers=headers, data=payload)
-
-        if response.status_code != 200:
-            try:
-                logging.error(response.json())
-            except AttributeError:
-                pass
-            raise Exception("Error on space creation: {}".format(
-                response.status_code))
-
+        item = self.api.rooms.create(title=space,
+                                     teamId=teamId)
         logging.info("- done")
-        item = response.json()
 
-        if team and ('teamId' in item) and (team != item['teamId']):
+        if teamId and item.teamId and (teamId != item.teamId):
             logging.warning("Unexpected team for this space")
 
         return item
@@ -190,20 +178,8 @@ class SparkSpace(object):
         """
         logging.info("Looking for Cisco Spark space '{}'".format(space))
 
-        url = 'https://api.ciscospark.com/v1/rooms'
-        headers = {'Authorization': 'Bearer '+self.bearer}
-        response = requests.get(url=url, headers=headers)
-
-        if response.status_code != 200:
-            try:
-                logging.error(response.json())
-            except AttributeError:
-                pass
-            raise Exception("Error on space list: {}".format(
-                response.status_code))
-
-        for item in response.json()['items']:
-            if space == item['title']:
+        for item in self.api.rooms.list():
+            if space == item.title:
                 logging.info("- found it")
                 return item
 
@@ -231,21 +207,9 @@ class SparkSpace(object):
         :type person: str
 
         """
-
-        url = 'https://api.ciscospark.com/v1/memberships'
-        headers = {'Authorization': 'Bearer '+self.bearer}
-        payload = {'roomId': self.room_id,
-                   'personEmail': person,
-                   'isModerator': 'true' }
-        response = requests.post(url=url, headers=headers, data=payload)
-
-        if response.status_code != 200:
-            try:
-                logging.error(response.json())
-            except AttributeError:
-                pass
-            raise Exception("Error on adding membership: {}".format(
-                response.status_code))
+        self.api.memberships.create(roomId=self.room_id,
+                                    personEmail=person,
+                                    isModerator=True)
 
     def add_participants(self, persons):
         """
@@ -268,21 +232,9 @@ class SparkSpace(object):
         :type person: str
 
         """
-
-        url = 'https://api.ciscospark.com/v1/memberships'
-        headers = {'Authorization': 'Bearer '+self.bearer}
-        payload = {'roomId': self.room_id,
-                   'personEmail': person,
-                   'isModerator': 'false' }
-        response = requests.post(url=url, headers=headers, data=payload)
-
-        if response.status_code != 200:
-            try:
-                logging.error(response.json())
-            except AttributeError:
-                pass
-            raise Exception("Error on adding membership: {}".format(
-                response.status_code))
+        self.api.memberships.create(roomId=self.room_id,
+                                    personEmail=person,
+                                    isModerator=True)
 
     def dispose(self, space=None):
         """
@@ -324,17 +276,7 @@ class SparkSpace(object):
 
         logging.info("Deleting Cisco Spark space '{}'".format(label))
 
-        url = 'https://api.ciscospark.com/v1/rooms/'+space
-        headers = {'Authorization': 'Bearer '+self.bearer}
-        response = requests.delete(url=url, headers=headers)
-
-        if response.status_code != 204:
-            try:
-                logging.error(response.json())
-            except AttributeError:
-                pass
-            raise Exception("Error on space deletion: {}".format(
-                response.status_code))
+        self.api.rooms.delete(roomId=space)
 
         if space == self.room_id:
             self.reset()
@@ -361,51 +303,25 @@ class SparkSpace(object):
         """
         logging.info("Looking for Cisco Spark team '{}'".format(team))
 
-        url = 'https://api.ciscospark.com/v1/teams'
-        headers = {'Authorization': 'Bearer '+self.bearer}
-        response = requests.get(url=url, headers=headers)
-
-        if response.status_code != 200:
-            try:
-                logging.error(response.json())
-            except AttributeError:
-                pass
-            raise Exception("Error on team list: {}".format(
-                response.status_code))
-
-        for item in response.json()['items']:
-            if team in item['name']:
+        for item in self.api.teams.list():
+            if team == item.name:
                 logging.info("- found it")
                 return item
 
         logging.warning("- not found")
         logging.info("Creating Cisco Spark team'{}'".format(team))
 
-        url = 'https://api.ciscospark.com/v1/teams'
-        headers = {'Authorization': 'Bearer '+self.bearer}
-        payload = {'name': team }
-        response = requests.post(url=url, headers=headers, data=payload)
-
-        if response.status_code != 200:
-            try:
-                logging.error(response.json())
-            except AttributeError:
-                pass
-            raise Exception("Error on team creation: {}".format(
-                response.status_code))
+        item = self.api.teams.create(name=team)
 
         logging.info("- done")
-        return(response.json())
+        return(item)
 
-    @classmethod
-    def build_message(self,
-                      markdown=None,
-                      text=None,
-                      file_path=None,
-                      file_label=None,
-                      file_type=None):
+    def post_message(self,
+                     text=None,
+                     markdown=None,
+                     file_path=None):
         """
-        Prepares a message for Cisco Spark
+        Posts a message for Cisco Spark
 
         :param markdown: content of the message as per Markdown
         :type markdown: str or list of str or ``None``
@@ -413,119 +329,38 @@ class SparkSpace(object):
         :param text: content of the message is plain text
         :type text: str or list of str or ``None``
 
-        :param file_path: location of file to be uploaded
+        :param file_path: location of file to be uploaded or attached
         :type file_path: str or ``None``
-
-        :param file_label: optional label for the file instead of file name
-        :type file_path: str or ``None``
-
-        :param file_type: optional MIME type for the file instead of default
-        :type file_type: str or ``None``
-
-        :return: the message to be posted
-        :rtype: dict
 
         Example message out of plain text::
 
-        >>>space.build_message(text='hello world')
+        >>>space.post_message(text='hello world')
         {'text': 'hello world'}
-
-        Lists of messages are combined as one::
-
-        >>>space.build_message(text=['hello', 'world'])
-        {'text': 'hello\nworld'}
 
         Example message with Markdown::
 
-        >>>space.build_message(markdown='this is a **bold** statement')
+        >>>space.post_message(markdown='this is a **bold** statement')
         {'markdown': 'this is a **bold** statement'}
-
-        Lists of Markdown messages are combined as one as well::
-
-        >>>space.build_message(markdown=['* line 1', '* line 2'])
-        {'markdown': '* line 1\n* line 2'}
 
         Example file upload::
 
-            space.build_message(file_path='./my_file.pdf', file_label='pres')
+            space.post_message(file_path='./my_file.pdf')
 
         Of course, you can combine text with the upload of a file::
 
             text = 'This is the presentation that was used for our meeting'
-            space.build_message(text=text,
-                                file_path='./my_file.pdf',
-                                file_label='pres from Foo Bar')
+            space.post_message(text=text,
+                               file_path='./my_file.pdf')
 
         """
 
-        logging.info("Building message")
+        logging.info("Posting message")
 
-        update = {}
-
-        if isinstance(text, (list, tuple)):
-            update['text'] = '\n'.join(text)
-
-        elif text:
-            update['text'] = str(text)
-
-        if isinstance(markdown, (list, tuple)):
-            update['markdown'] = '\n'.join(markdown)
-
-        elif markdown:
-            update['markdown'] = markdown
-
-        if file_path:
-
-            logging.info("- attaching file {}".format(file_path))
-
-            if file_label is None:
-                file_label = file_path
-
-            elif 'text' not in update:
-                update['text'] = str(file_label)
-
-            if file_type is None:
-                file_type = 'application/octet-stream'
-
-            update['files'] = (file_label, open(file_path, 'rb'), file_type)
-
-        if update == {}:
-            update = {'text': ''}
-
-        return update
-
-    def post_message(self, message):
-        """
-        Sends a meessage to a Cisco Spark space
-
-        :param message: the message to be sent
-        :type message: str or dict
-
-        If the message is a simple string, it is sent as such to Cisco Spark.
-        Else if it a dictionary, it is encoded as MIME Multipart.
-        """
-
-        logging.info("Sending update to Cisco Spark room")
-
-        url = 'https://api.ciscospark.com/v1/messages'
-        headers = {'Authorization': 'Bearer '+self.bearer}
-
-        if isinstance(message, dict):
-            message['roomId'] = self.room_id
-            payload = MultipartEncoder(fields=message)
-            headers['Content-Type'] = payload.content_type
-        else:
-            payload = {'roomId': self.room_id, 'text': str(message) }
-
-        response = requests.post(url=url, headers=headers, data=payload)
-
-        if response.status_code != 200:
-            try:
-                logging.error(response.json())
-            except AttributeError:
-                pass
-            raise Exception("Error on post: {}".format(
-                response.status_code))
+        files = [file_path] if file_path else None
+        self.api.messages.create(roomId=self.room_id,
+                                 text=text,
+                                 markdown=markdown,
+                                 files=files)
 
         logging.info("- done")
 
@@ -560,26 +395,15 @@ class SparkSpace(object):
         logging.info("Registering webhook to Cisco Spark")
         logging.info("- {}".format(webhook))
 
-        url = 'https://api.ciscospark.com/v1/webhooks'
-        headers = {'Authorization': 'Bearer '+self.bearer}
-        payload = {'name': 'controller-webhook',
-                   'resource': 'messages',
-                   'event': 'created',
-                   'filter': 'roomId='+self.room_id,
-                   'targetUrl': webhook }
-        response = requests.post(url=url, headers=headers, data=payload)
-
-        if response.status_code != 200:
-            try:
-                logging.error(response.json())
-            except AttributeError:
-                pass
-            raise Exception("Error on register: {}".format(
-                response.status_code))
+        self.api.webhooks.create(name='shellbot-webhook',
+                                 targetUrl=webhook,
+                                 resource='messages',
+                                 event='created',
+                                 filter='roomId='+self.room_id)
 
         logging.info("- done")
 
-    def on_message():
+    def webhook():
         """
         Processes the flow of events from Cisco Spark
 
@@ -596,22 +420,11 @@ class SparkSpace(object):
 
             # step 2 -- get the message itself
             #
-            url = 'https://api.ciscospark.com/v1/messages/{}'.format(message_id)
-            headers = {'Authorization': 'Bearer '+self.bearer}
-            response = requests.get(url=url, headers=headers)
-
-            if response.status_code != 200:
-                try:
-                    logging.error(response.json())
-                except AttributeError:
-                    pass
-                logging.error("Error on message: {}".format(
-                    response.status_code))
-                raise Exception
+            item = self.api.messages.get(messageId=message_id)
 
             # step 3 -- push it in the handling queue
             #
-            self.ears.put(response.json())
+            self.on_message(item)
 
             return "OK\n"
 
@@ -646,78 +459,49 @@ class SparkSpace(object):
         logging.info('Pulling messages pro-actively')
         self.context.increment('puller.counter')
 
-        url = 'https://api.ciscospark.com/v1/messages'
-        headers = {'Authorization': 'Bearer '+self.bearer}
-        payload = {'roomId': self.room_id, 'max': 10 }
-        response = requests.get(url=url,
-                                headers=headers,
-                                params=payload)
+        new_items = []
+        for item in self.api.messages.list(roomId= self.room_id,
+                                           max=25):
 
-        if response.status_code == 403:
-            try:
-                logging.error(response.json())
-            except AttributeError:
-                pass
-            logging.error("Error on pull: {}".format(
-                response.status_code))
-            return
-
-        if response.status_code != 200:
-            try:
-                logging.error(response.json())
-            except AttributeError:
-                pass
-            raise Exception("Error on pull: {}".format(
-                response.status_code))
-
-        items = response.json()['items']
-
-        index = 0
-        while index < len(items):
-            if items[index]['id'] == self._last_message_id:
+            if item.id == self._last_message_id:
                 break
-            index += 1
 
-        if index > 0:
-            logging.info("Fetching {} new messages".format(index))
+            new_items.append(item)
 
-        while index > 0:
-            index -= 1
-            self._last_message_id = items[index]['id']
-            self.ears.put(items[index])
+        if len(new_items):
+            logging.info("Fetching {} new messages".format(len(new_items)))
+
+        while len(new_items):
+            item = new_items.pop()
+            self._last_message_id = item.id
+            self.on_message(message=item)
+
+    def on_message(self, message):
+        """
+        Processes an incoming message
+        """
+        self.ears.put(message.text)
 
     def get_bot(self):
         """
         Retrieves attributes of this bot
 
         :return: the attributes as returned from Cisco Spark
-        :rtype: dict
+        :rtype: Person
 
         >>>print(space.get_bot())
-        {
-          'displayName': 'handy (bot)',
-          'created': '2016-10-15T14:55:54.739Z',
-          'emails': ['handy@sparkbot.io'],
-          'orgId': 'Y2lzY29zcGFyPTi8wMTk4ZjA4LTQ4NzEtYjU1ZS00ODYzY2NmNzIzZDU',
-          'avatar': 'https://2b571e19c5b5fd262.ssl.cf1.rackcdn.com/V1~6bg==~80',
-          'type': 'bot',
-          'id': 'Y2lzY29zcGFya3VzL1BFT1BMRSmI4LTQ1MDktYWRkMi0yNTEwNzdlOWUxZWM'
-        }
+        Person({"displayName": "handy (bot)",
+                "created": "2016-10-15T14:55:54.739Z",
+                "emails": ["handy@sparkbot.io"],
+                "orgId": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpZS00ODYzY2NmNzIzZDU",
+                "avatar": "https://2b571e1108a5262.cdn.com/V1~6bg==~80",
+                "type": "bot",
+                "id": "Y2lzY29zcGFyazovL3mI4LTQ1MDktYWRkMi0yNTEwNzdlOWUxZWM"})
 
         """
         logging.info("Getting bot attributes")
 
-        url = 'https://api.ciscospark.com/v1/people/me'
-        headers = {'Authorization': 'Bearer '+self.bearer}
-        response = requests.get(url=url, headers=headers)
-
-        if response.status_code != 200:
-            try:
-                logging.error(response.json())
-            except AttributeError:
-                pass
-            raise Exception("Error on person details: {}".format(
-                response.status_code))
+        item = self.api.people.me()
 
         logging.info("- done")
-        return response.json()
+        return item
