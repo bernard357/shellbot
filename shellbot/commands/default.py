@@ -28,30 +28,8 @@ class Default(Command):
             "Sorry, I do not know how to handle '{}'".format(verb))
         return True
 
-    @property
-    def keyword(self):
-        """
-        Retrieves the verb or token for this command
-        """
-        return '*default'
+    keyword = '*default'
 
-    @property
-    def information_message(self):
-        """
-        Retrieves basic information for this command
-        """
-        return 'Handles unmatched command.'
+    information_message = 'Handles unmatched command.'
 
-    @property
-    def usage_message(self):
-        """
-        Retrieves usage information for this command
-        """
-        return None
-
-    @property
-    def is_hidden(self):
-        """
-        Ensures that this command appears in help
-        """
-        return True
+    is_hidden = True

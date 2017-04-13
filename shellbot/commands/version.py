@@ -29,30 +29,8 @@ class Version(Command):
         self.shell.say("{} version {}".format(name, version))
         return True
 
-    @property
-    def keyword(self):
-        """
-        Retrieves the verb or token for this command
-        """
-        return 'version'
+    keyword = 'version'
 
-    @property
-    def information_message(self):
-        """
-        Retrieves basic information for this command
-        """
-        return 'Displays software version.'
+    information_message = 'Displays software version.'
 
-    @property
-    def usage_message(self):
-        """
-        Retrieves usage information for this command
-        """
-        return 'version'
-
-    @property
-    def is_hidden(self):
-        """
-        Ensures that this command appears in help
-        """
-        return False
+    usage_message = 'version'

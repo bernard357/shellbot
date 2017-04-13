@@ -30,16 +30,13 @@ class CommandsTests(unittest.TestCase):
 
         self.assertEqual(c.context.get('general.hello'), 'world')
 
-        with self.assertRaises(NotImplementedError):
-            c.keyword
-        with self.assertRaises(NotImplementedError):
-            c.information_message
+        self.assertEqual(c.keyword, None)
+        self.assertEqual(c.information_message, None)
         self.assertEqual(c.usage_message, None)
         self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
-        with self.assertRaises(NotImplementedError):
-            c.execute('test', '')
+        c.execute('test', '')
         with self.assertRaises(Exception):
             mouth.get_nowait()
 

@@ -71,30 +71,8 @@ class Help(Command):
 
         return result
 
-    @property
-    def keyword(self):
-        """
-        Retrieves the verb or token for this command
-        """
-        return 'help'
+    keyword = 'help'
 
-    @property
-    def information_message(self):
-        """
-        Retrieves basic information for this command
-        """
-        return 'Lists available commands and related usage information.'
+    information_message = 'Lists available commands and related usage information.'
 
-    @property
-    def usage_message(self):
-        """
-        Retrieves usage information for this command
-        """
-        return 'help <command>'
-
-    @property
-    def is_hidden(self):
-        """
-        Ensures that this command appears in help
-        """
-        return False
+    usage_message = 'help <command>'

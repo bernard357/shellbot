@@ -26,30 +26,10 @@ class Noop(Command):
         """
         return True
 
-    @property
-    def keyword(self):
-        """
-        Retrieves the verb or token for this command
-        """
-        return 'pass'
+    keyword = 'pass'
 
-    @property
-    def information_message(self):
-        """
-        Retrieves basic information for this command
-        """
-        return 'Does absolutely nothing.'
+    information_message = 'Does absolutely nothing.'
 
-    @property
-    def usage_message(self):
-        """
-        Retrieves usage information for this command
-        """
-        return 'pass'
+    usage_message = 'pass'
 
-    @property
-    def is_hidden(self):
-        """
-        Ensures that this command does not appear in help
-        """
-        return True
+    is_hidden = True

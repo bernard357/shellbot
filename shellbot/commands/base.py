@@ -39,80 +39,25 @@ class Command(object):
         messages with one or multiple ``self.shell.say("Whatever response")``.
 
         """
-        raise NotImplementedError()
+        if self.information_message:
+            self.shell.say(self.information_message)
 
-    @property
-    def keyword(self):
-        """
-        Retrieves the verb or token for this command
+    # verb or token for this command
+    #
+    keyword = None
 
-        :return: the verb or the token for this command, e.g., ``ignore``
-        :rtype: str
+    # basic information for this command
+    #
+    information_message = None
 
-        Example:
-            >>>print(command.keyword)
-            ignore
-        """
-        raise NotImplementedError()
+    # usage information for this command
+    #
+    usage_message = None
 
-    @property
-    def information_message(self):
-        """
-        Retrieves basic information for this command
+    # this command should be processed interactively
+    #
+    is_interactive = True
 
-        :return: the one-line information message for this command
-        :rtype: str
-
-        Example:
-            >>>print(command.information_message)
-            Ignores the current alert.
-        """
-        raise NotImplementedError()
-
-    @property
-    def usage_message(self):
-        """
-        Retrieves usage information for this command
-
-        :return: the text that explain how to use this command
-        :rtype: str or ``None``
-
-        Example:
-            >>>print(command.usage_message)
-            ["`ignore (last|current) XhYm`",
-             "Ignores an alert for X hours and Y minutes.",
-             "Selectable whether this ignores the current or last alert."]
-        """
-        return None
-
-    @property
-    def is_interactive(self):
-        """
-        Checks if this command should be processed interactively or not
-
-        :return:
-        :rtype: bool
-
-        Example:
-            >>>print(command.is_interactive)
-            True
-
-        Interactive commands are executed immediately, while non-interactive
-        commands are executed in the background
-        """
-        return True
-
-    @property
-    def is_hidden(self):
-        """
-        Ensures that this command appears in help
-
-        :return:
-        :rtype: bool
-
-        Example:
-            >>>print(command.is_hidden)
-            False
-        """
-        return False
-
+    # this command should be listed by 'help'
+    #
+    is_hidden = False

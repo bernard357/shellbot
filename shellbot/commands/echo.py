@@ -27,30 +27,8 @@ class Echo(Command):
         self.shell.say(str(arguments))
         return True
 
-    @property
-    def keyword(self):
-        """
-        Retrieves the verb or token for this command
-        """
-        return 'echo'
+    keyword = 'echo'
 
-    @property
-    def information_message(self):
-        """
-        Retrieves basic information for this command
-        """
-        return 'Echoes input string.'
+    information_message = 'Echoes input string.'
 
-    @property
-    def usage_message(self):
-        """
-        Retrieves usage information for this command
-        """
-        return 'echo "a string to be echoed"'
-
-    @property
-    def is_hidden(self):
-        """
-        Ensures that this command appears in help
-        """
-        return False
+    usage_message = 'echo "a string to be echoed"'

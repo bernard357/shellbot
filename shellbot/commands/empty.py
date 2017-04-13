@@ -33,30 +33,8 @@ class Empty(Command):
         self.help_command.execute('help')
         return True
 
-    @property
-    def keyword(self):
-        """
-        Retrieves the verb or token for this command
-        """
-        return '*empty'
+    keyword = '*empty'
 
-    @property
-    def information_message(self):
-        """
-        Retrieves basic information for this command
-        """
-        return 'Handles empty command.'
+    information_message = 'Handles empty command.'
 
-    @property
-    def usage_message(self):
-        """
-        Retrieves usage information for this command
-        """
-        return None
-
-    @property
-    def is_hidden(self):
-        """
-        Ensures that this command appears in help
-        """
-        return True
+    is_hidden = True

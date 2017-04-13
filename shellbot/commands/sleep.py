@@ -33,37 +33,12 @@ class Sleep(Command):
         time.sleep(delay)
         return True
 
-    @property
-    def keyword(self):
-        """
-        Retrieves the verb or token for this command
-        """
-        return 'sleep'
+    keyword ='sleep'
 
-    @property
-    def information_message(self):
-        """
-        Retrieves basic information for this command
-        """
-        return 'Sleeps for a while.'
+    information_message = 'Sleeps for a while.'
 
-    @property
-    def usage_message(self):
-        """
-        Retrieves usage information for this command
-        """
-        return 'sleep <n>'
+    usage_message = 'sleep <n>'
 
-    @property
-    def is_interactive(self):
-        """
-        Checks if this command should be processed interactively or not
-        """
-        return False
+    is_interactive = False
 
-    @property
-    def is_hidden(self):
-        """
-        Ensures that this command does not appear in help
-        """
-        return True
+    is_hidden = True
