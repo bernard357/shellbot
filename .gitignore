@@ -1,5 +1,5 @@
 dist/
-*.py[co]
+*.pyc
 *.sw[po]
 *.secrets
 *~
@@ -19,4 +19,4 @@ shellbot.egg-info/
 .settings
 .DS_Store
 .eggs/
-*.pyc
+test/local/
