@@ -32,9 +32,6 @@ class Command(object):
         :param arguments: The arguments for this command
         :type arguments: str or ``None``
 
-        :return: True if the command has executed correctly, False otherwise
-        :rtype: bool
-
         This function should report on progress by sending
         messages with one or multiple ``self.shell.say("Whatever response")``.
 
