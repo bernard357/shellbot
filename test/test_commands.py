@@ -40,6 +40,55 @@ class CommandsTests(unittest.TestCase):
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
+    def test_from_base(self):
+
+        context = Context()
+        mouth = Queue()
+        shell = Shell(context, mouth)
+
+        from shellbot.commands.base import Command
+
+        c = Command(shell)
+        c.keyword = 'batman'
+        c.information_message = "I'm Batman!"
+        c.execute('batman', '')
+        self.assertEqual(mouth.get(), c.information_message)
+        with self.assertRaises(Exception):
+            print(mouth.get_nowait())
+
+        class Batcave(Command):
+            keyword = 'batcave'
+            information_message = "The Batcave is silent..."
+
+            def execute(self, verb=None, arguments=None):
+                if arguments:
+                    self.shell.say("The Batcave echoes, '{0}'".format(arguments))
+                else:
+                    self.shell.say(self.information_message)
+
+        c = Batcave(shell)
+        c.execute('batcave', '')
+        self.assertEqual(mouth.get(), "The Batcave is silent...")
+        c.execute('batcave', 'hello?')
+        self.assertEqual(mouth.get(), "The Batcave echoes, 'hello?'")
+        with self.assertRaises(Exception):
+            print(mouth.get_nowait())
+
+        class Batsignal(Command):
+            keyword = 'batsignal'
+            information_message = "NANA NANA NANA NANA"
+            information_file = "https://upload.wikimedia.org/wikipedia/en/c/c6/Bat-signal_1989_film.jpg"
+
+            def execute(self, verb=None, arguments=None):
+                self.shell.say(self.information_message,
+                               file=c.information_file)
+
+        c = Batsignal(shell)
+        c.execute('batsignal', '')
+        item = mouth.get()
+        self.assertEqual(item.message, c.information_message)
+        self.assertEqual(item.file, c.information_file)
+
     def test_noop(self):
 
         context = Context()
