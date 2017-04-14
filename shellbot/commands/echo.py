@@ -20,15 +20,12 @@ class Echo(Command):
     Echoes input string
     """
 
-    def execute(self, verb, arguments):
+    keyword = 'echo'
+    information_message = 'Echoes input string.'
+    usage_message = 'echo "a string to be echoed"'
+
+    def execute(self, arguments):
         """
         Echoes input string
         """
         self.shell.say(str(arguments))
-        return True
-
-    keyword = 'echo'
-
-    information_message = 'Echoes input string.'
-
-    usage_message = 'echo "a string to be echoed"'

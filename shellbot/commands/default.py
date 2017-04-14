@@ -20,16 +20,13 @@ class Default(Command):
     Handles unmatched command
     """
 
-    def execute(self, verb, arguments):
+    keyword = '*default'
+    information_message = 'Handles unmatched command.'
+    is_hidden = True
+
+    def execute(self, arguments):
         """
         Handles unmatched command
         """
         self.shell.say(
-            "Sorry, I do not know how to handle '{}'".format(verb))
-        return True
-
-    keyword = '*default'
-
-    information_message = 'Handles unmatched command.'
-
-    is_hidden = True
+            "Sorry, I do not know how to handle '{}'".format(self.shell.verb))

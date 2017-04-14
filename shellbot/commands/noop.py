@@ -20,16 +20,12 @@ class Noop(Command):
     Does absolutely nothing
     """
 
-    def execute(self, verb, arguments=None):
+    keyword = 'pass'
+    information_message = 'Does absolutely nothing.'
+    is_hidden = True
+
+    def execute(self, arguments=None):
         """
         Does absolutely nothing
         """
-        return True
-
-    keyword = 'pass'
-
-    information_message = 'Does absolutely nothing.'
-
-    usage_message = 'pass'
-
-    is_hidden = True
+        pass

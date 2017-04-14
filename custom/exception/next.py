@@ -20,6 +20,9 @@ class Next(Command):
     Moves process to next state
     """
 
+    keyword = 'next'
+    information_message = 'Moves process to next state.'
+
     def execute(self, verb=None, arguments=None):
         """
         Displays software version
@@ -41,32 +44,3 @@ class Next(Command):
             states.pop(0)
 
         self.shell.say("New state: {}".format(state))
-        return True
-
-    @property
-    def keyword(self):
-        """
-        Retrieves the verb or token for this command
-        """
-        return 'next'
-
-    @property
-    def information_message(self):
-        """
-        Retrieves basic information for this command
-        """
-        return 'Moves process to next state.'
-
-    @property
-    def usage_message(self):
-        """
-        Retrieves usage information for this command
-        """
-        return 'next'
-
-    @property
-    def is_hidden(self):
-        """
-        Ensures that this command appears in help
-        """
-        return False

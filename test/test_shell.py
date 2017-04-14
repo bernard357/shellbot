@@ -253,8 +253,8 @@ class SpeakerTests(unittest.TestCase):
         from shellbot.commands.default import Default
 
         class Custom(Default):
-            def execute(self, verb, arguments):
-                self.shell.say("{}, really?".format(verb))
+            def execute(self, arguments):
+                self.shell.say("{}, really?".format(self.shell.verb))
 
         shell.load_command(Custom(shell))
 

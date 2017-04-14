@@ -95,11 +95,11 @@ class Worker(object):
         try:
             if verb in self.shell.commands:
                 command = self.shell.command(verb)
-                command.execute(verb, arguments)
+                command.execute(arguments)
 
             elif '*default' in self.shell.commands:
                 command = self.shell.command('*default')
-                command.execute(verb, arguments)
+                command.execute(arguments)
 
             else:
                 self.shell.say(

@@ -36,7 +36,7 @@ class CommandsTests(unittest.TestCase):
         self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
-        c.execute('test', '')
+        c.execute()
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
@@ -51,7 +51,7 @@ class CommandsTests(unittest.TestCase):
         c = Command(shell)
         c.keyword = 'batman'
         c.information_message = "I'm Batman!"
-        c.execute('batman', '')
+        c.execute()
         self.assertEqual(mouth.get(), c.information_message)
         with self.assertRaises(Exception):
             print(mouth.get_nowait())
@@ -60,16 +60,16 @@ class CommandsTests(unittest.TestCase):
             keyword = 'batcave'
             information_message = "The Batcave is silent..."
 
-            def execute(self, verb=None, arguments=None):
+            def execute(self, arguments=None):
                 if arguments:
                     self.shell.say("The Batcave echoes, '{0}'".format(arguments))
                 else:
                     self.shell.say(self.information_message)
 
         c = Batcave(shell)
-        c.execute('batcave', '')
+        c.execute('')
         self.assertEqual(mouth.get(), "The Batcave is silent...")
-        c.execute('batcave', 'hello?')
+        c.execute('hello?')
         self.assertEqual(mouth.get(), "The Batcave echoes, 'hello?'")
         with self.assertRaises(Exception):
             print(mouth.get_nowait())
@@ -79,12 +79,12 @@ class CommandsTests(unittest.TestCase):
             information_message = "NANA NANA NANA NANA"
             information_file = "https://upload.wikimedia.org/wikipedia/en/c/c6/Bat-signal_1989_film.jpg"
 
-            def execute(self, verb=None, arguments=None):
+            def execute(self, arguments=None):
                 self.shell.say(self.information_message,
                                file=c.information_file)
 
         c = Batsignal(shell)
-        c.execute('batsignal', '')
+        c.execute()
         item = mouth.get()
         self.assertEqual(item.message, c.information_message)
         self.assertEqual(item.file, c.information_file)
@@ -101,11 +101,11 @@ class CommandsTests(unittest.TestCase):
 
         self.assertEqual(c.keyword, 'pass')
         self.assertEqual(c.information_message, 'Does absolutely nothing.')
-        self.assertEqual(c.usage_message, 'pass')
+        self.assertEqual(c.usage_message, None)
         self.assertTrue(c.is_interactive)
         self.assertTrue(c.is_hidden)
 
-        self.assertTrue(c.execute(c.keyword, ''))
+        c.execute()
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
@@ -124,11 +124,11 @@ class CommandsTests(unittest.TestCase):
 
         self.assertEqual(c.keyword, 'version')
         self.assertEqual(c.information_message, 'Displays software version.')
-        self.assertEqual(c.usage_message, 'version')
+        self.assertEqual(c.usage_message, None)
         self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
-        self.assertTrue(c.execute(c.keyword, ''))
+        c.execute()
         self.assertEqual(mouth.get(), 'testy version 17.4.1')
         with self.assertRaises(Exception):
             mouth.get_nowait()
@@ -151,7 +151,7 @@ class CommandsTests(unittest.TestCase):
         self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
-        self.assertFalse(c.execute(c.keyword, ''))
+        c.execute()
         self.assertEqual(mouth.get(), 'No command has been found.')
         with self.assertRaises(Exception):
             print(mouth.get_nowait())
@@ -168,14 +168,14 @@ class CommandsTests(unittest.TestCase):
 
         c = Help(shell)
 
-        self.assertTrue(c.execute(c.keyword, ''))
+        c.execute()
         self.assertEqual(
             mouth.get(),
             'help - Lists available commands and related usage information.')
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
-        self.assertTrue(c.execute(c.keyword, "help"))
+        c.execute("help")
         self.assertEqual(
             mouth.get(),
             'help - Lists available commands and related usage information.')
@@ -198,19 +198,19 @@ class CommandsTests(unittest.TestCase):
 
         c = Help(shell)
 
-        self.assertFalse(c.execute(c.keyword, ''))
+        c.execute()
         self.assertEqual(mouth.get(), 'No command has been found.')
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
-        self.assertFalse(c.execute(c.keyword, "*unknown*command*"))
+        c.execute("*unknown*command*")
         self.assertEqual(mouth.get(), 'No command has been found.')
         with self.assertRaises(Exception):
             print(mouth.get_nowait())
 
         shell.load_command('shellbot.commands.help')
 
-        self.assertFalse(c.execute(c.keyword, "*unknown*command*"))
+        c.execute("*unknown*command*")
         self.assertEqual(mouth.get(), 'This command is unknown.')
         with self.assertRaises(Exception):
             mouth.get_nowait()
@@ -232,7 +232,7 @@ class CommandsTests(unittest.TestCase):
         self.assertFalse(c.is_hidden)
 
         message = "hello world"
-        self.assertTrue(c.execute(c.keyword, message))
+        c.execute(message)
         self.assertEqual(mouth.get(), message)
         with self.assertRaises(Exception):
             mouth.get_nowait()
@@ -253,11 +253,11 @@ class CommandsTests(unittest.TestCase):
         self.assertFalse(c.is_interactive)
         self.assertTrue(c.is_hidden)
 
-        self.assertTrue(c.execute(c.keyword, ''))
+        c.execute('')
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
-        self.assertTrue(c.execute(c.keyword, '2'))
+        c.execute('2')
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
@@ -277,7 +277,8 @@ class CommandsTests(unittest.TestCase):
         self.assertTrue(c.is_interactive)
         self.assertTrue(c.is_hidden)
 
-        self.assertTrue(c.execute('*unknown*', 'test of default command'))
+        shell.verb = '*unknown*'
+        c.execute('test of default command')
         self.assertEqual(mouth.get(),
                          "Sorry, I do not know how to handle '*unknown*'")
         with self.assertRaises(Exception):
@@ -301,12 +302,12 @@ class CommandsTests(unittest.TestCase):
         self.assertTrue(c.is_interactive)
         self.assertTrue(c.is_hidden)
 
-        self.assertTrue(c.execute('', 'should send same output than help'))
+        c.execute()
         self.assertEqual(
             mouth.get(),
             'help - Lists available commands and related usage information.')
         with self.assertRaises(Exception):
-            mouth.get_nowait()
+            print(mouth.get_nowait())
 
 if __name__ == '__main__':
 

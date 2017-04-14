@@ -20,6 +20,10 @@ class Empty(Command):
     Handles empty command
     """
 
+    keyword = '*empty'
+    information_message = 'Handles empty command.'
+    is_hidden = True
+
     def execute(self, *args):
         """
         Handles empty command
@@ -28,13 +32,6 @@ class Empty(Command):
             self.help_command = self.shell.command('help')
 
         if self.help_command is None:
-            return False
+            raise Exception("No help command has been found")
 
-        self.help_command.execute('help')
-        return True
-
-    keyword = '*empty'
-
-    information_message = 'Handles empty command.'
-
-    is_hidden = True
+        self.help_command.execute()

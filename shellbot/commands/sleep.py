@@ -22,7 +22,13 @@ class Sleep(Command):
     Sleeps for a while
     """
 
-    def execute(self, verb, arguments):
+    keyword ='sleep'
+    information_message = 'Sleeps for a while.'
+    usage_message = 'sleep <n>'
+    is_interactive = False
+    is_hidden = True
+
+    def execute(self, arguments):
         """
         Sleeps for a while
         """
@@ -31,14 +37,3 @@ class Sleep(Command):
         except ValueError:
             delay = 1
         time.sleep(delay)
-        return True
-
-    keyword ='sleep'
-
-    information_message = 'Sleeps for a while.'
-
-    usage_message = 'sleep <n>'
-
-    is_interactive = False
-
-    is_hidden = True

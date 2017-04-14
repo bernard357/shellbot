@@ -42,6 +42,7 @@ class Shell(object):
 
         self.line=None
         self.count=0
+        self.verb = None
 
     @property
     def name(self):
@@ -239,7 +240,8 @@ class Shell(object):
             if verb in self._commands.keys():
                 command = self._commands[verb]
                 if command.is_interactive:
-                    command.execute(verb, arguments)
+                    self.verb = verb
+                    command.execute(arguments)
                 else:
                     if not self.context.get('worker.busy', False):
                         self.say("Ok, working on it")
@@ -250,7 +252,8 @@ class Shell(object):
             elif '*default' in self._commands.keys():
                 command = self._commands['*default']
                 if command.is_interactive:
-                    command.execute(verb, arguments)
+                    self.verb = verb
+                    command.execute(arguments)
                 else:
                     if not self.context.get('worker.busy', False):
                         self.say("Ok, working on it")

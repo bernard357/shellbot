@@ -20,17 +20,13 @@ class Version(Command):
     Displays software version
     """
 
-    def execute(self, verb, arguments=None):
+    keyword = 'version'
+    information_message = 'Displays software version.'
+
+    def execute(self, arguments=None):
         """
         Displays software version
         """
         name = self.shell.name
         version = self.shell.version
         self.shell.say("{} version {}".format(name, version))
-        return True
-
-    keyword = 'version'
-
-    information_message = 'Displays software version.'
-
-    usage_message = 'version'

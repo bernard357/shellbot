@@ -22,12 +22,9 @@ class Command(object):
         self.shell = shell
         self.context = shell.context
 
-    def execute(self, verb=None, arguments=None):
+    def execute(self, arguments=None):
         """
         Executes this command
-
-        :param verb: The verb for this command
-        :type verb: str or ``None``
 
         :param arguments: The arguments for this command
         :type arguments: str or ``None``

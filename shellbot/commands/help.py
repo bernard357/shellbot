@@ -36,11 +36,14 @@ class Help(Command):
     def do_help(self, arguments=None):
         self.shell.say({'markdown': help_markdown})
 
-    def execute(self, verb, arguments=None):
+    keyword = 'help'
+    information_message = 'Lists available commands and related usage information.'
+    usage_message = 'help <command>'
+
+    def execute(self, arguments=None):
         """
         Lists available commands and related usage information
         """
-        result = False
 
         if self.shell.commands == []:
             self.shell.say("No command has been found.")
@@ -52,7 +55,6 @@ class Help(Command):
                     self.shell.say("{} - {}".format(
                         command.keyword,
                         str(command.information_message)))
-                result = True
 
         else:
             command = self.shell.command(arguments)
@@ -64,15 +66,6 @@ class Help(Command):
                 if command.usage_message:
                     self.shell.say("usage:")
                     self.shell.say(str(command.usage_message))
-                result = True
 
             else:
                 self.shell.say("This command is unknown.")
-
-        return result
-
-    keyword = 'help'
-
-    information_message = 'Lists available commands and related usage information.'
-
-    usage_message = 'help <command>'

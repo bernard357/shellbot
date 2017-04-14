@@ -20,6 +20,9 @@ class State(Command):
     Displays process status
     """
 
+    keyword = 'state'
+    information_message = 'Displays process current state.'
+
     def execute(self, verb, arguments=None):
         """
         Displays software version
@@ -30,32 +33,3 @@ class State(Command):
         if state is None:
             state = '*unknown*'
         self.shell.say("Current state: {}".format(state))
-        return True
-
-    @property
-    def keyword(self):
-        """
-        Retrieves the verb or token for this command
-        """
-        return 'state'
-
-    @property
-    def information_message(self):
-        """
-        Retrieves basic information for this command
-        """
-        return 'Displays process current state.'
-
-    @property
-    def usage_message(self):
-        """
-        Retrieves usage information for this command
-        """
-        return 'state'
-
-    @property
-    def is_hidden(self):
-        """
-        Ensures that this command appears in help
-        """
-        return False
