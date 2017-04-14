@@ -21,6 +21,11 @@ import importlib
 
 sys.path.insert(0, os.path.abspath('..'))
 
+class ShellMessage(object):
+    def __init__(self, message, markdown=None, file=None):
+        self.message = message
+        self.markdown = markdown
+        self.file = file
 
 class Shell(object):
     """
@@ -60,7 +65,7 @@ class Shell(object):
         """
         return self.context.get('bot.version', '*unknown*')
 
-    def say(self, message):
+    def say(self, message, markdown=None, file=None):
         """
         Sends a response back from shell
 
@@ -68,8 +73,11 @@ class Shell(object):
         :type message: str
 
         """
-        if self.mouth is not None:
-            self.mouth.put(message)
+        if self.mouth:
+            if markdown or file:
+                self.mouth.put(ShellMessage(message, markdown, file))
+            else:
+                self.mouth.put(message)
         else:
             logging.info(str(message))
 

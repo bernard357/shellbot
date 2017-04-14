@@ -87,12 +87,38 @@ class SpeakerTests(unittest.TestCase):
         context = Context()
         shell = Shell(context, mouth)
 
-        message1 = 'hello'
-        shell.say(message1)
-        message2 = 'world'
-        shell.say(message2)
-        self.assertEqual(mouth.get(), message1)
-        self.assertEqual(mouth.get(), message2)
+        message_1 = 'hello'
+        shell.say(message_1)
+        self.assertEqual(mouth.get(), message_1)
+
+        message_2 = 'world'
+        shell.say(message_2)
+        self.assertEqual(mouth.get(), message_2)
+
+        message_3 = 'hello'
+        markdown_3 = 'world'
+        shell.say(message_3, markdown=markdown_3)
+        item = mouth.get()
+        self.assertEqual(item.message, message_3)
+        self.assertEqual(item.markdown, markdown_3)
+        self.assertEqual(item.file, None)
+
+        message_4 = "What'sup Doc?"
+        file_4 = 'http://some.server/some/file'
+        shell.say(message_4, file=file_4)
+        item = mouth.get()
+        self.assertEqual(item.message, message_4)
+        self.assertEqual(item.markdown, None)
+        self.assertEqual(item.file, file_4)
+
+        message_5 = 'hello'
+        markdown_5 = 'world'
+        file_5 = 'http://some.server/some/file'
+        shell.say(message_5, markdown=markdown_5, file=file_5)
+        item = mouth.get()
+        self.assertEqual(item.message, message_5)
+        self.assertEqual(item.markdown, markdown_5)
+        self.assertEqual(item.file, file_5)
 
     def test_vocabulary(self):
 
