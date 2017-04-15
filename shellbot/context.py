@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import colorlog
 from copy import deepcopy
 import logging
 from multiprocessing import Lock, Manager
@@ -176,3 +177,33 @@ class Context(object):
         finally:
             self.lock.release()
             return value
+
+    @classmethod
+    def set_logger(cls, level=logging.DEBUG):
+        """
+        Configure logging
+
+        This utility function should probably be put elsewhere
+        """
+        handler = colorlog.StreamHandler()
+        formatter = colorlog.ColoredFormatter(
+            "%(asctime)-2s %(log_color)s%(message)s",
+            datefmt='%H:%M:%S',
+            reset=True,
+            log_colors={
+                'DEBUG':    'cyan',
+                'INFO':     'green',
+                'WARNING':  'yellow',
+                'ERROR':    'red',
+                'CRITICAL': 'red,bg_white',
+            },
+            secondary_log_colors={},
+            style='%'
+        )
+        handler.setFormatter(formatter)
+
+        logging.getLogger('').handlers = []
+        logging.getLogger('').addHandler(handler)
+
+        logging.getLogger('').setLevel(level=level)
+

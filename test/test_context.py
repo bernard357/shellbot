@@ -221,26 +221,5 @@ class ContextTests(unittest.TestCase):
 
 if __name__ == '__main__':
 
-    handler = colorlog.StreamHandler()
-    formatter = colorlog.ColoredFormatter(
-        "%(asctime)-2s %(log_color)s%(message)s",
-        datefmt='%H:%M:%S',
-        reset=True,
-        log_colors={
-            'DEBUG':    'cyan',
-            'INFO':     'green',
-            'WARNING':  'yellow',
-            'ERROR':    'red',
-            'CRITICAL': 'red,bg_white',
-        },
-        secondary_log_colors={},
-        style='%'
-    )
-    handler.setFormatter(formatter)
-
-    logging.getLogger('').handlers = []
-    logging.getLogger('').addHandler(handler)
-
-    logging.getLogger('').setLevel(level=logging.DEBUG)
-
+    Context.set_logger()
     sys.exit(unittest.main())
