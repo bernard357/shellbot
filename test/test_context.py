@@ -12,6 +12,16 @@ from shellbot.context import Context
 
 class ContextTests(unittest.TestCase):
 
+    def test_init(self):
+
+        settings = {
+            'bot': {'name': 'testy', 'version': '17.4.1'},
+        }
+
+        context = Context(settings)
+        self.assertEqual(context.get('bot.name'), 'testy')
+        self.assertEqual(context.get('bot.version'), '17.4.1')
+
     def test_apply(self):
 
         context = Context()
@@ -31,17 +41,86 @@ class ContextTests(unittest.TestCase):
         self.assertEqual(context.get('server.port'), 80)
         self.assertEqual(context.get('server.url'), 'http://www.acme.com/')
 
-    def test_init(self):
+    def test_parse(self):
+
+        context = Context()
+
+        self.assertEqual(context.get('spark.room'), None)
 
         settings = {
-            'bot': {'name': 'testy', 'version': '17.4.1'},
+            'spark': {
+                'room': 'My preferred room',
+                'moderators':
+                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+                'participants':
+                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+                'team': 'Anchor team',
+                'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
+                'webhook': "http://73a1e282.ngrok.io",
+            }
         }
 
-        context = Context(settings)
-        self.assertEqual(context.get('bot.name'), 'testy')
-        self.assertEqual(context.get('bot.version'), '17.4.1')
+        context.parse(settings, 'spark', 'room', is_mandatory=True)
+        self.assertEqual(context.get('spark.room'), 'My preferred room')
 
-    def test_store(self):
+        context.parse(settings, 'spark', 'team')
+        self.assertEqual(context.get('spark.team'), 'Anchor team')
+
+        context.parse(settings, 'spark', '*not*present')
+        self.assertEqual(context.get('spark.*not*present'), None)
+
+        context.parse(settings,
+                      'spark',
+                      'absent_list',
+                      default=[])
+        self.assertEqual(context.get('spark.absent_list'), [])
+
+        context.parse(settings,
+                      'spark',
+                      'absent_dict',
+                      default={})
+        self.assertEqual(context.get('spark.absent_dict'), {})
+
+        context.parse(settings,
+                      'spark',
+                      'absent_text',
+                      default='*born')
+        self.assertEqual(context.get('spark.absent_text'), '*born')
+
+        context.parse(settings,  # is_mandatory is useless if default is set
+                      'spark',
+                      '*not*present',
+                      default='*born',
+                      is_mandatory=True)
+        self.assertEqual(context.get('spark.*not*present'), '*born')
+
+        with self.assertRaises(KeyError): # missing key
+            context.parse(settings,
+                          'spark',
+                          '*unknown*key*',
+                          is_mandatory=True)
+
+        with self.assertRaises(KeyError): # validate implies is_mandatory
+            context.parse(settings,
+                          'spark',
+                          '*unknown*key*',
+                          validate=lambda line: True)
+
+        context.parse(settings,
+                      'spark',
+                      'webhook',
+                      validate=lambda line: line.startswith('http'))
+        self.assertEqual(context.get('spark.webhook'),
+                         "http://73a1e282.ngrok.io")
+
+        with self.assertRaises(ValueError): # present, but not put in context
+            context.parse(settings,
+                          'spark',
+                          'token',
+                          validate=lambda line: len(line) == 32)
+        self.assertEqual(context.get('spark.token'), None)
+
+    def test_getter(self):
 
         context = Context()
 
@@ -57,7 +136,11 @@ class ContextTests(unittest.TestCase):
         self.assertEqual(context.get('hello'), 'world')
 
         # default value is meaningless when key has been set
-        self.assertEqual(context.get('hello', whatever), 'world')
+        self.assertEqual(context.get('hello', 'whatever'), 'world')
+
+        # except when set to None
+        context.set('special', None)
+        self.assertEqual(context.get('special', []), [])
 
     def test_gauge(self):
 

@@ -68,6 +68,55 @@ class SpeakerTests(unittest.TestCase):
             with self.assertRaises(Exception):
                 mouth.get_nowait()
 
+    def test_process(self):
+
+        logging.info('*** Processing test ***')
+
+        context = Context()
+        context.set('spark.CISCO_SPARK_PLUMBERY_BOT', 'garbage')
+        context.set('spark.room_id', 'fake')
+
+        space = SparkSpace(context=context)
+        speaker = Speaker(mouth=Queue(), space=space)
+
+        with mock.patch.object(space,
+                               'post_message',
+                               return_value=None) as mocked:
+
+            speaker.process('hello world', 1)
+            mocked.assert_called_with('hello world')
+
+            class WithMarkdown(object):
+                message = ''
+                markdown =  'me **too**'
+                file = None
+
+            item = WithMarkdown()
+            speaker.process(item, 2)
+            mocked.assert_called_with('', markdown='me **too**', file=None)
+
+            class WithFile(object):
+                message = '*with*attachment'
+                markdown =  None
+                file = 'http://a.server/with/file'
+
+            item = WithFile()
+            speaker.process(item, 3)
+            mocked.assert_called_with('*with*attachment',
+                                      markdown=None,
+                                      file='http://a.server/with/file')
+
+            class WithAll(object):
+                message = 'hello world'
+                markdown =  'hello **world**'
+                file = 'http://a.server/with/file'
+
+            item = WithAll()
+            speaker.process(item, 4)
+            mocked.assert_called_with('hello world',
+                                      markdown='hello **world**',
+                                      file='http://a.server/with/file')
+
 if __name__ == '__main__':
 
     handler = colorlog.StreamHandler()

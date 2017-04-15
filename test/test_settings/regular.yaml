@@ -2,20 +2,18 @@
 #
 bot:
 
-    # bot name should match the one associated with token
-    #
     name: "dee"
 
-    # software version
-    #
-    version: "0.1 alpha"
+# shell settings
+#
+shell:
 
-    # custom commands
-    #
     commands:
         - custom.exception.state
         - custom.exception.next
 
+# additional settings
+#
 process:
     states:
         - T100
@@ -28,9 +26,13 @@ process:
 #
 spark:
 
-    # the name of the Cisco Spark room handled by this bot
+    # the title of the Cisco Spark room handled by this bot
     #
-    space: "Green Button"
+    room: "Green Button"
+
+    # the title of the team associated with the room
+    #
+    team:
 
     # pre-defined moderators
     #
@@ -42,11 +44,6 @@ spark:
 #    participants:
 #      - anastasios.dados@dimensiondata.com
 #      - frederic.munster@dimensiondata.com
-
-    # 'webhook' - let Cisco Spark transmit new messages
-    # 'pull' - check new messages by ourself
-    #
-    mode: 'webhook'
 
     # the token that has been created for this bot should normally be set in
     # the environment but you can override the configuration below
@@ -60,6 +57,10 @@ spark:
     #
     # CISCO_SPARK_TOKEN: "<token here hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY>"
 
+    # the url to be used by Cisco Spark to push new updates
+    #
+    #webhook: "http://73a1e282.ngrok.io"
+
 # server settings
 #
 server:
@@ -71,5 +72,4 @@ server:
     # the url that is used to access this server remotely, e.g. with ngrok
     #
     #url: "http://73a1e282.ngrok.io"
-    url: "http://c9b238b0.ngrok.io"
 

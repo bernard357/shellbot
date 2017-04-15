@@ -29,4 +29,4 @@ class Default(Command):
         Handles unmatched command
         """
         self.shell.say(
-            "Sorry, I do not know how to handle '{}'".format(self.shell.verb))
+            u"Sorry, I do not know how to handle '{}'".format(self.shell.verb))

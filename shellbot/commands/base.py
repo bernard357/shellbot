@@ -18,9 +18,9 @@ class Command(object):
     Implements one command
     """
 
-    def __init__(self, shell):
+    def __init__(self, shell=None):
         self.shell = shell
-        self.context = shell.context
+        self.context = shell.context if shell else None
 
     def execute(self, arguments=None):
         """

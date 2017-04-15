@@ -21,56 +21,82 @@ from worker import Worker
 class ShellBot(object):
 
     def __init__(self,
-                 context,
+                 context=None,
                  mouth=None,
                  inbox=None,
                  ears=None,
                  space=None,
                  store=None):
 
-        self.context = context
+        self.context = context if context else Context()
 
         self.mouth = mouth if mouth else Queue()
         self.inbox = inbox if inbox else Queue()
         self.ears = ears if ears else Queue()
 
-        self.space = space if space else SparkSpace(context=context,
-                                                    ears=ears)
+        self.space = space if space else SparkSpace(context=self.context,
+                                                    ears=self.ears)
         self.store = store
 
         self.shell = Shell(self.context, self.mouth, self.inbox)
-        self.shell.load_default_commands()
-        commands = self.context.get('bot.commands')
-        if commands:
-            self.shell.load_commands(commands)
 
         self.speaker = Speaker(self.mouth, self.space)
         self.worker = Worker(self.inbox, self.shell)
         self.listener = Listener(self.ears, self.shell)
 
     def start(self):
-        logging.info('Starting all threads')
+
+        logging.warning('Starting the bot')
+
+        self.space.connect()
+
+        self.space.bond(
+            space=self.context.get('spark.room', 'Bot under test'),
+            team=self.context.get('spark.team'),
+            moderators=self.context.get('spark.moderators', []),
+            participants=self.context.get('spark.participants', [])
+        )
+
+        self.start_processes()
+
+        self.space.hook()
+
+        self.on_start()
+
+    def start_processes(self):
+
         p = Process(target=self.speaker.work, args=(self.context,))
         p.daemon = True
         p.start()
-        self.speaker.process = p
+        self._speaker_process = p
 
         p = Process(target=self.worker.work, args=(self.context,))
         p.daemon = True
         p.start()
-        self.worker.process = p
+        self._worker_process = p
 
         p = Process(target=self.listener.work, args=(self.context,))
         p.daemon = True
         p.start()
-        self.listener.process = p
+        self._listener_process = p
+
+    def on_start(self):
+
+        self.shell.say(self.context.get('bot.on_start'))
 
     def stop(self):
-        logging.info('Stopping all threads')
+
+        logging.warning('Stopping the bot')
+
+        self.on_stop()
+
+        time.sleep(1)
         self.context.set('general.switch', 'off')
-        self.listener.process.join()
-        self.worker.process.join()
-        self.speaker.process.join()
+        self.space.unhook()
+
+    def on_stop(self):
+
+        self.shell.say(self.context.get('bot.on_stop'))
 
     def configure_from_path(self, path="settings.yaml"):
         """
@@ -124,63 +150,33 @@ class ShellBot(object):
         Look at the file ``settings.yaml`` that is coming with this project
         """
 
-        if "bot" not in settings:
-            raise KeyError("Missing bot: configuration information")
+        self.configure(settings)
 
-        if "name" not in settings['bot']:
-            raise KeyError("Missing bot.name: configuration information")
+        self.shell.configure(settings)
+        self.space.configure(settings)
 
-        if "spark" not in settings:
-            raise KeyError("Missing spark: configuration information")
+    def configure(self, settings):
+        """
+        Changes settings of the bot
 
-        if "space" not in settings['spark']:
-            raise KeyError("Missing space: configuration information")
+        :param settings: a dictionary with some statements for this instance
+        :type settings: dict
 
-        if "moderators" not in settings['spark']:
-            raise KeyError("Missing moderators: configuration information")
+        This function reads key ``bot`` and below, and update
+        the context accordingly.
 
-        if "mode" not in settings['spark']:
-            settings['spark']['mode'] = 'webhook'
+        >>>shell.configure({'bot': {
+               'on_banner': 'Hello, I am here to help',
+               }})
 
-        if 'CISCO_SPARK_PLUMBERY_BOT' not in settings['spark']:
-            token = os.environ.get('CISCO_SPARK_PLUMBERY_BOT')
-            if token is None:
-                raise KeyError("Missing CISCO_SPARK_PLUMBERY_BOT in the environment")
-            settings['spark']['CISCO_SPARK_PLUMBERY_BOT'] = token
+        This can also be written in a more compact form::
 
-        if 'CISCO_SPARK_TOKEN' not in settings['spark']:
-            token = os.environ.get('CISCO_SPARK_TOKEN')
-            if token is None:
-                logging.warning("Missing CISCO_SPARK_TOKEN, reduced functionality")
-                token = settings['spark']['CISCO_SPARK_PLUMBERY_BOT']
-            settings['spark']['CISCO_SPARK_TOKEN'] = token
+        >>>shell.configure({'bot.on_banner': 'Hello, I am here to help'})
 
-        if "server" not in settings:
-            raise KeyError("Missing server: configuration information")
+        """
 
-        if "url" not in settings['server']:
-            raise KeyError("Missing url: configuration information")
-
-        if len(sys.argv) > 1:
-            try:
-                port_number = int(sys.argv[1])
-            except:
-                raise ValueError("Invalid port_number specified")
-        elif "port" in settings['server']:
-            port_number = int(settings['server']['port'])
-        else:
-            port_number = 80
-        settings['server']['port'] = port_number
-
-        if 'debug' in settings:
-            debug = settings['debug']
-        else:
-            debug = os.environ.get('DEBUG', False)
-        settings['debug'] = debug
-        if debug:
-            logging.basicConfig(level=logging.DEBUG)
-
-        self.context.apply(settings)
+        self.context.parse(settings, 'bot', 'on_start')
+        self.context.parse(settings, 'bot', 'on_stop')
 
 # the program launched from the command line
 #
@@ -222,6 +218,12 @@ if __name__ == "__main__":
     # read configuration file, look at the environment, and update context
     #
     bot.configure()
+
+#        try:
+#            context.set('bot.id', space.get_bot()['id'])
+#        except:
+#            pass
+
 
     # create a clean environment for the demo
     #

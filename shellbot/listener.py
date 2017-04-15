@@ -76,16 +76,20 @@ class Listener(object):
 
         self.context = context
 
-        self.context.set('listener.counter', 0)
-        while self.context.get('general.switch', 'on') == 'on':
-            try:
-                item = self.ears.get(True, 0.1)
-                if isinstance(item, Exception):
-                    break
-                counter = self.context.increment('listener.counter')
-                self.process(item, counter)
-            except Empty:
-                pass
+        try:
+            self.context.set('listener.counter', 0)
+            while self.context.get('general.switch', 'on') == 'on':
+                try:
+                    item = self.ears.get(True, 0.1)
+                    if isinstance(item, Exception):
+                        break
+                    counter = self.context.increment('listener.counter')
+                    self.process(item, counter)
+                except Empty:
+                    pass
+
+        except KeyboardInterrupt:
+            pass
 
         logging.info("Listener has been stopped")
 
@@ -127,11 +131,12 @@ class Listener(object):
 
         # sanity check
         #
-        if not isinstance(item, dict) or 'personId' not in item.keys():
-            logging.info("- not a dict, thrown away")
+        try:
+            input = item['text']
+        except:
+            logging.warning("- invalid format, thrown away")
             return
 
-        input = item.get('text', '')
         if input is None:
             logging.info("- no input in this item, thrown away")
             return
@@ -149,7 +154,7 @@ class Listener(object):
         if input[0] in ['@', '/']:
             input = input[1:]
 
-        bot = self.shell.name.lower()
+        bot = self.context.get('bot.name', 'shelly')
         if not input.lower().startswith(bot):
             try:
                 logging.info("- {}".format(input))

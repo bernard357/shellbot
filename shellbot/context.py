@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from copy import deepcopy
 import logging
 from multiprocessing import Lock, Manager
 
@@ -47,6 +48,74 @@ class Context(object):
         finally:
             self.lock.release()
 
+    def parse(self,
+               settings,
+               primary,
+               secondary,
+               default=None,
+               is_mandatory=False,
+               validate=None):
+        """
+        Imports some settings from a dictionary
+
+        :param settings: the dictionary to parse
+        :type settings: dict
+
+        :param primary: the top-level key to check in the dictionary
+        :type primary: str
+
+        :param secondary: the next-level key to check in the dictionary
+        :type secondary: str
+
+        :param default: the default value if no statement can be found
+        :type default: str
+
+        :param is_mandatory: raise an exception if keys are not found
+        :type is_mandatory: bool
+
+        :param validate: a function called to validate values before the import
+        :type validate: callable
+
+        Example::
+
+            settings = {
+                'spark': {
+                    'room': 'My preferred room',
+                    'moderators':
+                        ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+                    'participants':
+                        ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+                    'team': 'Anchor team',
+                    'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY>',
+                    'webhook': "http://73a1e282.ngrok.io",
+                }
+            }
+
+            context.parse(settings, 'spark', 'room', is_mandatory=True)
+            context.parse(settings, 'spark', 'team')
+
+        """
+        values = None
+
+        if primary in settings and secondary in settings[primary]:
+            values = settings[primary][secondary]
+
+        dotted = '.'.join((primary, secondary))
+        if dotted in settings:
+            values = settings[dotted]
+
+        if values is None and default is not None:
+            values = deepcopy(default)
+
+        if values is None and (is_mandatory or validate):
+            raise KeyError("Missing '{}' in settings".format(dotted))
+
+        if validate and validate(values) is False:
+            raise ValueError(
+                "Invalid value for '{}' in settings".format(dotted))
+
+        self.set(dotted, values)
+
     def get(self, key, default=None):
         """
         Retrieves the value of one key
@@ -56,6 +125,9 @@ class Context(object):
         value = None
         try:
             value = self.values.get(key, default)
+
+            if value is None:
+                value = default
         finally:
             self.lock.release()
             return value

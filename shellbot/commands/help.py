@@ -37,7 +37,7 @@ class Help(Command):
         self.shell.say({'markdown': help_markdown})
 
     keyword = 'help'
-    information_message = 'Lists available commands and related usage information.'
+    information_message = 'Shows commands and usage'
     usage_message = 'help <command>'
 
     def execute(self, arguments=None):

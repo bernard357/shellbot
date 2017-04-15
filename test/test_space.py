@@ -14,7 +14,6 @@ sys.path.insert(0, os.path.abspath('..'))
 from shellbot.context import Context
 from shellbot.space import SparkSpace
 
-
 class FakeRoom(object):
     id = '*id'
     title = '*title'
@@ -26,16 +25,69 @@ class SpaceTests(unittest.TestCase):
     def test_init(self):
 
         logging.debug("*** Init")
-        space = SparkSpace(context='a', bearer='b', ears='c')
-        self.assertEqual(space.context, 'a')
+        space = SparkSpace(context=Context(), bearer='b', ears='c')
         self.assertEqual(space.bearer, 'b')
         self.assertEqual(space.ears, 'c')
         self.assertEqual(space.room_id, None)
         self.assertEqual(space.room_title, '*unknown*')
         self.assertEqual(space.team_id, None)
 
-    @vcr.use_cassette(
-        os.path.abspath(os.path.dirname(__file__))+'/local/space_lifecycle.yaml')
+    def test_configure(self):
+
+        logging.debug("*** Configure")
+
+        space = SparkSpace(context=Context())
+
+        space.configure({
+            'spark': {
+                'room': 'My preferred room',
+                'moderators':
+                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+                'participants':
+                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+                'team': 'Anchor team',
+                'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
+                'webhook': "http://73a1e282.ngrok.io",
+            }
+        })
+
+        self.assertEqual(space.context.get('spark.room'), 'My preferred room')
+        self.assertEqual(space.context.get('spark.moderators'),
+            ['foo.bar@acme.com', 'joe.bar@corporation.com'])
+        self.assertEqual(space.context.get('spark.participants'),
+            ['alan.droit@azerty.org', 'bob.nard@support.tv'])
+        self.assertEqual(space.context.get('spark.team'), 'Anchor team')
+
+        space.configure({
+            'spark': {
+                'room': 'My preferred room',
+                'moderators': 'foo.bar@acme.com',
+                'participants': 'alan.droit@azerty.org',
+            }
+        })
+
+        self.assertEqual(space.context.get('spark.room'), 'My preferred room')
+        self.assertEqual(space.context.get('spark.moderators'),
+            ['foo.bar@acme.com'])
+        self.assertEqual(space.context.get('spark.participants'),
+            ['alan.droit@azerty.org'])
+        self.assertEqual(space.context.get('spark.team'), None)
+
+        with self.assertRaises(KeyError): # missing key
+            space.configure({
+                'spark': {
+                    'moderators':
+                        ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+                    'participants':
+                        ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+                    'team': 'Anchor team',
+                    'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
+                    'webhook': "http://73a1e282.ngrok.io",
+                }
+            })
+
+#    @vcr.use_cassette(
+#        os.path.abspath(os.path.dirname(__file__))+'/local/space_lifecycle.yaml')
     def test_lifecycle(self):
 
         logging.debug("*** life cycle")
@@ -91,8 +143,8 @@ class SpaceTests(unittest.TestCase):
         self.assertTrue(item is None)
         self.assertTrue(mocked.called)
 
-    @vcr.use_cassette(
-        os.path.abspath(os.path.dirname(__file__))+'/local/lookup_space.yaml')
+#    @vcr.use_cassette(
+#        os.path.abspath(os.path.dirname(__file__))+'/local/lookup_space.yaml')
     def test_lookup_space_api(self):
 
         space = SparkSpace(context=Context(), bearer=cisco_spark_bearer)
@@ -180,7 +232,7 @@ class SpaceTests(unittest.TestCase):
         except IOError:
             pass
 
-    def test_connect_mock(self):
+    def test_hook_mock(self):
 
         space = SparkSpace(context=Context(), bearer=cisco_spark_bearer)
 
@@ -189,7 +241,7 @@ class SpaceTests(unittest.TestCase):
 
         mocked = mock.Mock()
         space.api.webhooks.create = mocked
-        space.connect('*hook')
+        space.hook('*hook')
         self.assertTrue(mocked.called)
 
     def test_register_hook_mock(self):
@@ -239,7 +291,6 @@ class SpaceTests(unittest.TestCase):
         space.api.messages.list = mocked
         space.pull()
         self.assertEqual(context.get('puller.counter'), 1)
-        self.assertTrue(mocked.called)
 
     def test_get_bot_mock(self):
 
@@ -250,8 +301,8 @@ class SpaceTests(unittest.TestCase):
         space.get_bot()
         self.assertTrue(mocked.called)
 
-    @vcr.use_cassette(
-        os.path.abspath(os.path.dirname(__file__))+'/local/get_bot.yaml')
+#    @vcr.use_cassette(
+#        os.path.abspath(os.path.dirname(__file__))+'/local/get_bot.yaml')
     def test_get_bot_api(self):
 
         space = SparkSpace(context=Context(), bearer=cisco_spark_bearer)
@@ -282,6 +333,6 @@ if __name__ == '__main__':
 
     logging.getLogger('').setLevel(level=logging.DEBUG)
 
-    cisco_spark_bearer = os.environ.get('CISCO_SPARK_BEARER')
+    cisco_spark_bearer = os.environ.get('CISCO_SPARK_BOT_TOKEN')
     if cisco_spark_bearer:
         sys.exit(unittest.main())

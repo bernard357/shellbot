@@ -44,6 +44,36 @@ class Shell(object):
         self.count=0
         self.verb = None
 
+    def configure(self, settings):
+        """
+        Changes settings of the shell
+
+        :param settings: a dictionary with some statements for this instance
+        :type settings: dict
+
+        This function reads key ``shell`` and below, and update
+        the context accordingly.
+
+        >>>shell.configure({'shell': {
+               'commands':
+                  ['examples.exception.state', 'examples.exception.next']
+               }})
+
+        This can also be written in a more compact form::
+
+        >>>shell.configure({'shell.commands':
+               ['examples.exception.state', 'examples.exception.next']
+               })
+
+        Note that this function does preserve commands that could have been
+        loaded previously.
+        """
+
+        self.context.parse(settings, 'shell', 'commands', default=[])
+
+        self.load_default_commands()
+        self.load_commands(self.context.get('shell.commands', []))
+
     @property
     def name(self):
         """
@@ -71,9 +101,18 @@ class Shell(object):
         Sends a response back from shell
 
         :param message: The message from the shell
-        :type message: str
+        :type message: str or None
+
+        :param markdown: A message using Markdown
+        :type markdown: str or None
+
+        :param file: path or URL to a file to attach
+        :type file: str or None
 
         """
+        if message in (None, ''):
+            return
+
         if self.mouth:
             if markdown or file:
                 self.mouth.put(ShellMessage(message, markdown, file))
@@ -199,8 +238,11 @@ class Shell(object):
             command = cls(self)
 
         if command.keyword in self._commands.keys():
-            logging.warning("Command '{}' has been replaced".format(
+            logging.debug("Command '{}' has been replaced".format(
                 command.keyword))
+
+        command.context = self.context
+        command.shell = self
 
         self._commands[ command.keyword ] = command
 
@@ -220,9 +262,10 @@ class Shell(object):
         Default implementation is provided in ``shellbot.commands.empty``.
 
         """
-        line = '' if line is None else str(line)  # sanity check
+        line = '' if line is None else unicode(line)  # sanity check
+        logging.error(line)
 
-        logging.debug("Handling: {}".format(line))
+        logging.debug(u"Handling: {}".format(line))
         self.line = line
         self.count += 1
 
@@ -263,9 +306,9 @@ class Shell(object):
 
             else:
                 self.say(
-                    "Sorry, I do not know how to handle '{}'".format(verb))
+                    u"Sorry, I do not know how to handle '{}'".format(verb))
 
         except Exception as feedback:
             self.say(
-                "Sorry, I do not know how to handle '{}'".format(verb))
+                u"Sorry, I do not know how to handle '{}'".format(verb))
             raise

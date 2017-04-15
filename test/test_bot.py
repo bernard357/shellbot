@@ -25,7 +25,6 @@ class BotTests(unittest.TestCase):
         logging.info('*** Init test ***')
 
         context = Context()
-        space = SparkSpace(context=context, bearer='b', ears='c')
 
         bot = ShellBot(context=context)
 
@@ -40,6 +39,7 @@ class BotTests(unittest.TestCase):
         self.assertTrue(bot.worker is not None)
         self.assertTrue(bot.listener is not None)
 
+        space = SparkSpace(context=context)
         bot = ShellBot(context=context,
                        space=space,
                        mouth='m',
@@ -62,10 +62,7 @@ class BotTests(unittest.TestCase):
 
         logging.info('*** Configuration test ***')
 
-        context = Context()
-        space = SparkSpace(context=context, bearer='b', ears='c')
-
-        bot = ShellBot(context=context)
+        bot = ShellBot()
 
         with self.assertRaises(KeyError):
             bot.configure_from_dict({})
@@ -102,45 +99,23 @@ class BotTests(unittest.TestCase):
             }
             bot.configure_from_dict(settings)
 
-        with self.assertRaises(KeyError):
-            settings = {
-                'bot': {'name': 'testy'},
-                'spark': {
-                    'space': 'space name',
-                    'moderators': 'space name',
-                },
-                'missing': 'server',
-            }
-            bot.configure_from_dict(settings)
-
-        with self.assertRaises(KeyError):
-            settings = {
-                'bot': {'name': 'testy'},
-                'spark': {
-                    'space': 'space name',
-                    'moderators': 'space name',
-                },
-                'server': {'missing': 'url'},
-            }
-            bot.configure_from_dict(settings)
-
         settings = {
             'bot': {'name': 'testy'},
             'spark': {
-                'space': 'space name',
+                'room': 'space name',
                 'moderators': 'foo.bar@acme.com',
+                'webhook': 'http://to.no.where/',
             },
-            'server': {'url': 'http://to.no.where/'},
         }
         bot.configure_from_dict(settings)
         self.assertEqual(bot.context.get('bot.name'), 'testy')
-        self.assertEqual(bot.context.get('spark.space'), 'space name')
+        self.assertEqual(bot.context.get('spark.room'), 'space name')
         self.assertEqual(bot.context.get('spark.moderators'),
-                         'foo.bar@acme.com')
-        self.assertEqual(bot.context.get('server.url'), 'http://to.no.where/')
+                         ['foo.bar@acme.com'])
+        self.assertEqual(bot.context.get('spark.webhook'), 'http://to.no.where/')
 
         bot.configure_from_path('test_settings/regular.yaml')
-        self.assertEqual(bot.context, context)
+        self.assertTrue(bot.context is not None)
         self.assertTrue(bot.space is not None)
         self.assertTrue(bot.store is None)
         self.assertTrue(bot.mouth is not None)
@@ -155,42 +130,45 @@ class BotTests(unittest.TestCase):
 
         logging.info('*** Static test ***')
 
-        context = Context()
-        space = SparkSpace(context=context, bearer='b', ears='c')
+        bot = ShellBot()
 
-        bot = ShellBot(context=context,
-                       space=space,
-                       mouth=None,
-                       inbox=None,
-                       ears=None,
-                       store=None)
+        settings = {
+            'bot': {'name': 'shelly'},
+            'spark': {
+                'room': '*Test Space',
+                'moderators': 'foo.bar@acme.com',
+            },
+        }
+
+        bot.configure_from_dict(settings)
 
         bot.start()
-
         time.sleep(1.0)
         bot.stop()
 
-        self.assertEqual(context.get('listener.counter', 0), 0)
-        self.assertEqual(context.get('worker.counter', 0), 0)
-        self.assertEqual(context.get('speaker.counter', 0), 0)
+        self.assertEqual(bot.context.get('listener.counter', 0), 0)
+        self.assertEqual(bot.context.get('worker.counter', 0), 0)
+        self.assertEqual(bot.context.get('speaker.counter', 0), 0)
 
     def test_dynamic(self):
 
         logging.info('*** Dynamic test ***')
 
-        context = Context()
-        space = SparkSpace(context=context, bearer='b', ears='c')
+        bot = ShellBot()
 
-        with mock.patch.object(space,
+        settings = {
+            'bot': {'name': 'shelly'},
+            'spark': {
+                'room': '*Test Space',
+                'moderators': 'foo.bar@acme.com',
+            },
+        }
+
+        bot.configure_from_dict(settings)
+
+        with mock.patch.object(bot.space,
                                'post_message',
                                return_value=None) as mocked:
-
-            bot = ShellBot(context=context,
-                           space=space,
-                           mouth=None,
-                           inbox=None,
-                           ears=None,
-                           store=None)
 
             bot.start()
 
@@ -268,10 +246,30 @@ class BotTests(unittest.TestCase):
             time.sleep(5.0)
             bot.stop()
 
-            self.assertEqual(context.get('listener.counter', 0), 6)
-            self.assertEqual(context.get('worker.counter', 0), 1)
-            self.assertTrue(context.get('speaker.counter', 0) > 0)
+            self.assertEqual(bot.context.get('listener.counter', 0), 6)
+            self.assertEqual(bot.context.get('worker.counter', 0), 1)
+            self.assertTrue(bot.context.get('speaker.counter', 0) == 5)
 
+    def test_connect(self):
+
+        logging.info('*** Connect test ***')
+
+        settings = {
+            'bot': {'name': 'shelly'},
+            'spark': {
+                'room': '*Test Space',
+                'moderators': 'foo.bar@acme.com',
+            },
+        }
+
+        bot = ShellBot()
+        bot.configure_from_dict(settings)
+
+        bot.start()
+        bot.shell.say('hello world')
+
+        time.sleep(5.0)
+        bot.stop()
 
 if __name__ == '__main__':
 

@@ -15,7 +15,7 @@ from shellbot.context import Context
 from shellbot.shell import Shell
 
 
-class SpeakerTests(unittest.TestCase):
+class ShellTests(unittest.TestCase):
 
     def test_default_properties(self):
 
@@ -36,6 +36,22 @@ class SpeakerTests(unittest.TestCase):
         self.assertEqual(shell.name, 'testy')
         self.assertEqual(shell.version, '17.4.1')
 
+    def test_configure(self):
+
+        logging.debug("*** Configure")
+
+        shell = Shell(context=Context())
+
+        shell.configure({
+            'shell': {
+                'commands':
+                    ['shellbot.commands.help', 'shellbot.commands.noop'],
+            }
+        })
+
+        self.assertEqual(shell.context.get('shell.commands'),
+            ['shellbot.commands.help', 'shellbot.commands.noop'])
+
     def test_load_command(self):
 
         context = Context()
@@ -45,8 +61,10 @@ class SpeakerTests(unittest.TestCase):
         self.assertEqual(shell.commands, ['help'])
 
         from shellbot.commands.help import Help
-        help = Help(shell)
+        help = Help()
         shell.load_command(help)
+        self.assertEqual(help.context, context)
+        self.assertEqual(help.shell, shell)
         self.assertEqual(shell.commands, ['help'])
         self.assertEqual(shell.command('help'), help)
 
@@ -80,12 +98,37 @@ class SpeakerTests(unittest.TestCase):
 
         self.assertEqual(shell.commands, ['help', 'pass'])
 
+    def test_load_commands_via_configure(self):
+
+        settings = {
+            'shell': {'commands': ['shellbot.commands.help',
+                                   'shellbot.commands.noop']},
+        }
+
+        context = Context()
+        shell = Shell(context)
+        shell.configure(settings)
+
+        self.assertEqual(
+            shell.commands,
+            ['*default', '*empty', 'echo', 'help', 'pass', 'sleep', 'version'])
+
     def test_say(self):
 
         mouth = Queue()
 
         context = Context()
         shell = Shell(context, mouth)
+
+        message_0 = None
+        shell.say(message_0)
+        with self.assertRaises(Exception):
+            mouth.get_nowait()
+
+        message_0 = ''
+        shell.say(message_0)
+        with self.assertRaises(Exception):
+            mouth.get_nowait()
 
         message_1 = 'hello'
         shell.say(message_1)

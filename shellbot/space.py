@@ -8,7 +8,7 @@ from requests_toolbelt import MultipartEncoder
 import sys
 import time
 from bottle import route, run, request, abort
-from ciscosparkapi import CiscoSparkAPI
+from ciscosparkapi import CiscoSparkAPI, SparkApiError
 
 from context import Context
 
@@ -33,7 +33,7 @@ class SparkSpace(object):
 
         """
         self.context = context
-        self.bearer = bearer if bearer else None
+        self.bearer = bearer
         self.ears = ears
 
         self.reset()
@@ -50,8 +50,124 @@ class SparkSpace(object):
         self.team_id = None
 
         self._last_message_id = 0
+        self._webhook = None
+        self._process = None
 
-        self.api = CiscoSparkAPI(access_token=self.bearer)
+    def configure(self, settings):
+        """
+        Changes settings of the space
+
+        :param settings: a dictionary with some statements for this instance
+        :type settings: dict
+
+        This function reads key ``spark`` and below, and update
+        the context accordingly.
+
+        >>>space.configure({'spark': {
+               'room': 'My preferred room',
+               'moderators':
+                  ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+               'participants':
+                  ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+               'team': 'Anchor team',
+               'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
+               'user_token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
+               'webhook': "http://73a1e282.ngrok.io",
+               }})
+
+        This can also be written in a more compact form::
+
+        >>>space.configure({'spark.room': 'My preferred room',
+               'spark.token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
+               })
+
+        If a single value is provided for ``moderators`` or for ``participants``
+        then it is turned automatically to a list.
+
+        >>>space.configure({'spark.moderators': 'bobby@jah.com'})
+
+        If ``token`` is not provided, then the function looks for an
+        environment variable ``CISCO_SPARK_TOKEN`` instead.
+
+        """
+
+        self.context.parse(settings, 'spark', 'room', is_mandatory=True)
+        self.context.parse(settings, 'spark', 'moderators')
+        self.context.parse(settings, 'spark', 'participants')
+        self.context.parse(settings, 'spark', 'team')
+        self.context.parse(settings, 'spark', 'token')
+        self.context.parse(settings, 'spark', 'personal_token')
+        self.context.parse(settings, 'spark', 'webhook')
+
+        values = self.context.get('spark.moderators')
+        if isinstance(values, str):
+            self.context.set('spark.moderators', [values])
+
+        values = self.context.get('spark.participants')
+        if isinstance(values, str):
+            self.context.set('spark.participants', [values])
+
+        if self.context.get('spark.personal_token') is None:
+            token = os.environ.get('CISCO_SPARK_TOKEN')
+            if token:
+                self.context.set('spark.personal_token', token)
+            else:
+                logging.warning("Missing CISCO_SPARK_TOKEN")
+
+        if self.context.get('spark.token') is None:
+            token1 = os.environ.get('CISCO_SPARK_BOT_TOKEN')
+            token2 = self.context.get('spark.personal_token')
+            if token1:
+                self.context.set('spark.token', token1)
+            elif token2:
+                self.context.set('spark.token', token2)
+            else:
+                logging.warning("Missing CISCO_SPARK_BOT_TOKEN")
+
+        self.reset()
+
+    def connect(self):
+        """
+        Connects to the back-end API
+        """
+        token = self.bearer if self.bearer else self.context.get('spark.token')
+        try:
+            if token is None:
+                self.api = None
+                logging.error("Unable to access Cisco Spark API")
+
+            else:
+                self.api = CiscoSparkAPI(access_token=token)
+                logging.debug("Connected as bot to Cisco Spark API")
+
+        except Exception as feedback:
+            logging.error("Unable to access Cisco Spark API")
+            logging.error("- {}".format(str(feedback)))
+            logging.error("- token '{}'".format(token))
+
+        token = self.context.get('spark.personal_token')
+        try:
+            if token is None:
+                self.personal_api = None
+            else:
+                self.personal_api = CiscoSparkAPI(access_token=token)
+                logging.debug("Connected as person to Cisco Spark API")
+
+        except Exception as feedback:
+            logging.error("Unable to access Cisco Spark API")
+            logging.error("- {}".format(str(feedback)))
+            logging.error("- token '{}'".format(token))
+
+        try:
+            bot = self.get_bot()
+            self.context.set('bot.name', str(bot.displayName.split(' ')[0]))
+            logging.debug("Bot name: {}".format(self.context.get('bot.name')))
+            self.bot_id = bot.id
+
+        except Exception as feedback:
+            logging.warning("Unable to retrieve bot id")
+            logging.warning(str(feedback))
+            self.bot_id = None
 
     def bond(self,
              space,
@@ -66,7 +182,7 @@ class SparkSpace(object):
         :type space: str
 
         :param team: the team to attach this space (optional)
-        :type team: str or dict
+        :type team: str
 
         :param moderators: the list of initial moderators (optional)
         :type moderators: list of str
@@ -74,15 +190,19 @@ class SparkSpace(object):
         :param participants: the list of initial participants (optional)
         :type participants: list of str
 
-        :param hook: an optional hook to be called on space creation (optional)
+        :param hook: an optional hook to be called (optional)
         :type hook: callable
 
         This function either bonds to an existing space, or creates a new space
         if necessary. In later case it also
-        adds moderators and participants, then calls the optional hook.
+        adds moderators and participants.
 
-        If a hook is provided, it is invoked with the id of the target space.
+        Then it calls the optional hook. If a hook is provided, it is invoked
+        with the id of the target space.
         """
+
+        logging.info("Bonding to room '{}'".format(space))
+
         item = self.get_space(space, team)
         self.room_id = item.id
         self.room_title = item.title
@@ -104,13 +224,13 @@ class SparkSpace(object):
         :param team: the team to attach this space (optional)
         :type team: str or dict
 
-        :return: attributes of the space
-        :rtype: dict
+        :return: a representation of the space
+        :rtype: Room
 
         This function either returns an existing space, or creates a new one.
 
         >>>print(space.get_space("Hello World"))
-        {
+        Room({
           "id" : "Y2lzY29zcGFyazJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
           "title" : "Hello World",
           "type" : "group",
@@ -118,7 +238,7 @@ class SparkSpace(object):
           "teamId" : "Y2lzY29zcGlNDVhZTAtYzQ2Yi0xMWU1LTlkZjktMGQ0MWUzNDIxOTcz",
           "lastActivity" : "2016-04-21T19:12:48.920Z",
           "created" : "2016-04-21T19:01:55.966Z"
-        }
+        })
 
         If the parameter ``team`` is provided, then it can be either a simple
         name, or a team object featuring an id.
@@ -142,10 +262,16 @@ class SparkSpace(object):
 
             return item
 
-        logging.info("Creating Cisco Spark space '{}'".format(space))
-        item = self.api.rooms.create(title=space,
-                                     teamId=teamId)
-        logging.info("- done")
+        logging.info("Creating Cisco Spark room '{}'".format(space))
+
+        try:
+            item = self.api.rooms.create(title=space,
+                                         teamId=teamId)
+            logging.info("- done")
+
+        except Exception as feedback:
+            logging.warning("Unable to create room ")
+            logging.warning(str(feedback))
 
         if teamId and item.teamId and (teamId != item.teamId):
             logging.warning("Unexpected team for this space")
@@ -160,12 +286,12 @@ class SparkSpace(object):
         :type space: str
 
         :return: attributes of the space
-        :rtype: dict or None
+        :rtype: Room or None
 
         This function returns either an existing space, or None.
 
         >>>print(space.get_space("Hello World"))
-        {
+        Room({
           "id" : "Y2lzY29zcGFyazJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
           "title" : "Hello World",
           "type" : "group",
@@ -173,17 +299,23 @@ class SparkSpace(object):
           "teamId" : "Y2lzY29zcGlNDVhZTAtYzQ2Yi0xMWU1LTlkZjktMGQ0MWUzNDIxOTcz",
           "lastActivity" : "2016-04-21T19:12:48.920Z",
           "created" : "2016-04-21T19:01:55.966Z"
-        }
+        })
 
         """
         logging.info("Looking for Cisco Spark space '{}'".format(space))
 
-        for item in self.api.rooms.list():
-            if space == item.title:
-                logging.info("- found it")
-                return item
+        try:
+            for item in self.api.rooms.list():
+                if space == item.title:
+                    logging.info("- found it")
+                    return item
 
-        logging.warning("- not found")
+            logging.warning("- not found")
+
+        except Exception as feedback:
+            logging.warning("Unable to list rooms")
+            logging.warning(str(feedback))
+
         return None
 
     def add_moderators(self, persons):
@@ -207,9 +339,14 @@ class SparkSpace(object):
         :type person: str
 
         """
-        self.api.memberships.create(roomId=self.room_id,
-                                    personEmail=person,
-                                    isModerator=True)
+        try:
+            self.api.memberships.create(roomId=self.room_id,
+                                        personEmail=person,
+                                        isModerator=True)
+
+        except Exception as feedback:
+            logging.warning("Unable to add moderator '{}'".format(person))
+            logging.warning(str(feedback))
 
     def add_participants(self, persons):
         """
@@ -232,9 +369,14 @@ class SparkSpace(object):
         :type person: str
 
         """
-        self.api.memberships.create(roomId=self.room_id,
-                                    personEmail=person,
-                                    isModerator=True)
+        try:
+            self.api.memberships.create(roomId=self.room_id,
+                                        personEmail=person,
+                                        isModerator=True)
+
+        except Exception as feedback:
+            logging.warning("Unable to add participant '{}'".format(person))
+            logging.warning(str(feedback))
 
     def dispose(self, space=None):
         """
@@ -264,8 +406,8 @@ class SparkSpace(object):
                 space = self.lookup_space(space)
                 if space is None:
                     return
-                label = space['title']
-                space = space['id']
+                label = space.title
+                space = space.id
 
         elif self.room_id:
             label = self.room_title
@@ -274,12 +416,17 @@ class SparkSpace(object):
         else:
             raise ValueError("Need to provide space to be disposed")
 
-        logging.info("Deleting Cisco Spark space '{}'".format(label))
+        logging.info("Deleting Cisco Spark room '{}'".format(label))
 
-        self.api.rooms.delete(roomId=space)
+        try:
+            self.api.rooms.delete(roomId=space)
 
-        if space == self.room_id:
-            self.reset()
+            if space == self.room_id:
+                self.reset()
+
+        except Exception as feedback:
+            logging.warning("Unable to delete room")
+            logging.warning(str(feedback))
 
     def get_team(self, team):
         """
@@ -294,11 +441,11 @@ class SparkSpace(object):
         This function either returns an existing team, or creates a new one.
 
         >>>print(space.get_team("Hello World"))
-        {
+        Team({
           "id" : "Y2lzY29zcGFyazovL3VzL1RFQU0Yy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5",
           "name" : "Hello World",
           "created" : "2015-10-18T14:26:16+00:00"
-        }
+        })
 
         """
         logging.info("Looking for Cisco Spark team '{}'".format(team))
@@ -356,15 +503,20 @@ class SparkSpace(object):
 
         logging.info("Posting message")
 
-        files = [file_path] if file_path else None
-        self.api.messages.create(roomId=self.room_id,
-                                 text=text,
-                                 markdown=markdown,
-                                 files=files)
+        try:
+            files = [file_path] if file_path else None
+            self.api.messages.create(roomId=self.room_id,
+                                     text=text,
+                                     markdown=markdown,
+                                     files=files)
+            logging.info("- done")
 
-        logging.info("- done")
 
-    def connect(self, webhook=None):
+        except Exception as feedback:
+            logging.warning("Unable to post message")
+            logging.warning(str(feedback))
+
+    def hook(self, webhook=None):
         """
         Connects in the background to Cisco Spark inbound events
 
@@ -376,12 +528,16 @@ class SparkSpace(object):
         in the background to pull new events.
         """
         if webhook:
+            self._webhook = webhook
             self.register_hook(webhook)
 
         else:
             p = Process(target=self.pull_for_ever)
             p.daemon = True
             p.start()
+
+    def unhook(self):
+        pass
 
     def register_hook(self, webhook):
         """
@@ -395,13 +551,18 @@ class SparkSpace(object):
         logging.info("Registering webhook to Cisco Spark")
         logging.info("- {}".format(webhook))
 
-        self.api.webhooks.create(name='shellbot-webhook',
-                                 targetUrl=webhook,
-                                 resource='messages',
-                                 event='created',
-                                 filter='roomId='+self.room_id)
+        try:
+            self.api.webhooks.create(name='shellbot-webhook',
+                                     targetUrl=webhook,
+                                     resource='messages',
+                                     event='created',
+                                     filter='roomId='+self.room_id)
 
-        logging.info("- done")
+            logging.info("- done")
+
+        except Exception as feedback:
+            logging.warning("Unable to add webhook")
+            logging.warning(str(feedback))
 
     def webhook():
         """
@@ -440,13 +601,19 @@ class SparkSpace(object):
         to a processing queue.
         """
 
-        logging.info('Looping for new messages')
+        logging.info('Starting puller')
 
-        self.context.set('puller.counter', 0)
-        while self.context.get('general.switch', 'on') == 'on':
+        try:
+            self.context.set('puller.counter', 0)
+            while self.context.get('general.switch', 'on') == 'on':
 
-            self.pull()
-            time.sleep(1)
+                self.pull()
+                time.sleep(1)
+
+        except KeyboardInterrupt:
+            pass
+
+        logging.info("Puller has been stopped")
 
     def pull(self):
         """
@@ -456,17 +623,26 @@ class SparkSpace(object):
         to a processing queue.
         """
 
-        logging.info('Pulling messages pro-actively')
+        logging.info('Pulling messages')
         self.context.increment('puller.counter')
 
         new_items = []
-        for item in self.api.messages.list(roomId= self.room_id,
-                                           max=25):
+        try:
+            items = self.api.messages.list(roomId=self.room_id,
+                                           mentionedPeople=['me'],
+                                           max=10)
 
-            if item.id == self._last_message_id:
-                break
+            for item in items:
 
-            new_items.append(item)
+                if item.id == self._last_message_id:
+                    break
+
+                new_items.append(item)
+
+        except Exception as feedback:
+            logging.warning("Unable to pull messages")
+            logging.warning(str(feedback))
+            return
 
         if len(new_items):
             logging.info("Fetching {} new messages".format(len(new_items)))
@@ -480,7 +656,7 @@ class SparkSpace(object):
         """
         Processes an incoming message
         """
-        self.ears.put(message.text)
+        self.ears.put(message._json)
 
     def get_bot(self):
         """

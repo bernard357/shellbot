@@ -18,6 +18,7 @@ from Queue import Empty
 import requests
 from requests_toolbelt import MultipartEncoder
 import random
+from six import string_types
 import time
 
 class Speaker(object):
@@ -70,22 +71,26 @@ class Speaker(object):
             mouth.put(Exception('EOQ'))
 
         """
-        logging.info("Starting speaker")
+        logging.info(u"Starting speaker")
 
         self.context = context
 
-        self.context.set('speaker.counter', 0)
-        while self.context.get('general.switch', 'on') == 'on':
-            try:
-                item = self.mouth.get(True, 0.1)
-                if isinstance(item, Exception):
-                    break
-                counter = self.context.increment('speaker.counter')
-                self.process(item, counter)
-            except Empty:
-                pass
+        try:
+            self.context.set('speaker.counter', 0)
+            while self.context.get('general.switch', 'on') == 'on':
+                try:
+                    item = self.mouth.get(True, 0.1)
+                    if isinstance(item, Exception):
+                        break
+                    counter = self.context.increment('speaker.counter')
+                    self.process(item, counter)
+                except Empty:
+                    pass
 
-        logging.info("Speaker has been stopped")
+        except KeyboardInterrupt:
+            pass
+
+        logging.info(u"Speaker has been stopped")
 
     def process(self, item, counter):
         """
@@ -99,9 +104,14 @@ class Speaker(object):
 
         """
 
-        logging.debug('Speaker is working on {}'.format(counter))
+        logging.debug(u'Speaker is working on {}'.format(counter))
 
         if self.space is not None:
-            self.space.post_message(item)
+            if isinstance(item, string_types):
+                self.space.post_message(item)
+            else:
+                self.space.post_message(item.message,
+                                        markdown=item.markdown,
+                                        file_path=item.file)
         else:
             logging.info(str(item))
