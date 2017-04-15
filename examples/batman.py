@@ -16,41 +16,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import colorlog
+"""
+Chat with Batman
+
+Credit: https://developer.ciscospark.com/blog/blog-details-8110.html
+"""
+
 import logging
 import os
 import sys
 import time
-from bottle import route, run, request, abort
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot.bot import ShellBot
-from shellbot.context import Context
+from shellbot import ShellBot, Context
 from shellbot.commands.base import Command
-
-handler = colorlog.StreamHandler()
-formatter = colorlog.ColoredFormatter(
-    "%(asctime)-2s %(log_color)s%(message)s",
-    datefmt='%H:%M:%S',
-    reset=True,
-    log_colors={
-        'DEBUG':    'cyan',
-        'INFO':     'green',
-        'WARNING':  'yellow',
-        'ERROR':    'red',
-        'CRITICAL': 'red,bg_white',
-    },
-    secondary_log_colors={},
-    style='%'
-)
-handler.setFormatter(formatter)
-
-logging.getLogger('').handlers = []
-logging.getLogger('').addHandler(handler)
-
-logging.getLogger('').setLevel(level=logging.DEBUG)
-
 
 class Batman(Command):
     keyword = 'whoareyou'
@@ -86,6 +66,8 @@ class Batsuicide(Command):
         self.shell.say(self.information_message)
         self.context.set('general.signal', 'suicide')
 
+
+Context.set_logger()
 
 bot = ShellBot()
 bot.shell.load_commands([Batman(), Batcave(), Batsignal(), Batsuicide()])

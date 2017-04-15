@@ -12,9 +12,7 @@ import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot.context import Context
-from shellbot.worker import Worker
-from shellbot.shell import Shell
+from shellbot import Context, Shell, Worker
 
 
 class WorkerTests(unittest.TestCase):
@@ -71,7 +69,7 @@ class WorkerTests(unittest.TestCase):
 
         self.assertEqual(
             mouth.get(),
-            'help - Lists available commands and related usage information.')
+            'help - Show commands and usage.')
         self.assertEqual(
             mouth.get(),
             'usage:')

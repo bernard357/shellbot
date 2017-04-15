@@ -13,9 +13,7 @@ import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot.context import Context
-from shellbot.speaker import Speaker
-from shellbot.space import SparkSpace
+from shellbot import Context, SparkSpace, Speaker
 
 
 class SpeakerTests(unittest.TestCase):
@@ -94,7 +92,9 @@ class SpeakerTests(unittest.TestCase):
 
             item = WithMarkdown()
             speaker.process(item, 2)
-            mocked.assert_called_with('', markdown='me **too**', file=None)
+            mocked.assert_called_with('',
+                                      markdown='me **too**',
+                                      file_path=None)
 
             class WithFile(object):
                 message = '*with*attachment'
@@ -105,7 +105,7 @@ class SpeakerTests(unittest.TestCase):
             speaker.process(item, 3)
             mocked.assert_called_with('*with*attachment',
                                       markdown=None,
-                                      file='http://a.server/with/file')
+                                      file_path='http://a.server/with/file')
 
             class WithAll(object):
                 message = 'hello world'
@@ -116,7 +116,7 @@ class SpeakerTests(unittest.TestCase):
             speaker.process(item, 4)
             mocked.assert_called_with('hello world',
                                       markdown='hello **world**',
-                                      file='http://a.server/with/file')
+                                      file_path='http://a.server/with/file')
 
 if __name__ == '__main__':
 

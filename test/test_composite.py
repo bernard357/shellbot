@@ -13,12 +13,12 @@ import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot.context import Context
-from shellbot.listener import Listener
-from shellbot.shell import Shell
-from shellbot.worker import Worker
-from shellbot.speaker import Speaker
-from shellbot.space import SparkSpace
+from shellbot import Context
+from shellbot import Listener
+from shellbot import Shell
+from shellbot import Worker
+from shellbot import Speaker
+from shellbot import SparkSpace
 
 
 class CompositeTests(unittest.TestCase):

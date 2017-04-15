@@ -12,8 +12,7 @@ import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot.context import Context
-from shellbot.shell import Shell
+from shellbot import Context, Shell
 
 
 class ShellTests(unittest.TestCase):
@@ -199,7 +198,7 @@ class ShellTests(unittest.TestCase):
         self.assertEqual(shell.line, 'help help')
         self.assertEqual(shell.count, 3)
         self.assertEqual(mouth.get(),
-                         'help - Lists available commands and related usage information.')
+                         'help - Show commands and usage.')
         self.assertEqual(mouth.get(), 'usage:')
         self.assertEqual(mouth.get(), 'help <command>')
         with self.assertRaises(Exception):
@@ -248,10 +247,10 @@ class ShellTests(unittest.TestCase):
         shell.do('')
         self.assertEqual(shell.line, '')
         self.assertEqual(shell.count, 8)
-        self.assertEqual(mouth.get(), 'echo - Echoes input string.')
+        self.assertEqual(mouth.get(), 'echo - Echo input string.')
         self.assertEqual(mouth.get(),
-                         'help - Lists available commands and related usage information.')
-        self.assertEqual(mouth.get(), 'version - Displays software version.')
+                         'help - Show commands and usage.')
+        self.assertEqual(mouth.get(), 'version - Display software version.')
         with self.assertRaises(Exception):
             print(mouth.get_nowait())
         with self.assertRaises(Exception):

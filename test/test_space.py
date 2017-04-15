@@ -12,8 +12,7 @@ import vcr
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot.context import Context
-from shellbot.space import SparkSpace
+from shellbot import Context, SparkSpace
 
 class FakeRoom(object):
     id = '*id'

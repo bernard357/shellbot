@@ -8,7 +8,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot.context import Context
+from shellbot import Context
 
 
 class ContextTests(unittest.TestCase):

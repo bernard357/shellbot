@@ -13,8 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Are you looking for a cloud plumber? We hope this one will be useful to you
-"""
-__all__ = ['__version__']
-__version__ = '17.03.29'
+from bot import ShellBot
+from context import Context
+from listener import Listener
+from shell import Shell
+from space import SparkSpace
+from speaker import Speaker
+from worker import Worker
+
+__version__ = '17.04.15'
+

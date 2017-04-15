@@ -13,9 +13,7 @@ import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot.context import Context
-from shellbot.listener import Listener
-from shellbot.shell import Shell
+from shellbot import Context, Shell, Listener
 
 
 class ListenerTests(unittest.TestCase):
@@ -145,10 +143,10 @@ class ListenerTests(unittest.TestCase):
         with self.assertRaises(Exception):
             inbox.get_nowait()
         self.assertEqual(mouth.get(), 'Shelly version *unknown*')
-        self.assertEqual(mouth.get(), 'echo - Echoes input string.')
-        self.assertEqual(mouth.get(), 'help - Lists available commands and related usage information.')
-        self.assertEqual(mouth.get(), 'version - Displays software version.')
-        self.assertEqual(mouth.get(), 'help - Lists available commands and related usage information.')
+        self.assertEqual(mouth.get(), 'echo - Echo input string.')
+        self.assertEqual(mouth.get(), 'help - Show commands and usage.')
+        self.assertEqual(mouth.get(), 'version - Display software version.')
+        self.assertEqual(mouth.get(), 'help - Show commands and usage.')
         self.assertEqual(mouth.get(), 'usage:')
         self.assertEqual(mouth.get(), 'help <command>')
         with self.assertRaises(Exception):

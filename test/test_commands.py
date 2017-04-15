@@ -10,8 +10,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot.context import Context
-from shellbot.shell import Shell
+from shellbot import Context, Shell
 
 
 class CommandsTests(unittest.TestCase):
