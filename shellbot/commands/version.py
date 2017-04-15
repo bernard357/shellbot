@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -20,8 +22,8 @@ class Version(Command):
     Displays software version
     """
 
-    keyword = 'version'
-    information_message = 'Displays software version.'
+    keyword = u'version'
+    information_message = u'Display software version.'
 
     def execute(self, arguments=None):
         """
@@ -29,4 +31,4 @@ class Version(Command):
         """
         name = self.shell.name
         version = self.shell.version
-        self.shell.say("{} version {}".format(name, version))
+        self.shell.say(u"{} version {}".format(name, version))

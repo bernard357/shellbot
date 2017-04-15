@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -20,9 +22,9 @@ class Echo(Command):
     Echoes input string
     """
 
-    keyword = 'echo'
-    information_message = 'Echoes input string.'
-    usage_message = 'echo "a string to be echoed"'
+    keyword = u'echo'
+    information_message = u'Echo input string.'
+    usage_message = u'echo "a string to be echoed"'
 
     def execute(self, arguments):
         """

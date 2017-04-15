@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -20,8 +22,8 @@ class Empty(Command):
     Handles empty command
     """
 
-    keyword = '*empty'
-    information_message = 'Handles empty command.'
+    keyword = u'*empty'
+    information_message = u'Handle empty command.'
     is_hidden = True
 
     def execute(self, *args):
@@ -32,6 +34,6 @@ class Empty(Command):
             self.help_command = self.shell.command('help')
 
         if self.help_command is None:
-            raise Exception("No help command has been found")
+            raise Exception(u"No help command has been found")
 
         self.help_command.execute()

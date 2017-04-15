@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import colorlog
 import unittest
@@ -141,6 +142,20 @@ class ContextTests(unittest.TestCase):
         # except when set to None
         context.set('special', None)
         self.assertEqual(context.get('special', []), [])
+
+    def test_unicode(self):
+
+        context = Context()
+
+        context.set('hello', 'world')
+        self.assertEqual(context.get('hello'), 'world')
+        self.assertEqual(context.get(u'hello'), 'world')
+
+        context.set('hello', u'wôrld')
+        self.assertEqual(context.get('hello'), u'wôrld')
+
+        context.set(u'hello', u'wôrld')
+        self.assertEqual(context.get(u'hello'), u'wôrld')
 
     def test_gauge(self):
 

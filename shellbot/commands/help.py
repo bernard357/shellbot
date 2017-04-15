@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -36,9 +38,9 @@ class Help(Command):
     def do_help(self, arguments=None):
         self.shell.say({'markdown': help_markdown})
 
-    keyword = 'help'
-    information_message = 'Shows commands and usage'
-    usage_message = 'help <command>'
+    keyword = u'help'
+    information_message = u'Show commands and usage.'
+    usage_message = u'help <command>'
 
     def execute(self, arguments=None):
         """
@@ -46,13 +48,13 @@ class Help(Command):
         """
 
         if self.shell.commands == []:
-            self.shell.say("No command has been found.")
+            self.shell.say(u"No command has been found.")
 
         elif arguments in (None, ''):
             for key in self.shell.commands:
                 command = self.shell.command(key)
                 if not command.is_hidden:
-                    self.shell.say("{} - {}".format(
+                    self.shell.say(u"{} - {}".format(
                         command.keyword,
                         str(command.information_message)))
 
@@ -60,12 +62,12 @@ class Help(Command):
             command = self.shell.command(arguments)
 
             if command:
-                self.shell.say("{} - {}".format(
+                self.shell.say(u"{} - {}".format(
                     command.keyword,
                     str(command.information_message)))
                 if command.usage_message:
-                    self.shell.say("usage:")
+                    self.shell.say(u"usage:")
                     self.shell.say(str(command.usage_message))
 
             else:
-                self.shell.say("This command is unknown.")
+                self.shell.say(u"This command is unknown.")

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -20,10 +22,10 @@ class State(Command):
     Displays process status
     """
 
-    keyword = 'state'
-    information_message = 'Displays process current state.'
+    keyword = u'state'
+    information_message = u'Display process current state.'
 
-    def execute(self, verb, arguments=None):
+    def execute(self, arguments=None):
         """
         Displays software version
         """
@@ -32,4 +34,4 @@ class State(Command):
             state = self.context.get('process.initial')
         if state is None:
             state = '*unknown*'
-        self.shell.say("Current state: {}".format(state))
+        self.shell.say(u"Current state: {}".format(state))

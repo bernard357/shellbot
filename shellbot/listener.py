@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -72,7 +74,7 @@ class Listener(object):
             ears.put(Exception('EOQ'))
 
         """
-        logging.info("Starting listener")
+        logging.info(u"Starting listener")
 
         self.context = context
 
@@ -91,7 +93,7 @@ class Listener(object):
         except KeyboardInterrupt:
             pass
 
-        logging.info("Listener has been stopped")
+        logging.info(u"Listener has been stopped")
 
     def process(self, item, counter):
         """
@@ -124,7 +126,7 @@ class Listener(object):
             }
 
         """
-        logging.info('Listener is working on {}'.format(counter))
+        logging.info(u'Listener is working on {}'.format(counter))
 
         if self.tee:
             self.tee.put(item)
@@ -134,17 +136,17 @@ class Listener(object):
         try:
             input = item['text']
         except:
-            logging.warning("- invalid format, thrown away")
+            logging.warning(u"- invalid format, thrown away")
             return
 
         if input is None:
-            logging.info("- no input in this item, thrown away")
+            logging.info(u"- no input in this item, thrown away")
             return
 
         # my own messages
         #
         if item['personId'] == self.context.get('spark.bot_id'):
-            logging.info("- sent by me, thrown away")
+            logging.info(u"- sent by me, thrown away")
             return
 
 #        print(item)
@@ -157,10 +159,10 @@ class Listener(object):
         bot = self.context.get('bot.name', 'shelly')
         if not input.lower().startswith(bot):
             try:
-                logging.info("- {}".format(input))
+                logging.info(u"- {}".format(input))
             except:
                 pass
-            logging.info("- not for me, thrown away")
+            logging.info(u"- not for me, thrown away")
             return
 
         line = input[len(bot):].strip()

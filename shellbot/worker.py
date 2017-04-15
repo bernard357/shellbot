@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -57,7 +59,7 @@ class Worker(object):
             inbox.put(Exception('EOQ'))
 
         """
-        logging.info("Starting worker")
+        logging.info(u"Starting worker")
 
         self.context = context
         self.context.set('worker.counter', 0)
@@ -80,7 +82,7 @@ class Worker(object):
         except KeyboardInterrupt:
             pass
 
-        logging.info("Worker has been stopped")
+        logging.info(u"Worker has been stopped")
 
     def process(self, item, counter):
         """
@@ -92,7 +94,7 @@ class Worker(object):
             ('version', '')
 
         """
-        logging.debug('Worker is working on {}'.format(counter))
+        logging.debug(u'Worker is working on {}'.format(counter))
 
         (verb, arguments) = item
 
@@ -107,9 +109,9 @@ class Worker(object):
 
             else:
                 self.shell.say(
-                    "Sorry, I do not know how to handle '{}'".format(verb))
+                    u"Sorry, I do not know how to handle '{}'".format(verb))
 
         except Exception as feedback:
             self.shell.say(
-                "Sorry, I do not know how to handle '{}'".format(verb))
+                u"Sorry, I do not know how to handle '{}'".format(verb))
             raise

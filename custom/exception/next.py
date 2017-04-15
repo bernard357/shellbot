@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -20,10 +22,10 @@ class Next(Command):
     Moves process to next state
     """
 
-    keyword = 'next'
-    information_message = 'Moves process to next state.'
+    keyword = u'next'
+    information_message = u'Move process to next state.'
 
-    def execute(self, verb=None, arguments=None):
+    def execute(self, arguments=None):
         """
         Displays software version
         """
@@ -43,4 +45,4 @@ class Next(Command):
                 break
             states.pop(0)
 
-        self.shell.say("New state: {}".format(state))
+        self.shell.say(u"New state: {}".format(state))

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import colorlog
 import unittest
@@ -100,7 +101,6 @@ class BotTests(unittest.TestCase):
             bot.configure_from_dict(settings)
 
         settings = {
-            'bot': {'name': 'testy'},
             'spark': {
                 'room': 'space name',
                 'moderators': 'foo.bar@acme.com',
@@ -108,7 +108,6 @@ class BotTests(unittest.TestCase):
             },
         }
         bot.configure_from_dict(settings)
-        self.assertEqual(bot.context.get('bot.name'), 'testy')
         self.assertEqual(bot.context.get('spark.room'), 'space name')
         self.assertEqual(bot.context.get('spark.moderators'),
                          ['foo.bar@acme.com'])

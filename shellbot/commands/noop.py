@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -20,8 +22,8 @@ class Noop(Command):
     Does absolutely nothing
     """
 
-    keyword = 'pass'
-    information_message = 'Does absolutely nothing.'
+    keyword = u'pass'
+    information_message = u'Do absolutely nothing.'
     is_hidden = True
 
     def execute(self, arguments=None):

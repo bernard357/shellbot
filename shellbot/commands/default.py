@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -20,8 +22,8 @@ class Default(Command):
     Handles unmatched command
     """
 
-    keyword = '*default'
-    information_message = 'Handles unmatched command.'
+    keyword = u'*default'
+    information_message = u'Handle unmatched command.'
     is_hidden = True
 
     def execute(self, arguments):

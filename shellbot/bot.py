@@ -1,4 +1,21 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import colorlog
 import json
 import logging
@@ -46,7 +63,7 @@ class ShellBot(object):
 
     def start(self):
 
-        logging.warning('Starting the bot')
+        logging.warning(u'Starting the bot')
 
         self.space.connect()
 
@@ -61,6 +78,7 @@ class ShellBot(object):
 
         self.space.hook()
 
+        self.shell.say(self.context.get('bot.on_start'))
         self.on_start()
 
     def start_processes(self):
@@ -81,13 +99,18 @@ class ShellBot(object):
         self._listener_process = p
 
     def on_start(self):
+        """
+        Do additional stuff on bot start
 
-        self.shell.say(self.context.get('bot.on_start'))
+        Provide your own implementation in a sub-class where required.
+        """
+        pass
 
     def stop(self):
 
-        logging.warning('Stopping the bot')
+        logging.warning(u'Stopping the bot')
 
+        self.shell.say(self.context.get('bot.on_stop'))
         self.on_stop()
 
         time.sleep(1)
@@ -95,8 +118,15 @@ class ShellBot(object):
         self.space.unhook()
 
     def on_stop(self):
+        """
+        Do additional stuff on bot top
 
-        self.shell.say(self.context.get('bot.on_stop'))
+        Provide your own implementation in a sub-class where required.
+
+        Note that this function is called before the actual stop, so
+        you can the shell or any other resource at will.
+        """
+
 
     def configure_from_path(self, path="settings.yaml"):
         """
@@ -111,8 +141,8 @@ class ShellBot(object):
         Look at the file ``settings.yaml`` that is coming with this project
         """
 
-        logging.info("Loading configuration")
-        logging.info("- from '{}'".format(path))
+        logging.info(u"Loading configuration")
+        logging.info(u"- from '{}'".format(path))
         with open(path, 'r') as stream:
             self.configure_from_file(stream)
 
@@ -249,7 +279,7 @@ if __name__ == "__main__":
 
     # ready to receive updates
     #
-    logging.info("Starting web endpoint")
+    logging.info(u"Starting web endpoint")
     run(host='0.0.0.0',
         port=context.get('server.port'),
         debug=context.get('general.DEBUG'),

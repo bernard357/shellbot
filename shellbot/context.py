@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -108,11 +110,11 @@ class Context(object):
             values = deepcopy(default)
 
         if values is None and (is_mandatory or validate):
-            raise KeyError("Missing '{}' in settings".format(dotted))
+            raise KeyError(u"Missing '{}' in settings".format(dotted))
 
         if validate and validate(values) is False:
             raise ValueError(
-                "Invalid value for '{}' in settings".format(dotted))
+                u"Invalid value for '{}' in settings".format(dotted))
 
         self.set(dotted, values)
 

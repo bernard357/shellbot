@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -238,7 +240,7 @@ class Shell(object):
             command = cls(self)
 
         if command.keyword in self._commands.keys():
-            logging.debug("Command '{}' has been replaced".format(
+            logging.debug(u"Command '{}' has been replaced".format(
                 command.keyword))
 
         command.context = self.context
@@ -287,9 +289,9 @@ class Shell(object):
                     command.execute(arguments)
                 else:
                     if not self.context.get('worker.busy', False):
-                        self.say("Ok, working on it")
+                        self.say(u"Ok, working on it")
                     else:
-                        self.say("Ok, will work on it as soon as possible")
+                        self.say(u"Ok, will work on it as soon as possible")
                     self.inbox.put((command.keyword, arguments))
 
             elif '*default' in self._commands.keys():
@@ -299,9 +301,9 @@ class Shell(object):
                     command.execute(arguments)
                 else:
                     if not self.context.get('worker.busy', False):
-                        self.say("Ok, working on it")
+                        self.say(u"Ok, working on it")
                     else:
-                        self.say("Ok, will work on it as soon as possible")
+                        self.say(u"Ok, will work on it as soon as possible")
                     self.inbox.put((verb, arguments))
 
             else:

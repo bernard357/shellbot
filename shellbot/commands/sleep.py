@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -22,9 +24,9 @@ class Sleep(Command):
     Sleeps for a while
     """
 
-    keyword ='sleep'
-    information_message = 'Sleeps for a while.'
-    usage_message = 'sleep <n>'
+    keyword = u'sleep'
+    information_message = u'Sleep for a while.'
+    usage_message = u'sleep <n>'
     is_interactive = False
     is_hidden = True
 
