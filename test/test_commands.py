@@ -24,7 +24,7 @@ class CommandsTests(unittest.TestCase):
         mouth = Queue()
         shell = Shell(context, mouth)
 
-        from shellbot.commands.base import Command
+        from shellbot.commands import Command
 
         c = Command(shell)
 
@@ -46,7 +46,7 @@ class CommandsTests(unittest.TestCase):
         mouth = Queue()
         shell = Shell(context, mouth)
 
-        from shellbot.commands.base import Command
+        from shellbot.commands import Command
 
         c = Command(shell)
         c.keyword = u'bâtman'
@@ -95,7 +95,7 @@ class CommandsTests(unittest.TestCase):
         mouth = Queue()
         shell = Shell(context, mouth)
 
-        from shellbot.commands.noop import Noop
+        from shellbot.commands import Noop
 
         c = Noop(shell)
 
@@ -118,7 +118,7 @@ class CommandsTests(unittest.TestCase):
         mouth = Queue()
         shell = Shell(context, mouth)
 
-        from shellbot.commands.version import Version
+        from shellbot.commands import Version
 
         c = Version(shell)
 
@@ -139,7 +139,7 @@ class CommandsTests(unittest.TestCase):
         mouth = Queue()
         shell = Shell(context, mouth)
 
-        from shellbot.commands.help import Help
+        from shellbot.commands import Help
 
         c = Help(shell)
 
@@ -164,7 +164,7 @@ class CommandsTests(unittest.TestCase):
 
         shell.load_command('shellbot.commands.help')
 
-        from shellbot.commands.help import Help
+        from shellbot.commands import Help
 
         c = Help(shell)
 
@@ -194,7 +194,7 @@ class CommandsTests(unittest.TestCase):
         mouth = Queue()
         shell = Shell(context, mouth)
 
-        from shellbot.commands.help import Help
+        from shellbot.commands import Help
 
         c = Help(shell)
 
@@ -221,7 +221,7 @@ class CommandsTests(unittest.TestCase):
         mouth = Queue()
         shell = Shell(context, mouth)
 
-        from shellbot.commands.echo import Echo
+        from shellbot.commands import Echo
 
         c = Echo(shell)
 
@@ -243,7 +243,7 @@ class CommandsTests(unittest.TestCase):
         mouth = Queue()
         shell = Shell(context, mouth)
 
-        from shellbot.commands.sleep import Sleep
+        from shellbot.commands import Sleep
 
         c = Sleep(shell)
 
@@ -267,7 +267,7 @@ class CommandsTests(unittest.TestCase):
         mouth = Queue()
         shell = Shell(context, mouth)
 
-        from shellbot.commands.default import Default
+        from shellbot.commands import Default
 
         c = Default(shell)
 
@@ -292,7 +292,7 @@ class CommandsTests(unittest.TestCase):
 
         shell.load_command('shellbot.commands.help')
 
-        from shellbot.commands.empty import Empty
+        from shellbot.commands import Empty
 
         c = Empty(shell)
 
