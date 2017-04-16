@@ -70,7 +70,17 @@ class CommandsTests(unittest.TestCase):
         r = Notify(Context(), queue=queue, notification='signal')
         self.assertEqual(r.queue, queue)
         self.assertEqual(r.notification, 'signal')
+
         self.assertEqual(r.get(), 'OK')
+        self.assertEqual(queue.get(), 'signal')
+
+        self.assertEqual(r.post(), 'OK')
+        self.assertEqual(queue.get(), 'signal')
+
+        self.assertEqual(r.put(), 'OK')
+        self.assertEqual(queue.get(), 'signal')
+
+        self.assertEqual(r.delete(), 'OK')
         self.assertEqual(queue.get(), 'signal')
 
     def test_static(self):
@@ -86,6 +96,49 @@ class CommandsTests(unittest.TestCase):
         self.assertEqual(r.route, '/hello')
         self.assertEqual(r.page, 'Hello world')
         self.assertEqual(r.get(), 'Hello world')
+
+    def test_wrapper(self):
+
+        from shellbot.routes.wrapper import Wrapper
+
+        r = Wrapper(Context())
+
+        with self.assertRaises(NotImplementedError):
+            r.get()
+
+        with self.assertRaises(NotImplementedError):
+            r.post()
+
+        with self.assertRaises(NotImplementedError):
+            r.put()
+
+        with self.assertRaises(NotImplementedError):
+            r.delete()
+
+        context = Context()
+
+        class Callable(object):
+            def __init__(self, context):
+                self.context = context
+
+            def hook(self, **kwargs):
+                self.context.set('signal', 'wrapped!')
+                return 'OK'
+
+        callable = Callable(context)
+
+        r = Wrapper(context=context,
+                    callable=callable.hook,
+                    route = '/wrapped')
+
+        self.assertEqual(r.route, '/wrapped')
+        self.assertEqual(r.callable, callable.hook)
+        self.assertEqual(context.get('signal'), None)
+        self.assertEqual(r.get(), 'OK')
+        self.assertEqual(r.post(), 'OK')
+        self.assertEqual(r.put(), 'OK')
+        self.assertEqual(r.delete(), 'OK')
+        self.assertEqual(context.get('signal'), 'wrapped!')
 
 if __name__ == '__main__':
 

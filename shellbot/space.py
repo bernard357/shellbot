@@ -580,7 +580,7 @@ class SparkSpace(object):
             logging.warning(u"Unable to add webhook")
             logging.warning(feedback)
 
-    def webhook():
+    def webhook(self):
         """
         Processes the flow of events from Cisco Spark
 

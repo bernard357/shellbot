@@ -16,3 +16,4 @@
 from base import Route
 from static import Static
 from notify import Notify
+from wrapper import Wrapper

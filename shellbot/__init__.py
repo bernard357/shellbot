@@ -16,6 +16,7 @@
 from bot import ShellBot
 from context import Context
 from listener import Listener
+from server import Server
 from shell import Shell
 from space import SparkSpace
 from speaker import Speaker
@@ -23,6 +24,7 @@ from worker import Worker
 
 from commands.base import Command
 from routes.base import Route
+from routes.wrapper import Wrapper
 
 __version__ = '17.04.15'
 

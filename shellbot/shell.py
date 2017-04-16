@@ -265,7 +265,6 @@ class Shell(object):
 
         """
         line = '' if line is None else unicode(line)  # sanity check
-        logging.error(line)
 
         logging.debug(u"Handling: {}".format(line))
         self.line = line

@@ -20,46 +20,40 @@ from bottle import template
 from base import Route
 
 
-class NoQueue(object):
-    def put(self, item=None):
-        raise Exception(u"No queue for this notification")
-
-class Notify(Route):
+class Wrapper(Route):
     """
-    Notifies a queue on web request
+    Calls a function on web request
 
-    >>>queue = Queue()
-    >>>route = Notify(route='/notify', queue=queue, notification='hello')
+    >>>def my_callable(**kwargs):
+    ...
+    >>>route = Wrapper(route='/hook', callable=my_callable)
 
-    When the route is requested over the web, the notification is pushed
-    to the queue.
+    When the route is requested over the web, the target function is
+    called.
 
-    >>>queue.get()
-    'hello'
-
-    Notification is triggered on GET, POST, PUT and DELETE verbs.
+    Wrapping is triggered on GET, POST, PUT and DELETE verbs.
     """
 
-    route = '/notify'
+    route = None
 
-    queue = NoQueue()
-
-    notification = None
+    callable = None
 
     def get(self, **kwargs):
-        return self.notify()
+        if self.callable is None:
+            raise NotImplementedError()
+        return self.callable(**kwargs)
 
     def post(self):
-        return self.notify()
+        if self.callable is None:
+            raise NotImplementedError()
+        return self.callable()
 
     def put(self):
-        return self.notify()
+        if self.callable is None:
+            raise NotImplementedError()
+        return self.callable()
 
     def delete(self):
-        return self.notify()
-
-    def notify(self):
-        item = self.route if self.notification is None else self.notification
-        self.queue.put(item)
-        return 'OK'
-
+        if self.callable is None:
+            raise NotImplementedError()
+        return self.callable()

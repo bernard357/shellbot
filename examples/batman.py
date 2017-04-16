@@ -48,7 +48,7 @@ import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import ShellBot, Context, Command
+from shellbot import ShellBot, Context, Command, Server, Wrapper
 
 class Batman(Command):
     keyword = 'whoareyou'
@@ -79,18 +79,18 @@ class Batsignal(Command):
 class Batsuicide(Command):
     keyword = 'suicide'
     information_message = "Going back to Hell"
+    is_interactive = False
 
     def execute(self, arguments=None):
+        time.sleep(3)
         self.shell.say(self.information_message)
-        self.context.set('general.signal', 'suicide')
+        global bot
+        bot.stop()
+        time.sleep(3)
+        sys.exit(1)
 
 
-Context.set_logger()
-
-bot = ShellBot()
-bot.shell.load_commands([Batman(), Batcave(), Batsignal(), Batsuicide()])
-
-bot.configure_from_dict({
+settings = {
 
     'bot': {
         'on_start': 'You can now chat with Batman',
@@ -100,20 +100,41 @@ bot.configure_from_dict({
     'spark': {
         'room': 'Chat with Batman',
         'moderators': 'bernard.paques@dimensiondata.com',
-#        'webhook': 'http://518c74cc.ngrok.io',
+        'webhook': 'http://d9b62df9.ngrok.io/hook',
     },
 
-})
+    'server': {
+        'address': '0.0.0.0',
+        'port': 8080,
+    },
+
+}
+
+Context.set_logger()
+context = Context()
+
+bot = ShellBot(context=context)
+bot.shell.load_commands([Batman(), Batcave(), Batsignal(), Batsuicide()])
+
+bot.configure_from_dict(settings)
+
+route = Wrapper(context=context,
+                route='/hook',
+                callable=bot.space.webhook)
+
+server = Server(context=context, route=route)
+server.configure(settings)
 
 bot.space.connect()
 bot.space.dispose(bot.context.get('spark.room'))
 
 bot.start()
 
-while bot.context.get('general.signal') is None:
-    time.sleep(1)
-
-bot.stop()
+server.run()
+#while bot.context.get('general.signal') is None:
+#    time.sleep(1)
+#
+#bot.stop()
 
 time.sleep(5)
 bot.space.dispose(bot.context.get('spark.room'))

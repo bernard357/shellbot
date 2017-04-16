@@ -16,7 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import colorlog
 import json
 import logging
 import os
@@ -76,7 +75,7 @@ class ShellBot(object):
 
         self.start_processes()
 
-        self.space.hook()
+        self.space.hook(self.context.get('spark.webhook'))
 
         self.shell.say(self.context.get('bot.on_start'))
         self.on_start()
@@ -214,27 +213,7 @@ if __name__ == "__main__":
 
     # handling logs
     #
-    handler = colorlog.StreamHandler()
-    formatter = colorlog.ColoredFormatter(
-        "%(asctime)-2s %(log_color)s%(message)s",
-        datefmt='%H:%M:%S',
-        reset=True,
-        log_colors={
-            'DEBUG':    'cyan',
-            'INFO':     'green',
-            'WARNING':  'yellow',
-            'ERROR':    'red',
-            'CRITICAL': 'red,bg_white',
-        },
-        secondary_log_colors={},
-        style='%'
-    )
-    handler.setFormatter(formatter)
-
-    logging.getLogger('').handlers = []
-    logging.getLogger('').addHandler(handler)
-
-    logging.getLogger('').setLevel(level=logging.DEBUG)
+    Context.set_logger()
 
     # the safe-thread store that is shared across components
     #
