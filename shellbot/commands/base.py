@@ -38,22 +38,13 @@ class Command(object):
         if self.information_message:
             self.shell.say(self.information_message)
 
-    # verb or token for this command
-    #
-    keyword = None
+    keyword = None      # verb or token for this command
 
-    # basic information for this command
-    #
-    information_message = None
+    information_message = None    # basic information for this command
 
-    # usage information for this command
-    #
-    usage_message = None
+    usage_message = None    # usage information for this command
 
-    # this command should be processed interactively
-    #
-    is_interactive = True
+    is_interactive = True    # this command should be processed interactively
 
-    # this command should be listed by 'help'
-    #
-    is_hidden = False
+    is_hidden = False    # this command should be listed by 'help'
+
