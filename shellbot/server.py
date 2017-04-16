@@ -23,54 +23,137 @@ import requests
 from requests_toolbelt import MultipartEncoder
 import sys
 import time
-from bottle import Bottle, request, template
+from bottle import Bottle
 
 from context import Context
-from shell import Shell
 
 
 class Server(Bottle):
+    """
+    Serves web requests
+    """
 
-    def __init__(self, context, shell):
-        self.context = context
-        self.shell = shell
-        self.app = Bottle()
-
-    def route(self, prefix):
-        self.app.route('/', method="GET", callback=self.index)
-
-        print(u'Using prefix {}'.format(prefix))
-        self.app.route('/'+prefix+'/hello/<name>', callback=self.hello)
-
-    def start(self):
-        print(u'Starting web server')
-        self.route(self.context.get('server.prefix', '12357'))
-        self.app.run(host=self.context.get('server.address', '0.0.0.0'),
-                     port=self.context.get('server.port', 80),
-                     debug=self.context.get('server.debug', False),
-                     server='paste')
-
-    def index(self):
+    def __init__(self, context=None, httpd=None, route=None, routes=None):
         """
-        Provides the home page
-        """
-        return "Hello World"
+        Serves web requests
 
-    def hello(self, name="Guest"):
-        return template('Hello {{name}}, how are you?', name=name)
+        :param context: global context for this process
+        :type context: Context
+
+        :param httpd: actual WSGI server
+
+        :param route: a route to add to this instance
+        :type route: Route
+
+        :param routes: multiple routes to add to this instance
+        :type routes: list of Route
+
+        """
+        self.context = Context() if context is None else context
+        self.httpd = Bottle() if httpd is None else httpd
+
+        self._routes = {}
+        if route is not None:
+            self.load_route(route)
+        if routes is not None:
+            self.load_routes(routes)
+
+    def configure(self, settings):
+        """
+        Changes settings of the server
+
+        :param settings: a dictionary with some statements for this instance
+        :type settings: dict
+
+        This function reads key ``server`` and below, and update
+        the context accordingly.
+
+        >>>shell.configure({'server': {
+               'address': '10.4.2.5',
+               'port': 5000,
+               'debug': True,
+               }})
+
+        This can also be written in a more compact form::
+
+        >>>shell.configure({'server.port': 5000})
+
+        """
+
+        self.context.parse(settings, 'server', 'address')
+        self.context.parse(settings, 'server', 'port')
+        self.context.parse(settings, 'server', 'debug')
+
+    @property
+    def routes(self):
+        """
+        Lists all routes
+
+        :return: a list of routes, or []
+
+        >>>server.get_routes()
+        ['/hello', '/world']
+        """
+        return sorted(self._routes.keys())
+
+    def route(self, route):
+        """
+        Gets one route by path
+
+        :return: the related route, or None
+        """
+        return self._routes.get(route, None)
+
+    def load_routes(self, items):
+        """
+        Loads web routes
+
+        :param routes: a list of additional routes
+        :type routes: list of routes
+
+        """
+        for item in items:
+            self.load_route(item)
+
+    def load_route(self, item):
+        """
+        Loads one web route
+
+        :param route: one additional route
+        :type route: Route
+
+        """
+        self._routes[item.route] = item
+        self.httpd.route(item.route, method="GET", callback=item.get)
+        self.httpd.route(item.route, method="POST", callback=item.post)
+        self.httpd.route(item.route, method="PUT", callback=item.put)
+        self.httpd.route(item.route, method="DELETE", callback=item.delete)
+
+    def run(self):
+        """
+        Serves requests
+        """
+        logging.info(u'Starting web server')
+        try:
+            self.httpd.run(host=self.context.get('server.address', '0.0.0.0'),
+                           port=self.context.get('server.port', 80),
+                           debug=self.context.get('server.debug', False),
+                           server='paste')
+        except:
+            pass
+
+        logging.info(u'Web server has been stopped')
 
 # the program launched from the command line
 #
 if __name__ == "__main__":
 
+    Context.set_logger()
+
     context = Context()
     context.set('server.port', 8080)
     context.set('server.debug', True)
 
-    mouth = Queue()
-    inbox = Queue()
-    shell = Shell(context, mouth, inbox)
-    shell.load_default_commands()
-
-    server = Server(context=context, shell=shell)
+    server = Server(context=context)
+    server.load_routes([Index(), Hello(), Login()])
     server.start()
