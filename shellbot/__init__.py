@@ -22,6 +22,7 @@ from speaker import Speaker
 from worker import Worker
 
 from commands.base import Command
+from routes.base import Route
 
 __version__ = '17.04.15'
 
