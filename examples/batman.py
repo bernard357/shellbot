@@ -19,6 +19,25 @@
 """
 Chat with Batman
 
+In this example we create following commands with some lines of code:
+
+- command: whoareyou
+- response: I'm Batman!
+
+- command: cave
+- response: The Batcave is silent...
+
+- command: cave give me some echo
+- response: The Batcave echoes, 'give me some echo'
+
+- command: signal
+- response: NANA NANA NANA NANA
+- also uploads an image to the chat room
+
+- command: suicide
+- response: Going back to Hell
+- also stops the bot itself on the server
+
 Credit: https://developer.ciscospark.com/blog/blog-details-8110.html
 """
 
@@ -29,8 +48,7 @@ import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import ShellBot, Context
-from shellbot.commands.base import Command
+from shellbot import ShellBot, Context, Command
 
 class Batman(Command):
     keyword = 'whoareyou'
@@ -72,7 +90,7 @@ Context.set_logger()
 bot = ShellBot()
 bot.shell.load_commands([Batman(), Batcave(), Batsignal(), Batsuicide()])
 
-settings = {
+bot.configure_from_dict({
 
     'bot': {
         'on_start': 'You can now chat with Batman',
@@ -85,24 +103,17 @@ settings = {
 #        'webhook': 'http://518c74cc.ngrok.io',
     },
 
-}
-
-bot.configure_from_dict(settings)
+})
 
 bot.space.connect()
 bot.space.dispose(bot.context.get('spark.room'))
 
 bot.start()
 
-while True:
-
+while bot.context.get('general.signal') is None:
     time.sleep(1)
-    signal = bot.context.get('general.signal')
-    if signal is not None:
-        bot.stop()
-        time.sleep(5)
-        bot.space.dispose(bot.context.get('spark.room'))
-        break
 
+bot.stop()
 
-
+time.sleep(5)
+bot.space.dispose(bot.context.get('spark.room'))
