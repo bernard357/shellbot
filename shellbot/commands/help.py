@@ -65,9 +65,11 @@ class Help(Command):
                 self.shell.say(u"{} - {}".format(
                     command.keyword,
                     str(command.information_message)))
+                self.shell.say(u"usage:")
                 if command.usage_message:
-                    self.shell.say(u"usage:")
                     self.shell.say(str(command.usage_message))
+                else:
+                    self.shell.say(str(command.keyword))
 
             else:
                 self.shell.say(u"This command is unknown.")
