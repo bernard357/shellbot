@@ -2,7 +2,8 @@
 #
 bot:
 
-    name: "dee"
+    on_start: How can I help you?
+    on_stop: Bye for now
 
 # shell settings
 #
@@ -28,48 +29,53 @@ spark:
 
     # the title of the Cisco Spark room handled by this bot
     #
-    room: "Green Button"
+    room: Support room
 
     # the title of the team associated with the room
     #
-    team:
+    team: Support service
 
     # pre-defined moderators
     #
     moderators:
-      - bernard.paques@dimensiondata.com
+      - foo.bar@acme.com
 
     # pre-defined participants
     #
-#    participants:
-#      - anastasios.dados@dimensiondata.com
-#      - frederic.munster@dimensiondata.com
+    participants:
+      - joe.bar@acme.com
+      - super.support@help.org
 
     # the token that has been created for this bot should normally be set in
     # the environment but you can override the configuration below
     #
-    # CISCO_SPARK_PLUMBERY_BOT: "<token here hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY>"
+    token: "<token here hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY>"
 
     # the token of a human being, that allow the bot to get all messages
     # and not only those mentioning the bot itself
     # this should normally be set in the environment
     # but you can override the configuration below
     #
-    # CISCO_SPARK_TOKEN: "<token here hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY>"
-
-    # the url to be used by Cisco Spark to push new updates
-    #
-    #webhook: "http://73a1e282.ngrok.io"
+    personal_token: "<token here hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY>"
 
 # server settings
 #
 server:
 
+    # the url that is used to access this server remotely, e.g. with ngrok
+    #
+    url: "http://73a1e282.ngrok.io"
+
+    # the web path for hooking Cisco Spark
+    #
+    hook: /hook
+
+    # the network address to listen from
+    #
+    binding: 0.0.0.0
+
     # the port from which this bot is getting requests from the internet
     #
     port: 8080
 
-    # the url that is used to access this server remotely, e.g. with ngrok
-    #
-    #url: "http://73a1e282.ngrok.io"
 

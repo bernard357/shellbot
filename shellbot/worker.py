@@ -82,7 +82,8 @@ class Worker(object):
         except KeyboardInterrupt:
             pass
 
-        logging.info(u"Worker has been stopped")
+        finally:
+            logging.info(u"Worker has been stopped")
 
     def process(self, item, counter):
         """

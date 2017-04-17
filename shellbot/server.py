@@ -33,7 +33,12 @@ class Server(Bottle):
     Serves web requests
     """
 
-    def __init__(self, context=None, httpd=None, route=None, routes=None):
+    def __init__(self,
+                 context=None,
+                 httpd=None,
+                 route=None,
+                 routes=None,
+                 settings=None):
         """
         Serves web requests
 
@@ -48,15 +53,22 @@ class Server(Bottle):
         :param routes: multiple routes to add to this instance
         :type routes: list of Route
 
+        :param settings: initial paramters for this instance
+        :type settings: dict
+
         """
         self.context = Context() if context is None else context
+
         self.httpd = Bottle() if httpd is None else httpd
 
         self._routes = {}
         if route is not None:
-            self.load_route(route)
+            self.add_route(route)
         if routes is not None:
-            self.load_routes(routes)
+            self.add_routes(routes)
+
+        if settings is not None:
+            self.configure(settings)
 
     def configure(self, settings):
         """
@@ -69,7 +81,7 @@ class Server(Bottle):
         the context accordingly.
 
         >>>shell.configure({'server': {
-               'address': '10.4.2.5',
+               'binding': '10.4.2.5',
                'port': 5000,
                'debug': True,
                }})
@@ -80,7 +92,7 @@ class Server(Bottle):
 
         """
 
-        self.context.parse(settings, 'server', 'address')
+        self.context.parse(settings, 'server', 'binding')
         self.context.parse(settings, 'server', 'port')
         self.context.parse(settings, 'server', 'debug')
 
@@ -104,20 +116,20 @@ class Server(Bottle):
         """
         return self._routes.get(route, None)
 
-    def load_routes(self, items):
+    def add_routes(self, items):
         """
-        Loads web routes
+        Adds web routes
 
         :param routes: a list of additional routes
         :type routes: list of routes
 
         """
         for item in items:
-            self.load_route(item)
+            self.add_route(item)
 
-    def load_route(self, item):
+    def add_route(self, item):
         """
-        Loads one web route
+        Adds one web route
 
         :param route: one additional route
         :type route: Route

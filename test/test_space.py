@@ -244,18 +244,6 @@ class SpaceTests(unittest.TestCase):
         space.hook('*hook')
         self.assertTrue(mocked.called)
 
-    def test_register_hook_mock(self):
-
-        space = SparkSpace(context=Context(), bearer=cisco_spark_bearer)
-
-        space.api.rooms.list = mock.Mock(return_value=[FakeRoom()])
-        space.bond(space='*title')
-
-        mocked = mock.Mock()
-        space.api.webhooks.create = mocked
-        space.register_hook('*hook')
-        self.assertTrue(mocked.called)
-
     def test_pull_for_ever_mock(self):
 
         context = Context()

@@ -37,16 +37,22 @@ class ServerTests(unittest.TestCase):
 
         logging.info('*** Configuration test ***')
 
-        server = Server()
-
-        server.configure({
+        settings = {
             'server': {
-                'address': '1.2.3.4',
+                'binding': '1.2.3.4',
                 'port': 8888,
                 'debug': True,
             },
-        })
-        self.assertEqual(server.context.get('server.address'), '1.2.3.4')
+        }
+
+        server = Server()
+        server.configure(settings)
+        self.assertEqual(server.context.get('server.binding'), '1.2.3.4')
+        self.assertEqual(server.context.get('server.port'), 8888)
+        self.assertEqual(server.context.get('server.debug'), True)
+
+        server = Server(settings=settings)
+        self.assertEqual(server.context.get('server.binding'), '1.2.3.4')
         self.assertEqual(server.context.get('server.port'), 8888)
         self.assertEqual(server.context.get('server.debug'), True)
 
@@ -58,7 +64,7 @@ class ServerTests(unittest.TestCase):
         world = Route(route='/world')
 
         server = Server()
-        server.load_routes([hello, world])
+        server.add_routes([hello, world])
         self.assertEqual(server.routes, ['/hello', '/world'])
         self.assertEqual(server.route('/hello'), hello)
         self.assertEqual(server.route('/world'), world)
@@ -75,7 +81,7 @@ class ServerTests(unittest.TestCase):
         route = Route(route='/hello')
 
         server = Server()
-        server.load_route(route)
+        server.add_route(route)
         self.assertEqual(server.routes, ['/hello'])
         self.assertEqual(server.route('/hello'), route)
 
@@ -100,8 +106,7 @@ class ServerTests(unittest.TestCase):
 
         route = Static(route='/hello', page='Hello, world!')
 
-        server = Server()
-        server.load_route(route)
+        server = Server(route=route)
 
         test = TestApp(server.httpd)
         r = test.get('/hello')
@@ -115,8 +120,7 @@ class ServerTests(unittest.TestCase):
         queue = Queue()
         route = Notify(route='/notify', queue=queue, notification='hello!')
 
-        server = Server()
-        server.load_route(route)
+        server = Server(route=route)
 
         test = TestApp(server.httpd)
         r = test.get('/notify')
@@ -145,8 +149,7 @@ class ServerTests(unittest.TestCase):
                         route='/wrapper',
                         callable=callable.hook)
 
-        server = Server(context=context)
-        server.load_route(route)
+        server = Server(context=context, route=route)
 
         self.assertEqual(context.get('signal'), None)
 

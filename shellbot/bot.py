@@ -33,6 +33,7 @@ from listener import Listener
 from space import SparkSpace
 from speaker import Speaker
 from worker import Worker
+from routes.wrapper import Wrapper
 
 class ShellBot(object):
 
@@ -41,6 +42,7 @@ class ShellBot(object):
                  mouth=None,
                  inbox=None,
                  ears=None,
+                 settings=None,
                  space=None,
                  store=None):
 
@@ -60,72 +62,8 @@ class ShellBot(object):
         self.worker = Worker(self.inbox, self.shell)
         self.listener = Listener(self.ears, self.shell)
 
-    def start(self):
-
-        logging.warning(u'Starting the bot')
-
-        self.space.connect()
-
-        self.space.bond(
-            space=self.context.get('spark.room', 'Bot under test'),
-            team=self.context.get('spark.team'),
-            moderators=self.context.get('spark.moderators', []),
-            participants=self.context.get('spark.participants', [])
-        )
-
-        self.start_processes()
-
-        self.space.hook(self.context.get('spark.webhook'))
-
-        self.shell.say(self.context.get('bot.on_start'))
-        self.on_start()
-
-    def start_processes(self):
-
-        p = Process(target=self.speaker.work, args=(self.context,))
-        p.daemon = True
-        p.start()
-        self._speaker_process = p
-
-        p = Process(target=self.worker.work, args=(self.context,))
-        p.daemon = True
-        p.start()
-        self._worker_process = p
-
-        p = Process(target=self.listener.work, args=(self.context,))
-        p.daemon = True
-        p.start()
-        self._listener_process = p
-
-    def on_start(self):
-        """
-        Do additional stuff on bot start
-
-        Provide your own implementation in a sub-class where required.
-        """
-        pass
-
-    def stop(self):
-
-        logging.warning(u'Stopping the bot')
-
-        self.shell.say(self.context.get('bot.on_stop'))
-        self.on_stop()
-
-        time.sleep(1)
-        self.context.set('general.switch', 'off')
-        self.space.unhook()
-
-    def on_stop(self):
-        """
-        Do additional stuff on bot top
-
-        Provide your own implementation in a sub-class where required.
-
-        Note that this function is called before the actual stop, so
-        you can the shell or any other resource at will.
-        """
-
+        if settings is not None:
+            self.configure(settings)
 
     def configure_from_path(self, path="settings.yaml"):
         """
@@ -164,9 +102,9 @@ class ShellBot(object):
             logging.error(str(feedback))
             sys.exit(1)
 
-        self.configure_from_dict(settings)
+        self.configure(settings)
 
-    def configure_from_dict(self, settings):
+    def configure(self, settings):
         """
         Reads configuration information
 
@@ -179,12 +117,12 @@ class ShellBot(object):
         Look at the file ``settings.yaml`` that is coming with this project
         """
 
-        self.configure(settings)
+        self.configure_from_dict(settings)
 
         self.shell.configure(settings)
         self.space.configure(settings)
 
-    def configure(self, settings):
+    def configure_from_dict(self, settings):
         """
         Changes settings of the bot
 
@@ -192,11 +130,21 @@ class ShellBot(object):
         :type settings: dict
 
         This function reads key ``bot`` and below, and update
-        the context accordingly.
+        the context accordingly. It also reads hook parameters under ``server``.
 
-        >>>shell.configure({'bot': {
-               'on_banner': 'Hello, I am here to help',
-               }})
+        >>>shell.configure({
+
+            'bot': {
+                'on_start': 'You can now chat with Batman',
+                'on_stop': 'Batman is now quitting the room, bye',
+            },
+
+            'server': {
+                'url': 'http://d9b62df9.ngrok.io',
+                'hook': '/hook',
+            },
+
+        })
 
         This can also be written in a more compact form::
 
@@ -206,6 +154,132 @@ class ShellBot(object):
 
         self.context.parse(settings, 'bot', 'on_start')
         self.context.parse(settings, 'bot', 'on_stop')
+
+        self.context.parse(settings, 'server', 'url')
+        self.context.parse(settings, 'server', 'hook')
+
+    def load_commands(self, *args, **kwargs):
+        """
+        Loads commands for this bot
+
+        This function is a convenient proxy for the underlying shell.
+        """
+        self.shell.load_commands(*args, **kwargs)
+
+    def bond(self, reset=False):
+        """
+        Bonds to a room
+
+        :param reset: if True, delete previous room and re-create one
+        :type reset: bool
+
+        This function creates a room, or connect to an existing one.
+        """
+        self.space.connect()
+
+        if reset:
+            self.space.dispose(self.context.get('spark.room'))
+
+        self.space.bond(
+            space=self.context.get('spark.room', 'Bot under test'),
+            team=self.context.get('spark.team'),
+            moderators=self.context.get('spark.moderators', []),
+            participants=self.context.get('spark.participants', [])
+        )
+
+    def hook(self, server):
+        """
+        Connects this bot with Cisco Spark
+
+        :param server: web server to be used
+        :type server: Server
+
+        This function adds a route to the provided server, and
+        asks Cisco Spark to send messages there.
+        """
+        server.add_route(
+            Wrapper(route=self.context.get('server.hook', '/hook'),
+                    callable=self.space.webhook))
+
+        assert self.context.get('server.url') is not None
+        self.space.hook(
+            self.context.get('server.url')
+            +self.context.get('server.hook', '/hook'))
+
+    def run(self, server=None):
+        """
+        Runs the bot
+
+        :param server: a web server
+
+        If a server is provided, it is ran in the background. Else
+        a pulling loop is started instead to get messages.
+
+        In both cases, this function does not return, except on interrupt.
+        """
+        self.start()
+
+        if server is None:
+            self.space.pull_for_ever()
+
+        else:
+            server.run()
+
+    def start(self):
+
+        logging.warning(u'Starting the bot')
+
+        self.context.set('general.switch', 'on')
+        self.start_processes()
+
+        self.shell.say(self.context.get('bot.on_start'))
+        self.on_start()
+
+    def start_processes(self):
+
+        p = Process(target=self.speaker.work, args=(self.context,))
+        p.daemon = True
+        p.start()
+        self._speaker_process = p
+
+        p = Process(target=self.worker.work, args=(self.context,))
+        p.daemon = True
+        p.start()
+        self._worker_process = p
+
+        p = Process(target=self.listener.work, args=(self.context,))
+        p.daemon = True
+        p.start()
+        self._listener_process = p
+
+    def on_start(self):
+        """
+        Do additional stuff on bot start
+
+        Provide your own implementation in a sub-class where required.
+        """
+        pass
+
+    def stop(self):
+
+        logging.warning(u'Stopping the bot')
+
+        self.shell.say(self.context.get('bot.on_stop'))
+        self.on_stop()
+
+        time.sleep(1)
+        self.context.set('general.switch', 'off')
+
+    def on_stop(self):
+        """
+        Do additional stuff on bot top
+
+        Provide your own implementation in a sub-class where required.
+
+        Note that this function is called before the actual stop, so
+        you can access the shell or any other resource at will.
+        """
+        pass
 
 # the program launched from the command line
 #

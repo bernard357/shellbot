@@ -113,7 +113,6 @@ class SparkSpace(object):
         self.context.parse(settings, 'spark', 'team')
         self.context.parse(settings, 'spark', 'token')
         self.context.parse(settings, 'spark', 'personal_token')
-        self.context.parse(settings, 'spark', 'webhook')
 
         values = self.context.get('spark.moderators')
         if isinstance(values, str):
@@ -190,7 +189,7 @@ class SparkSpace(object):
              team=None,
              moderators=(),
              participants=(),
-             hook=None):
+             callback=None):
         """
         Creates or binds to the named Cisco Spark space
 
@@ -206,15 +205,15 @@ class SparkSpace(object):
         :param participants: the list of initial participants (optional)
         :type participants: list of str
 
-        :param hook: an optional hook to be called (optional)
-        :type hook: callable
+        :param callback: a function to be called (optional)
+        :type callback: callable
 
         This function either bonds to an existing space, or creates a new space
         if necessary. In later case it also
         adds moderators and participants.
 
-        Then it calls the optional hook. If a hook is provided, it is invoked
-        with the id of the target space.
+        Then it calls the optional callback. If a callback is provided, it is
+        invoked with the id of the target space.
         """
 
         logging.info(u"Bonding to room '{}'".format(space))
@@ -227,8 +226,8 @@ class SparkSpace(object):
         self.add_moderators(moderators)
         self.add_participants(participants)
 
-        if hook:
-            hook(self.room_id)
+        if callback:
+            callback(self.room_id)
 
     def get_space(self, space, team=None):
         """
@@ -532,37 +531,16 @@ class SparkSpace(object):
             logging.warning(u"Unable to post message")
             logging.warning(str(feedback))
 
-    def hook(self, webhook=None):
+    def hook(self, webhook):
         """
         Connects in the background to Cisco Spark inbound events
 
         :param webhook: web address to be used by Cisco Spark service
-        :type webhook: str or ``None``
-
-        If a webhook is provided, it is registered so that Cisco Spark
-        sends updates in the background. Else a daemon service is created
-        in the background to pull new events.
-        """
-        if webhook:
-            self._webhook = webhook
-            self.register_hook(webhook)
-
-        else:
-            p = Process(target=self.pull_for_ever)
-            p.daemon = True
-            p.start()
-
-    def unhook(self):
-        pass
-
-    def register_hook(self, webhook):
-        """
-        Asks Cisco Spark to send updates
-
-        :param webhook: web address to be used by Cisco Spark service
         :type webhook: str
 
+        This function registers the provided hook to Cisco Spark.
         """
+        assert webhook is not None
 
         logging.info(u"Registering webhook to Cisco Spark")
         logging.info(u"- {}".format(webhook))

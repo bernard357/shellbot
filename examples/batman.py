@@ -49,6 +49,41 @@ import time
 sys.path.insert(0, os.path.abspath('..'))
 
 from shellbot import ShellBot, Context, Command, Server, Wrapper
+Context.set_logger()
+
+#
+# load configuration
+#
+
+settings = {
+
+    'bot': {
+        'on_start': 'You can now chat with Batman',
+        'on_stop': 'Batman is now quitting the room, bye',
+    },
+
+    'spark': {
+        'room': 'Chat with Batman',
+        'moderators': 'bernard.paques@dimensiondata.com',
+    },
+
+    'server': {
+#        'url': 'http://66609f50.ngrok.io',
+        'hook': '/hook',
+#        'binding': '0.0.0.0',
+        'port': 8080,
+    },
+
+}
+
+context = Context(settings)
+
+#
+# create a bot and load commands
+#
+
+bot = ShellBot(settings=settings, context=context)
+
 
 class Batman(Command):
     keyword = 'whoareyou'
@@ -90,51 +125,24 @@ class Batsuicide(Command):
         sys.exit(1)
 
 
-settings = {
+bot.load_commands([Batman(), Batcave(), Batsignal(), Batsuicide()])
 
-    'bot': {
-        'on_start': 'You can now chat with Batman',
-        'on_stop': 'Batman is now quitting the room, bye',
-    },
-
-    'spark': {
-        'room': 'Chat with Batman',
-        'moderators': 'bernard.paques@dimensiondata.com',
-        'webhook': 'http://d9b62df9.ngrok.io/hook',
-    },
-
-    'server': {
-        'address': '0.0.0.0',
-        'port': 8080,
-    },
-
-}
-
-Context.set_logger()
-context = Context()
-
-bot = ShellBot(context=context)
-bot.shell.load_commands([Batman(), Batcave(), Batsignal(), Batsuicide()])
-
-bot.configure_from_dict(settings)
-
-route = Wrapper(context=context,
-                route='/hook',
-                callable=bot.space.webhook)
-
-server = Server(context=context, route=route)
-server.configure(settings)
-
-bot.space.connect()
-bot.space.dispose(bot.context.get('spark.room'))
-
-bot.start()
-
-server.run()
-#while bot.context.get('general.signal') is None:
-#    time.sleep(1)
 #
-#bot.stop()
+# initialise a suitable chat room
+#
 
-time.sleep(5)
+bot.bond(reset=True)
+
+#
+# run the bot
+#
+
+server = None
+
+if context.get('server.binding') is not None:
+    server = Server(context=context)
+    bot.hook(server=server)
+
+bot.run(server=server)
+
 bot.space.dispose(bot.context.get('spark.room'))
