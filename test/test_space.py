@@ -37,7 +37,6 @@ class SpaceTests(unittest.TestCase):
         logging.debug("*** Configure")
 
         space = SparkSpace(context=Context())
-
         space.configure({
             'spark': {
                 'room': 'My preferred room',
@@ -58,6 +57,7 @@ class SpaceTests(unittest.TestCase):
             ['alan.droit@azerty.org', 'bob.nard@support.tv'])
         self.assertEqual(space.context.get('spark.team'), 'Anchor team')
 
+        space = SparkSpace(context=Context())
         space.configure({
             'spark': {
                 'room': 'My preferred room',
@@ -74,6 +74,7 @@ class SpaceTests(unittest.TestCase):
         self.assertEqual(space.context.get('spark.team'), None)
 
         with self.assertRaises(KeyError): # missing key
+            space = SparkSpace(context=Context())
             space.configure({
                 'spark': {
                     'moderators':

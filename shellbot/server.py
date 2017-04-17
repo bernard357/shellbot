@@ -72,7 +72,7 @@ class Server(Bottle):
 
     def configure(self, settings):
         """
-        Changes settings of the server
+        Checks settings of the server
 
         :param settings: a dictionary with some statements for this instance
         :type settings: dict
@@ -92,9 +92,10 @@ class Server(Bottle):
 
         """
 
-        self.context.parse(settings, 'server', 'binding')
-        self.context.parse(settings, 'server', 'port')
-        self.context.parse(settings, 'server', 'debug')
+        self.context.apply(settings)
+        self.context.check('server.binding', '0.0.0.0')
+        self.context.check('server.port', 8080)
+        self.context.check('server.debug', False)
 
     @property
     def routes(self):

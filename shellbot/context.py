@@ -45,30 +45,22 @@ class Context(object):
             for key in settings.keys():
                 if isinstance(settings[key], dict):
                     for label in settings[key].keys():
-                        self.values[key+'.'+label] = settings[key].get(label)
+                        self.values[key+'.'+label] = deepcopy(settings[key].get(label))
                 else:
-                    self.values['general.'+key] = settings[key]
+                    self.values['general.'+key] = deepcopy(settings[key])
         finally:
             self.lock.release()
 
-    def parse(self,
-               settings,
-               primary,
-               secondary,
-               default=None,
-               is_mandatory=False,
-               validate=None):
+    def check(self,
+              key,
+              default=None,
+              is_mandatory=False,
+              validate=None):
         """
-        Imports some settings from a dictionary
+        Checks some settings
 
-        :param settings: the dictionary to parse
-        :type settings: dict
-
-        :param primary: the top-level key to check in the dictionary
+        :param key: the key that has to be checked
         :type primary: str
-
-        :param secondary: the next-level key to check in the dictionary
-        :type secondary: str
 
         :param default: the default value if no statement can be found
         :type default: str
@@ -81,7 +73,7 @@ class Context(object):
 
         Example::
 
-            settings = {
+            context = Context({
                 'spark': {
                     'room': 'My preferred room',
                     'moderators':
@@ -92,32 +84,49 @@ class Context(object):
                     'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY>',
                     'webhook': "http://73a1e282.ngrok.io",
                 }
-            }
+            })
 
-            context.parse(settings, 'spark', 'room', is_mandatory=True)
-            context.parse(settings, 'spark', 'team')
+            context.check('spark.room', is_mandatory=True)
+            context.check('spark.team')
 
+        When a default value is provided, it is used to initialize
+        properly some key.
+
+        >>>context.check('general.switch', 'on')
+
+        Another usage is to ensure that a key has been set previously.
+
+        >>>context.check('spark.room', is_mandatory=True)
+
+        Additional control can be added with the validation function.
+
+        >>>context.check('general.switch', validate=lambda x: x in ('on', 'off'))
+
+        This function raises ``KeyError`` if a mandatory key is absent.
+        If a validation function is provided, then a ``ValueError`` can be
+        raised as well in some situations.
         """
-        values = None
+        self.lock.acquire()
+        try:
 
-        if primary in settings and secondary in settings[primary]:
-            values = settings[primary][secondary]
+            if default is not None:
+                value = self.values.get(key, None)
+                if value is None:
+                    self.values[key] = deepcopy(default)
+                    value = default
 
-        dotted = '.'.join((primary, secondary))
-        if dotted in settings:
-            values = settings[dotted]
+            elif (is_mandatory or validate):
+                try:
+                    value = self.values[key]
+                except KeyError:
+                    raise KeyError(u"Missing '{}' in context".format(key))
 
-        if values is None and default is not None:
-            values = deepcopy(default)
+            if validate and validate(value) is False:
+                raise ValueError(
+                    u"Invalid value for '{}' in context".format(key))
 
-        if values is None and (is_mandatory or validate):
-            raise KeyError(u"Missing '{}' in settings".format(dotted))
-
-        if validate and validate(values) is False:
-            raise ValueError(
-                u"Invalid value for '{}' in settings".format(dotted))
-
-        self.set(dotted, values)
+        finally:
+            self.lock.release()
 
     def get(self, key, default=None):
         """

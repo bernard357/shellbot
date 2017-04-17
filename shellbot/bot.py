@@ -106,7 +106,7 @@ class ShellBot(object):
 
     def configure(self, settings):
         """
-        Reads configuration information
+        Changes global settings
 
         :param settings: configuration information
         :type settings: dict
@@ -132,7 +132,7 @@ class ShellBot(object):
         This function reads key ``bot`` and below, and update
         the context accordingly. It also reads hook parameters under ``server``.
 
-        >>>shell.configure({
+        >>>shell.configure_fom_dict({
 
             'bot': {
                 'on_start': 'You can now chat with Batman',
@@ -152,11 +152,11 @@ class ShellBot(object):
 
         """
 
-        self.context.parse(settings, 'bot', 'on_start')
-        self.context.parse(settings, 'bot', 'on_stop')
-
-        self.context.parse(settings, 'server', 'url')
-        self.context.parse(settings, 'server', 'hook')
+        self.context.apply(settings)
+        self.context.check('bot.on_start')
+        self.context.check('bot.on_stop')
+        self.context.check('server.url')
+        self.context.check('server.hook')
 
     def load_commands(self, *args, **kwargs):
         """

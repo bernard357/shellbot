@@ -42,13 +42,13 @@ class ContextTests(unittest.TestCase):
         self.assertEqual(context.get('server.port'), 80)
         self.assertEqual(context.get('server.url'), 'http://www.acme.com/')
 
-    def test_parse(self):
+    def test_check(self):
 
         context = Context()
 
         self.assertEqual(context.get('spark.room'), None)
 
-        settings = {
+        context.apply({
             'spark': {
                 'room': 'My preferred room',
                 'moderators':
@@ -59,67 +59,50 @@ class ContextTests(unittest.TestCase):
                 'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
                 'webhook': "http://73a1e282.ngrok.io",
             }
-        }
+        })
 
-        context.parse(settings, 'spark', 'room', is_mandatory=True)
+        context.check('spark.room', is_mandatory=True)
         self.assertEqual(context.get('spark.room'), 'My preferred room')
 
-        context.parse(settings, 'spark', 'team')
+        context.check('spark.team')
         self.assertEqual(context.get('spark.team'), 'Anchor team')
 
-        context.parse(settings, 'spark', '*not*present')
+        context.check('spark.*not*present')  # will be set to None
         self.assertEqual(context.get('spark.*not*present'), None)
 
-        context.parse(settings,
-                      'spark',
-                      'absent_list',
-                      default=[])
+        context.check('spark.absent_list', default=[])
         self.assertEqual(context.get('spark.absent_list'), [])
 
-        context.parse(settings,
-                      'spark',
-                      'absent_dict',
-                      default={})
+        context.check('spark.absent_dict', default={})
         self.assertEqual(context.get('spark.absent_dict'), {})
 
-        context.parse(settings,
-                      'spark',
-                      'absent_text',
-                      default='*born')
+        context.check('spark.absent_text', default='*born')
         self.assertEqual(context.get('spark.absent_text'), '*born')
 
-        context.parse(settings,  # is_mandatory is useless if default is set
-                      'spark',
-                      '*not*present',
+        # is_mandatory is useless if default is set
+        context.check('spark.*not*present',
                       default='*born',
                       is_mandatory=True)
         self.assertEqual(context.get('spark.*not*present'), '*born')
 
         with self.assertRaises(KeyError): # missing key
-            context.parse(settings,
-                          'spark',
-                          '*unknown*key*',
+            context.check('spark.*unknown*key*',
                           is_mandatory=True)
 
         with self.assertRaises(KeyError): # validate implies is_mandatory
-            context.parse(settings,
-                          'spark',
-                          '*unknown*key*',
+            context.check('spark.*unknown*key*',
                           validate=lambda line: True)
 
-        context.parse(settings,
-                      'spark',
-                      'webhook',
+        context.check('spark.webhook',
                       validate=lambda line: line.startswith('http'))
         self.assertEqual(context.get('spark.webhook'),
                          "http://73a1e282.ngrok.io")
 
         with self.assertRaises(ValueError): # present, but not put in context
-            context.parse(settings,
-                          'spark',
-                          'token',
+            context.check('spark.token',
                           validate=lambda line: len(line) == 32)
-        self.assertEqual(context.get('spark.token'), None)
+        self.assertEqual(context.get('spark.token'),
+                         'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY')
 
     def test_getter(self):
 

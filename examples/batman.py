@@ -140,7 +140,7 @@ bot.bond(reset=True)
 server = None
 
 if context.get('server.binding') is not None:
-    server = Server(context=context)
+    server = Server(settings=settings, context=context)
     bot.hook(server=server)
 
 bot.run(server=server)

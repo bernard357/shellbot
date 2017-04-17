@@ -71,7 +71,7 @@ class SparkSpace(object):
 
     def configure(self, settings):
         """
-        Changes settings of the space
+        Checks settings of the space
 
         :param settings: a dictionary with some statements for this instance
         :type settings: dict
@@ -107,12 +107,13 @@ class SparkSpace(object):
 
         """
 
-        self.context.parse(settings, 'spark', 'room', is_mandatory=True)
-        self.context.parse(settings, 'spark', 'moderators')
-        self.context.parse(settings, 'spark', 'participants')
-        self.context.parse(settings, 'spark', 'team')
-        self.context.parse(settings, 'spark', 'token')
-        self.context.parse(settings, 'spark', 'personal_token')
+        self.context.apply(settings)
+        self.context.check('spark.room', is_mandatory=True)
+        self.context.check('spark.moderators')
+        self.context.check('spark.participants')
+        self.context.check('spark.team')
+        self.context.check('spark.token')
+        self.context.check('spark.personal_token')
 
         values = self.context.get('spark.moderators')
         if isinstance(values, str):

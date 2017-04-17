@@ -48,7 +48,7 @@ class Shell(object):
 
     def configure(self, settings):
         """
-        Changes settings of the shell
+        Checks settings of the shell
 
         :param settings: a dictionary with some statements for this instance
         :type settings: dict
@@ -71,10 +71,11 @@ class Shell(object):
         loaded previously.
         """
 
-        self.context.parse(settings, 'shell', 'commands', default=[])
+        self.context.apply(settings)
+        self.context.check('shell.commands', default=[])
 
         self.load_default_commands()
-        self.load_commands(self.context.get('shell.commands', []))
+        self.load_commands(self.context.get('shell.commands'))
 
     @property
     def name(self):
