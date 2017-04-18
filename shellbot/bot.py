@@ -250,7 +250,7 @@ class ShellBot(object):
         self.context.set('general.switch', 'on')
         self.start_processes()
 
-        self.shell.say(self.context.get('bot.on_start'))
+        self.say(self.context.get('bot.on_start'))
         self.on_start()
 
     def start_processes(self):
@@ -294,7 +294,7 @@ class ShellBot(object):
 
         logging.warning(u'Stopping the bot')
 
-        self.shell.say(self.context.get('bot.on_stop'))
+        self.say(self.context.get('bot.on_stop'))
         self.on_stop()
 
         time.sleep(1)
