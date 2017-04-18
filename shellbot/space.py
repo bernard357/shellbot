@@ -55,7 +55,13 @@ class SparkSpace(object):
        >>>space.is_ready
        True
 
-    4.
+    4. Messages can be posted
+
+       >>>space.post_message('Hello, World!')
+
+    5. Room can be disposed
+
+       >>space.dispose()
 
     """
 
@@ -222,7 +228,9 @@ class SparkSpace(object):
             bot = self.get_bot()
             self.context.set('bot.name', str(bot.displayName.split(' ')[0]))
             logging.debug(u"Bot name: {}".format(self.context.get('bot.name')))
+
             self.bot_id = bot.id
+            self.context.set('bot.id', bot.id)
 
         except Exception as feedback:
             logging.warning(u"Unable to retrieve bot id")
@@ -266,9 +274,12 @@ class SparkSpace(object):
 
         logging.info(u"Bonding to room '{}'".format(room))
         self.room_id = item.id
-        logging.info(u"- roomId: {}".format(self.room_id))
+        self.context.set('spark.room.id', self.room_id)
+
+        logging.debug(u"- roomId: {}".format(self.room_id))
         self.room_title = item.title
-        logging.info(u"- roomTitle: {}".format(self.room_title))
+
+        logging.debug(u"- roomTitle: {}".format(self.room_title))
         self.team_id = item.teamId
 
         self.add_moderators(moderators)
@@ -585,6 +596,7 @@ class SparkSpace(object):
         if self.room_id is None:
             self.room_id = self.context.get('room.id')
 
+        logging.debug(u"- text: {}".format(text))
         logging.debug(u"- roomId: {}".format(self.room_id))
 
         try:
@@ -593,7 +605,7 @@ class SparkSpace(object):
                                      text=text,
                                      markdown=markdown,
                                      files=files)
-            logging.info(u"- done")
+            logging.debug(u"- done")
 
 
         except Exception as feedback:
@@ -621,7 +633,7 @@ class SparkSpace(object):
                                      event='created',
                                      filter='roomId='+self.room_id)
 
-            logging.info(u"- done")
+            logging.debug(u"- done")
 
         except Exception as feedback:
             logging.warning(u"Unable to add webhook")
@@ -742,5 +754,5 @@ class SparkSpace(object):
 
         item = self.api.people.me()
 
-        logging.info(u"- done")
+        logging.debug(u"- done")
         return item

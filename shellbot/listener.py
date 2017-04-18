@@ -126,7 +126,7 @@ class Listener(object):
             }
 
         """
-        logging.info(u'Listener is working on {}'.format(counter))
+        logging.debug(u'Listener is working on {}'.format(counter))
 
         if self.tee:
             self.tee.put(item)
@@ -140,13 +140,13 @@ class Listener(object):
             return
 
         if input is None:
-            logging.info(u"- no input in this item, thrown away")
+            logging.debug(u"- no input in this item, thrown away")
             return
 
         # my own messages
         #
-        if item['personId'] == self.context.get('spark.bot_id'):
-            logging.info(u"- sent by me, thrown away")
+        if item['personId'] == self.context.get('bot.id'):
+            logging.debug(u"- sent by me, thrown away")
             return
 
 #        print(item)

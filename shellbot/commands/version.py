@@ -29,4 +29,5 @@ class Version(Command):
         """
         Displays software version
         """
-        self.shell.say(u"version {}".format(self.shell.version))
+        self.shell.say(u"{} version {}".format(self.shell.name,
+                                               self.shell.version))
