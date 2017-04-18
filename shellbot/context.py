@@ -16,7 +16,6 @@
 # limitations under the License.
 
 import colorlog
-from copy import deepcopy
 import logging
 from multiprocessing import Lock, Manager
 
@@ -45,9 +44,11 @@ class Context(object):
             for key in settings.keys():
                 if isinstance(settings[key], dict):
                     for label in settings[key].keys():
-                        self.values[key+'.'+label] = deepcopy(settings[key].get(label))
+                        self.values[key+'.'+label] = settings[key].get(label)
+                elif len(key.split('.')) > 1:
+                    self.values[key] = settings[key]
                 else:
-                    self.values['general.'+key] = deepcopy(settings[key])
+                    self.values['general.'+key] = settings[key]
         finally:
             self.lock.release()
 
@@ -112,7 +113,7 @@ class Context(object):
             if default is not None:
                 value = self.values.get(key, None)
                 if value is None:
-                    self.values[key] = deepcopy(default)
+                    self.values[key] = default
                     value = default
 
             elif (is_mandatory or validate):
@@ -191,6 +192,8 @@ class Context(object):
     def set_logger(cls, level=logging.DEBUG):
         """
         Configure logging
+
+        :param level: expected level of verbosity
 
         This utility function should probably be put elsewhere
         """

@@ -15,34 +15,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from shellbot.commands.base import Command
+from shellbot import Command
 
-class Next(Command):
+class State(Command):
     """
-    Moves process to next state
+    Displays process status
     """
 
-    keyword = u'next'
-    information_message = u'Move process to next state.'
+    keyword = u'state'
+    information_message = u'Display process current state.'
 
     def execute(self, arguments=None):
         """
-        Displays software version
+        Displays process status
         """
-        state = self.context.get('process.current')
+        state = self.context.get('process.current.state')
         if state is None:
-            state = self.context.get('process.initial')
+            state = self.context.get('process.initial.state')
         if state is None:
             state = '*unknown*'
-
-        states = self.context.get('process.states')
-        while len(states):
-            if states[0] == state:
-                states.pop(0)
-                if len(states):
-                    state = states.pop(0)
-                    self.context.set('process.current', state)
-                break
-            states.pop(0)
-
-        self.shell.say(u"New state: {}".format(state))
+        self.shell.say(u"Current state: {}".format(state))

@@ -68,9 +68,9 @@ settings = {
     },
 
     'server': {
-#        'url': 'http://66609f50.ngrok.io',
+        'url': 'http://ceb1bfec.ngrok.io',
         'hook': '/hook',
-#        'binding': '0.0.0.0',
+        'binding': '0.0.0.0',
         'port': 8080,
     },
 
@@ -82,7 +82,7 @@ context = Context(settings)
 # create a bot and load commands
 #
 
-bot = ShellBot(settings=settings, context=context)
+bot = ShellBot(context=context, check=True)
 
 
 class Batman(Command):
@@ -140,7 +140,7 @@ bot.bond(reset=True)
 server = None
 
 if context.get('server.binding') is not None:
-    server = Server(settings=settings, context=context)
+    server = Server(context=context, check=True)
     bot.hook(server=server)
 
 bot.run(server=server)

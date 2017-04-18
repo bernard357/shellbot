@@ -142,7 +142,7 @@ class ListenerTests(unittest.TestCase):
             ears.get_nowait()
         with self.assertRaises(Exception):
             inbox.get_nowait()
-        self.assertEqual(mouth.get(), 'Shelly version *unknown*')
+        self.assertEqual(mouth.get(), 'version *unknown*')
         self.assertEqual(mouth.get(), 'echo - Echo input string.')
         self.assertEqual(mouth.get(), 'help - Show commands and usage.')
         self.assertEqual(mouth.get(), 'version - Display software version.')

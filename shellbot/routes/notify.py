@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from bottle import template
+import logging
 
 from base import Route
 
@@ -47,19 +47,23 @@ class Notify(Route):
     notification = None
 
     def get(self, **kwargs):
+        logging.debug(u"GET {}".format(self.route))
         return self.notify()
 
     def post(self):
+        logging.debug(u"POST {}".format(self.route))
         return self.notify()
 
     def put(self):
+        logging.debug(u"PUT {}".format(self.route))
         return self.notify()
 
     def delete(self):
+        logging.debug(u"DELETE {}".format(self.route))
         return self.notify()
 
     def notify(self):
-        item = self.route if self.notification is None else self.notification
+        item = self.notification if self.notification else self.route
         self.queue.put(item)
         return 'OK'
 

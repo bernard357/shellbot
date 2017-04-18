@@ -15,12 +15,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+
 from base import Route
 
 
 class Static(Route):
     """
     Implements a static web page
+
+    >>>page = "<html> ... </html>"
+    >>>route = Static(route='/index', page=page)
+
+    When the route is requested over the web, static content is provided
+    in return.
+
+    >>>route.get()
+    "<html> ... </html>"
+
+    This class handles only GET requests.
     """
 
     route = '/'
@@ -28,5 +41,6 @@ class Static(Route):
     page = None
 
     def get(self):
-        return 'OK' if self.page is None else self.page
+        logging.debug(u"GET {}".format(self.route))
+        return self.page if self.page else 'OK'
 

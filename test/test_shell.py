@@ -238,7 +238,7 @@ class ShellTests(unittest.TestCase):
         shell.do('version')
         self.assertEqual(shell.line, 'version')
         self.assertEqual(shell.count, 7)
-        self.assertEqual(mouth.get(), 'Shelly version *unknown*')
+        self.assertEqual(mouth.get(), 'version *unknown*')
         with self.assertRaises(Exception):
             mouth.get_nowait()
         with self.assertRaises(Exception):

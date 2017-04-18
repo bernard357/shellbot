@@ -39,6 +39,25 @@ class ServerTests(unittest.TestCase):
 
         settings = {
             'server': {
+                'port': 8888,
+                'debug': True,
+            },
+        }
+
+        context = Context(settings)
+        server = Server(context=context)
+        self.assertEqual(server.context.get('server.binding'), None)
+        self.assertEqual(server.context.get('server.port'), 8888)
+        self.assertEqual(server.context.get('server.debug'), True)
+
+        context = Context(settings)
+        server = Server(context=context, check=True)
+        self.assertEqual(server.context.get('server.binding'), '0.0.0.0')
+        self.assertEqual(server.context.get('server.port'), 8888)
+        self.assertEqual(server.context.get('server.debug'), True)
+
+        settings = {
+            'server': {
                 'binding': '1.2.3.4',
                 'port': 8888,
                 'debug': True,
@@ -51,7 +70,7 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(server.context.get('server.port'), 8888)
         self.assertEqual(server.context.get('server.debug'), True)
 
-        server = Server(settings=settings)
+        server = Server(Context(settings))
         self.assertEqual(server.context.get('server.binding'), '1.2.3.4')
         self.assertEqual(server.context.get('server.port'), 8888)
         self.assertEqual(server.context.get('server.debug'), True)

@@ -77,7 +77,7 @@ class WorkerTests(unittest.TestCase):
             mouth.get(),
             'help <command>')
 
-        self.assertEqual(mouth.get(), 'Shelly version *unknown*')
+        self.assertEqual(mouth.get(), 'version *unknown*')
 
         self.assertEqual(mouth.get(),
                          "Sorry, I do not know how to handle 'None'")

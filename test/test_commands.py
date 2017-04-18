@@ -305,7 +305,7 @@ class CommandsTests(unittest.TestCase):
         self.assertFalse(c.is_hidden)
 
         c.execute()
-        self.assertEqual(mouth.get(), 'testy version 17.4.1')
+        self.assertEqual(mouth.get(), 'version 17.4.1')
         with self.assertRaises(Exception):
             mouth.get_nowait()
 

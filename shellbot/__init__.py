@@ -24,7 +24,8 @@ from worker import Worker
 
 from commands.base import Command
 from routes.base import Route
+from routes.notify import Notify
 from routes.wrapper import Wrapper
 
-__version__ = '17.04.15'
+__version__ = '17.04.18'
 

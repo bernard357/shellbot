@@ -17,6 +17,7 @@
 
 import logging
 import os
+from six import string_types
 import sys
 import yaml
 import importlib
@@ -229,7 +230,7 @@ class Shell(object):
             >>>command = Version()
             >>>shell.load_command(command)
         """
-        if isinstance(command, str):
+        if isinstance(command, string_types):
             try:
                 module = importlib.import_module(command)
             except ImportError:

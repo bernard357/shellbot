@@ -31,6 +31,7 @@ class ContextTests(unittest.TestCase):
 
         settings = {
             'spark': {'CISCO_SPARK_BTTN_BOT': 'who_knows'},
+            'spark.room': 'title',
             'DEBUG': True,
             'server': {'port': 80, 'url': 'http://www.acme.com/'},
         }
@@ -39,6 +40,7 @@ class ContextTests(unittest.TestCase):
 
         self.assertEqual(context.get('general.DEBUG'), True)
         self.assertEqual(context.get('spark.CISCO_SPARK_BTTN_BOT'), 'who_knows')
+        self.assertEqual(context.get('spark.room'), 'title')
         self.assertEqual(context.get('server.port'), 80)
         self.assertEqual(context.get('server.url'), 'http://www.acme.com/')
 

@@ -38,7 +38,7 @@ class Server(Bottle):
                  httpd=None,
                  route=None,
                  routes=None,
-                 settings=None):
+                 check=False):
         """
         Serves web requests
 
@@ -67,10 +67,10 @@ class Server(Bottle):
         if routes is not None:
             self.add_routes(routes)
 
-        if settings is not None:
-            self.configure(settings)
+        if check:
+            self.configure()
 
-    def configure(self, settings):
+    def configure(self, settings={}):
         """
         Checks settings of the server
 
@@ -147,6 +147,10 @@ class Server(Bottle):
         Serves requests
         """
         logging.info(u'Starting web server')
+
+        for route in self.routes:
+            logging.debug(u'- {}'.format(route))
+
         try:
             self.httpd.run(host=self.context.get('server.address', '0.0.0.0'),
                            port=self.context.get('server.port', 80),

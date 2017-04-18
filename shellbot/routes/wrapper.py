@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from bottle import template
+import logging
 
 from base import Route
 
@@ -41,19 +41,23 @@ class Wrapper(Route):
     def get(self, **kwargs):
         if self.callable is None:
             raise NotImplementedError()
+        logging.debug(u"GET {}".format(self.route))
         return self.callable(**kwargs)
 
     def post(self):
         if self.callable is None:
             raise NotImplementedError()
+        logging.debug(u"POST {}".format(self.route))
         return self.callable()
 
     def put(self):
         if self.callable is None:
             raise NotImplementedError()
+        logging.debug(u"PUT {}".format(self.route))
         return self.callable()
 
     def delete(self):
         if self.callable is None:
             raise NotImplementedError()
+        logging.debug(u"DELETE {}".format(self.route))
         return self.callable()

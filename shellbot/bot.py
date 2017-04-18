@@ -42,7 +42,7 @@ class ShellBot(object):
                  mouth=None,
                  inbox=None,
                  ears=None,
-                 settings=None,
+                 check=False,
                  space=None,
                  store=None):
 
@@ -62,8 +62,8 @@ class ShellBot(object):
         self.worker = Worker(self.inbox, self.shell)
         self.listener = Listener(self.ears, self.shell)
 
-        if settings is not None:
-            self.configure(settings)
+        if check:
+            self.configure()
 
     def configure_from_path(self, path="settings.yaml"):
         """
@@ -99,14 +99,14 @@ class ShellBot(object):
         try:
             settings = yaml.load(stream)
         except Exception as feedback:
-            logging.error(str(feedback))
+            logging.error(feedback)
             sys.exit(1)
 
         self.configure(settings)
 
-    def configure(self, settings):
+    def configure(self, settings={}):
         """
-        Changes global settings
+        Checks settings
 
         :param settings: configuration information
         :type settings: dict
@@ -121,6 +121,9 @@ class ShellBot(object):
 
         self.shell.configure(settings)
         self.space.configure(settings)
+
+        self.space.connect()
+
 
     def configure_from_dict(self, settings):
         """
@@ -175,19 +178,21 @@ class ShellBot(object):
 
         This function creates a room, or connect to an existing one.
         """
-        self.space.connect()
-
         if reset:
             self.space.dispose(self.context.get('spark.room'))
 
+        def remember_room_id(id):
+            self.context.set('room.id', id)
+
         self.space.bond(
-            space=self.context.get('spark.room', 'Bot under test'),
+            room=self.context.get('spark.room', 'Bot under test'),
             team=self.context.get('spark.team'),
             moderators=self.context.get('spark.moderators', []),
-            participants=self.context.get('spark.participants', [])
+            participants=self.context.get('spark.participants', []),
+            callback=remember_room_id
         )
 
-    def hook(self, server):
+    def hook(self, server=None):
         """
         Connects this bot with Cisco Spark
 
@@ -197,22 +202,32 @@ class ShellBot(object):
         This function adds a route to the provided server, and
         asks Cisco Spark to send messages there.
         """
-        server.add_route(
-            Wrapper(route=self.context.get('server.hook', '/hook'),
-                    callable=self.space.webhook))
+
+        if server is not None:
+            logging.debug('Adding hook route to web server')
+            server.add_route(
+                Wrapper(route=self.context.get('server.hook', '/hook'),
+                        callable=self.get_hook()))
 
         assert self.context.get('server.url') is not None
         self.space.hook(
             self.context.get('server.url')
             +self.context.get('server.hook', '/hook'))
 
+    def get_hook(self):
+        """
+        Provides the hooking function to receive messages from Cisco Spark
+        """
+        return self.space.webhook
+
     def run(self, server=None):
         """
         Runs the bot
 
         :param server: a web server
+        :type server: Server
 
-        If a server is provided, it is ran in the background. Else
+        If a server is provided, it is run in the background. Else
         a pulling loop is started instead to get messages.
 
         In both cases, this function does not return, except on interrupt.
@@ -226,6 +241,9 @@ class ShellBot(object):
             server.run()
 
     def start(self):
+        """
+        Starts the bot
+        """
 
         logging.warning(u'Starting the bot')
 
@@ -236,6 +254,12 @@ class ShellBot(object):
         self.on_start()
 
     def start_processes(self):
+        """
+        Starts bot processes
+
+        This function starts a separate daemonic process for each
+        main component onf the architecture: listener, speaker, and worker.
+        """
 
         p = Process(target=self.speaker.work, args=(self.context,))
         p.daemon = True
@@ -261,6 +285,12 @@ class ShellBot(object):
         pass
 
     def stop(self):
+        """
+        Stops the bot
+
+        This function changes in the context a specific key that is monitored
+        by bot components.
+        """
 
         logging.warning(u'Stopping the bot')
 
@@ -280,3 +310,14 @@ class ShellBot(object):
         you can access the shell or any other resource at will.
         """
         pass
+
+    def say(self, *args, **kwargs):
+        """
+        Says something to the room
+
+        >>>bot.say('Hello, World!')
+
+        This function is a convenient proxy for the underlying shell.
+        """
+        self.shell.say(*args, **kwargs)
+

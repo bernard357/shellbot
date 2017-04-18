@@ -10,8 +10,8 @@ bot:
 shell:
 
     commands:
-        - custom.exception.state
-        - custom.exception.next
+        - examples.linear.state
+        - examples.linear.next
 
 # additional settings
 #
@@ -37,8 +37,7 @@ spark:
 
     # pre-defined moderators
     #
-    moderators:
-      - foo.bar@acme.com
+    moderators: foo.bar@acme.com
 
     # pre-defined participants
     #

@@ -13,14 +13,14 @@ sys.path.insert(0, os.path.abspath('..'))
 from shellbot import Context, Shell
 
 
-class CustomTests(unittest.TestCase):
+class ExampleTests(unittest.TestCase):
 
-    def test_exception_status_initial(self):
+    def test_linear_state_initial(self):
 
         settings = {
             'process': {
                 'states': ['T100', 'T200', 'T300'],
-                'initial': 'T100'
+                'initial.state': 'T100'
             }
         }
 
@@ -28,12 +28,12 @@ class CustomTests(unittest.TestCase):
         mouth = Queue()
         shell = Shell(context, mouth)
 
-        from custom.exception.state import State
+        from examples.linear.state import State
 
         c = State(shell)
 
         self.assertEqual(c.keyword, 'state')
-        self.assertEqual(c.information_message, 'Displays process current state.')
+        self.assertEqual(c.information_message, 'Display process current state.')
         self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
@@ -42,12 +42,12 @@ class CustomTests(unittest.TestCase):
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
-    def test_exception_status_current(self):
+    def test_linear_state_current(self):
 
         settings = {
             'process': {
                 'states': ['T100', 'T200', 'T300'],
-                'current': 'T200'
+                'current.state': 'T200'
             }
         }
 
@@ -55,12 +55,12 @@ class CustomTests(unittest.TestCase):
         mouth = Queue()
         shell = Shell(context, mouth)
 
-        from custom.exception.state import State
+        from examples.linear.state import State
 
         c = State(shell)
 
         self.assertEqual(c.keyword, 'state')
-        self.assertEqual(c.information_message, 'Displays process current state.')
+        self.assertEqual(c.information_message, 'Display process current state.')
         self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
@@ -69,12 +69,12 @@ class CustomTests(unittest.TestCase):
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
-    def test_exception_next_current(self):
+    def test_linear_next_current(self):
 
         settings = {
             'process': {
                 'states': ['T100', 'T200', 'T300'],
-                'current': 'T200'
+                'current.state': 'T200'
             }
         }
 
@@ -82,12 +82,12 @@ class CustomTests(unittest.TestCase):
         mouth = Queue()
         shell = Shell(context, mouth)
 
-        from custom.exception.next import Next
+        from examples.linear.next import Next
 
         c = Next(shell)
 
         self.assertEqual(c.keyword, 'next')
-        self.assertEqual(c.information_message, 'Moves process to next state.')
+        self.assertEqual(c.information_message, 'Move process to next state.')
         self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
@@ -96,12 +96,12 @@ class CustomTests(unittest.TestCase):
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
-    def test_exception_sequence(self):
+    def test_linear_lifecycle(self):
 
         settings = {
             'process': {
                 'states': ['T100', 'T200', 'T300'],
-                'current': 'T100'
+                'current.state': 'T100'
             }
         }
 
@@ -109,8 +109,8 @@ class CustomTests(unittest.TestCase):
         mouth = Queue()
         shell = Shell(context, mouth)
 
-        from custom.exception.state import State
-        from custom.exception.next import Next
+        from examples.linear.state import State
+        from examples.linear.next import Next
 
         s = State(shell)
         n = Next(shell)

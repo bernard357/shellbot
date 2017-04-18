@@ -21,7 +21,7 @@ class BotTests(unittest.TestCase):
 
     def test_init(self):
 
-        logging.info('*** Init test ***')
+        logging.info('*** init***')
 
         context = Context()
 
@@ -59,13 +59,14 @@ class BotTests(unittest.TestCase):
 
     def test_configuration(self):
 
-        logging.info('*** Configuration test ***')
+        logging.info('*** configure ***')
 
         bot = ShellBot()
 
         with self.assertRaises(KeyError):
             bot.configure({})
 
+        bot = ShellBot()
         settings = {
 
             'bot': {
@@ -75,7 +76,7 @@ class BotTests(unittest.TestCase):
 
             'spark': {
                 'room': 'space name',
-                'moderators': ['foo.bar@acme.com'],
+                'moderators': 'foo.bar@acme.com',
                 'participants': ['joe.bar@acme.com'],
             },
 
@@ -98,6 +99,7 @@ class BotTests(unittest.TestCase):
         self.assertEqual(bot.context.get('server.url'), 'http://to.no.where')
         self.assertEqual(bot.context.get('server.hook'), '/hook')
 
+        bot = ShellBot()
         bot.configure_from_path('test_settings/regular.yaml')
         self.assertEqual(bot.context.get('bot.on_start'), 'How can I help you?')
         self.assertEqual(bot.context.get('bot.on_stop'), 'Bye for now')
@@ -109,7 +111,49 @@ class BotTests(unittest.TestCase):
         self.assertEqual(bot.context.get('server.url'), 'http://73a1e282.ngrok.io')
         self.assertEqual(bot.context.get('server.hook'), '/hook')
 
+    def test_configuration_2(self):
+
+        logging.info('*** configure 2 ***')
+
+        settings = {
+
+            'bot': {
+                'on_start': 'Start!',
+                'on_stop': 'Stop!',
+            },
+
+            'spark': {
+                'room': 'Support room',
+                'moderators': 'foo.bar@acme.com',
+            },
+
+            'server': {
+                'url': 'http://to.nowhere/',
+                'trigger': '/trigger',
+                'hook': '/hook',
+                'binding': '0.0.0.0',
+                'port': 8080,
+            },
+
+        }
+
+        context = Context(settings)
+        bot = ShellBot(context=context, check=True)
+        self.assertEqual(bot.context.get('bot.on_start'), 'Start!')
+        self.assertEqual(bot.context.get('bot.on_stop'), 'Stop!')
+        self.assertEqual(bot.context.get('spark.room'), 'Support room')
+        self.assertEqual(bot.context.get('spark.moderators'),
+                         ['foo.bar@acme.com'])
+        self.assertEqual(bot.context.get('spark.participants'), [])
+        self.assertEqual(bot.context.get('server.url'), 'http://to.nowhere/')
+        self.assertEqual(bot.context.get('server.hook'), '/hook')
+        self.assertEqual(bot.context.get('server.trigger'), '/trigger')
+        self.assertEqual(bot.context.get('server.binding'), '0.0.0.0')
+        self.assertEqual(bot.context.get('server.port'), 8080)
+
     def test_load_commands(self):
+
+        logging.info('*** load_commands ***')
 
         bot = ShellBot()
         with mock.patch.object(bot.shell,
@@ -118,9 +162,20 @@ class BotTests(unittest.TestCase):
             bot.load_commands(['a', 'b', 'c', 'd'])
             mocked.assert_called_with(['a', 'b', 'c', 'd'])
 
+    def test_say(self):
+
+        logging.info('*** say ***')
+
+        bot = ShellBot()
+        with mock.patch.object(bot.shell,
+                               'say',
+                               return_value=None) as mocked:
+            bot.say('hello')
+            mocked.assert_called_with('hello')
+
     def test_static(self):
 
-        logging.info('*** Static test ***')
+        logging.info('*** static test ***')
 
         bot = ShellBot()
 
@@ -144,7 +199,7 @@ class BotTests(unittest.TestCase):
 
     def test_dynamic(self):
 
-        logging.info('*** Dynamic test ***')
+        logging.info('*** dynamic test ***')
 
         bot = ShellBot()
 
