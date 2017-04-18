@@ -17,9 +17,6 @@
 
 import logging
 from Queue import Empty
-import requests
-from requests_toolbelt import MultipartEncoder
-import random
 from six import string_types
 import time
 
@@ -72,6 +69,8 @@ class Speaker(object):
 
             mouth.put(Exception('EOQ'))
 
+        Note that items are not picked up from the queue until the underlying
+        space is ready for handling messages.
         """
         logging.info(u"Starting speaker")
 
@@ -80,6 +79,12 @@ class Speaker(object):
         try:
             self.context.set('speaker.counter', 0)
             while self.context.get('general.switch', 'on') == 'on':
+
+                if not self.space.is_ready:
+                    logging.debug("Speaker is waiting for space to be ready...")
+                    time.sleep(5)
+                    continue
+
                 try:
                     item = self.mouth.get(True, 0.1)
                     if isinstance(item, Exception):
