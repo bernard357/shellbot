@@ -54,6 +54,7 @@ class SpeakerTests(unittest.TestCase):
         context.set('spark.room_id', 'fake')
 
         space = SparkSpace(context=context)
+        space.room_id = '123'
         speaker = Speaker(mouth=mouth, space=space)
 
         with mock.patch.object(space,
