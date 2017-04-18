@@ -20,9 +20,11 @@ class Command(object):
     Implements one command
     """
 
-    def __init__(self, shell=None):
+    def __init__(self, shell=None, **kwargs):
         self.shell = shell
         self.context = shell.context if shell else None
+        for key, value in kwargs.items():
+              setattr(self, key, value)
 
     def execute(self, arguments=None):
         """

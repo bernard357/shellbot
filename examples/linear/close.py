@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -13,6 +15,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from close import Close
-from next import Next
-from state import State
+import sys
+import time
+
+from shellbot import Command
+
+
+class Close(Command):
+    """
+    Closes the room
+
+    >>>close = Close(bot=bot)
+    >>>shell.load_command(close)
+
+    """
+    keyword = 'close'
+    information_message = "Close this room"
+    is_interactive = False
+
+    def execute(self, arguments=None):
+        time.sleep(3)
+        self.shell.say(self.information_message)
+        self.bot.stop()
+        self.bot.dispose()
+        time.sleep(3)
+        sys.exit(1)

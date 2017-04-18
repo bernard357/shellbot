@@ -78,10 +78,9 @@ context.check('server.hook', '/hook')
 
 bot = ShellBot(context=context, check=True)
 
-from linear.state import State
-from linear.next import Next
+from linear import State, Next, Close
 
-bot.load_commands([State(), Next()])
+bot.load_commands([State(), Next(), Close(bot=bot)])
 
 #
 # a queue of events between the web server and the bot

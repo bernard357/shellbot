@@ -275,11 +275,12 @@ class SparkSpace(object):
         logging.info(u"Bonding to room '{}'".format(room))
         self.room_id = item.id
         self.context.set('spark.room.id', self.room_id)
-
         logging.debug(u"- roomId: {}".format(self.room_id))
-        self.room_title = item.title
 
+        self.room_title = item.title
+        self.context.set('spark.room.title', self.room_title)
         logging.debug(u"- roomTitle: {}".format(self.room_title))
+
         self.team_id = item.teamId
 
         self.add_moderators(moderators)
@@ -504,6 +505,10 @@ class SparkSpace(object):
         elif self.room_id:
             id = self.room_id
             title = self.room_title
+
+        elif self.context.get('spark.room.id'):
+            id = self.context.get('spark.room.id')
+            title = self.context.get('spark.room.title', '*unknown*')
 
         else:
             raise ValueError(u"Need to provide room to be disposed")

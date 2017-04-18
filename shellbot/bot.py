@@ -179,7 +179,7 @@ class ShellBot(object):
         This function creates a room, or connect to an existing one.
         """
         if reset:
-            self.space.dispose(self.context.get('spark.room'))
+            self.dispose(self.context.get('spark.room'))
 
         def remember_room_id(id):
             self.context.set('room.id', id)
@@ -191,6 +191,14 @@ class ShellBot(object):
             participants=self.context.get('spark.participants', []),
             callback=remember_room_id
         )
+
+    def dispose(self, *args, **kwargs):
+        """
+        Disposes the room
+
+        This function is a convenient proxy for the underlying space.
+        """
+        self.space.dispose(*args, **kwargs)
 
     def hook(self, server=None):
         """
