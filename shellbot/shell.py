@@ -119,11 +119,13 @@ class Shell(object):
 
         if self.mouth:
             if markdown or file:
+                logging.debug("Shell says: {}".format(message))
                 self.mouth.put(ShellMessage(message, markdown, file))
             else:
+                logging.debug("Shell says: {}".format(message))
                 self.mouth.put(message)
         else:
-            logging.info(str(message))
+            logging.info("Shell says: {}".format(message))
 
     @property
     def commands(self):
@@ -268,7 +270,7 @@ class Shell(object):
         """
         line = '' if line is None else unicode(line)  # sanity check
 
-        logging.debug(u"Handling: {}".format(line))
+        logging.info(u"Handling: {}".format(line))
         self.line = line
         self.count += 1
 
