@@ -24,6 +24,7 @@ class Version(Command):
 
     keyword = u'version'
     information_message = u'Display software version.'
+    is_hidden = True
 
     def execute(self, arguments=None):
         """
