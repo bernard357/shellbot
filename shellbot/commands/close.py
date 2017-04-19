@@ -33,6 +33,6 @@ class Close(Command):
     information_message = u"Close this room."
 
     def execute(self, arguments=None):
-        self.shell.say(self.information_message)
+        self.bot.say(self.information_message)
         self.bot.stop()
         self.bot.dispose()

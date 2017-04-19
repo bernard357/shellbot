@@ -40,13 +40,13 @@ class Next(Command):
         current = self.steps.step
         new = self.steps.next()
         if new is None:
-            self.shell.say(u"Current state is undefined")
+            self.bot.say(u"Current state is undefined")
             return
 
         if (current is not None) and (current.label == new.label):
-            self.shell.say(u"Current state: {} - {}".format(current.label,
-                                                            current.message))
+            self.bot.say(u"Current state: {} - {}".format(current.label,
+                                                          current.message))
             return
 
-        self.shell.say(u"New state: {} - {}".format(new.label,
-                                                    new.message))
+        self.bot.say(u"New state: {} - {}".format(new.label,
+                                                  new.message))

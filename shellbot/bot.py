@@ -35,6 +35,7 @@ from speaker import Speaker
 from worker import Worker
 from routes.wrapper import Wrapper
 
+
 class ShellBot(object):
 
     def __init__(self,
@@ -56,10 +57,10 @@ class ShellBot(object):
                                                     ears=self.ears)
         self.store = store
 
-        self.shell = Shell(self.context, self.mouth, self.inbox)
+        self.shell = Shell(bot=self)
 
         self.speaker = Speaker(self.mouth, self.space)
-        self.worker = Worker(self.inbox, self.shell)
+        self.worker = Worker(bot=self)
         self.listener = Listener(self.ears, self.shell)
 
         if check:
@@ -161,13 +162,43 @@ class ShellBot(object):
         self.context.check('server.url')
         self.context.check('server.hook')
 
+    @property
+    def name(self):
+        """
+        Retrieves the dynamic name of this bot
+
+        :return: The value of ``bot.name`` key in current context
+        :rtype: str
+
+        """
+        return self.context.get('bot.name', 'Shelly')
+
+    @property
+    def version(self):
+        """
+        Retrieves the version of this bot
+
+        :return: The value of ``bot.version`` key in current context
+        :rtype: str
+
+        """
+        return self.context.get('bot.version', '*unknown*')
+
     def load_commands(self, *args, **kwargs):
         """
         Loads commands for this bot
 
         This function is a convenient proxy for the underlying shell.
         """
-        self.shell.load_commands(bot=self, *args, **kwargs)
+        self.shell.load_commands(*args, **kwargs)
+
+    def load_command(self, *args, **kwargs):
+        """
+        Loads one commands for this bot
+
+        This function is a convenient proxy for the underlying shell.
+        """
+        self.shell.load_command(*args, **kwargs)
 
     def bond(self, reset=False):
         """
@@ -319,13 +350,37 @@ class ShellBot(object):
         """
         pass
 
-    def say(self, *args, **kwargs):
+    def say(self, message, markdown=None, file=None):
         """
-        Says something to the room
+        Sends a response back to the room
 
-        >>>bot.say('Hello, World!')
+        :param message: Plain text message
+        :type message: str or None
 
-        This function is a convenient proxy for the underlying shell.
+        :param markdown: A message using Markdown
+        :type markdown: str or None
+
+        :param file: path or URL to a file to attach
+        :type file: str or None
+
         """
-        self.shell.say(*args, **kwargs)
+        if message in (None, ''):
+            return
+
+        if self.mouth:
+            if markdown or file:
+                logging.debug(u"Bot says: {}".format(message))
+                self.mouth.put(ShellBotMessage(message, markdown, file))
+            else:
+                logging.debug(u"Bot says: {}".format(message))
+                self.mouth.put(message)
+        else:
+            logging.info(u"Bot says: {}".format(message))
+
+
+class ShellBotMessage(object):
+    def __init__(self, message, markdown=None, file=None):
+        self.message = message
+        self.markdown = markdown
+        self.file = file
 

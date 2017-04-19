@@ -39,7 +39,7 @@ class State(Command):
 
         step = self.steps.step
         if step is None:
-            self.shell.say(u"Current state is undefined")
+            self.bot.say(u"Current state is undefined")
         else:
-            self.shell.say(u"Current state: {} - {}".format(step.label,
-                                                            step.message))
+            self.bot.say(u"Current state: {} - {}".format(step.label,
+                                                          step.message))

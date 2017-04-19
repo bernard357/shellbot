@@ -13,7 +13,7 @@ import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import Context, Shell, Listener
+from shellbot import Context, ShellBot, Listener
 
 
 class ListenerTests(unittest.TestCase):
@@ -22,27 +22,23 @@ class ListenerTests(unittest.TestCase):
 
         logging.info('*** Static test ***')
 
-        ears = Queue()
-        mouth = Queue()
-        inbox = Queue()
+        bot = ShellBot()
+        bot.shell.load_default_commands()
 
-        context = Context()
-        shell = Shell(context, mouth, inbox)
-        shell.load_default_commands()
-        listener = Listener(ears, shell)
+        listener = Listener(bot.ears, bot.shell)
 
-        listener_process = Process(target=listener.work, args=(context,))
+        listener_process = Process(target=listener.work, args=(bot.context,))
         listener_process.daemon = True
         listener_process.start()
 
         listener_process.join(1.0)
         if listener_process.is_alive():
             logging.info('Stopping listener')
-            context.set('general.switch', 'off')
+            bot.context.set('general.switch', 'off')
             listener_process.join()
 
         self.assertFalse(listener_process.is_alive())
-        self.assertEqual(context.get('listener.counter', 0), 0)
+        self.assertEqual(bot.context.get('listener.counter', 0), 0)
 
     def test_dynamic(self):
 
@@ -121,36 +117,32 @@ class ListenerTests(unittest.TestCase):
 
         ]
 
-        ears = Queue()
+        bot = ShellBot()
+        bot.shell.load_default_commands()
+
         for item in items:
-            ears.put(item)
-        ears.put(Exception('EOQ'))
+            bot.ears.put(item)
 
-        mouth = Queue()
-        inbox = Queue()
+        bot.ears.put(Exception('EOQ'))
+
         tee = Queue()
+        listener = Listener(bot.ears, bot.shell, tee=tee)
 
-        context = Context()
-        shell = Shell(context, mouth, inbox)
-        shell.load_default_commands()
-        listener = Listener(ears, shell, tee=tee)
+        listener.work(bot.context)
 
-        listener.work(context)
-
-        self.assertEqual(context.get('listener.counter'), 5)
+        self.assertEqual(bot.context.get('listener.counter'), 5)
         with self.assertRaises(Exception):
-            ears.get_nowait()
+            bot.ears.get_nowait()
         with self.assertRaises(Exception):
-            inbox.get_nowait()
-        self.assertEqual(mouth.get(), 'version *unknown*')
-        self.assertEqual(mouth.get(), 'echo - Echo input string.')
-        self.assertEqual(mouth.get(), 'help - Show commands and usage.')
-        self.assertEqual(mouth.get(), 'version - Display software version.')
-        self.assertEqual(mouth.get(), 'help - Show commands and usage.')
-        self.assertEqual(mouth.get(), 'usage:')
-        self.assertEqual(mouth.get(), 'help <command>')
+            bot.inbox.get_nowait()
+        self.assertEqual(bot.mouth.get(), 'Shelly version *unknown*')
+        self.assertEqual(bot.mouth.get(), 'echo - Echo input string.')
+        self.assertEqual(bot.mouth.get(), 'help - Show commands and usage.')
+        self.assertEqual(bot.mouth.get(), 'help - Show commands and usage.')
+        self.assertEqual(bot.mouth.get(), 'usage:')
+        self.assertEqual(bot.mouth.get(), 'help <command>')
         with self.assertRaises(Exception):
-            print(mouth.get_nowait())
+            print(bot.mouth.get_nowait())
 
         for item in items:
             self.assertEqual(tee.get(), item)

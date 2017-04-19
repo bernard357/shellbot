@@ -20,9 +20,10 @@ class Command(object):
     Implements one command
     """
 
-    def __init__(self, shell=None, **kwargs):
-        self.shell = shell
-        self.context = shell.context if shell else None
+    def __init__(self, bot=None, **kwargs):
+        self.bot = bot
+        self.shell = bot.shell if bot else None
+        self.context = bot.context if bot else None
         for key, value in kwargs.items():
               setattr(self, key, value)
 
@@ -38,7 +39,7 @@ class Command(object):
 
         """
         if self.information_message:
-            self.shell.say(self.information_message)
+            self.bot.say(self.information_message)
 
     keyword = None      # verb or token for this command
 

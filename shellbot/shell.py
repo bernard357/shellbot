@@ -17,31 +17,27 @@
 
 import logging
 import os
+from multiprocessing import Queue
 from six import string_types
 import sys
 import yaml
 import importlib
 
-sys.path.insert(0, os.path.abspath('..'))
+from context import Context
 
-class ShellMessage(object):
-    def __init__(self, message, markdown=None, file=None):
-        self.message = message
-        self.markdown = markdown
-        self.file = file
 
 class Shell(object):
     """
     Parses input and reacts accordingly
     """
 
-    def __init__(self, context, mouth=None, inbox=None):
-        self.context = context
-        self.mouth = mouth
-        self.inbox = inbox
+    def __init__(self, bot):
+        self.bot = bot
+        self.context = bot.context
+        self.inbox = bot.inbox
 
         self._commands = {}
-        self.load_commands(context.get('shell.commands', []))
+        self.load_commands(self.context.get('shell.commands', []))
 
         self.line=None
         self.count=0
@@ -78,54 +74,15 @@ class Shell(object):
         self.load_default_commands()
         self.load_commands(self.context.get('shell.commands'))
 
-    @property
-    def name(self):
+    def say(self, *args, **kwargs):
         """
-        Retrieves the dynamic name of this bot
+        Says something to the room
 
-        :return: The value of ``bot.name`` key in current context
-        :rtype: str
+        >>>shell.say('Hello, World!')
 
+        This function is a convenient proxy for the bot itself.
         """
-        return self.context.get('bot.name', 'Shelly')
-
-    @property
-    def version(self):
-        """
-        Retrieves the version of this bot
-
-        :return: The value of ``bot.version`` key in current context
-        :rtype: str
-
-        """
-        return self.context.get('bot.version', '*unknown*')
-
-    def say(self, message, markdown=None, file=None):
-        """
-        Sends a response back from shell
-
-        :param message: The message from the shell
-        :type message: str or None
-
-        :param markdown: A message using Markdown
-        :type markdown: str or None
-
-        :param file: path or URL to a file to attach
-        :type file: str or None
-
-        """
-        if message in (None, ''):
-            return
-
-        if self.mouth:
-            if markdown or file:
-                logging.debug(u"Shell says: {}".format(message))
-                self.mouth.put(ShellMessage(message, markdown, file))
-            else:
-                logging.debug(u"Shell says: {}".format(message))
-                self.mouth.put(message)
-        else:
-            logging.info(u"Shell says: {}".format(message))
+        self.bot.say(*args, **kwargs)
 
     @property
     def commands(self):
@@ -235,13 +192,15 @@ class Shell(object):
         if isinstance(command, string_types):
             try:
                 module = importlib.import_module(command)
+                logging.debug(u"Loading command '{}'".format(command))
             except ImportError:
                 (dummy, label) = command.split('.', 1)
                 module = importlib.import_module(label)
+                logging.debug(u"Loading command '{}'".format(label))
 
             name = command.rsplit('.', 1)[1].capitalize()
             cls = getattr(module, name)
-            command = cls(self)
+            command = cls(self.bot)
 
         if command.keyword in self._commands.keys():
             logging.debug(u"Command '{}' has been replaced".format(
@@ -249,6 +208,7 @@ class Shell(object):
 
         command.context = self.context
         command.shell = self
+        command.bot = self.bot
 
         self._commands[ command.keyword ] = command
 

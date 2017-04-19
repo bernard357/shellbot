@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.abspath('..'))
 from shellbot import Context
 from shellbot import Listener
 from shellbot import Shell
+from shellbot import ShellBot
 from shellbot import Worker
 from shellbot import Speaker
 from shellbot import SparkSpace
@@ -34,15 +35,21 @@ class CompositeTests(unittest.TestCase):
         mouth = Queue()
         inbox = Queue()
 
-        shell = Shell(context, mouth, inbox)
+        my_bot = ShellBot(context=context,
+                          mouth=mouth,
+                          inbox=inbox,
+                          ears=ears,
+                          space=space)
+
+        shell = Shell(bot=my_bot)
         shell.load_default_commands()
 
         speaker = Speaker(mouth, space)
         speaker_process = Process(target=speaker.work, args=(context,))
         speaker_process.start()
 
-        worker = Worker(inbox, shell)
-        worker_process = Process(target=worker.work, args=(context,))
+        worker = Worker(bot=my_bot)
+        worker_process = Process(target=worker.work)
         worker_process.start()
 
         listener = Listener(ears, shell)
@@ -68,12 +75,19 @@ class CompositeTests(unittest.TestCase):
         context = Context()
         space = SparkSpace(context=context, bearer='*dummy')
         space.post_message = MagicMock()
+        space.room_id = '123'
 
         ears = Queue()
         mouth = Queue()
         inbox = Queue()
 
-        shell = Shell(context, mouth, inbox)
+        my_bot = ShellBot(context=context,
+                          mouth=mouth,
+                          inbox=inbox,
+                          ears=ears,
+                          space=space)
+
+        shell = Shell(bot=my_bot)
         shell.load_default_commands()
 
         speaker = Speaker(mouth, space)
@@ -81,8 +95,8 @@ class CompositeTests(unittest.TestCase):
         speaker_process.daemon = True
         speaker_process.start()
 
-        worker = Worker(inbox, shell)
-        worker_process = Process(target=worker.work, args=(context,))
+        worker = Worker(bot=my_bot)
+        worker_process = Process(target=worker.work)
         worker_process.daemon = True
         worker_process.start()
 

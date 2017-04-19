@@ -17,6 +17,7 @@
 
 from base import Command
 
+
 class Version(Command):
     """
     Displays software version
@@ -30,5 +31,5 @@ class Version(Command):
         """
         Displays software version
         """
-        self.shell.say(u"{} version {}".format(self.shell.name,
-                                               self.shell.version))
+        self.bot.say(u"{} version {}".format(self.bot.name,
+                                             self.bot.version))

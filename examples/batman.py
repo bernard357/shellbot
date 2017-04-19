@@ -68,9 +68,9 @@ settings = {
     },
 
     'server': {
-        'url': 'http://ceb1bfec.ngrok.io',
+#        'url': 'http://ceb1bfec.ngrok.io',
         'hook': '/hook',
-        'binding': '0.0.0.0',
+#        'binding': '0.0.0.0',
         'port': 8080,
     },
 
@@ -96,9 +96,9 @@ class Batcave(Command):
 
     def execute(self, arguments=None):
         if arguments:
-            self.shell.say("The Batcave echoes, '{0}'".format(arguments))
+            self.bot.say("The Batcave echoes, '{0}'".format(arguments))
         else:
-            self.shell.say(self.information_message)
+            self.bot.say(self.information_message)
 
 
 class Batsignal(Command):
@@ -107,8 +107,8 @@ class Batsignal(Command):
     information_file = "https://upload.wikimedia.org/wikipedia/en/c/c6/Bat-signal_1989_film.jpg"
 
     def execute(self, arguments=None):
-        self.shell.say(self.information_message,
-                       file=self.information_file)
+        self.bot.say(self.information_message,
+                     file=self.information_file)
 
 
 class Batsuicide(Command):
@@ -118,11 +118,8 @@ class Batsuicide(Command):
 
     def execute(self, arguments=None):
         time.sleep(3)
-        self.shell.say(self.information_message)
-        global bot
-        bot.stop()
-        time.sleep(3)
-        sys.exit(1)
+        self.bot.say(self.information_message)
+        self.bot.stop()
 
 
 bot.load_commands([Batman(), Batcave(), Batsignal(), Batsuicide()])

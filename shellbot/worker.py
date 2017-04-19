@@ -25,11 +25,13 @@ class Worker(object):
     Executes non-interactive commands
     """
 
-    def __init__(self, inbox, shell):
-        self.inbox = inbox
-        self.shell = shell
+    def __init__(self, bot=None):
+        self.bot = bot
+        self.context = bot.context
+        self.inbox = bot.inbox
+        self.shell = bot.shell
 
-    def work(self, context):
+    def work(self):
         """
         Continuously processes commands
 
@@ -42,9 +44,9 @@ class Worker(object):
         Processing should be handled in a separate background process, like
         in the following example::
 
-            worker = Worker(inbox=inbox, shell=shell)
+            worker = Worker(bot=my_bot)
 
-            process = Process(target=worker.work, args=(context,))
+            process = Process(target=worker.work)
             process.daemon = True
             process.start()
 
@@ -61,7 +63,6 @@ class Worker(object):
         """
         logging.info(u"Starting worker")
 
-        self.context = context
         self.context.set('worker.counter', 0)
         self.context.set('worker.busy', False)
 
@@ -109,10 +110,10 @@ class Worker(object):
                 command.execute(arguments)
 
             else:
-                self.shell.say(
+                self.bot.say(
                     u"Sorry, I do not know how to handle '{}'".format(verb))
 
         except Exception as feedback:
-            self.shell.say(
+            self.bot.say(
                 u"Sorry, I do not know how to handle '{}'".format(verb))
             raise

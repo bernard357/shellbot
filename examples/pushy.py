@@ -130,10 +130,10 @@ server.add_route(Wrapper(route=context.get('server.hook'),
 
 class Trigger(object):
 
-    def __init__(self, context, queue, bot):
-        self.context = context
-        self.queue = queue if queue else Queue()
+    def __init__(self, bot, queue):
         self.bot = bot
+        self.context = bot.context
+        self.queue = queue if queue else Queue()
 
     def work(self):
         logging.info(u"Waiting for trigger")
@@ -167,7 +167,7 @@ class Trigger(object):
 # launch multiple processes to do the job
 #
 
-trigger = Trigger(context, queue, bot)
+trigger = Trigger(bot, queue)
 p = Process(target=trigger.work)
 p.start()
 

@@ -11,24 +11,20 @@ import sys
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import Context, Shell
+from shellbot import Context, ShellBot, Shell
 
 
 class CommandsTests(unittest.TestCase):
 
     def test_base(self):
 
-        settings = {
-            u'hello': u'world',
-        }
-        context = Context(settings)
-        mouth = Queue()
-        shell = Shell(context, mouth)
-
+        my_bot = ShellBot()
         from shellbot.commands import Command
+        c = Command(my_bot)
 
-        c = Command(shell)
-
+        my_bot.shell.configure(settings={
+            u'hello': u'world',
+        })
         self.assertEqual(c.context.get('general.hello'), u'world')
 
         self.assertEqual(c.keyword, None)
@@ -43,19 +39,16 @@ class CommandsTests(unittest.TestCase):
 
     def test_from_base(self):
 
-        context = Context()
-        mouth = Queue()
-        shell = Shell(context, mouth)
-
+        my_bot = ShellBot()
         from shellbot.commands import Command
 
-        c = Command(shell)
+        c = Command(my_bot)
         c.keyword = u'bâtman'
         c.information_message = u"I'm Bâtman!"
         c.execute()
-        self.assertEqual(mouth.get(), c.information_message)
+        self.assertEqual(my_bot.mouth.get(), c.information_message)
         with self.assertRaises(Exception):
-            print(mouth.get_nowait())
+            print(my_bot.mouth.get_nowait())
 
         class Batcave(Command):
             keyword = u'batcave'
@@ -63,17 +56,17 @@ class CommandsTests(unittest.TestCase):
 
             def execute(self, arguments=None):
                 if arguments:
-                    self.shell.say(u"The Batcave echoes, '{0}'".format(arguments))
+                    self.bot.say(u"The Batcave echoes, '{0}'".format(arguments))
                 else:
-                    self.shell.say(self.information_message)
+                    self.bot.say(self.information_message)
 
-        c = Batcave(shell)
+        c = Batcave(my_bot)
         c.execute('')
-        self.assertEqual(mouth.get(), u"The Batcave is silent...")
+        self.assertEqual(my_bot.mouth.get(), u"The Batcave is silent...")
         c.execute(u'hello?')
-        self.assertEqual(mouth.get(), u"The Batcave echoes, 'hello?'")
+        self.assertEqual(my_bot.mouth.get(), u"The Batcave echoes, 'hello?'")
         with self.assertRaises(Exception):
-            print(mouth.get_nowait())
+            print(my_bot.mouth.get_nowait())
 
         class Batsignal(Command):
             keyword = u'batsignal'
@@ -81,30 +74,24 @@ class CommandsTests(unittest.TestCase):
             information_file = "https://upload.wikimedia.org/wikipedia/en/c/c6/Bat-signal_1989_film.jpg"
 
             def execute(self, arguments=None):
-                self.shell.say(self.information_message,
+                self.bot.say(self.information_message,
                                file=c.information_file)
 
-        c = Batsignal(shell)
+        c = Batsignal(my_bot)
         c.execute()
-        item = mouth.get()
+        item = my_bot.mouth.get()
         self.assertEqual(item.message, c.information_message)
         self.assertEqual(item.file, c.information_file)
 
     def test_close(self):
 
-        context = Context()
-        mouth = Queue()
-        shell = Shell(context, mouth)
-
-        class FakeBot(object):
-            def __init__(self):
-                self.stop = mock.Mock()
-                self.dispose = mock.Mock()
+        my_bot = ShellBot()
+        my_bot.stop = mock.Mock()
+        my_bot.dispose = mock.Mock()
 
         from shellbot.commands import Close
 
-        bot = FakeBot()
-        c = Close(shell, bot=bot)
+        c = Close(my_bot)
 
         self.assertEqual(c.keyword, u'close')
         self.assertEqual(c.information_message, u'Close this room.')
@@ -113,21 +100,18 @@ class CommandsTests(unittest.TestCase):
         self.assertFalse(c.is_hidden)
 
         c.execute()
-        self.assertEqual(mouth.get(), u'Close this room.')
+        self.assertEqual(my_bot.mouth.get(), u'Close this room.')
         with self.assertRaises(Exception):
-            mouth.get_nowait()
-        self.assertTrue(bot.stop.called)
-        self.assertTrue(bot.dispose.called)
+            my_bot.mouth.get_nowait()
+        self.assertTrue(my_bot.stop.called)
+        self.assertTrue(my_bot.dispose.called)
 
     def test_default(self):
 
-        context = Context()
-        mouth = Queue()
-        shell = Shell(context, mouth)
-
+        my_bot = ShellBot()
         from shellbot.commands import Default
 
-        c = Default(shell)
+        c = Default(my_bot)
 
         self.assertEqual(c.keyword, u'*default')
         self.assertEqual(c.information_message, u'Handle unmatched command.')
@@ -135,22 +119,19 @@ class CommandsTests(unittest.TestCase):
         self.assertTrue(c.is_interactive)
         self.assertTrue(c.is_hidden)
 
-        shell.verb = u'*unknown*'
+        my_bot.shell.verb = u'*unknown*'
         c.execute('test of default command')
-        self.assertEqual(mouth.get(),
+        self.assertEqual(my_bot.mouth.get(),
                          u"Sorry, I do not know how to handle '*unknown*'")
         with self.assertRaises(Exception):
-            mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
     def test_echo(self):
 
-        context = Context()
-        mouth = Queue()
-        shell = Shell(context, mouth)
-
+        my_bot = ShellBot()
         from shellbot.commands import Echo
 
-        c = Echo(shell)
+        c = Echo(my_bot)
 
         self.assertEqual(c.keyword, u'echo')
         self.assertEqual(c.information_message, u'Echo input string.')
@@ -160,21 +141,18 @@ class CommandsTests(unittest.TestCase):
 
         message = u"hello world"
         c.execute(message)
-        self.assertEqual(mouth.get(), message)
+        self.assertEqual(my_bot.mouth.get(), message)
         with self.assertRaises(Exception):
-            mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
     def test_empty(self):
 
-        context = Context()
-        mouth = Queue()
-        shell = Shell(context, mouth)
-
-        shell.load_command('shellbot.commands.help')
+        my_bot = ShellBot()
+        my_bot.shell.load_command('shellbot.commands.help')
 
         from shellbot.commands import Empty
 
-        c = Empty(shell)
+        c = Empty(my_bot)
 
         self.assertEqual(c.keyword, u'*empty')
         self.assertEqual(c.information_message, u'Handle empty command.')
@@ -184,20 +162,17 @@ class CommandsTests(unittest.TestCase):
 
         c.execute()
         self.assertEqual(
-            mouth.get(),
+            my_bot.mouth.get(),
             u'help - Show commands and usage.')
         with self.assertRaises(Exception):
-            print(mouth.get_nowait())
+            print(my_bot.mouth.get_nowait())
 
     def test_help(self):
 
-        context = Context()
-        mouth = Queue()
-        shell = Shell(context, mouth)
-
+        my_bot = ShellBot()
         from shellbot.commands import Help
 
-        c = Help(shell)
+        c = Help(my_bot)
 
         self.assertEqual(c.keyword, u'help')
         self.assertEqual(
@@ -208,78 +183,69 @@ class CommandsTests(unittest.TestCase):
         self.assertFalse(c.is_hidden)
 
         c.execute()
-        self.assertEqual(mouth.get(), u'No command has been found.')
+        self.assertEqual(my_bot.mouth.get(), u'No command has been found.')
         with self.assertRaises(Exception):
-            print(mouth.get_nowait())
+            print(my_bot.mouth.get_nowait())
 
     def test_help_true(self):
 
-        context = Context()
-        mouth = Queue()
-        shell = Shell(context, mouth)
-
-        shell.load_command('shellbot.commands.help')
+        my_bot = ShellBot()
+        my_bot.shell.load_command('shellbot.commands.help')
 
         from shellbot.commands import Help
 
-        c = Help(shell)
+        c = Help(my_bot)
 
         c.execute()
         self.assertEqual(
-            mouth.get(),
+            my_bot.mouth.get(),
             u'help - Show commands and usage.')
         with self.assertRaises(Exception):
-            mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
         c.execute("help")
         self.assertEqual(
-            mouth.get(),
+            my_bot.mouth.get(),
             u'help - Show commands and usage.')
         self.assertEqual(
-            mouth.get(),
+            my_bot.mouth.get(),
             u'usage:')
         self.assertEqual(
-            mouth.get(),
+            my_bot.mouth.get(),
             u'help <command>')
         with self.assertRaises(Exception):
-            mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
     def test_help_false(self):
 
-        context = Context()
-        mouth = Queue()
-        shell = Shell(context, mouth)
-
+        my_bot = ShellBot()
         from shellbot.commands import Help
 
-        c = Help(shell)
+        c = Help(my_bot)
 
         c.execute()
-        self.assertEqual(mouth.get(), u'No command has been found.')
+        self.assertEqual(my_bot.mouth.get(), u'No command has been found.')
         with self.assertRaises(Exception):
-            mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
         c.execute(u"*unknown*command*")
-        self.assertEqual(mouth.get(), u'No command has been found.')
+        self.assertEqual(my_bot.mouth.get(), u'No command has been found.')
         with self.assertRaises(Exception):
-            print(mouth.get_nowait())
+            print(my_bot.mouth.get_nowait())
 
-        shell.load_command('shellbot.commands.help')
+        my_bot.load_command('shellbot.commands.help')
 
         c.execute("*unknown*command*")
-        self.assertEqual(mouth.get(), u'This command is unknown.')
+        self.assertEqual(my_bot.mouth.get(), u'This command is unknown.')
         with self.assertRaises(Exception):
-            mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
     def test_noop(self):
 
-        context = Context()
-        mouth = Queue()
-        shell = Shell(context, mouth)
-
+        my_bot = ShellBot()
         from shellbot.commands import Noop
 
-        c = Noop(shell)
+        c = Noop(my_bot)
 
         self.assertEqual(c.keyword, u'pass')
         self.assertEqual(c.information_message, u'Do absolutely nothing.')
@@ -289,17 +255,14 @@ class CommandsTests(unittest.TestCase):
 
         c.execute()
         with self.assertRaises(Exception):
-            mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
     def test_sleep(self):
 
-        context = Context()
-        mouth = Queue()
-        shell = Shell(context, mouth)
-
+        my_bot = ShellBot()
         from shellbot.commands import Sleep
 
-        c = Sleep(shell)
+        c = Sleep(my_bot)
 
         self.assertEqual(c.keyword, u'sleep')
         self.assertEqual(c.information_message, u'Sleep for a while.')
@@ -309,24 +272,22 @@ class CommandsTests(unittest.TestCase):
 
         c.execute(u'')
         with self.assertRaises(Exception):
-            mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
         c.execute(u'1')
         with self.assertRaises(Exception):
-            mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
     def test_version(self):
 
-        settings = {
+        my_bot = ShellBot()
+        my_bot.shell.configure(settings={
             'bot': {'name': 'testy', 'version': '17.4.1'},
-        }
-        context = Context(settings)
-        mouth = Queue()
-        shell = Shell(context, mouth)
+        })
 
         from shellbot.commands import Version
 
-        c = Version(shell)
+        c = Version(my_bot)
 
         self.assertEqual(c.keyword, u'version')
         self.assertEqual(c.information_message, u'Display software version.')
@@ -335,9 +296,9 @@ class CommandsTests(unittest.TestCase):
         self.assertTrue(c.is_hidden)
 
         c.execute()
-        self.assertEqual(mouth.get(), 'testy version 17.4.1')
+        self.assertEqual(my_bot.mouth.get(), 'testy version 17.4.1')
         with self.assertRaises(Exception):
-            mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
 if __name__ == '__main__':
 

@@ -12,8 +12,10 @@ import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import Context, Shell, Worker
+from shellbot import Context, ShellBot, Worker
 
+
+my_bot = ShellBot()
 
 class WorkerTests(unittest.TestCase):
 
@@ -21,72 +23,63 @@ class WorkerTests(unittest.TestCase):
 
         logging.info('*** Static test ***')
 
-        mouth = Queue()
-        inbox = Queue()
+        my_bot.context = Context()
+        worker = Worker(bot=my_bot)
 
-        context = Context()
-        shell = Shell(context, mouth, inbox)
-        shell.load_default_commands()
-        worker = Worker(inbox, shell)
-
-        worker_process = Process(target=worker.work, args=(context,))
+        worker_process = Process(target=worker.work)
         worker_process.daemon = True
         worker_process.start()
 
         worker_process.join(1.0)
         if worker_process.is_alive():
             logging.info('Stopping worker')
-            context.set('general.switch', 'off')
+            my_bot.context.set('general.switch', 'off')
             worker_process.join()
 
         self.assertFalse(worker_process.is_alive())
-        self.assertEqual(context.get('worker.counter', 0), 0)
+        self.assertEqual(my_bot.context.get('worker.counter', 0), 0)
 
     def test_dynamic(self):
 
         logging.info('*** Dynamic test ***')
 
-        mouth = Queue()
-        inbox = Queue()
-        inbox.put(('echo', 'hello world'))
-        inbox.put(('help', 'help'))
-        inbox.put(('pass', ''))
-        inbox.put(('sleep', '2'))
-        inbox.put(('version', ''))
-        inbox.put(('unknownCommand', ''))
-        inbox.put(Exception('EOQ'))
+        my_bot.inbox.put(('echo', 'hello world'))
+        my_bot.inbox.put(('help', 'help'))
+        my_bot.inbox.put(('pass', ''))
+        my_bot.inbox.put(('sleep', '2'))
+        my_bot.inbox.put(('version', ''))
+        my_bot.inbox.put(('unknownCommand', ''))
+        my_bot.inbox.put(Exception('EOQ'))
 
-        context = Context()
-        shell = Shell(context, mouth, inbox)
-        shell.load_default_commands()
-        worker = Worker(inbox, shell)
+        my_bot.context = Context()
+        my_bot.shell.load_default_commands()
+        worker = Worker(bot=my_bot)
+        worker.work()
 
-        worker.work(context)
+        self.assertEqual(my_bot.context.get('worker.counter'), 6)
 
-        self.assertEqual(context.get('worker.counter'), 6)
-
-        self.assertEqual(mouth.get(), 'hello world')
+        self.assertEqual(my_bot.mouth.get(), 'hello world')
 
         self.assertEqual(
-            mouth.get(),
+            my_bot.mouth.get(),
             'help - Show commands and usage.')
         self.assertEqual(
-            mouth.get(),
+            my_bot.mouth.get(),
             'usage:')
         self.assertEqual(
-            mouth.get(),
+            my_bot.mouth.get(),
             'help <command>')
 
-        self.assertEqual(mouth.get(), 'version *unknown*')
+        self.assertEqual(my_bot.mouth.get(), u'Shelly version *unknown*')
 
-        self.assertEqual(mouth.get(),
+        self.assertEqual(my_bot.mouth.get(),
                          "Sorry, I do not know how to handle 'None'")
 
         with self.assertRaises(Exception):
-            print(mouth.get_nowait())
+            print(my_bot.mouth.get_nowait())
 
         with self.assertRaises(Exception):
-            inbox.get_nowait()
+            my_bot.inbox.get_nowait()
 
 if __name__ == '__main__':
 

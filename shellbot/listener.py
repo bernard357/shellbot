@@ -136,7 +136,7 @@ class Listener(object):
         try:
             input = item['text']
         except:
-            logging.warning(u"- invalid format, thrown away")
+            logging.debug(u"- invalid format, thrown away")
             return
 
         if input is None:
@@ -159,7 +159,7 @@ class Listener(object):
         bot = self.context.get('bot.name', 'shelly')
         if not input.lower().startswith(bot):
             try:
-                logging.info(u"- {}".format(input))
+                logging.debug(u"- {}".format(input))
             except:
                 pass
             logging.info(u"- not for me, thrown away")

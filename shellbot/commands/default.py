@@ -30,5 +30,5 @@ class Default(Command):
         """
         Handles unmatched command
         """
-        self.shell.say(
+        self.bot.say(
             u"Sorry, I do not know how to handle '{}'".format(self.shell.verb))
