@@ -78,7 +78,8 @@ context.check('server.hook', '/hook')
 
 bot = ShellBot(context=context, check=True)
 
-from linear import State, Next, Close
+from linear import State, Next
+from shellbot.commands import Close
 
 bot.load_commands([State(), Next(), Close(bot=bot)])
 

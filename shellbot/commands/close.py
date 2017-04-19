@@ -18,7 +18,7 @@
 import sys
 import time
 
-from shellbot import Command
+from base import Command
 
 
 class Close(Command):
@@ -30,13 +30,9 @@ class Close(Command):
 
     """
     keyword = 'close'
-    information_message = "Close this room"
-    is_interactive = False
+    information_message = u"Close this room."
 
     def execute(self, arguments=None):
-        time.sleep(3)
         self.shell.say(self.information_message)
         self.bot.stop()
         self.bot.dispose()
-        time.sleep(3)
-        sys.exit(1)

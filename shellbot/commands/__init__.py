@@ -14,6 +14,7 @@
 # limitations under the License.
 
 from base import Command
+from close import Close
 from default import Default
 from echo import Echo
 from empty import Empty

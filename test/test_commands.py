@@ -4,6 +4,7 @@
 import colorlog
 import unittest
 import logging
+import mock
 import os
 from multiprocessing import Process, Queue
 import sys
@@ -88,6 +89,35 @@ class CommandsTests(unittest.TestCase):
         item = mouth.get()
         self.assertEqual(item.message, c.information_message)
         self.assertEqual(item.file, c.information_file)
+
+    def test_close(self):
+
+        context = Context()
+        mouth = Queue()
+        shell = Shell(context, mouth)
+
+        class FakeBot(object):
+            def __init__(self):
+                self.stop = mock.Mock()
+                self.dispose = mock.Mock()
+
+        from shellbot.commands import Close
+
+        bot = FakeBot()
+        c = Close(shell, bot=bot)
+
+        self.assertEqual(c.keyword, u'close')
+        self.assertEqual(c.information_message, u'Close this room.')
+        self.assertEqual(c.usage_message, None)
+        self.assertTrue(c.is_interactive)
+        self.assertFalse(c.is_hidden)
+
+        c.execute()
+        self.assertEqual(mouth.get(), u'Close this room.')
+        with self.assertRaises(Exception):
+            mouth.get_nowait()
+        self.assertTrue(bot.stop.called)
+        self.assertTrue(bot.dispose.called)
 
     def test_default(self):
 
@@ -281,7 +311,7 @@ class CommandsTests(unittest.TestCase):
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
-        c.execute(u'2')
+        c.execute(u'1')
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
@@ -302,10 +332,10 @@ class CommandsTests(unittest.TestCase):
         self.assertEqual(c.information_message, u'Display software version.')
         self.assertEqual(c.usage_message, None)
         self.assertTrue(c.is_interactive)
-        self.assertFalse(c.is_hidden)
+        self.assertTrue(c.is_hidden)
 
         c.execute()
-        self.assertEqual(mouth.get(), 'version 17.4.1')
+        self.assertEqual(mouth.get(), 'testy version 17.4.1')
         with self.assertRaises(Exception):
             mouth.get_nowait()
 
