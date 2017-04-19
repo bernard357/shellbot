@@ -51,25 +51,33 @@ class Help(Command):
             self.bot.say(u"No command has been found.")
 
         elif arguments in (None, ''):
+            lines = []
             for key in self.shell.commands:
                 command = self.shell.command(key)
                 if not command.is_hidden:
-                    self.bot.say(u"{} - {}".format(
+                    lines.append(u"{} - {}".format(
                         command.keyword,
-                        str(command.information_message)))
+                        command.information_message))
+
+            if lines:
+                self.bot.say('\n'.join(lines))
 
         else:
             command = self.shell.command(arguments)
 
             if command:
-                self.bot.say(u"{} - {}".format(
+                lines = []
+                lines.append(u"{} - {}".format(
                     command.keyword,
-                    str(command.information_message)))
-                self.bot.say(u"usage:")
+                    command.information_message))
+                lines.append(u"usage:")
                 if command.usage_message:
-                    self.bot.say(str(command.usage_message))
+                    lines.append(command.usage_message)
                 else:
-                    self.bot.say(str(command.keyword))
+                    lines.append(command.keyword)
+
+                if lines:
+                    self.bot.say('\n'.join(lines))
 
             else:
                 self.bot.say(u"This command is unknown.")
