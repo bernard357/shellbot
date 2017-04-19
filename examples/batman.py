@@ -68,9 +68,9 @@ settings = {
     },
 
     'server': {
-#        'url': 'http://ceb1bfec.ngrok.io',
+        'url': 'http://5ad34e5b.ngrok.io',
         'hook': '/hook',
-#        'binding': '0.0.0.0',
+        'binding': '0.0.0.0',
         'port': 8080,
     },
 

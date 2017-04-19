@@ -198,7 +198,7 @@ class BotTests(unittest.TestCase):
         bot.say(message_3, markdown=markdown_3)
         item = bot.mouth.get()
         self.assertEqual(item.message, message_3)
-        self.assertEqual(item.markdown, markdown_3)
+        self.assertEqual(item.markdown, message_3+'\n\n'+markdown_3)
         self.assertEqual(item.file, None)
 
         message_4 = "What'sup Doc?"
@@ -215,8 +215,41 @@ class BotTests(unittest.TestCase):
         bot.say(message_5, markdown=markdown_5, file=file_5)
         item = bot.mouth.get()
         self.assertEqual(item.message, message_5)
-        self.assertEqual(item.markdown, markdown_5)
+        self.assertEqual(item.markdown, message_5+'\n\n'+markdown_5)
         self.assertEqual(item.file, file_5)
+
+    def test_add_moderators(self):
+
+        logging.info('*** add_moderators ***')
+
+        bot = ShellBot()
+        with mock.patch.object(bot.space,
+                               'add_moderators',
+                               return_value=None) as mocked:
+            bot.add_moderators(['a', 'b', 'c', 'd'])
+            mocked.assert_called_with(['a', 'b', 'c', 'd'])
+
+    def test_add_participants(self):
+
+        logging.info('*** add_participants ***')
+
+        bot = ShellBot()
+        with mock.patch.object(bot.space,
+                               'add_participants',
+                               return_value=None) as mocked:
+            bot.add_participants(['a', 'b', 'c', 'd'])
+            mocked.assert_called_with(['a', 'b', 'c', 'd'])
+
+    def test_dispose(self):
+
+        logging.info('*** dispose ***')
+
+        bot = ShellBot()
+        with mock.patch.object(bot.space,
+                               'dispose',
+                               return_value=None) as mocked:
+            bot.dispose(['a', 'b', 'c', 'd'])
+            mocked.assert_called_with(['a', 'b', 'c', 'd'])
 
     def test_static(self):
 

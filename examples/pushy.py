@@ -53,7 +53,7 @@ settings = {
     },
 
     'server': {
-        'url': 'http://ceb1bfec.ngrok.io',
+        'url': 'http://5ad34e5b.ngrok.io',
         'trigger': '/trigger',
         'hook': '/hook',
         'binding': '0.0.0.0',
@@ -65,18 +65,24 @@ settings = {
         {
             'label': u'Level 1',
             'message': u'Initial capture of information',
+            'markdown': u'If you are on the shop floor:\n'
+                +u'* Take a picture of the faulty part\n'
+                +u'* Describe the issue in the chat box\n'
+                +u'\n'
+                +u'As a Stress engineer, engage with shop floor and ask questions.'
+                +u' To engage with the design team, type **next** in the chat box.'
         },
 
         {
             'label': u'Level 2',
             'message': u'Escalation to technical experts',
-            'moderators': 'alice@acme.com',
+            'moderators': 'guillain@gmail.com',
         },
 
         {
             'label': u'Level 3',
             'message': u'Escalation to decision stakeholders',
-            'participants': 'bob@acme.com',
+            'participants': 'bernard.paques@laposte.net',
         },
 
         {

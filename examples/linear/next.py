@@ -49,4 +49,8 @@ class Next(Command):
             return
 
         self.bot.say(u"New state: {} - {}".format(new.label,
-                                                  new.message))
+                                                  new.message),
+                     markdown=new.markdown)
+
+        self.bot.add_moderators(new.moderators)
+        self.bot.add_participants(new.participants)

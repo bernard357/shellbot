@@ -223,6 +223,22 @@ class ShellBot(object):
             callback=remember_room_id
         )
 
+    def add_moderators(self, *args, **kwargs):
+        """
+        Adds moderators to the room
+
+        This function is a convenient proxy for the underlying space.
+        """
+        self.space.add_moderators(*args, **kwargs)
+
+    def add_participants(self, *args, **kwargs):
+        """
+        Adds participants to the room
+
+        This function is a convenient proxy for the underlying space.
+        """
+        self.space.add_participants(*args, **kwargs)
+
     def dispose(self, *args, **kwargs):
         """
         Disposes the room
@@ -305,7 +321,7 @@ class ShellBot(object):
         p.start()
         self._speaker_process = p
 
-        p = Process(target=self.worker.work, args=(self.context,))
+        p = Process(target=self.worker.work)
         p.daemon = True
         p.start()
         self._worker_process = p
@@ -369,10 +385,10 @@ class ShellBot(object):
 
         if self.mouth:
             if markdown or file:
-                logging.debug(u"Bot says: {}".format(message))
+                logging.info(u"Bot says: {}".format(message))
                 self.mouth.put(ShellBotMessage(message, markdown, file))
             else:
-                logging.debug(u"Bot says: {}".format(message))
+                logging.info(u"Bot says: {}".format(message))
                 self.mouth.put(message)
         else:
             logging.info(u"Bot says: {}".format(message))
@@ -382,5 +398,7 @@ class ShellBotMessage(object):
     def __init__(self, message, markdown=None, file=None):
         self.message = message
         self.markdown = markdown
+        if message is not None and markdown is not None:
+            self.markdown = message+'\n\n'+markdown
         self.file = file
 
