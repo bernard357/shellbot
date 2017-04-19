@@ -20,18 +20,26 @@ from shellbot import Command
 class State(Command):
     """
     Displays process status
+
+    >>>state = State(steps=steps)
+    >>>shell.load_command(state)
+
     """
 
     keyword = u'state'
     information_message = u'Display process current state.'
+    steps = None
 
     def execute(self, arguments=None):
         """
         Displays process status
         """
-        state = self.context.get('process.current.state')
-        if state is None:
-            state = self.context.get('process.initial.state')
-        if state is None:
-            state = '*unknown*'
-        self.shell.say(u"Current state: {}".format(state))
+        if self.steps is None:
+            raise AttributeError(u'State machine has not been initialised')
+
+        step = self.steps.step
+        if step is None:
+            self.shell.say(u"Current state is undefined")
+        else:
+            self.shell.say(u"Current state: {} - {}".format(step.label,
+                                                            step.message))

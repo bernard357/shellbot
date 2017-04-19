@@ -160,7 +160,7 @@ class BotTests(unittest.TestCase):
                                'load_commands',
                                return_value=None) as mocked:
             bot.load_commands(['a', 'b', 'c', 'd'])
-            mocked.assert_called_with(['a', 'b', 'c', 'd'])
+            mocked.called
 
     def test_say(self):
 

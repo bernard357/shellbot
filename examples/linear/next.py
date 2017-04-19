@@ -20,29 +20,33 @@ from shellbot import Command
 class Next(Command):
     """
     Moves process to next state
+
+    >>>next = Next(steps=steps)
+    >>>shell.load_command(next)
+
     """
 
     keyword = u'next'
     information_message = u'Move process to next state.'
+    steps = None
 
     def execute(self, arguments=None):
         """
         Moves process to next state
         """
-        state = self.context.get('process.current.state')
-        if state is None:
-            state = self.context.get('process.initial.state')
-        if state is None:
-            state = '*unknown*'
+        if self.steps is None:
+            raise AttributeError(u'State machine has not been initialised')
 
-        states = self.context.get('process.states', [])
-        while len(states):
-            if states[0] == state:
-                states.pop(0)
-                if len(states):
-                    state = states.pop(0)
-                    self.context.set('process.current.state', state)
-                break
-            states.pop(0)
+        current = self.steps.step
+        new = self.steps.next()
+        if new is None:
+            self.shell.say(u"Current state is undefined")
+            return
 
-        self.shell.say(u"New state: {}".format(state))
+        if (current is not None) and (current.label == new.label):
+            self.shell.say(u"Current state: {} - {}".format(current.label,
+                                                            current.message))
+            return
+
+        self.shell.say(u"New state: {} - {}".format(new.label,
+                                                    new.message))

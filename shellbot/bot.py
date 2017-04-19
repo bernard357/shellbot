@@ -167,7 +167,7 @@ class ShellBot(object):
 
         This function is a convenient proxy for the underlying shell.
         """
-        self.shell.load_commands(*args, **kwargs)
+        self.shell.load_commands(bot=self, *args, **kwargs)
 
     def bond(self, reset=False):
         """

@@ -60,11 +60,31 @@ settings = {
         'port': 8080,
     },
 
-    'process': {
-        'states': ['start', 'escalation', 'end'],
-        'initial.state': 'start',
-    },
+    'process.steps': [
 
+        {
+            'label': u'Level 1',
+            'message': u'Initial capture of information',
+        },
+
+        {
+            'label': u'Level 2',
+            'message': u'Escalation to technical experts',
+            'moderators': 'alice@acme.com',
+        },
+
+        {
+            'label': u'Level 3',
+            'message': u'Escalation to decision stakeholders',
+            'participants': 'bob@acme.com',
+        },
+
+        {
+            'label': u'Terminated',
+            'message': u'Process is closed, yet conversation can continue',
+        },
+
+    ],
 
 }
 
@@ -78,10 +98,12 @@ context.check('server.hook', '/hook')
 
 bot = ShellBot(context=context, check=True)
 
-from linear import State, Next
+from linear import Steps, State, Next
+steps = Steps(context=context, check=True)
+
 from shellbot.commands import Close
 
-bot.load_commands([State(), Next(), Close(bot=bot)])
+bot.load_commands([State(steps=steps), Next(steps=steps), Close(bot=bot)])
 
 #
 # a queue of events between the web server and the bot
