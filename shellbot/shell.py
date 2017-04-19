@@ -119,13 +119,13 @@ class Shell(object):
 
         if self.mouth:
             if markdown or file:
-                logging.debug("Shell says: {}".format(message))
+                logging.debug(u"Shell says: {}".format(message))
                 self.mouth.put(ShellMessage(message, markdown, file))
             else:
-                logging.debug("Shell says: {}".format(message))
+                logging.debug(u"Shell says: {}".format(message))
                 self.mouth.put(message)
         else:
-            logging.info("Shell says: {}".format(message))
+            logging.info(u"Shell says: {}".format(message))
 
     @property
     def commands(self):
