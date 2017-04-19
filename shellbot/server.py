@@ -53,8 +53,8 @@ class Server(Bottle):
         :param routes: multiple routes to add to this instance
         :type routes: list of Route
 
-        :param settings: initial paramters for this instance
-        :type settings: dict
+        :param check: True to check configuration settings
+        :type check: bool
 
         """
         self.context = Context() if context is None else context
