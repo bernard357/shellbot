@@ -13,10 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from base import Route
-from static import Static
-from notify import Notify
-from wrapper import Wrapper
+from .base import Route
+from .static import Static
+from .notify import Notify
+from .wrapper import Wrapper
 
 __all__ = [
     'Route',

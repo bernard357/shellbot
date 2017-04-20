@@ -13,15 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from base import Command
-from close import Close
-from default import Default
-from echo import Echo
-from empty import Empty
-from help import Help
-from noop import Noop
-from sleep import Sleep
-from version import Version
+from .base import Command
+from .close import Close
+from .default import Default
+from .echo import Echo
+from .empty import Empty
+from .help import Help
+from .noop import Noop
+from .sleep import Sleep
+from .version import Version
 
 __all__ = [
     'Command',
