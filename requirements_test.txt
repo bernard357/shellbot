@@ -1,0 +1,6 @@
+coveralls
+flake8
+coverage
+requests-mock
+mock
+webtest

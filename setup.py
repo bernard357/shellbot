@@ -10,11 +10,12 @@ try:
 except ImportError:
     from distutils.core import setup
 
-# get requirements from separate file
+# get requirements from separate files
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
-test_requirements = []
+with open('requirements_test.txt') as f:
+    test_requirements = f.read().splitlines()
 
 # get version from package itself
 def get_version():

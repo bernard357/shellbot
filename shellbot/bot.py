@@ -21,7 +21,6 @@ import logging
 import os
 from multiprocessing import Process, Queue
 import requests
-from requests_toolbelt import MultipartEncoder
 import sys
 import time
 import yaml
