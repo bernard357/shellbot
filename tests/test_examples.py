@@ -11,7 +11,7 @@ import sys
 sys.path.insert(0, os.path.abspath('..'))
 
 from shellbot import Context, ShellBot
-from examples.linear.steps import Steps
+from examples.steps import Steps, Next, State
 
 
 my_settings = {
@@ -46,7 +46,7 @@ my_settings = {
 
 class ExampleTests(unittest.TestCase):
 
-    def test_linear_steps_init(self):
+    def test_steps_steps(self):
 
         context = Context(settings=my_settings)
         steps = Steps(context, check=True)
@@ -82,13 +82,12 @@ class ExampleTests(unittest.TestCase):
         self.assertEqual(step.label, 'Terminated')
         self.assertEqual(step.label, steps.step.label)
 
-    def test_linear_state(self):
+    def test_steps_state(self):
 
         context = Context(settings=my_settings)
         bot = ShellBot(context=context)
 
         steps = Steps(context, check=True)
-        from examples.linear.state import State
         s = State(bot=bot, steps=steps)
 
         self.assertEqual(s.keyword, 'state')
@@ -103,13 +102,12 @@ class ExampleTests(unittest.TestCase):
         with self.assertRaises(Exception):
             bot.mouth.get_nowait()
 
-    def test_linear_next_current(self):
+    def test_steps_next(self):
 
         context = Context(settings=my_settings)
         bot = ShellBot(context=context)
 
         steps = Steps(context, check=True)
-        from examples.linear.next import Next
         n = Next(bot=bot, steps=steps)
 
         self.assertEqual(n.keyword, 'next')
@@ -125,17 +123,13 @@ class ExampleTests(unittest.TestCase):
         with self.assertRaises(Exception):
             bot.mouth.get_nowait()
 
-    def test_linear_lifecycle(self):
+    def test_steps_lifecycle(self):
 
         context = Context(settings=my_settings)
         bot = ShellBot(context=context)
 
         steps = Steps(context, check=True)
-
-        from examples.linear.state import State
         s = State(bot=bot, steps=steps)
-
-        from examples.linear.next import Next
         n = Next(bot=bot, steps=steps)
 
         s.execute()

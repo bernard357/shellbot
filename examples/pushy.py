@@ -104,7 +104,7 @@ context.check('server.hook', '/hook')
 
 bot = ShellBot(context=context, check=True)
 
-from linear import Steps, State, Next
+from steps import Steps, State, Next
 steps = Steps(context=context, check=True)
 
 from shellbot.commands import Close
