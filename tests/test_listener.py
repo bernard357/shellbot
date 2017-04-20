@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import colorlog
 import unittest
-import json
 import logging
 import os
-import random
 import sys
 from multiprocessing import Process, Queue
-import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
@@ -138,7 +134,8 @@ class ListenerTests(unittest.TestCase):
         self.assertEqual(bot.mouth.get(), 'Shelly version *unknown*')
         self.assertEqual(
             bot.mouth.get(),
-            u'echo - Echo input string.\nhelp - Show commands and usage.')
+            u'Available commands:\n'
+            + u'echo - Echo input string.\nhelp - Show commands and usage.')
         self.assertEqual(
             bot.mouth.get(),
             u'help - Show commands and usage.\nusage:\nhelp <command>')

@@ -17,8 +17,7 @@
 
 import logging
 from Queue import Empty
-import random
-import time
+
 
 class Worker(object):
     """
@@ -113,7 +112,7 @@ class Worker(object):
                 self.bot.say(
                     u"Sorry, I do not know how to handle '{}'".format(verb))
 
-        except Exception as feedback:
+        except Exception:
             self.bot.say(
                 u"Sorry, I do not know how to handle '{}'".format(verb))
             raise

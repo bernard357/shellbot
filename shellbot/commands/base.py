@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 class Command(object):
     """
     Implements one command
@@ -25,7 +26,7 @@ class Command(object):
         self.shell = bot.shell if bot else None
         self.context = bot.context if bot else None
         for key, value in kwargs.items():
-              setattr(self, key, value)
+            setattr(self, key, value)
 
     def execute(self, arguments=None):
         """
@@ -50,4 +51,3 @@ class Command(object):
     is_interactive = True    # this command should be processed interactively
 
     is_hidden = False    # this command should be listed by 'help'
-

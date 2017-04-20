@@ -1,16 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import colorlog
 import unittest
 import logging
-from mock import MagicMock
 import os
 import mock
-from multiprocessing import Process, Queue
-import random
 import sys
-import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
@@ -108,15 +103,17 @@ class BotTests(unittest.TestCase):
 
         bot = ShellBot()
         bot.configure_from_path(os.path.dirname(os.path.abspath(__file__))
-                                +'/test_settings/regular.yaml')
-        self.assertEqual(bot.context.get('bot.on_start'), 'How can I help you?')
+                                + '/test_settings/regular.yaml')
+        self.assertEqual(bot.context.get('bot.on_start'),
+                         'How can I help you?')
         self.assertEqual(bot.context.get('bot.on_stop'), 'Bye for now')
         self.assertEqual(bot.context.get('spark.room'), 'Support room')
         self.assertEqual(bot.context.get('spark.moderators'),
                          ['foo.bar@acme.com'])
         self.assertEqual(bot.context.get('spark.participants'),
                          ['joe.bar@acme.com', 'super.support@help.org'])
-        self.assertEqual(bot.context.get('server.url'), 'http://73a1e282.ngrok.io')
+        self.assertEqual(bot.context.get('server.url'),
+                         'http://73a1e282.ngrok.io')
         self.assertEqual(bot.context.get('server.hook'), '/hook')
 
     def test_configuration_2(self):

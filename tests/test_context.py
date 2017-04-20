@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import colorlog
 import unittest
 import logging
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath('..'))
 
 from shellbot import Context
@@ -39,7 +39,8 @@ class ContextTests(unittest.TestCase):
         context.apply(settings)
 
         self.assertEqual(context.get('general.DEBUG'), True)
-        self.assertEqual(context.get('spark.CISCO_SPARK_BTTN_BOT'), 'who_knows')
+        self.assertEqual(context.get('spark.CISCO_SPARK_BTTN_BOT'),
+                         'who_knows')
         self.assertEqual(context.get('spark.room'), 'title')
         self.assertEqual(context.get('server.port'), 80)
         self.assertEqual(context.get('server.url'), 'http://www.acme.com/')
@@ -69,7 +70,7 @@ class ContextTests(unittest.TestCase):
         context.check('spark.team')
         self.assertEqual(context.get('spark.team'), 'Anchor team')
 
-        context.check('spark.*not*present')  # will be set to None
+        context.check('spark.*not*present')   # will be set to None
         self.assertEqual(context.get('spark.*not*present'), None)
 
         context.check('spark.absent_list', default=[])
@@ -87,11 +88,11 @@ class ContextTests(unittest.TestCase):
                       is_mandatory=True)
         self.assertEqual(context.get('spark.*not*present'), '*born')
 
-        with self.assertRaises(KeyError): # missing key
+        with self.assertRaises(KeyError):  # missing key
             context.check('spark.*unknown*key*',
                           is_mandatory=True)
 
-        with self.assertRaises(KeyError): # validate implies is_mandatory
+        with self.assertRaises(KeyError):  # validate implies is_mandatory
             context.check('spark.*unknown*key*',
                           validate=lambda line: True)
 
@@ -100,7 +101,7 @@ class ContextTests(unittest.TestCase):
         self.assertEqual(context.get('spark.webhook'),
                          "http://73a1e282.ngrok.io")
 
-        with self.assertRaises(ValueError): # present, but not put in context
+        with self.assertRaises(ValueError):  # present, but not put in context
             context.check('spark.token',
                           validate=lambda line: len(line) == 32)
         self.assertEqual(context.get('spark.token'),

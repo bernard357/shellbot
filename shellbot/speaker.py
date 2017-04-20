@@ -20,6 +20,7 @@ from Queue import Empty
 from six import string_types
 import time
 
+
 class Speaker(object):
     """
     Sends updates to a business messaging space
@@ -81,7 +82,8 @@ class Speaker(object):
             while self.context.get('general.switch', 'on') == 'on':
 
                 if not self.space.is_ready:
-                    logging.debug("Speaker is waiting for space to be ready...")
+                    logging.debug(
+                        u"Speaker is waiting for space to be ready...")
                     time.sleep(5)
                     continue
 

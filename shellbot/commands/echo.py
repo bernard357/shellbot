@@ -17,6 +17,7 @@
 
 from base import Command
 
+
 class Echo(Command):
     """
     Echoes input string

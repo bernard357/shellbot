@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import colorlog
 import unittest
 import logging
 import mock
 import os
-from multiprocessing import Process, Queue
+from multiprocessing import Process
 import sys
-import vcr
 
 sys.path.insert(0, os.path.abspath('..'))
 
@@ -19,13 +17,13 @@ from shellbot import Context, SparkSpace
 cisco_spark_bearer = None
 
 # functional tests
-#cisco_spark_bearer = os.environ.get('CISCO_SPARK_BOT_TOKEN')
+# cisco_spark_bearer = os.environ.get('CISCO_SPARK_BOT_TOKEN')
 
 
 class Fake(object):
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
-              setattr(self, key, value)
+            setattr(self, key, value)
 
 
 class FakeRoom(Fake):
@@ -129,7 +127,7 @@ class SpaceTests(unittest.TestCase):
             ['alan.droit@azerty.org'])
         self.assertEqual(space.context.get('spark.team'), None)
 
-        with self.assertRaises(KeyError): # missing key
+        with self.assertRaises(KeyError):  # missing key
             space = SparkSpace(context=Context())
             space.configure({
                 'spark': {
@@ -193,6 +191,13 @@ class SpaceTests(unittest.TestCase):
 
         self.assertEqual(item.id, '*id')
 
+        space = SparkSpace()
+        space.api = FakeApi()
+
+        item = space.get_team(team='*team*does*not*exist*in*this*world')
+
+        self.assertTrue(space.api.teams.create.called)
+
     def test_lookup_room_mock(self):
 
         logging.debug("*** lookup_room")
@@ -217,17 +222,6 @@ class SpaceTests(unittest.TestCase):
             item = space.lookup_room(room='*does*not*exist*in*this*world')
 
             self.assertEqual(item, None)
-
-    def test_get_room_mock(self):
-
-        logging.debug("*** get_room")
-
-        space = SparkSpace()
-        space.api = FakeApi()
-
-        item = space.get_team(team='*team*does*not*exist*in*this*world')
-
-        self.assertTrue(space.api.teams.create.called)
 
     def test_add_moderators_mock(self):
 

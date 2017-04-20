@@ -17,6 +17,7 @@
 
 from base import Command
 
+
 class Empty(Command):
     """
     Handles empty command

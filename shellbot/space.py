@@ -15,18 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
+from bottle import request
 import logging
 import os
-from multiprocessing import Process, Queue
-import requests
 from six import string_types
-import sys
 import time
-from bottle import route, run, request, abort
-from ciscosparkapi import CiscoSparkAPI, SparkApiError
+from ciscosparkapi import CiscoSparkAPI
 
 from context import Context
+
 
 class SparkSpace(object):
     """
@@ -145,8 +142,8 @@ class SparkSpace(object):
           If ``spark.personal_token`` is not provided, then the function looks
           for an environment variable ``CISCO_SPARK_TOKEN`` instead.
 
-        If a single value is provided for ``moderators`` or for ``participants``
-        then it is turned automatically to a list.
+        If a single value is provided for ``moderators`` or for
+        ``participants`` then it is turned automatically to a list.
 
         >>>space.configure({'spark.moderators': 'bobby@jah.com'})
         >>>space.context.get('spark.moderators')
@@ -321,7 +318,7 @@ class SparkSpace(object):
 
         >>>print(space.get_room("Hello World"))
         Room({
-          "id" : "Y2lzY29zcGFyazJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+          "id" : "Y2lzY29zcGFyazJjZWIxYWQtNDNS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
           "title" : "Hello World",
           "type" : "group",
           "isLocked" : true,
@@ -382,7 +379,7 @@ class SparkSpace(object):
 
         >>>print(space.lookup_room("Hello World"))
         Room({
-          "id" : "Y2lzY29zcGFyazJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+          "id" : "Y2lzY29zcGFyazJjZWIxYWQtNDMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
           "title" : "Hello World",
           "type" : "group",
           "isLocked" : true,
@@ -611,7 +608,6 @@ class SparkSpace(object):
                                      files=files)
             logging.debug(u"- done")
 
-
         except Exception as feedback:
             logging.warning(u"Unable to post message")
             logging.warning(feedback)
@@ -670,6 +666,7 @@ class SparkSpace(object):
 
         except Exception as feedback:
             logging.error(u"ABORTED: fatal error has been encountered")
+            logging.error(feedback)
             raise
 
     def pull_for_ever(self):

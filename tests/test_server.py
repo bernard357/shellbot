@@ -3,11 +3,8 @@
 
 import unittest
 import logging
-from mock import MagicMock
 import os
-import mock
-from multiprocessing import Process, Queue
-import random
+from multiprocessing import Queue
 import sys
 import time
 from webtest import TestApp

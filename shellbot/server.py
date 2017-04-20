@@ -15,14 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import logging
-import os
-from multiprocessing import Process, Queue
-import requests
-from requests_toolbelt import MultipartEncoder
-import sys
-import time
 from bottle import Bottle
 
 from context import Context
@@ -160,17 +153,3 @@ class Server(Bottle):
             pass
 
         logging.info(u'Web server has been stopped')
-
-# the program launched from the command line
-#
-if __name__ == "__main__":
-
-    Context.set_logger()
-
-    context = Context()
-    context.set('server.port', 8080)
-    context.set('server.debug', True)
-
-    server = Server(context=context)
-    server.load_routes([Index(), Hello(), Login()])
-    server.start()

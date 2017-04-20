@@ -43,4 +43,3 @@ class Static(Route):
     def get(self):
         logging.debug(u"GET {}".format(self.route))
         return self.page if self.page else 'OK'
-

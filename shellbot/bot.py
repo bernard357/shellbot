@@ -16,15 +16,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import logging
-import os
 from multiprocessing import Process, Queue
-import requests
 import sys
 import time
 import yaml
-from bottle import route, run, request, abort
 
 from context import Context
 from shell import Shell
@@ -72,8 +68,8 @@ class ShellBot(object):
         :param path: path to the configuration file
         :type path: str
 
-        The function loads configuration from the file and from the environment.
-        Port number can be set from the command line.
+        The function loads configuration from the file and from the
+        environment. Port number can be set from the command line.
 
         Look at the file ``settings.yaml`` that is coming with this project
         """
@@ -90,8 +86,8 @@ class ShellBot(object):
         :param stream: the handle that contains configuration information
         :type stream: file
 
-        The function loads configuration from the file and from the environment.
-        Port number can be set from the command line.
+        The function loads configuration from the file and from the
+        environment. Port number can be set from the command line.
 
         Look at the file ``settings.yaml`` that is coming with this project
         """
@@ -111,8 +107,8 @@ class ShellBot(object):
         :param settings: configuration information
         :type settings: dict
 
-        The function loads configuration from the dict and from the environment.
-        Port number can be set from the command line.
+        The function loads configuration from the dict and from the
+        environment. Port number can be set from the command line.
 
         Look at the file ``settings.yaml`` that is coming with this project
         """
@@ -124,7 +120,6 @@ class ShellBot(object):
 
         self.space.connect()
 
-
     def configure_from_dict(self, settings):
         """
         Changes settings of the bot
@@ -133,7 +128,8 @@ class ShellBot(object):
         :type settings: dict
 
         This function reads key ``bot`` and below, and update
-        the context accordingly. It also reads hook parameters under ``server``.
+        the context accordingly.
+        It also reads hook parameters under ``server``.
 
         >>>shell.configure_fom_dict({
 
@@ -266,7 +262,7 @@ class ShellBot(object):
         assert self.context.get('server.url') is not None
         self.space.hook(
             self.context.get('server.url')
-            +self.context.get('server.hook', '/hook'))
+            + self.context.get('server.hook', '/hook'))
 
     def get_hook(self):
         """
@@ -400,4 +396,3 @@ class ShellBotMessage(object):
         if message is not None and markdown is not None:
             self.markdown = message+'\n\n'+markdown
         self.file = file
-

@@ -22,3 +22,15 @@ from help import Help
 from noop import Noop
 from sleep import Sleep
 from version import Version
+
+__all__ = [
+    'Command',
+    'Close',
+    'Default',
+    'Echo',
+    'Empty',
+    'Help',
+    'Noop',
+    'Sleep',
+    'Version'
+]

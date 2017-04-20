@@ -1,15 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import colorlog
 import unittest
 import logging
 from mock import MagicMock
 import os
 from multiprocessing import Process, Queue
-import random
 import sys
-import time
 
 sys.path.insert(0, os.path.abspath('..'))
 

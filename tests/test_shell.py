@@ -1,22 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import colorlog
 import unittest
 import logging
 import os
-from multiprocessing import Process, Manager, Queue
-import random
 import sys
-import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
 from shellbot import Context, ShellBot, Shell
 
-
-
 my_bot = ShellBot()
+
 
 class ShellTests(unittest.TestCase):
 
@@ -214,7 +209,8 @@ class ShellTests(unittest.TestCase):
         self.assertEqual(shell.line, 'help help')
         self.assertEqual(shell.count, 3)
         self.assertEqual(shell.bot.mouth.get(),
-                         u'help - Show commands and usage.\nusage:\nhelp <command>')
+                         u'help - Show commands and usage.\n'
+                         + u'usage:\nhelp <command>')
         with self.assertRaises(Exception):
             print(shell.bot.mouth.get_nowait())
         with self.assertRaises(Exception):
@@ -237,7 +233,8 @@ class ShellTests(unittest.TestCase):
         self.assertEqual(shell.count, 6)
         shell.context.set('worker.busy', False)
         self.assertEqual(shell.bot.mouth.get(), 'Ok, working on it')
-        self.assertEqual(shell.bot.mouth.get(), 'Ok, will work on it as soon as possible')
+        self.assertEqual(shell.bot.mouth.get(),
+                         'Ok, will work on it as soon as possible')
         with self.assertRaises(Exception):
             print(shell.bot.mouth.get_nowait())
         (command, arguments) = shell.inbox.get()
@@ -263,7 +260,8 @@ class ShellTests(unittest.TestCase):
         self.assertEqual(shell.count, 8)
         self.assertEqual(
             shell.bot.mouth.get(),
-            u'echo - Echo input string.\nhelp - Show commands and usage.')
+            u'Available commands:\n'
+            + u'echo - Echo input string.\nhelp - Show commands and usage.')
         with self.assertRaises(Exception):
             print(shell.bot.mouth.get_nowait())
         with self.assertRaises(Exception):

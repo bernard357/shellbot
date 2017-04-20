@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import colorlog
 import unittest
-import logging
 import os
-from multiprocessing import Process, Queue
 import sys
 
 sys.path.insert(0, os.path.abspath('..'))
@@ -43,6 +40,7 @@ my_settings = {
     ],
 
 }
+
 
 class ExampleTests(unittest.TestCase):
 
@@ -91,7 +89,8 @@ class ExampleTests(unittest.TestCase):
         s = State(bot=bot, steps=steps)
 
         self.assertEqual(s.keyword, 'state')
-        self.assertEqual(s.information_message, 'Display process current state.')
+        self.assertEqual(s.information_message,
+                         'Display process current state.')
         self.assertTrue(s.is_interactive)
         self.assertFalse(s.is_hidden)
         self.assertTrue(s.steps is not None)
@@ -119,7 +118,8 @@ class ExampleTests(unittest.TestCase):
         n.execute()
 
         self.assertEqual(bot.mouth.get(),
-                         u'New state: Level 1 - Initial capture of information')
+                         u'New state: Level 1 - '
+                         + u'Initial capture of information')
         with self.assertRaises(Exception):
             bot.mouth.get_nowait()
 
@@ -139,55 +139,64 @@ class ExampleTests(unittest.TestCase):
 
         n.execute()
         self.assertEqual(bot.mouth.get(),
-                         u'New state: Level 1 - Initial capture of information')
+                         u'New state: Level 1 - '
+                         + u'Initial capture of information')
         with self.assertRaises(Exception):
             bot.mouth.get_nowait()
 
         s.execute()
         self.assertEqual(bot.mouth.get(),
-                         u'Current state: Level 1 - Initial capture of information')
+                         u'Current state: Level 1 - '
+                         + u'Initial capture of information')
         with self.assertRaises(Exception):
             bot.mouth.get_nowait()
 
         n.execute()
         self.assertEqual(bot.mouth.get(),
-                         u'New state: Level 2 - Escalation to technical experts')
+                         u'New state: Level 2 - '
+                         + u'Escalation to technical experts')
         with self.assertRaises(Exception):
             bot.mouth.get_nowait()
 
         s.execute()
         self.assertEqual(bot.mouth.get(),
-                         u'Current state: Level 2 - Escalation to technical experts')
+                         u'Current state: Level 2 - '
+                         + u'Escalation to technical experts')
         with self.assertRaises(Exception):
             bot.mouth.get_nowait()
 
         n.execute()
         self.assertEqual(bot.mouth.get(),
-                         u'New state: Level 3 - Escalation to decision stakeholders')
+                         u'New state: Level 3 - '
+                         + u'Escalation to decision stakeholders')
         with self.assertRaises(Exception):
             bot.mouth.get_nowait()
 
         s.execute()
         self.assertEqual(bot.mouth.get(),
-                         u'Current state: Level 3 - Escalation to decision stakeholders')
+                         u'Current state: Level 3 - '
+                         + u'Escalation to decision stakeholders')
         with self.assertRaises(Exception):
             bot.mouth.get_nowait()
 
         n.execute()
         self.assertEqual(bot.mouth.get(),
-                         u'New state: Terminated - Process is closed, yet conversation can continue')
+                         u'New state: Terminated - '
+                         + u'Process is closed, yet conversation can continue')
         with self.assertRaises(Exception):
             bot.mouth.get_nowait()
 
         s.execute()
         self.assertEqual(bot.mouth.get(),
-                         u'Current state: Terminated - Process is closed, yet conversation can continue')
+                         u'Current state: Terminated - '
+                         + u'Process is closed, yet conversation can continue')
         with self.assertRaises(Exception):
             bot.mouth.get_nowait()
 
         n.execute()
         self.assertEqual(bot.mouth.get(),
-                         u'Current state: Terminated - Process is closed, yet conversation can continue')
+                         u'Current state: Terminated - '
+                         + u'Process is closed, yet conversation can continue')
         with self.assertRaises(Exception):
             bot.mouth.get_nowait()
 

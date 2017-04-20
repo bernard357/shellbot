@@ -19,6 +19,7 @@ import colorlog
 import logging
 from multiprocessing import Lock, Manager
 
+
 class Context(object):
     """
     Stores data across multiple independent processing units
@@ -101,7 +102,8 @@ class Context(object):
 
         Additional control can be added with the validation function.
 
-        >>>context.check('general.switch', validate=lambda x: x in ('on', 'off'))
+        >>>context.check('general.switch',
+        ...              validate=lambda x: x in ('on', 'off'))
 
         This function raises ``KeyError`` if a mandatory key is absent.
         If a validation function is provided, then a ``ValueError`` can be
@@ -218,4 +220,3 @@ class Context(object):
         logging.getLogger('').addHandler(handler)
 
         logging.getLogger('').setLevel(level=level)
-

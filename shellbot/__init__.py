@@ -29,3 +29,18 @@ from routes.wrapper import Wrapper
 
 __version__ = '17.04.18'
 
+__all__ = [
+    __version__,
+    'ShellBot',
+    'Context',
+    'Listener',
+    'Server',
+    'Shell',
+    'SparkSpace',
+    'Speaker',
+    'Worker',
+    'Command',
+    'Route',
+    'Notify',
+    'Wrapper',
+]

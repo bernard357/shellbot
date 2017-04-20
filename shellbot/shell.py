@@ -16,14 +16,8 @@
 # limitations under the License.
 
 import logging
-import os
-from multiprocessing import Queue
 from six import string_types
-import sys
-import yaml
 import importlib
-
-from context import Context
 
 
 class Shell(object):
@@ -39,8 +33,8 @@ class Shell(object):
         self._commands = {}
         self.load_commands(self.context.get('shell.commands', []))
 
-        self.line=None
-        self.count=0
+        self.line = None
+        self.count = 0
         self.verb = None
 
     def configure(self, settings):
@@ -209,7 +203,7 @@ class Shell(object):
         command.shell = self
         command.bot = self.bot
 
-        self._commands[ command.keyword ] = command
+        self._commands[command.keyword] = command
 
     def do(self, line):
         """
@@ -272,7 +266,7 @@ class Shell(object):
                 self.say(
                     u"Sorry, I do not know how to handle '{}'".format(verb))
 
-        except Exception as feedback:
+        except Exception:
             self.say(
                 u"Sorry, I do not know how to handle '{}'".format(verb))
             raise

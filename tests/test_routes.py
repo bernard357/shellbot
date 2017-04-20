@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import colorlog
 import unittest
-import logging
 import os
-from multiprocessing import Process, Queue
+from multiprocessing import Queue
 import sys
 
 sys.path.insert(0, os.path.abspath('..'))
@@ -122,7 +120,7 @@ class CommandsTests(unittest.TestCase):
             return 'world'
 
         r = Wrapper(callable=hook,
-                    route = '/wrapped')
+                    route='/wrapped')
 
         self.assertEqual(r.route, '/wrapped')
         self.assertTrue(r.callable is not None)
@@ -151,7 +149,7 @@ class CommandsTests(unittest.TestCase):
 
         r = Wrapper(context=context,
                     callable=callable.hook,
-                    route = '/wrapped')
+                    route='/wrapped')
 
         self.assertEqual(r.route, '/wrapped')
         self.assertEqual(r.callable, callable.hook)

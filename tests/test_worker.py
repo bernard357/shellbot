@@ -1,21 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import colorlog
 import unittest
 import logging
 import os
-from multiprocessing import Process, Queue
-import random
+from multiprocessing import Process
 import sys
-import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
 from shellbot import Context, ShellBot, Worker
 
-
 my_bot = ShellBot()
+
 
 class WorkerTests(unittest.TestCase):
 

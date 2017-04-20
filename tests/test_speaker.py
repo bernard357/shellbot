@@ -1,15 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import colorlog
 import unittest
 import logging
 import mock
 from multiprocessing import Process, Queue
 import os
-import random
 import sys
-import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
@@ -88,7 +85,7 @@ class SpeakerTests(unittest.TestCase):
 
             class WithMarkdown(object):
                 message = ''
-                markdown =  'me **too**'
+                markdown = 'me **too**'
                 file = None
 
             item = WithMarkdown()
@@ -99,7 +96,7 @@ class SpeakerTests(unittest.TestCase):
 
             class WithFile(object):
                 message = '*with*attachment'
-                markdown =  None
+                markdown = None
                 file = 'http://a.server/with/file'
 
             item = WithFile()
@@ -110,7 +107,7 @@ class SpeakerTests(unittest.TestCase):
 
             class WithAll(object):
                 message = 'hello world'
-                markdown =  'hello **world**'
+                markdown = 'hello **world**'
                 file = 'http://a.server/with/file'
 
             item = WithAll()

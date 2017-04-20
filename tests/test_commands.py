@@ -1,17 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import colorlog
 import unittest
-import logging
 import mock
 import os
-from multiprocessing import Process, Queue
 import sys
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import Context, ShellBot, Shell
+from shellbot import Context, ShellBot
 
 
 class CommandsTests(unittest.TestCase):
@@ -35,7 +32,7 @@ class CommandsTests(unittest.TestCase):
 
         c.execute()
         with self.assertRaises(Exception):
-            mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
     def test_from_base(self):
 
@@ -56,7 +53,8 @@ class CommandsTests(unittest.TestCase):
 
             def execute(self, arguments=None):
                 if arguments:
-                    self.bot.say(u"The Batcave echoes, '{0}'".format(arguments))
+                    self.bot.say(
+                        u"The Batcave echoes, '{0}'".format(arguments))
                 else:
                     self.bot.say(self.information_message)
 
@@ -71,11 +69,12 @@ class CommandsTests(unittest.TestCase):
         class Batsignal(Command):
             keyword = u'batsignal'
             information_message = u"NANA NANA NANA NANA"
-            information_file = "https://upload.wikimedia.org/wikipedia/en/c/c6/Bat-signal_1989_film.jpg"
+            information_file = "https://upload.wikimedia.org/wikipedia" \
+                               "/en/c/c6/Bat-signal_1989_film.jpg"
 
             def execute(self, arguments=None):
                 self.bot.say(self.information_message,
-                               file=c.information_file)
+                             file=c.information_file)
 
         c = Batsignal(my_bot)
         c.execute()
@@ -163,7 +162,7 @@ class CommandsTests(unittest.TestCase):
         c.execute()
         self.assertEqual(
             my_bot.mouth.get(),
-            u'help - Show commands and usage.')
+            u'Available commands:\nhelp - Show commands and usage.')
         with self.assertRaises(Exception):
             print(my_bot.mouth.get_nowait())
 
@@ -199,7 +198,7 @@ class CommandsTests(unittest.TestCase):
         c.execute()
         self.assertEqual(
             my_bot.mouth.get(),
-            u'help - Show commands and usage.')
+            u'Available commands:\nhelp - Show commands and usage.')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 

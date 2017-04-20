@@ -17,6 +17,7 @@
 
 from base import Command
 
+
 class Default(Command):
     """
     Handles unmatched command

@@ -17,6 +17,7 @@
 
 from base import Command
 
+
 class Noop(Command):
     """
     Does absolutely nothing

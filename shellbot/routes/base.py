@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 class Route(object):
     """
     Implements one route
@@ -23,7 +24,7 @@ class Route(object):
     def __init__(self, context=None, **kwargs):
         self.context = context
         for key, value in kwargs.items():
-              setattr(self, key, value)
+            setattr(self, key, value)
 
     route = None      # e.g., '/wiki/<pagename>'
 

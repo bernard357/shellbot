@@ -24,6 +24,7 @@ class NoQueue(object):
     def put(self, item=None):
         raise Exception(u"No queue for this notification")
 
+
 class Notify(Route):
     """
     Notifies a queue on web request
@@ -66,4 +67,3 @@ class Notify(Route):
         item = self.notification if self.notification else self.route
         self.queue.put(item)
         return 'OK'
-

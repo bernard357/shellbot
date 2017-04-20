@@ -30,6 +30,7 @@ Some commands that may prove useful:
 - destroy resources: @plumby dispose
 """
 
+
 class Help(Command):
     """
     Lists available commands and related usage information
@@ -60,7 +61,9 @@ class Help(Command):
                         command.information_message))
 
             if lines:
-                self.bot.say('\n'.join(lines))
+                self.bot.say(
+                    'Available commands:\n'
+                    + '\n'.join(lines))
 
         else:
             command = self.shell.command(arguments)
