@@ -206,13 +206,7 @@ class CommandsTests(unittest.TestCase):
         c.execute("help")
         self.assertEqual(
             my_bot.mouth.get(),
-            u'help - Show commands and usage.')
-        self.assertEqual(
-            my_bot.mouth.get(),
-            u'usage:')
-        self.assertEqual(
-            my_bot.mouth.get(),
-            u'help <command>')
+            u'help - Show commands and usage.\nusage:\nhelp <command>')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
