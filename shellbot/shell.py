@@ -194,9 +194,8 @@ class Shell(object):
                 module = importlib.import_module(command)
                 logging.debug(u"Loading command '{}'".format(command))
             except ImportError:
-                (dummy, label) = command.split('.', 1)
-                module = importlib.import_module(label)
-                logging.debug(u"Loading command '{}'".format(label))
+                logging.error(u"Unable to import '{}'".format(command))
+                return
 
             name = command.rsplit('.', 1)[1].capitalize()
             cls = getattr(module, name)

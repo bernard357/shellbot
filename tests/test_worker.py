@@ -62,13 +62,7 @@ class WorkerTests(unittest.TestCase):
 
         self.assertEqual(
             my_bot.mouth.get(),
-            'help - Show commands and usage.')
-        self.assertEqual(
-            my_bot.mouth.get(),
-            'usage:')
-        self.assertEqual(
-            my_bot.mouth.get(),
-            'help <command>')
+            u'help - Show commands and usage.\nusage:\nhelp <command>')
 
         self.assertEqual(my_bot.mouth.get(), u'Shelly version *unknown*')
 

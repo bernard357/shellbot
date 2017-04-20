@@ -62,10 +62,16 @@ class ShellTests(unittest.TestCase):
 
         my_bot.context = Context()
         shell = Shell(bot=my_bot)
+        shell.load_command('this.one.does.not.exist.at.all')
+        self.assertEqual(shell.commands, [])
 
+        my_bot.context = Context()
+        shell = Shell(bot=my_bot)
         shell.load_command('shellbot.commands.help')
         self.assertEqual(shell.commands, ['help'])
 
+        my_bot.context = Context()
+        shell = Shell(bot=my_bot)
         from shellbot.commands.help import Help
         help = Help()
         shell.load_command(help)
@@ -155,7 +161,7 @@ class ShellTests(unittest.TestCase):
         shell.say(message_3, markdown=markdown_3)
         item = shell.bot.mouth.get()
         self.assertEqual(item.message, message_3)
-        self.assertEqual(item.markdown, markdown_3)
+        self.assertEqual(item.markdown, message_3+'\n\n'+markdown_3)
         self.assertEqual(item.file, None)
 
         message_4 = "What'sup Doc?"
@@ -172,7 +178,7 @@ class ShellTests(unittest.TestCase):
         shell.say(message_5, markdown=markdown_5, file=file_5)
         item = shell.bot.mouth.get()
         self.assertEqual(item.message, message_5)
-        self.assertEqual(item.markdown, markdown_5)
+        self.assertEqual(item.markdown, message_5+'\n\n'+markdown_5)
         self.assertEqual(item.file, file_5)
 
     def test_vocabulary(self):
@@ -208,9 +214,7 @@ class ShellTests(unittest.TestCase):
         self.assertEqual(shell.line, 'help help')
         self.assertEqual(shell.count, 3)
         self.assertEqual(shell.bot.mouth.get(),
-                         'help - Show commands and usage.')
-        self.assertEqual(shell.bot.mouth.get(), 'usage:')
-        self.assertEqual(shell.bot.mouth.get(), 'help <command>')
+                         u'help - Show commands and usage.\nusage:\nhelp <command>')
         with self.assertRaises(Exception):
             print(shell.bot.mouth.get_nowait())
         with self.assertRaises(Exception):
@@ -257,9 +261,9 @@ class ShellTests(unittest.TestCase):
         shell.do('')
         self.assertEqual(shell.line, '')
         self.assertEqual(shell.count, 8)
-        self.assertEqual(shell.bot.mouth.get(), 'echo - Echo input string.')
-        self.assertEqual(shell.bot.mouth.get(),
-                         'help - Show commands and usage.')
+        self.assertEqual(
+            shell.bot.mouth.get(),
+            u'echo - Echo input string.\nhelp - Show commands and usage.')
         with self.assertRaises(Exception):
             print(shell.bot.mouth.get_nowait())
         with self.assertRaises(Exception):

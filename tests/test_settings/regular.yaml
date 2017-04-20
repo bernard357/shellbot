@@ -10,8 +10,9 @@ bot:
 shell:
 
     commands:
-        - examples.linear.state
-        - examples.linear.next
+        - examples.steps.state
+        - examples.steps.next
+        - this.one.does.not.exist
 
 # additional settings
 #

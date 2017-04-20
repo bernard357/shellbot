@@ -107,7 +107,8 @@ class BotTests(unittest.TestCase):
         self.assertEqual(bot.context.get('server.hook'), '/hook')
 
         bot = ShellBot()
-        bot.configure_from_path('test_settings/regular.yaml')
+        bot.configure_from_path(os.path.dirname(os.path.abspath(__file__))
+                                +'/test_settings/regular.yaml')
         self.assertEqual(bot.context.get('bot.on_start'), 'How can I help you?')
         self.assertEqual(bot.context.get('bot.on_stop'), 'Bye for now')
         self.assertEqual(bot.context.get('spark.room'), 'Support room')

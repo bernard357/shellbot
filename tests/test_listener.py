@@ -136,11 +136,12 @@ class ListenerTests(unittest.TestCase):
         with self.assertRaises(Exception):
             bot.inbox.get_nowait()
         self.assertEqual(bot.mouth.get(), 'Shelly version *unknown*')
-        self.assertEqual(bot.mouth.get(), 'echo - Echo input string.')
-        self.assertEqual(bot.mouth.get(), 'help - Show commands and usage.')
-        self.assertEqual(bot.mouth.get(), 'help - Show commands and usage.')
-        self.assertEqual(bot.mouth.get(), 'usage:')
-        self.assertEqual(bot.mouth.get(), 'help <command>')
+        self.assertEqual(
+            bot.mouth.get(),
+            u'echo - Echo input string.\nhelp - Show commands and usage.')
+        self.assertEqual(
+            bot.mouth.get(),
+            u'help - Show commands and usage.\nusage:\nhelp <command>')
         with self.assertRaises(Exception):
             print(bot.mouth.get_nowait())
 

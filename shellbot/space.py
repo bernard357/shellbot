@@ -20,7 +20,6 @@ import logging
 import os
 from multiprocessing import Process, Queue
 import requests
-from requests_toolbelt import MultipartEncoder
 from six import string_types
 import sys
 import time

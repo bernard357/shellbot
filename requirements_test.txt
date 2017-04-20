@@ -3,4 +3,5 @@ flake8
 coverage
 requests-mock
 mock
+vcr
 webtest

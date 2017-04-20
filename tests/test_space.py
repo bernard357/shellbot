@@ -15,6 +15,13 @@ sys.path.insert(0, os.path.abspath('..'))
 from shellbot import Context, SparkSpace
 
 
+# unit tests
+cisco_spark_bearer = None
+
+# functional tests
+#cisco_spark_bearer = os.environ.get('CISCO_SPARK_BOT_TOKEN')
+
+
 class Fake(object):
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
@@ -138,7 +145,7 @@ class SpaceTests(unittest.TestCase):
 
     def test_lifecycle(self):
 
-        if cisco_spark_bearer:
+        if cisco_spark_bearer is not None:
 
             logging.debug("*** (life cycle)")
 
@@ -200,7 +207,7 @@ class SpaceTests(unittest.TestCase):
 
     def test_lookup_room_api(self):
 
-        if cisco_spark_bearer:
+        if cisco_spark_bearer is not None:
 
             logging.debug("*** lookup_room API")
 
@@ -354,7 +361,7 @@ class SpaceTests(unittest.TestCase):
 
     def test_get_bot_api(self):
 
-        if cisco_spark_bearer:
+        if cisco_spark_bearer is not None:
 
             logging.debug("*** get_bot API")
 
@@ -366,11 +373,4 @@ class SpaceTests(unittest.TestCase):
 if __name__ == '__main__':
 
     Context.set_logger()
-
-    # unit tests
-    cisco_spark_bearer = None
-
-    # functional tests
-    #cisco_spark_bearer = os.environ.get('CISCO_SPARK_BOT_TOKEN')
-
     sys.exit(unittest.main())
