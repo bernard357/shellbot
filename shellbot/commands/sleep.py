@@ -17,7 +17,7 @@
 
 import time
 
-from base import Command
+from .base import Command
 
 
 class Sleep(Command):

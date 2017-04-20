@@ -22,7 +22,7 @@ from six import string_types
 import time
 from ciscosparkapi import CiscoSparkAPI
 
-from context import Context
+from .context import Context
 
 
 class SparkSpace(object):

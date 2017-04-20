@@ -22,13 +22,13 @@ import sys
 import time
 import yaml
 
-from context import Context
-from shell import Shell
-from listener import Listener
-from space import SparkSpace
-from speaker import Speaker
-from worker import Worker
-from routes.wrapper import Wrapper
+from .context import Context
+from .shell import Shell
+from .listener import Listener
+from .space import SparkSpace
+from .speaker import Speaker
+from .worker import Worker
+from .routes.wrapper import Wrapper
 
 
 class ShellBot(object):

@@ -18,7 +18,7 @@
 import logging
 from bottle import Bottle
 
-from context import Context
+from .context import Context
 
 
 class Server(Bottle):
