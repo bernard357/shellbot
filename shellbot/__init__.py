@@ -27,7 +27,7 @@ from routes.base import Route
 from routes.notify import Notify
 from routes.wrapper import Wrapper
 
-__version__ = '17.04.18'
+__version__ = '17.4.18'
 
 __all__ = [
     __version__,

@@ -3,6 +3,7 @@
 
 import os
 from os.path import join as pjoin
+import re
 import sys
 
 try:
@@ -18,13 +19,14 @@ with open('requirements_test.txt') as f:
     test_requirements = f.read().splitlines()
 
 # get version from package itself
-def get_version():
-    version = None
-    sys.path.insert(0, pjoin(os.getcwd()))
-    from shellbot import __version__
-    version = __version__
-    sys.path.pop(0)
-    return version
+version = '0.0.0'
+with open('shellbot/__init__.py') as f:
+    lines = f.read().splitlines()
+    for line in lines:
+        match = re.match(r"__version__ = '(.*?)'", line)
+        if match:
+            version = match.group(1)
+            break
 
 # get description from README.rst
 def get_long_description():
@@ -35,7 +37,7 @@ def get_long_description():
 
 setup(
     name='shellbot',
-    version=get_version(),
+    version=version,
     description="A bot that is also a responsive shell",
     long_description=get_long_description(),
     author="Bernard Paques",

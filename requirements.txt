@@ -2,6 +2,4 @@ bottle
 colorlog
 paste
 PyYAML
-requests
-requests_toolbelt
 ciscosparkapi
