@@ -48,7 +48,7 @@ Credits
 * Cookiecutter_
 * `cookiecutter-pypackage`_
 
-.. _`Shellbot at ReadTheDocs`: https://shellbot.readthedocs.org
+.. _`Shellbot at ReadTheDocs`: http://shellbot-for-cisco-spark.readthedocs.io/en/latest/
 .. _`Shellbot at PyPi`: https://pypi.python.org/pypi/shellbot
 .. _`Shellbot at GitHub`: https://github.com/bernard357/shellbot
 .. _`Apache License (2.0)`: http://www.apache.org/licenses/LICENSE-2.0
