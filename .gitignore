@@ -20,4 +20,3 @@ shellbot.egg-info/
 .DS_Store
 .eggs/
 test/local/
-.travis.yml
