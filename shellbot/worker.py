@@ -16,8 +16,7 @@
 # limitations under the License.
 
 import logging
-from multiprocessing import Queue
-from Queue import Empty
+import time
 
 
 class Worker(object):
@@ -68,17 +67,24 @@ class Worker(object):
 
         try:
             while self.context.get('general.switch', 'on') == 'on':
+
+                if self.inbox.empty():
+                    time.sleep(0.1)
+                    continue
+
                 try:
                     item = self.inbox.get(True, 0.1)
                     if isinstance(item, Exception):
                         break
                     counter = self.context.increment('worker.counter')
+
                     self.context.set('worker.busy', True)
                     self.process(item, counter)
-
                     self.context.set('worker.busy', False)
-                except Empty:
-                    pass
+
+                except Exception as feedback:
+                    logging.debug(feedback)
+                    break
 
         except KeyboardInterrupt:
             pass

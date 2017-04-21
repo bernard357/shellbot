@@ -16,8 +16,7 @@
 # limitations under the License.
 
 import logging
-from multiprocessing import Queue
-from Queue import Empty
+import time
 
 
 class Listener(object):
@@ -80,14 +79,20 @@ class Listener(object):
         try:
             self.context.set('listener.counter', 0)
             while self.context.get('general.switch', 'on') == 'on':
+
+                if self.ears.empty():
+                    time.sleep(0.1)
+                    continue
+
                 try:
                     item = self.ears.get(True, 0.1)
                     if isinstance(item, Exception):
                         break
                     counter = self.context.increment('listener.counter')
                     self.process(item, counter)
-                except Empty:
-                    pass
+                except Exception as feedback:
+                    logging.debug(feedback)
+                    break
 
         except KeyboardInterrupt:
             pass

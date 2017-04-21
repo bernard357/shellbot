@@ -16,8 +16,6 @@
 # limitations under the License.
 
 import logging
-from multiprocessing import Queue
-from Queue import Empty
 from six import string_types
 import time
 
@@ -88,14 +86,19 @@ class Speaker(object):
                     time.sleep(5)
                     continue
 
+                if self.mouth.empty():
+                    time.sleep(0.1)
+                    continue
+
                 try:
                     item = self.mouth.get(True, 0.1)
                     if isinstance(item, Exception):
                         break
                     counter = self.context.increment('speaker.counter')
                     self.process(item, counter)
-                except Empty:
-                    pass
+                except Exception as feedback:
+                    logging.debug(feedback)
+                    break
 
         except KeyboardInterrupt:
             pass

@@ -27,7 +27,6 @@ a collaborative place where multiple persons can participate.
 import logging
 import os
 from multiprocessing import Process, Queue
-from Queue import Empty
 import sys
 import time
 
@@ -66,11 +65,11 @@ settings = {
             'label': u'Level 1',
             'message': u'Initial capture of information',
             'markdown': u'If you are on the shop floor:\n'
-                +u'* Take a picture of the faulty part\n'
-                +u'* Describe the issue in the chat box\n'
-                +u'\n'
-                +u'As a Stress engineer, engage with shop floor and ask questions.'
-                +u' To engage with the design team, type **next** in the chat box.'
+                + u'* Take a picture of the faulty part\n'
+                + u'* Describe the issue in the chat box\n'
+                + u'\n'
+                + u'As a Stress engineer, engage with shop floor and ask questions.'
+                + u' To engage with the design team, type **next** in the chat box.'
         },
 
         {
@@ -123,12 +122,12 @@ queue = Queue()
 
 server = Server(context=context, check=True)
 
-server.add_route(Notify(route=context.get('server.trigger'),
-                        queue=queue,
-                        notification='click'))
+server.add_route(Notify(queue=queue,
+                        notification='click'),
+                        route=context.get('server.trigger'))
 
-server.add_route(Wrapper(route=context.get('server.hook'),
-                         callable=bot.get_hook()))
+server.add_route(Wrapper(callable=bot.get_hook()),
+                         route=context.get('server.hook'))
 
 #
 # delay the creation of a room until we receive some trigger
@@ -147,14 +146,18 @@ class Trigger(object):
         try:
             self.context.set('trigger.counter', 0)
             while self.context.get('general.switch', 'on') == 'on':
+                if self.queue.empty():
+                    time.sleep(0.1)
+                    continue
                 try:
                     item = self.queue.get(True, 0.1)
                     if isinstance(item, Exception):
                         break
                     counter = self.context.increment('trigger.counter')
                     self.process(item, counter)
-                except Empty:
-                    pass
+                except Exception as feedback:
+                    logging.debug(feedback)
+                    break
 
         except KeyboardInterrupt:
             pass
