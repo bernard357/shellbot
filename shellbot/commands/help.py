@@ -17,19 +17,6 @@
 
 from .base import Command
 
-help_markdown = """
-Some commands that may prove useful:
-- show status: @plumby status
-- list categories: @plumby list
-- list templates: @plumby list analytics
-- use template: @plumby use analytics/hadoop-cluster
-- deploy template: @plumby deploy
-- get information: @plumby information
-- stop servers: @plumby stop
-- start servers: @plumby start
-- destroy resources: @plumby dispose
-"""
-
 
 class Help(Command):
     """
