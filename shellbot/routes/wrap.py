@@ -20,13 +20,13 @@ import logging
 from base import Route
 
 
-class Wrapper(Route):
+class Wrap(Route):
     """
     Calls a function on web request
 
     >>>def my_callable(**kwargs):
     ...
-    >>>route = Wrapper(route='/hook', callable=my_callable)
+    >>>route = Wrap(callable=my_callable, route='/hook')
 
     When the route is requested over the web, the target function is
     called.

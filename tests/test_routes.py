@@ -81,25 +81,25 @@ class CommandsTests(unittest.TestCase):
         self.assertEqual(r.delete(), 'OK')
         self.assertEqual(queue.get(), 'signal')
 
-    def test_static(self):
+    def test_text(self):
 
-        from shellbot.routes.static import Static
+        from shellbot.routes.text import Text
 
-        r = Static(Context())
+        r = Text(Context())
         self.assertEqual(r.route, '/')
         self.assertEqual(r.page, None)
         self.assertEqual(r.get(), 'OK')
 
-        r = Static(Context(), route='/hello', page='Hello world')
+        r = Text(Context(), route='/hello', page='Hello world')
         self.assertEqual(r.route, '/hello')
         self.assertEqual(r.page, 'Hello world')
         self.assertEqual(r.get(), 'Hello world')
 
     def test_wrapper(self):
 
-        from shellbot.routes.wrapper import Wrapper
+        from shellbot.routes.wrap import Wrap
 
-        r = Wrapper(Context())
+        r = Wrap(Context())
 
         with self.assertRaises(NotImplementedError):
             r.get()
@@ -119,7 +119,7 @@ class CommandsTests(unittest.TestCase):
         def hook_patched():
             return 'world'
 
-        r = Wrapper(callable=hook,
+        r = Wrap(callable=hook,
                     route='/wrapped')
 
         self.assertEqual(r.route, '/wrapped')
@@ -147,9 +147,9 @@ class CommandsTests(unittest.TestCase):
 
         callable = Callable(context)
 
-        r = Wrapper(context=context,
-                    callable=callable.hook,
-                    route='/wrapped')
+        r = Wrap(context=context,
+                 callable=callable.hook,
+                 route='/wrapped')
 
         self.assertEqual(r.route, '/wrapped')
         self.assertEqual(r.callable, callable.hook)

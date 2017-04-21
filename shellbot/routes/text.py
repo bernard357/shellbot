@@ -20,12 +20,12 @@ import logging
 from base import Route
 
 
-class Static(Route):
+class Text(Route):
     """
     Implements a static web page
 
     >>>page = "<html> ... </html>"
-    >>>route = Static(route='/index', page=page)
+    >>>route = text(route='/index', page=page)
 
     When the route is requested over the web, static content is provided
     in return.

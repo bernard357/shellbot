@@ -12,7 +12,7 @@ from webtest import TestApp
 sys.path.insert(0, os.path.abspath('..'))
 
 from shellbot import Context, Server
-from shellbot.routes import Route, Static, Notify, Wrapper
+from shellbot.routes import Route, Notify, Text, Wrap
 
 
 class ServerTests(unittest.TestCase):
@@ -116,11 +116,11 @@ class ServerTests(unittest.TestCase):
         server = Server(httpd=FakeHttpd())
         server.run()
 
-    def test_static(self):
+    def test_text(self):
 
-        logging.info('*** Static test***')
+        logging.info('*** Text test***')
 
-        route = Static(route='/hello', page='Hello, world!')
+        route = Text(route='/hello', page='Hello, world!')
 
         server = Server(route=route)
 
@@ -145,9 +145,9 @@ class ServerTests(unittest.TestCase):
         time.sleep(0.1)
         self.assertEqual(queue.get_nowait(), 'hello!')
 
-    def test_wrapper(self):
+    def test_wrap(self):
 
-        logging.info('*** Wrapper test***')
+        logging.info('*** Wrap test***')
 
         context = Context()
 
@@ -161,9 +161,9 @@ class ServerTests(unittest.TestCase):
 
         callable = Callable(context)
 
-        route = Wrapper(context=context,
-                        route='/wrapper',
-                        callable=callable.hook)
+        route = Wrap(context=context,
+                     route='/wrapper',
+                     callable=callable.hook)
 
         server = Server(context=context, route=route)
 

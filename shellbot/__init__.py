@@ -25,7 +25,7 @@ from .worker import Worker
 from .commands.base import Command
 from .routes.base import Route
 from .routes.notify import Notify
-from .routes.wrapper import Wrapper
+from .routes.wrap import Wrap
 
 __version__ = '17.4.18'
 
@@ -42,5 +42,5 @@ __all__ = [
     'Command',
     'Route',
     'Notify',
-    'Wrapper',
+    'Wrap',
 ]

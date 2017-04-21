@@ -28,7 +28,7 @@ from .listener import Listener
 from .space import SparkSpace
 from .speaker import Speaker
 from .worker import Worker
-from .routes.wrapper import Wrapper
+from .routes.wrap import Wrap
 
 
 class ShellBot(object):
@@ -256,8 +256,8 @@ class ShellBot(object):
         if server is not None:
             logging.debug('Adding hook route to web server')
             server.add_route(
-                Wrapper(route=self.context.get('server.hook', '/hook'),
-                        callable=self.get_hook()))
+                Wrap(callable=self.get_hook(),
+                     route=self.context.get('server.hook', '/hook')))
 
         assert self.context.get('server.url') is not None
         self.space.hook(
@@ -311,7 +311,7 @@ class ShellBot(object):
         main component onf the architecture: listener, speaker, and worker.
         """
 
-        p = Process(target=self.speaker.work, args=(self.context,))
+        p = Process(target=self.speaker.work)
         p.daemon = True
         p.start()
         self._speaker_process = p
@@ -321,7 +321,7 @@ class ShellBot(object):
         p.start()
         self._worker_process = p
 
-        p = Process(target=self.listener.work, args=(self.context,))
+        p = Process(target=self.listener.work)
         p.daemon = True
         p.start()
         self._listener_process = p

@@ -31,4 +31,4 @@ class Echo(Command):
         """
         Echoes input string
         """
-        self.bot.say(str(arguments))
+        self.bot.say(arguments)
