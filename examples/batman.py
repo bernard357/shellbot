@@ -38,6 +38,21 @@ In this example we create following commands with some lines of code:
 - response: Going back to Hell
 - also stops the bot itself on the server
 
+To run this script you have to change the configuration below, or set
+environment variables instead.
+
+Put the token received from Cisco Spark for your bot in
+a variable named ``SHELLY_TOKEN``::
+
+    export SHELLY_TOKEN="<token id from Cisco Spark for Developers>"
+
+The variable ``SERVER_URL`` has to mention the public IP address and link
+used to reach this server from the Internet. For example, if you use ngrok
+during development and test::
+
+    export SERVER_URL="http://1a107f21.ngrok.io"
+
+
 Credit: https://developer.ciscospark.com/blog/blog-details-8110.html
 """
 
@@ -65,10 +80,11 @@ settings = {
     'spark': {
         'room': 'Chat with Batman',
         'moderators': 'bernard.paques@dimensiondata.com',
+        'token': '$SHELLY_TOKEN',
     },
 
     'server': {
-        'url': 'http://1a107f21.ngrok.io',
+        'url': '$SERVER_URL',
         'hook': '/hook',
         'binding': '0.0.0.0',
         'port': 8080,

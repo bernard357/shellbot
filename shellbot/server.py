@@ -87,6 +87,7 @@ class Server(Bottle):
 
         self.context.apply(settings)
         self.context.check('server.binding', '0.0.0.0')
+        self.context.check('server.url', filter=True)
         self.context.check('server.port', 8080)
         self.context.check('server.debug', False)
 

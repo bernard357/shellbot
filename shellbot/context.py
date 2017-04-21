@@ -148,11 +148,17 @@ class Context(object):
                     self.values[key] = default
                     value = default
 
-            elif (is_mandatory or validate or filter):
+            elif (is_mandatory or validate):
                 try:
                     value = self.values[key]
                 except KeyError:
                     raise KeyError(u"Missing '{}' in context".format(key))
+
+            else:
+                try:
+                    value = self.values[key]
+                except KeyError:
+                    value = None
 
             if validate and validate(value) is False:
                 raise ValueError(
@@ -199,6 +205,7 @@ class Context(object):
             context.check('spark.personal_token', filter=True)
 
         """
+
         if value is None or len(value) < 1 or value[0] != '$':
             return value
 
@@ -231,6 +238,8 @@ class Context(object):
         self.lock.acquire()
         try:
             self.values[key] = value
+        except IOError as feedback:
+            logging.error(feedback)
         finally:
             self.lock.release()
 

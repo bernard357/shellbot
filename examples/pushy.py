@@ -22,6 +22,32 @@ Push a button to start interactions
 In this example an external event is captured via a web request. This creates
 a collaborative place where multiple persons can participate.
 
+Then following commands are available from the bot:
+
+- command: next
+- response describes the name and characteristics of new state
+
+- command: state
+- response describes current state
+
+- command: close
+- responses describes the proper archiving of the room
+
+To run this script you have to change the configuration below, or set
+environment variables instead.
+
+Put the token received from Cisco Spark for your bot in
+a variable named ``SHELLY_TOKEN``::
+
+    export SHELLY_TOKEN="<token id from Cisco Spark for Developers>"
+
+The variable ``SERVER_URL`` has to mention the public IP address and link
+used to reach this server from the Internet. For example, if you use ngrok
+during development and test::
+
+    export SERVER_URL="http://1a107f21.ngrok.io"
+
+
 """
 
 import logging
@@ -49,10 +75,11 @@ settings = {
     'spark': {
         'room': 'On-demand collaboration',
         'moderators': 'bernard.paques@dimensiondata.com',
+        'token': '$SHELLY_TOKEN',
     },
 
     'server': {
-        'url': 'http://1a107f21.ngrok.io',
+        'url': '$SERVER_URL',
         'trigger': '/trigger',
         'hook': '/hook',
         'binding': '0.0.0.0',
@@ -182,10 +209,3 @@ p.start()
 
 bot.start()
 server.run()
-
-#
-# clean the room
-#
-
-bot.stop()
-bot.space.dispose(context.get('spark.room'))

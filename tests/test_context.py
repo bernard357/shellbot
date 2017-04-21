@@ -107,10 +107,9 @@ class ContextTests(unittest.TestCase):
             context.check('spark.*unknown*key*',
                           validate=lambda line: True)
 
-        # filter implies is_mandatory
-        with self.assertRaises(KeyError):
-            context.check('spark.*unknown*key*',
-                          filter=True)
+        # filter does not implies is_mandatory
+        context.check('spark.*unknown*key*',
+                      filter=True)
 
         context.check('spark.webhook',
                       validate=lambda line: line.startswith('http'))
