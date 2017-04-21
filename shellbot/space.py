@@ -154,12 +154,6 @@ class SparkSpace(object):
         """
 
         self.context.apply(settings)
-        self.context.check('spark.room', is_mandatory=True)
-        self.context.check('spark.moderators', [])
-        self.context.check('spark.participants', [])
-        self.context.check('spark.team')
-        self.context.check('spark.token')
-        self.context.check('spark.personal_token')
 
         values = self.context.get('spark.moderators')
         if isinstance(values, string_types):
@@ -173,8 +167,6 @@ class SparkSpace(object):
             token = os.environ.get('CISCO_SPARK_TOKEN')
             if token:
                 self.context.set('spark.personal_token', token)
-            else:
-                logging.warning(u"Missing CISCO_SPARK_TOKEN")
 
         if self.context.get('spark.token') is None:
             token1 = os.environ.get('CISCO_SPARK_BOT_TOKEN')
@@ -183,8 +175,13 @@ class SparkSpace(object):
                 self.context.set('spark.token', token1)
             elif token2:
                 self.context.set('spark.token', token2)
-            else:
-                logging.warning(u"Missing CISCO_SPARK_BOT_TOKEN")
+
+        self.context.check('spark.room', is_mandatory=True)
+        self.context.check('spark.moderators', [])
+        self.context.check('spark.participants', [])
+        self.context.check('spark.team')
+        self.context.check('spark.token', filter=True)
+        self.context.check('spark.personal_token', filter=True)
 
         self.reset()
 

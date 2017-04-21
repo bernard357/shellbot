@@ -23,6 +23,13 @@ class ContextTests(unittest.TestCase):
         self.assertEqual(context.get('bot.name'), 'testy')
         self.assertEqual(context.get('bot.version'), '17.4.1')
 
+    def test_init_filter(self):
+
+        context = Context(filter=lambda x : x + '...')
+        context.apply({'my.var': 'my value'})
+        context.check('my.var', filter=True)
+        self.assertEqual(context.get('my.var'), 'my value...')
+
     def test_apply(self):
 
         context = Context()
@@ -60,6 +67,8 @@ class ContextTests(unittest.TestCase):
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
                 'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
+                'personal_token': '$MY_FUZZY_SPARK_TOKEN',
+                'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
                 'webhook': "http://73a1e282.ngrok.io",
             }
         })
@@ -88,24 +97,67 @@ class ContextTests(unittest.TestCase):
                       is_mandatory=True)
         self.assertEqual(context.get('spark.*not*present'), '*born')
 
-        with self.assertRaises(KeyError):  # missing key
+        # missing key
+        with self.assertRaises(KeyError):
             context.check('spark.*unknown*key*',
                           is_mandatory=True)
 
-        with self.assertRaises(KeyError):  # validate implies is_mandatory
+        # validate implies is_mandatory
+        with self.assertRaises(KeyError):
             context.check('spark.*unknown*key*',
                           validate=lambda line: True)
+
+        # filter implies is_mandatory
+        with self.assertRaises(KeyError):
+            context.check('spark.*unknown*key*',
+                          filter=True)
 
         context.check('spark.webhook',
                       validate=lambda line: line.startswith('http'))
         self.assertEqual(context.get('spark.webhook'),
                          "http://73a1e282.ngrok.io")
 
-        with self.assertRaises(ValueError):  # present, but not put in context
+        with self.assertRaises(ValueError):
             context.check('spark.token',
                           validate=lambda line: len(line) == 32)
         self.assertEqual(context.get('spark.token'),
                          'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY')
+
+        context.check('spark.personal_token')
+        self.assertEqual(context.get('spark.personal_token'),
+                         '$MY_FUZZY_SPARK_TOKEN')
+
+        with self.assertRaises(AttributeError):
+            context.check('spark.personal_token', filter=True)
+        self.assertEqual(context.get('spark.personal_token'),
+                         '$MY_FUZZY_SPARK_TOKEN')
+
+        os.environ['MY_FUZZY_SPARK_TOKEN'] = ''
+        context.check('spark.personal_token', filter=True)
+        self.assertEqual(context.get('spark.personal_token'), '')
+
+        context.check('spark.fuzzy_token')
+        self.assertEqual(context.get('spark.fuzzy_token'),
+                         '$MY_FUZZY_SPARK_TOKEN')
+
+        os.environ['MY_FUZZY_SPARK_TOKEN'] = 'hello'
+        context.check('spark.fuzzy_token', filter=True)
+        self.assertEqual(context.get('spark.fuzzy_token'), 'hello')
+
+    def test__filter(self):
+
+        self.assertEqual(Context._filter(None), None)
+
+        self.assertEqual(Context._filter(''), '')
+
+        self.assertEqual(Context._filter('ZLOGQ0OVGlZWU1NmYtyY'),
+                         'ZLOGQ0OVGlZWU1NmYtyY')
+
+        if os.environ.get('PATH') is not None:
+            self.assertTrue(Context._filter('$PATH') != '$PATH')
+
+        with self.assertRaises(AttributeError):
+            Context._filter('$TOTALLY*UNKNOWN*HERE')
 
     def test_getter(self):
 

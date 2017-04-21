@@ -17,20 +17,33 @@
 
 import colorlog
 import logging
+import os
 from multiprocessing import Lock, Manager
 
 
 class Context(object):
     """
-    Stores data across multiple independent processing units
+    Stores settings across multiple independent processing units
 
     This is a basic key-value store, that supports concurrency
     across multiple processes
     """
 
-    def __init__(self, settings=None):
+    def __init__(self, settings=None, filter=None):
+        """
+        Stores settings across multiple independent processing units
+
+        :param settings: the set of variables managed in this context
+        :type settings: dict
+
+        :param filter: a function to interpret values on check()
+        :type filter: callable
+
+        """
         self.lock = Lock()
         self.values = Manager().dict()
+
+        self.filter = filter if filter else self._filter
 
         if settings:
             self.apply(settings)
@@ -57,7 +70,8 @@ class Context(object):
               key,
               default=None,
               is_mandatory=False,
-              validate=None):
+              validate=None,
+              filter=False):
         """
         Checks some settings
 
@@ -73,6 +87,9 @@ class Context(object):
         :param validate: a function called to validate values before the import
         :type validate: callable
 
+        :param filter: look at the content, and change it eventually
+        :type filter: bool
+
         Example::
 
             context = Context({
@@ -85,18 +102,20 @@ class Context(object):
                     'team': 'Anchor team',
                     'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY>',
                     'webhook': "http://73a1e282.ngrok.io",
+                    'personal_token', '$CISCO_SPARK_TOKEN',
                 }
             })
 
             context.check('spark.room', is_mandatory=True)
             context.check('spark.team')
+            context.check('spark.personal_token', filter=True)
 
         When a default value is provided, it is used to initialize
-        properly some key.
+        properly a missing key.
 
         >>>context.check('general.switch', 'on')
 
-        Another usage is to ensure that a key has been set previously.
+        Another usage is to ensure that a key has been set.
 
         >>>context.check('spark.room', is_mandatory=True)
 
@@ -104,6 +123,17 @@ class Context(object):
 
         >>>context.check('general.switch',
         ...              validate=lambda x: x in ('on', 'off'))
+
+        When filter is True, if the value is a string starting with '$',
+        then a variable with the same name is loaded from the environment.
+
+        >>>token=context.check('spark.personal_token', filter=True)
+        >>>assert token == os.environ.get('CISCO_SPARK_TOKEN')
+        True
+
+        The default filter can be changed at the creation of a context.
+
+        >>>context=Context(filter=lambda x : x + '...')
 
         This function raises ``KeyError`` if a mandatory key is absent.
         If a validation function is provided, then a ``ValueError`` can be
@@ -118,7 +148,7 @@ class Context(object):
                     self.values[key] = default
                     value = default
 
-            elif (is_mandatory or validate):
+            elif (is_mandatory or validate or filter):
                 try:
                     value = self.values[key]
                 except KeyError:
@@ -128,8 +158,54 @@ class Context(object):
                 raise ValueError(
                     u"Invalid value for '{}' in context".format(key))
 
+            if filter:
+                self.values[key] = self.filter(value)
+
         finally:
             self.lock.release()
+
+    @classmethod
+    def _filter(self, value):
+        """
+        Loads a value from the environment
+
+        :param value: if it starts with '$',
+            then it names an environment variable
+        :type value: str
+
+        :return: the same or a different text string
+        :rtype: str
+
+        If the string provided starts with the char '$', then the function
+        looks for an environment variable of this name and returns its value.
+
+        >>>print(context._filter('$HOME'))
+        /Users/bernard
+
+        This is useful if you want to secure your configuration files.
+        Instead of putting secrets in these files, you can store them
+        in the environment, and only make a reference.
+
+        Example::
+
+            context = Context({
+                'spark': {
+                    'token': '$MY_BOT_TOKEN',
+                    'personal_token', '$CISCO_SPARK_TOKEN',
+                }
+            })
+
+            context.check('spark.token', filter=True)
+            context.check('spark.personal_token', filter=True)
+
+        """
+        if value is None or len(value) < 1 or value[0] != '$':
+            return value
+
+        imported = os.environ.get(value[1:])
+        if imported is None:
+            raise AttributeError(u"Missing {}".format(value))
+        return imported
 
     def get(self, key, default=None):
         """
