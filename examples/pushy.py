@@ -32,7 +32,7 @@ import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import ShellBot, Context, Command, Server, Notify, Wrapper
+from shellbot import ShellBot, Context, Command, Server, Notify, Wrap
 Context.set_logger()
 
 #
@@ -52,7 +52,7 @@ settings = {
     },
 
     'server': {
-        'url': 'http://5ad34e5b.ngrok.io',
+        'url': 'http://1a107f21.ngrok.io',
         'trigger': '/trigger',
         'hook': '/hook',
         'binding': '0.0.0.0',
@@ -123,11 +123,11 @@ queue = Queue()
 server = Server(context=context, check=True)
 
 server.add_route(Notify(queue=queue,
-                        notification='click'),
-                        route=context.get('server.trigger'))
+                        notification='click',
+                        route=context.get('server.trigger')))
 
-server.add_route(Wrapper(callable=bot.get_hook()),
-                         route=context.get('server.hook'))
+server.add_route(Wrap(callable=bot.get_hook(),
+                      route=context.get('server.hook')))
 
 #
 # delay the creation of a room until we receive some trigger
@@ -147,7 +147,7 @@ class Trigger(object):
             self.context.set('trigger.counter', 0)
             while self.context.get('general.switch', 'on') == 'on':
                 if self.queue.empty():
-                    time.sleep(0.1)
+                    time.sleep(0.005)
                     continue
                 try:
                     item = self.queue.get(True, 0.1)

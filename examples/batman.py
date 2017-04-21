@@ -48,7 +48,7 @@ import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import ShellBot, Context, Command, Server, Wrapper
+from shellbot import ShellBot, Context, Command, Server
 Context.set_logger()
 
 #
@@ -68,7 +68,7 @@ settings = {
     },
 
     'server': {
-        'url': 'http://5ad34e5b.ngrok.io',
+        'url': 'http://1a107f21.ngrok.io',
         'hook': '/hook',
         'binding': '0.0.0.0',
         'port': 8080,
@@ -87,23 +87,23 @@ bot = ShellBot(context=context, check=True)
 
 class Batman(Command):
     keyword = 'whoareyou'
-    information_message = "I'm Batman!"
+    information_message = u"I'm Batman!"
 
 
 class Batcave(Command):
     keyword = 'cave'
-    information_message = "The Batcave is silent..."
+    information_message = u"The Batcave is silent..."
 
     def execute(self, arguments=None):
         if arguments:
-            self.bot.say("The Batcave echoes, '{0}'".format(arguments))
+            self.bot.say(u"The Batcave echoes, '{0}'".format(arguments))
         else:
             self.bot.say(self.information_message)
 
 
 class Batsignal(Command):
     keyword = 'signal'
-    information_message = "NANA NANA NANA NANA"
+    information_message = u"NANA NANA NANA NANA"
     information_file = "https://upload.wikimedia.org/wikipedia/en/c/c6/Bat-signal_1989_film.jpg"
 
     def execute(self, arguments=None):
@@ -113,7 +113,7 @@ class Batsignal(Command):
 
 class Batsuicide(Command):
     keyword = 'suicide'
-    information_message = "Going back to Hell"
+    information_message = u"Going back to Hell"
     is_interactive = False
 
     def execute(self, arguments=None):
