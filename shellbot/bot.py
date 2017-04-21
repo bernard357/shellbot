@@ -54,9 +54,9 @@ class ShellBot(object):
 
         self.shell = Shell(bot=self)
 
-        self.speaker = Speaker(self.mouth, self.space)
+        self.speaker = Speaker(bot=self)
         self.worker = Worker(bot=self)
-        self.listener = Listener(self.ears, self.shell)
+        self.listener = Listener(bot=self)
 
         if check:
             self.configure()

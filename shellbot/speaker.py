@@ -25,26 +25,27 @@ class Speaker(object):
     Sends updates to a business messaging space
     """
 
-    def __init__(self, mouth, space):
+    def __init__(self, bot=None, tee=None):
         """
         Sends updates to a business messaging space
 
-        :param mouth: the queue of outbound updates
-        :type mouth: queue
+        :param bot: the overarching bot
+        :type bot: ShellBot
 
-        :param space: the connector to a business messaging space
-        :type space: SparkSpace or similar
+        :param tee: if provided, messages received are duplicated there
+        :type tee: queue
 
         """
-        self.mouth = mouth
-        self.space = space
+        self.bot = bot
+        self.context = bot.context
+        self.mouth = bot.mouth
+        self.space = bot.space
 
-    def work(self, context):
+        self.tee = tee
+
+    def work(self):
         """
         Continuously send updates
-
-        :param context: the context shared across processes
-        :type context: context
 
         This function is looping on items received from the queue, and
         is handling them one by one in the background.
@@ -52,33 +53,34 @@ class Speaker(object):
         Processing should be handled in a separate background process, like
         in the following example::
 
-            space = SparkSpace(context=context)
-            speaker = Speaker(mouth=mouth, space=space)
+            speaker = Speaker(bot=bot)
 
-            process = Process(target=speaker.work, args=(context,))
+            process = Process(target=speaker.work)
             process.daemon = True
             process.start()
 
         The recommended way for stopping the process is to change the
         parameter ``general.switch`` in the context. For example::
 
-            context.set('general.switch', 'off')
+            bot.context.set('general.switch', 'off')
 
         Alternatively, the loop is also broken when an exception is pushed
         to the queue. For example::
 
-            mouth.put(Exception('EOQ'))
+            bot.mouth.put(Exception('EOQ'))
 
         Note that items are not picked up from the queue until the underlying
         space is ready for handling messages.
         """
         logging.info(u"Starting speaker")
 
-        self.context = context
-
         try:
             self.context.set('speaker.counter', 0)
             while self.context.get('general.switch', 'on') == 'on':
+
+                if self.mouth.empty():
+                    time.sleep(0.005)
+                    continue
 
                 if not self.space.is_ready:
                     logging.debug(
@@ -86,16 +88,17 @@ class Speaker(object):
                     time.sleep(5)
                     continue
 
-                if self.mouth.empty():
-                    time.sleep(0.1)
-                    continue
-
                 try:
                     item = self.mouth.get(True, 0.1)
                     if isinstance(item, Exception):
                         break
                     counter = self.context.increment('speaker.counter')
+
+                    if self.tee:
+                        self.tee.put(item)
+
                     self.process(item, counter)
+
                 except Exception as feedback:
                     logging.debug(feedback)
                     break
@@ -127,4 +130,4 @@ class Speaker(object):
                                         markdown=item.markdown,
                                         file_path=item.file)
         else:
-            logging.info(str(item))
+            logging.info(item)

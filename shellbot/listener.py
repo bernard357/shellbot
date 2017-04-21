@@ -24,30 +24,27 @@ class Listener(object):
     Handles messages received from chat space
     """
 
-    def __init__(self, ears, shell, tee=None):
+    def __init__(self, bot=None, tee=None):
         """
         Handles messages received from chat space
 
-        :param ears: the queue of messages
-        :type ears: queue
-
-        :param shell: the shell that will handle commands
-        :type shell: shell
+        :param bot: the overarching bot
+        :type bot: ShellBot
 
         :param tee: if provided, messages received are duplicated there
         :type tee: queue
 
         """
-        self.ears = ears
-        self.shell = shell
+        self.bot = bot
+        self.context = bot.context
+        self.ears = bot.ears
+        self.shell = bot.shell
+
         self.tee = tee
 
-    def work(self, context):
+    def work(self):
         """
         Continuously receives updates
-
-        :param context: the context shared across processes
-        :type context: context
 
         This function is looping on items received from the queue, and
         is handling them one by one in the background.
@@ -55,33 +52,31 @@ class Listener(object):
         Processing should be handled in a separate background process, like
         in the following example::
 
-            listener = Listener(ears=ears, shell=shell)
+            listener = Listener(bot=bot)
 
-            process = Process(target=listener.work, args=(context,))
+            process = Process(target=listener.work)
             process.daemon = True
             process.start()
 
         The recommended way for stopping the process is to change the
         parameter ``general.switch`` in the context. For example::
 
-            context.set('general.switch', 'off')
+            bot.context.set('general.switch', 'off')
 
         Alternatively, the loop is also broken when an exception is pushed
         to the queue. For example::
 
-            ears.put(Exception('EOQ'))
+            bot.ears.put(Exception('EOQ'))
 
         """
         logging.info(u"Starting listener")
-
-        self.context = context
 
         try:
             self.context.set('listener.counter', 0)
             while self.context.get('general.switch', 'on') == 'on':
 
                 if self.ears.empty():
-                    time.sleep(0.1)
+                    time.sleep(0.005)
                     continue
 
                 try:
@@ -89,7 +84,12 @@ class Listener(object):
                     if isinstance(item, Exception):
                         break
                     counter = self.context.increment('listener.counter')
+
+                    if self.tee:
+                        self.tee.put(item)
+
                     self.process(item, counter)
+
                 except Exception as feedback:
                     logging.debug(feedback)
                     break
@@ -130,9 +130,6 @@ class Listener(object):
 
         """
         logging.debug(u'Listener is working on {}'.format(counter))
-
-        if self.tee:
-            self.tee.put(item)
 
         # sanity check
         #

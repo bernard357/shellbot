@@ -25,70 +25,43 @@ class CompositeTests(unittest.TestCase):
 
         logging.info('*** Static test ***')
 
-        context = Context()
-        space = SparkSpace(context=context)
+        my_bot = ShellBot()
 
-        ears = Queue()
-        mouth = Queue()
-        inbox = Queue()
-
-        my_bot = ShellBot(context=context,
-                          mouth=mouth,
-                          inbox=inbox,
-                          ears=ears,
-                          space=space)
-
-        shell = Shell(bot=my_bot)
-        shell.load_default_commands()
-
-        speaker = Speaker(mouth, space)
-        speaker_process = Process(target=speaker.work, args=(context,))
+        speaker = Speaker(bot=my_bot)
+        speaker_process = Process(target=speaker.work)
         speaker_process.start()
 
         worker = Worker(bot=my_bot)
         worker_process = Process(target=worker.work)
         worker_process.start()
 
-        listener = Listener(ears, shell)
-        listener_process = Process(target=listener.work, args=(context,))
+        listener = Listener(bot=my_bot)
+        listener_process = Process(target=listener.work)
         listener_process.start()
 
-        listener_process.join(1.0)
+        listener_process.join(0.2)
         if listener_process.is_alive():
             logging.info('Stopping all threads')
-            context.set('general.switch', 'off')
+            my_bot.context.set('general.switch', 'off')
             listener_process.join()
             worker_process.join()
             speaker_process.join()
 
-        self.assertEqual(context.get('listener.counter', 0), 0)
-        self.assertEqual(context.get('worker.counter', 0), 0)
-        self.assertEqual(context.get('speaker.counter', 0), 0)
+        self.assertEqual(my_bot.context.get('listener.counter', 0), 0)
+        self.assertEqual(my_bot.context.get('worker.counter', 0), 0)
+        self.assertEqual(my_bot.context.get('speaker.counter', 0), 0)
 
     def test_dynamic(self):
 
         logging.info('*** Dynamic test ***')
 
-        context = Context()
-        space = SparkSpace(context=context, bearer='*dummy')
-        space.post_message = MagicMock()
-        space.room_id = '123'
+        my_bot = ShellBot()
+        my_bot.shell.load_default_commands()
+        my_bot.space.post_message = MagicMock()
+        my_bot.space.room_id = '123'
 
-        ears = Queue()
-        mouth = Queue()
-        inbox = Queue()
-
-        my_bot = ShellBot(context=context,
-                          mouth=mouth,
-                          inbox=inbox,
-                          ears=ears,
-                          space=space)
-
-        shell = Shell(bot=my_bot)
-        shell.load_default_commands()
-
-        speaker = Speaker(mouth, space)
-        speaker_process = Process(target=speaker.work, args=(context,))
+        speaker = Speaker(bot=my_bot)
+        speaker_process = Process(target=speaker.work)
         speaker_process.daemon = True
         speaker_process.start()
 
@@ -97,14 +70,14 @@ class CompositeTests(unittest.TestCase):
         worker_process.daemon = True
         worker_process.start()
 
-        listener = Listener(ears, shell)
-        listener_process = Process(target=listener.work, args=(context,))
+        listener = Listener(bot=my_bot)
+        listener_process = Process(target=listener.work)
         listener_process.daemon = True
         listener_process.start()
 
-        ears.put('hello world')
+        my_bot.ears.put('hello world')
 
-        ears.put({
+        my_bot.ears.put({
               "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
               "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
               "roomType" : "group",
@@ -119,7 +92,7 @@ class CompositeTests(unittest.TestCase):
               "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
             })
 
-        ears.put({
+        my_bot.ears.put({
               "id" : "2_2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
               "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
               "roomType" : "group",
@@ -132,7 +105,7 @@ class CompositeTests(unittest.TestCase):
               "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
             })
 
-        ears.put({
+        my_bot.ears.put({
               "id" : "3_2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
               "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
               "roomType" : "group",
@@ -145,7 +118,7 @@ class CompositeTests(unittest.TestCase):
               "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
             })
 
-        ears.put({
+        my_bot.ears.put({
               "id" : "3_2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
               "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
               "roomType" : "group",
@@ -158,7 +131,7 @@ class CompositeTests(unittest.TestCase):
               "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
             })
 
-        ears.put({
+        my_bot.ears.put({
               "id" : "4_2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
               "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
               "roomType" : "group",
@@ -174,17 +147,17 @@ class CompositeTests(unittest.TestCase):
             })
 
 
-        listener_process.join(2.0)
+        listener_process.join(1.0)
         if listener_process.is_alive():
             logging.info('Stopping all threads')
-            context.set('general.switch', 'off')
+            my_bot.context.set('general.switch', 'off')
             listener_process.join()
             worker_process.join()
             speaker_process.join()
 
-        self.assertEqual(context.get('listener.counter', 0), 6)
-        self.assertEqual(context.get('worker.counter', 0), 1)
-        self.assertTrue(context.get('speaker.counter', 0) > 3)
+        self.assertEqual(my_bot.context.get('listener.counter', 0), 6)
+        self.assertEqual(my_bot.context.get('worker.counter', 0), 1)
+        self.assertEqual(my_bot.context.get('speaker.counter', 0), 3)
 
 
 if __name__ == '__main__':

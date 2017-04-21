@@ -21,13 +21,13 @@ class ListenerTests(unittest.TestCase):
         bot = ShellBot()
         bot.shell.load_default_commands()
 
-        listener = Listener(bot.ears, bot.shell)
+        listener = Listener(bot=bot)
 
-        listener_process = Process(target=listener.work, args=(bot.context,))
+        listener_process = Process(target=listener.work)
         listener_process.daemon = True
         listener_process.start()
 
-        listener_process.join(1.0)
+        listener_process.join(0.1)
         if listener_process.is_alive():
             logging.info('Stopping listener')
             bot.context.set('general.switch', 'off')
@@ -122,9 +122,9 @@ class ListenerTests(unittest.TestCase):
         bot.ears.put(Exception('EOQ'))
 
         tee = Queue()
-        listener = Listener(bot.ears, bot.shell, tee=tee)
+        listener = Listener(bot=bot, tee=tee)
 
-        listener.work(bot.context)
+        listener.work()
 
         self.assertEqual(bot.context.get('listener.counter'), 5)
         with self.assertRaises(Exception):

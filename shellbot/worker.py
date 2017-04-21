@@ -69,7 +69,7 @@ class Worker(object):
             while self.context.get('general.switch', 'on') == 'on':
 
                 if self.inbox.empty():
-                    time.sleep(0.1)
+                    time.sleep(0.005)
                     continue
 
                 try:

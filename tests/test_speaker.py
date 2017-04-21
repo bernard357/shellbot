@@ -10,7 +10,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import Context, SparkSpace, Speaker
+from shellbot import Context, ShellBot, SparkSpace, Speaker
 
 
 class SpeakerTests(unittest.TestCase):
@@ -19,64 +19,61 @@ class SpeakerTests(unittest.TestCase):
 
         logging.info('*** Static test ***')
 
-        context = Context()
-        mouth = Queue()
-        space = SparkSpace(context=context)
-        speaker = Speaker(mouth=mouth, space=space)
+        bot = ShellBot()
+        speaker = Speaker(bot=bot)
 
-        speaker_process = Process(target=speaker.work, args=(context,))
+        speaker_process = Process(target=speaker.work)
         speaker_process.daemon = True
         speaker_process.start()
 
-        speaker_process.join(1.0)
+        speaker_process.join(0.1)
         if speaker_process.is_alive():
             logging.info('Stopping speaker')
-            context.set('general.switch', 'off')
+            bot.context.set('general.switch', 'off')
             speaker_process.join()
 
         self.assertFalse(speaker_process.is_alive())
-        self.assertEqual(context.get('speaker.counter', 0), 0)
+        self.assertEqual(bot.context.get('speaker.counter', 0), 0)
 
     def test_dynamic(self):
 
         logging.info('*** Dynamic test ***')
 
-        mouth = Queue()
-        mouth.put('hello')
-        mouth.put('world')
-        mouth.put(Exception('EOQ'))
+        bot = ShellBot()
+        bot.space.room_id = '123'
 
-        context = Context()
-        context.set('spark.CISCO_SPARK_PLUMBERY_BOT', 'garbage')
-        context.set('spark.room_id', 'fake')
+        items = ['hello', 'world']
+        for item in items:
+            bot.mouth.put(item)
+        bot.mouth.put(Exception('EOQ'))
 
-        space = SparkSpace(context=context)
-        space.room_id = '123'
-        speaker = Speaker(mouth=mouth, space=space)
+        tee = Queue()
+        speaker = Speaker(bot=bot, tee=tee)
 
-        with mock.patch.object(space,
+        with mock.patch.object(bot.space,
                                'post_message',
                                return_value=None) as mocked:
 
-            speaker.work(context)
+            speaker.work()
             mocked.assert_any_call('hello')
             mocked.assert_called_with('world')
 
             with self.assertRaises(Exception):
                 mouth.get_nowait()
 
+        for item in items:
+            self.assertEqual(tee.get(), item)
+
     def test_process(self):
 
         logging.info('*** Processing test ***')
 
-        context = Context()
-        context.set('spark.CISCO_SPARK_PLUMBERY_BOT', 'garbage')
-        context.set('spark.room_id', 'fake')
+        bot = ShellBot()
+        bot.space.room_id = '123'
 
-        space = SparkSpace(context=context)
-        speaker = Speaker(mouth=Queue(), space=space)
+        speaker = Speaker(bot=bot)
 
-        with mock.patch.object(space,
+        with mock.patch.object(bot.space,
                                'post_message',
                                return_value=None) as mocked:
 
