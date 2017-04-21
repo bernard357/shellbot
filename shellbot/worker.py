@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import logging
+from multiprocessing import Queue
 from Queue import Empty
 
 
