@@ -17,7 +17,7 @@
 
 import logging
 
-from base import Route
+from .base import Route
 
 
 class Text(Route):
