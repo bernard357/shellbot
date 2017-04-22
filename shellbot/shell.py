@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from builtins import str
 import logging
 from six import string_types
 import importlib
@@ -221,7 +222,7 @@ class Shell(object):
         Default implementation is provided in ``shellbot.commands.empty``.
 
         """
-        line = '' if line is None else unicode(line)  # sanity check
+        line = '' if line is None else str(line)  # sanity check
 
         logging.info(u"Handling: {}".format(line))
         self.line = line
