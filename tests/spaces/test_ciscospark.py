@@ -8,9 +8,10 @@ import os
 from multiprocessing import Process
 import sys
 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, SparkSpace
+from shellbot import Context
+from shellbot.spaces import SparkSpace
 
 
 # unit tests
@@ -65,18 +66,19 @@ class FakeApi(object):
         self.people.me = mock.Mock()
 
 
-class SpaceTests(unittest.TestCase):
+class SparkSpaceTests(unittest.TestCase):
 
     def test_init(self):
 
         logging.debug("*** init")
-        space = SparkSpace(bearer='b', ears='c')
+
+        space = SparkSpace(ex_token='b', ex_ears='c')
         self.assertTrue(space.context is not None)
-        self.assertEqual(space.bearer, 'b')
+        self.assertEqual(space.token, 'b')
         self.assertEqual(space.ears, 'c')
-        self.assertEqual(space.room_id, None)
-        self.assertEqual(space.room_title, '*unknown*')
-        self.assertEqual(space.team_id, None)
+        self.assertEqual(space.id, None)
+        self.assertEqual(space.title, '*unknown*')
+        self.assertEqual(space.teamId, None)
 
     def test_is_ready(self):
 
@@ -85,7 +87,7 @@ class SpaceTests(unittest.TestCase):
         space = SparkSpace()
         self.assertFalse(space.is_ready)
 
-        space = SparkSpace(context=Context({'spark.room.id': '123'}))
+        space = SparkSpace(context=Context({'spark.id': '123'}))
         self.assertTrue(space.is_ready)
 
     def test_configure(self):
@@ -147,18 +149,18 @@ class SpaceTests(unittest.TestCase):
 
             logging.debug("*** (life cycle)")
 
-            space = SparkSpace(bearer=cisco_spark_bearer)
+            space = SparkSpace(ex_token=cisco_spark_bearer)
             space.connect()
-            space.bond(room='*transient*for*test')
-            self.assertTrue(len(space.room_id) > 10)
-            self.assertEqual(space.room_title, '*transient*for*test')
-            self.assertEqual(space.team_id, None)
+            space.bond(title='*transient*for*test')
+            self.assertTrue(len(space.id) > 10)
+            self.assertEqual(space.title, '*transient*for*test')
+            self.assertEqual(space.teamId, None)
 
             space.post_message('Hello World')
 
             space.dispose()
-            self.assertEqual(space.room_id, None)
-            self.assertEqual(space.room_title, '*unknown*')
+            self.assertEqual(space.id, None)
+            self.assertEqual(space.title, '*unknown*')
             self.assertEqual(space.team_id, None)
 
     def test_bond_mock(self):
@@ -169,59 +171,48 @@ class SpaceTests(unittest.TestCase):
         space.api = FakeApi()
         space.add_moderator = mock.Mock()
         space.add_participant = mock.Mock()
-        mocked = mock.Mock()
 
-        space.bond(room='*title',
+        space.bond(title='*title',
                    moderators=['who', 'knows'],
-                   participants=['not', 'me'],
-                   callback=mocked)
+                   participants=['not', 'me'])
 
         self.assertTrue(space.add_moderator.called)
         self.assertTrue(space.add_participant.called)
-        self.assertTrue(mocked.called)
 
-    def test_get_room_mock(self):
+    def test_lookup_space_mock(self):
 
-        logging.debug("*** get_room")
-
-        space = SparkSpace()
-        space.api = FakeApi()
-
-        item = space.get_room(room='*title')
-
-        self.assertEqual(item.id, '*id')
+        logging.debug("*** lookup_space")
 
         space = SparkSpace()
         space.api = FakeApi()
 
-        item = space.get_team(team='*team*does*not*exist*in*this*world')
+        flag = space.lookup_space(title='*does*not*exist*in*this*world')
 
-        self.assertTrue(space.api.teams.create.called)
-
-    def test_lookup_room_mock(self):
-
-        logging.debug("*** lookup_room")
-
-        space = SparkSpace()
-        space.api = FakeApi()
-
-        item = space.lookup_room(room='*does*not*exist*in*this*world')
-
-        self.assertTrue(item is None)
+        self.assertFalse(flag)
         self.assertTrue(space.api.rooms.list.called)
 
-    def test_lookup_room_api(self):
+    def test_lookup_space_api(self):
 
         if cisco_spark_bearer is not None:
 
-            logging.debug("*** lookup_room API")
+            logging.debug("*** lookup_space API")
 
-            space = SparkSpace(bearer=cisco_spark_bearer)
+            space = SparkSpace(ex_token=cisco_spark_bearer)
             space.connect()
 
-            item = space.lookup_room(room='*does*not*exist*in*this*world')
+            flag = space.lookup_space(title='*does*not*exist*in*this*world')
 
-            self.assertEqual(item, None)
+            self.assertFalse(flag)
+
+    def test_create_space_mock(self):
+
+        logging.debug("*** create_space")
+
+        space = SparkSpace()
+        space.api = FakeApi()
+        space.create_space(title='*title')
+        self.assertTrue(space.api.rooms.create.called)
+        self.assertEqual(space.id, '*id')
 
     def test_add_moderators_mock(self):
 
@@ -273,7 +264,7 @@ class SpaceTests(unittest.TestCase):
         logging.debug("*** dispose")
         space = SparkSpace()
         space.api = FakeApi(rooms=[FakeRoom()])
-        space.bond(room='*title')
+        space.bond(title='*title')
 
         space.dispose()
 
@@ -289,40 +280,40 @@ class SpaceTests(unittest.TestCase):
         self.assertTrue(space.api.messages.create.called)
 
         space.api = FakeApi()
-        space.post_message(markdown='hello world')
+        space.post_message(ex_markdown='hello world')
         self.assertTrue(space.api.messages.create.called)
 
         try:
             space.api = FakeApi()
             space.post_message(text='hello world',
-                               markdown='hello world',
-                               file_path='./test_messages/sample.png')
+                               ex_markdown='hello world',
+                               ex_file_path='./test_messages/sample.png')
             self.assertTrue(space.api.messages.create.called)
         except IOError:
             pass
 
-    def test_hook_mock(self):
+    def test_register_mock(self):
 
-        logging.debug("*** hook")
+        logging.debug("*** register")
         space = SparkSpace()
 
         space.api = FakeApi(rooms=[FakeRoom()])
-        space.bond(room='*title')
-        space.hook('*hook')
+        space.bond(title='*title')
+        space.register('*hook')
         self.assertTrue(space.api.webhooks.create.called)
 
-    def test_pull_for_ever_mock(self):
+    def test_work(self):
 
-        logging.debug("*** pull_for_ever")
+        logging.debug("*** work")
         context = Context()
         space = SparkSpace(context=context)
         space.api = FakeApi(rooms=[FakeRoom()])
-        space.bond(room='*title')
+        space.bond(title='*title')
 
         mocked = mock.Mock(return_value=[])
         space.pull = mocked
 
-        p = Process(target=space.pull_for_ever)
+        p = Process(target=space.work)
         p.daemon = True
         p.start()
 
@@ -340,7 +331,7 @@ class SpaceTests(unittest.TestCase):
         context = Context()
         space = SparkSpace(context=context)
         space.api = FakeApi(rooms=[FakeRoom()])
-        space.bond(room='*title')
+        space.bond(title='*title')
         space.pull()
         self.assertEqual(context.get('puller.counter'), 1)
         self.assertTrue(space.api.messages.list.called)
