@@ -57,6 +57,7 @@ Credit: https://developer.ciscospark.com/blog/blog-details-8110.html
 """
 
 import logging
+from multiprocessing import Process, Queue
 import os
 import sys
 import time
@@ -98,7 +99,11 @@ context = Context(settings)
 # create a bot and load commands
 #
 
-bot = ShellBot(context=context, check=True)
+bot = ShellBot(context=context,
+               check=True,
+               ears=Queue(),
+               inbox=Queue(),
+               mouth=Queue())
 
 
 class Batman(Command):
@@ -158,4 +163,4 @@ if context.get('server.binding') is not None:
 
 bot.run(server=server)
 
-bot.space.dispose(bot.context.get('spark.room'))
+bot.space.dispose()

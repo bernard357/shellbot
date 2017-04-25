@@ -177,7 +177,7 @@ class SparkSpace(Space):
             logging.warning(str(feedback))
             self.bot_id = None
 
-    def lookup_space(self, title):
+    def lookup_space(self, title, **kwargs):
         """
         Looks for an existing space by name
 
@@ -209,7 +209,7 @@ class SparkSpace(Space):
 
         return False
 
-    def create_space(self, title, ex_team=None):
+    def create_space(self, title, ex_team=None, **kwargs):
         """
         Creates a space
 
@@ -347,7 +347,8 @@ class SparkSpace(Space):
             pass
 
         else:
-            raise ValueError(u"unable to find a room to delete")
+            logging.debug(u"No room to delete")
+            return
 
         logging.info(u"Deleting Cisco Spark room '{}'".format(self.title))
 

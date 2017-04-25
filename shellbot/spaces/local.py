@@ -60,7 +60,7 @@ class LocalSpace(Space):
         """
         self.post_message('Connected locally')
 
-    def lookup_space(self, title):
+    def lookup_space(self, title, **kwargs):
         """
         Looks for an existing space by name
 

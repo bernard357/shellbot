@@ -127,7 +127,7 @@ class Speaker(object):
                 self.space.post_message(item)
             else:
                 self.space.post_message(item.message,
-                                        markdown=item.markdown,
-                                        file_path=item.file)
+                                        ex_markdown=item.markdown,
+                                        ex_file_path=item.file)
         else:
             logging.info(item)

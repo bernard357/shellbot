@@ -286,7 +286,7 @@ class Space(object):
         except:
             return False
 
-    def lookup_space(self, title):
+    def lookup_space(self, title, **kwargs):
         """
         Looks for an existing space by name
 

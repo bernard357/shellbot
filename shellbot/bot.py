@@ -49,7 +49,7 @@ class ShellBot(object):
         self.ears = ears
 
         self.space = space if space else SparkSpace(context=self.context,
-                                                    ears=self.ears)
+                                                    ex_ears=self.ears)
         self.store = store
 
         self.shell = Shell(bot=self)
@@ -205,17 +205,13 @@ class ShellBot(object):
         This function creates a room, or connect to an existing one.
         """
         if reset:
-            self.dispose(self.context.get('spark.room'))
-
-        def remember_room_id(id):
-            self.context.set('room.id', id)
+            self.space.delete_space(title=self.context.get('spark.room'))
 
         self.space.bond(
-            room=self.context.get('spark.room', 'Bot under test'),
-            team=self.context.get('spark.team'),
+            title=self.context.get('spark.room', 'Bot under test'),
+            ex_team=self.context.get('spark.team'),
             moderators=self.context.get('spark.moderators', []),
             participants=self.context.get('spark.participants', []),
-            callback=remember_room_id
         )
 
     def add_moderators(self, *args, **kwargs):
@@ -260,7 +256,7 @@ class ShellBot(object):
                      route=self.context.get('server.hook', '/hook')))
 
         assert self.context.get('server.url') is not None
-        self.space.hook(
+        self.space.register(
             self.context.get('server.url')
             + self.context.get('server.hook', '/hook'))
 
