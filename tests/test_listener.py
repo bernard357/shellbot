@@ -3,6 +3,7 @@
 
 import unittest
 import logging
+import mock
 import os
 import sys
 from multiprocessing import Process, Queue
@@ -143,6 +144,24 @@ class ListenerTests(unittest.TestCase):
             self.assertEqual(tee.get(), item)
         with self.assertRaises(Exception):
             print(tee.get_nowait())
+
+    def test_work(self):
+
+        logging.info("*** work")
+
+        my_bot.context = Context()
+        listener = Listener(bot=my_bot)
+        listener.process = mock.Mock(side_effect=Exception('unexpected exception'))
+        listener.ears.put(('dummy'))
+        listener.work()
+        self.assertEqual(listener.context.get('listener.counter'), 1)
+
+        my_bot.context = Context()
+        listener = Listener(bot=my_bot)
+        listener.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
+        listener.ears.put(('dummy'))
+        listener.work()
+        self.assertEqual(listener.context.get('listener.counter'), 1)
 
 if __name__ == '__main__':
 

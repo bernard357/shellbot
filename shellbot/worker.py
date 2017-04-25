@@ -102,9 +102,9 @@ class Worker(object):
             ('version', '')
 
         """
-        logging.debug(u'Worker is working on {}'.format(counter))
-
         (verb, arguments) = item
+
+        logging.debug(u'Worker is working on {} ({})'.format(verb, counter))
 
         try:
             if verb in self.shell.commands:

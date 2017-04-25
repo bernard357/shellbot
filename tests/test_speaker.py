@@ -64,6 +64,25 @@ class SpeakerTests(unittest.TestCase):
         for item in items:
             self.assertEqual(tee.get(), item)
 
+    def test_work(self):
+
+        logging.info("*** work")
+
+        bot = ShellBot(mouth=Queue())
+        bot.space.id = '123'
+
+        speaker = Speaker(bot=bot)
+        speaker.process = mock.Mock(side_effect=Exception('unexpected exception'))
+        speaker.mouth.put(('dummy'))
+        speaker.work()
+        self.assertEqual(speaker.context.get('speaker.counter'), 1)
+
+        speaker = Speaker(bot=bot)
+        speaker.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
+        speaker.mouth.put(('dummy'))
+        speaker.work()
+        self.assertEqual(speaker.context.get('speaker.counter'), 1)
+
     def test_process(self):
 
         logging.info('*** Processing test ***')
@@ -88,8 +107,8 @@ class SpeakerTests(unittest.TestCase):
             item = WithMarkdown()
             speaker.process(item, 2)
             mocked.assert_called_with('',
-                                      markdown='me **too**',
-                                      file_path=None)
+                                      ex_markdown='me **too**',
+                                      ex_file_path=None)
 
             class WithFile(object):
                 message = '*with*attachment'
@@ -99,8 +118,8 @@ class SpeakerTests(unittest.TestCase):
             item = WithFile()
             speaker.process(item, 3)
             mocked.assert_called_with('*with*attachment',
-                                      markdown=None,
-                                      file_path='http://a.server/with/file')
+                                      ex_markdown=None,
+                                      ex_file_path='http://a.server/with/file')
 
             class WithAll(object):
                 message = 'hello world'
@@ -110,8 +129,8 @@ class SpeakerTests(unittest.TestCase):
             item = WithAll()
             speaker.process(item, 4)
             mocked.assert_called_with('hello world',
-                                      markdown='hello **world**',
-                                      file_path='http://a.server/with/file')
+                                      ex_markdown='hello **world**',
+                                      ex_file_path='http://a.server/with/file')
 
 if __name__ == '__main__':
 

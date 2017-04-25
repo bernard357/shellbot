@@ -4,6 +4,7 @@
 import unittest
 import logging
 import os
+import mock
 from multiprocessing import Process, Queue
 import sys
 
@@ -71,6 +72,35 @@ class WorkerTests(unittest.TestCase):
 
         with self.assertRaises(Exception):
             my_bot.inbox.get_nowait()
+
+    def test_work(self):
+
+        logging.info("*** work")
+
+        my_bot.context = Context()
+        worker = Worker(bot=my_bot)
+        worker.process = mock.Mock(side_effect=Exception('unexpected exception'))
+        worker.inbox.put(('do', 'this'))
+        worker.work()
+        self.assertEqual(worker.context.get('worker.counter'), 1)
+
+        my_bot.context = Context()
+        worker = Worker(bot=my_bot)
+        worker.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
+        worker.inbox.put(('do', 'that'))
+        worker.work()
+        self.assertEqual(worker.context.get('worker.counter'), 1)
+
+    def test_process(self):
+
+        logging.info("*** process")
+
+        my_bot.context = Context()
+        my_bot.shell._commands = {}
+        worker = Worker(bot=my_bot)
+        worker.bot.say = mock.Mock(side_effect=[Exception(), True])
+        with self.assertRaises(Exception):
+            worker.process(item=('hello', 'here'), counter=1)
 
 if __name__ == '__main__':
 
