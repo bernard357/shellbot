@@ -128,7 +128,11 @@ context.check('server.hook', '/hook')
 # create a bot and load commands
 #
 
-bot = ShellBot(context=context, check=True)
+bot = ShellBot(context=context,
+               check=True,
+               ears=Queue(),
+               inbox=Queue(),
+               mouth=Queue())
 
 from steps import Steps, State, Next
 steps = Steps(context=context, check=True)
