@@ -4,14 +4,14 @@
 import unittest
 import logging
 import os
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 import sys
 
 sys.path.insert(0, os.path.abspath('..'))
 
 from shellbot import Context, ShellBot, Worker
 
-my_bot = ShellBot()
+my_bot = ShellBot(inbox=Queue(), mouth=Queue())
 
 
 class WorkerTests(unittest.TestCase):

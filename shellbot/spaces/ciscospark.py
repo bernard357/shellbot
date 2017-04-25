@@ -23,7 +23,7 @@ from six import string_types
 import time
 from ciscosparkapi import CiscoSparkAPI
 
-from shellbot import Context
+from ..context import Context
 from .base import Space
 
 
@@ -46,7 +46,7 @@ class SparkSpace(Space):
         """
         self.prefix = 'spark'
         self.token = ex_token
-        self.ears = ex_ears if ex_ears else Queue
+        self.ears = ex_ears if ex_ears else Queue()
 
     def on_reset(self):
         """
@@ -136,7 +136,7 @@ class SparkSpace(Space):
         """
         Connects to the back-end API
         """
-        token = self.bearer if self.bearer else self.context.get('spark.token')
+        token = self.token if self.token else self.context.get('spark.token')
         try:
             if token is None:
                 self.api = None

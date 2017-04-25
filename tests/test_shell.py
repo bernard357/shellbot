@@ -3,6 +3,7 @@
 
 import unittest
 import logging
+from multiprocessing import Process, Queue
 import os
 import sys
 
@@ -10,7 +11,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 from shellbot import Context, ShellBot, Shell
 
-my_bot = ShellBot()
+my_bot = ShellBot(inbox=Queue(), mouth=Queue())
 
 
 class ShellTests(unittest.TestCase):

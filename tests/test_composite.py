@@ -16,7 +16,11 @@ from shellbot import Shell
 from shellbot import ShellBot
 from shellbot import Worker
 from shellbot import Speaker
-from shellbot import SparkSpace
+
+my_bot = ShellBot(ears=Queue(), inbox=Queue(), mouth=Queue())
+my_bot.shell.load_default_commands()
+my_bot.space.post_message = MagicMock()
+my_bot.space.id = '123'
 
 
 class CompositeTests(unittest.TestCase):
@@ -25,18 +29,16 @@ class CompositeTests(unittest.TestCase):
 
         logging.info('*** Static test ***')
 
-        my_bot = ShellBot()
-
-        speaker = Speaker(bot=my_bot)
-        speaker_process = Process(target=speaker.work)
+        speaker_process = Process(target=my_bot.speaker.work)
+        speaker_process.daemon = True
         speaker_process.start()
 
-        worker = Worker(bot=my_bot)
-        worker_process = Process(target=worker.work)
+        worker_process = Process(target=my_bot.worker.work)
+        worker_process.daemon = True
         worker_process.start()
 
-        listener = Listener(bot=my_bot)
-        listener_process = Process(target=listener.work)
+        listener_process = Process(target=my_bot.listener.work)
+        listener_process.daemon = True
         listener_process.start()
 
         listener_process.join(0.2)
@@ -55,23 +57,15 @@ class CompositeTests(unittest.TestCase):
 
         logging.info('*** Dynamic test ***')
 
-        my_bot = ShellBot()
-        my_bot.shell.load_default_commands()
-        my_bot.space.post_message = MagicMock()
-        my_bot.space.room_id = '123'
-
-        speaker = Speaker(bot=my_bot)
-        speaker_process = Process(target=speaker.work)
+        speaker_process = Process(target=my_bot.speaker.work)
         speaker_process.daemon = True
         speaker_process.start()
 
-        worker = Worker(bot=my_bot)
-        worker_process = Process(target=worker.work)
+        worker_process = Process(target=my_bot.worker.work)
         worker_process.daemon = True
         worker_process.start()
 
-        listener = Listener(bot=my_bot)
-        listener_process = Process(target=listener.work)
+        listener_process = Process(target=my_bot.listener.work)
         listener_process.daemon = True
         listener_process.start()
 

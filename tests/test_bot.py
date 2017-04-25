@@ -5,11 +5,13 @@ import unittest
 import logging
 import os
 import mock
+from multiprocessing import Process, Queue
 import sys
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import Context, ShellBot, SparkSpace
+from shellbot import Context, ShellBot
+from shellbot.spaces import Space, LocalSpace, SparkSpace
 
 
 class BotTests(unittest.TestCase):
@@ -25,9 +27,9 @@ class BotTests(unittest.TestCase):
         self.assertEqual(bot.context, context)
         self.assertTrue(bot.space is not None)
         self.assertTrue(bot.store is None)
-        self.assertTrue(bot.mouth is not None)
-        self.assertTrue(bot.inbox is not None)
-        self.assertTrue(bot.ears is not None)
+        self.assertTrue(bot.mouth is None)
+        self.assertTrue(bot.inbox is None)
+        self.assertTrue(bot.ears is None)
         self.assertTrue(bot.shell is not None)
         self.assertTrue(bot.speaker is not None)
         self.assertTrue(bot.worker is not None)
@@ -171,7 +173,7 @@ class BotTests(unittest.TestCase):
 
         logging.info('*** say ***')
 
-        bot = ShellBot()
+        bot = ShellBot(mouth=Queue())
 
         message_0 = None
         bot.say(message_0)
@@ -277,7 +279,7 @@ class BotTests(unittest.TestCase):
 
         logging.info('*** dynamic test ***')
 
-        bot = ShellBot()
+        bot = ShellBot(ears=Queue())
 
         settings = {
             'bot': {'name': 'shelly'},

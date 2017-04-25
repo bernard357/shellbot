@@ -3,19 +3,24 @@
 
 import unittest
 import mock
+from multiprocessing import Process, Queue
 import os
 import sys
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import Context, ShellBot
+from shellbot import Context, ShellBot, Shell
 
+
+my_bot = ShellBot(mouth=Queue())
 
 class CommandsTests(unittest.TestCase):
 
+    def setUp(self):
+        my_bot.shell = Shell(bot=my_bot)
+
     def test_base(self):
 
-        my_bot = ShellBot()
         from shellbot.commands import Command
         c = Command(my_bot)
 
@@ -36,7 +41,6 @@ class CommandsTests(unittest.TestCase):
 
     def test_from_base(self):
 
-        my_bot = ShellBot()
         from shellbot.commands import Command
 
         c = Command(my_bot)
@@ -53,10 +57,10 @@ class CommandsTests(unittest.TestCase):
 
             def execute(self, arguments=None):
                 if arguments:
-                    self.bot.say(
+                    my_bot.say(
                         u"The Batcave echoes, '{0}'".format(arguments))
                 else:
-                    self.bot.say(self.information_message)
+                    my_bot.say(self.information_message)
 
         c = Batcave(my_bot)
         c.execute('')
@@ -73,7 +77,7 @@ class CommandsTests(unittest.TestCase):
                                "/en/c/c6/Bat-signal_1989_film.jpg"
 
             def execute(self, arguments=None):
-                self.bot.say(self.information_message,
+                my_bot.say(self.information_message,
                              file=c.information_file)
 
         c = Batsignal(my_bot)
@@ -84,7 +88,6 @@ class CommandsTests(unittest.TestCase):
 
     def test_close(self):
 
-        my_bot = ShellBot()
         my_bot.stop = mock.Mock()
         my_bot.dispose = mock.Mock()
 
@@ -107,7 +110,6 @@ class CommandsTests(unittest.TestCase):
 
     def test_default(self):
 
-        my_bot = ShellBot()
         from shellbot.commands import Default
 
         c = Default(my_bot)
@@ -127,7 +129,6 @@ class CommandsTests(unittest.TestCase):
 
     def test_echo(self):
 
-        my_bot = ShellBot()
         from shellbot.commands import Echo
 
         c = Echo(my_bot)
@@ -146,7 +147,6 @@ class CommandsTests(unittest.TestCase):
 
     def test_empty(self):
 
-        my_bot = ShellBot()
         my_bot.shell.load_command('shellbot.commands.help')
 
         from shellbot.commands import Empty
@@ -168,7 +168,6 @@ class CommandsTests(unittest.TestCase):
 
     def test_help(self):
 
-        my_bot = ShellBot()
         from shellbot.commands import Help
 
         c = Help(my_bot)
@@ -188,7 +187,6 @@ class CommandsTests(unittest.TestCase):
 
     def test_help_true(self):
 
-        my_bot = ShellBot()
         my_bot.shell.load_command('shellbot.commands.help')
 
         from shellbot.commands import Help
@@ -211,7 +209,6 @@ class CommandsTests(unittest.TestCase):
 
     def test_help_false(self):
 
-        my_bot = ShellBot()
         from shellbot.commands import Help
 
         c = Help(my_bot)
@@ -235,7 +232,6 @@ class CommandsTests(unittest.TestCase):
 
     def test_noop(self):
 
-        my_bot = ShellBot()
         from shellbot.commands import Noop
 
         c = Noop(my_bot)
@@ -252,7 +248,6 @@ class CommandsTests(unittest.TestCase):
 
     def test_sleep(self):
 
-        my_bot = ShellBot()
         from shellbot.commands import Sleep
 
         c = Sleep(my_bot)
@@ -273,7 +268,6 @@ class CommandsTests(unittest.TestCase):
 
     def test_version(self):
 
-        my_bot = ShellBot()
         my_bot.shell.configure(settings={
             'bot': {'name': 'testy', 'version': '17.4.1'},
         })

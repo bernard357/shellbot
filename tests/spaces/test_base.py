@@ -39,26 +39,28 @@ class SpaceTests(unittest.TestCase):
 
         space = Space()
         self.assertTrue(space.context is not None)
-        self.assertTrue(space.ears is not None)
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, '*unknown*')
         self.assertEqual(space.hook_url, None)
 
-        space = Space(context='c', ears='e', weird='w')
+        space = Space(context='c', weird='w')
         self.assertEqual(space.context, 'c')
-        self.assertEqual(space.ears, 'e')
+        with self.assertRaises(AttributeError):
+            self.assertEqual(space.weird, 'w')
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, '*unknown*')
         self.assertEqual(space.hook_url, None)
 
         class ExSpace(Space):
-            def on_init(self, ex_token=None, **kwargs):
+            def on_init(self, ex_token=None, ex_ears=None, **kwargs):
                 self.token = ex_token
+                self.ears = ex_ears
 
-        space = ExSpace(ex_token='*token', ex_unknown='*weird')
+        space = ExSpace(ex_token='*token', ex_ears='e', ex_unknown='*weird')
         self.assertEqual(space.token, '*token')
+        self.assertEqual(space.ears, 'e')
         with self.assertRaises(AttributeError):
             self.assertTrue(space.unknown is not None)
         with self.assertRaises(AttributeError):
@@ -74,7 +76,6 @@ class SpaceTests(unittest.TestCase):
 
         space = ExSpace()
         self.assertTrue(space.context is not None)
-        self.assertTrue(space.ears is not None)
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, '*unknown*')

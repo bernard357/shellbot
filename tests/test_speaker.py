@@ -10,7 +10,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import Context, ShellBot, SparkSpace, Speaker
+from shellbot import Context, ShellBot, Speaker
 
 
 class SpeakerTests(unittest.TestCase):
@@ -19,7 +19,7 @@ class SpeakerTests(unittest.TestCase):
 
         logging.info('*** Static test ***')
 
-        bot = ShellBot()
+        bot = ShellBot(mouth=Queue())
         speaker = Speaker(bot=bot)
 
         speaker_process = Process(target=speaker.work)
@@ -39,8 +39,8 @@ class SpeakerTests(unittest.TestCase):
 
         logging.info('*** Dynamic test ***')
 
-        bot = ShellBot()
-        bot.space.room_id = '123'
+        bot = ShellBot(mouth=Queue())
+        bot.space.id = '123'
 
         items = ['hello', 'world']
         for item in items:
@@ -69,7 +69,7 @@ class SpeakerTests(unittest.TestCase):
         logging.info('*** Processing test ***')
 
         bot = ShellBot()
-        bot.space.room_id = '123'
+        bot.space.id = '123'
 
         speaker = Speaker(bot=bot)
 

@@ -39,7 +39,6 @@ class LocalSpaceTests(unittest.TestCase):
 
         space = LocalSpace()
         self.assertTrue(space.context is not None)
-        self.assertTrue(space.ears is not None)
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, '*unknown*')

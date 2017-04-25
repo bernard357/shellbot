@@ -12,16 +12,16 @@ sys.path.insert(0, os.path.abspath('..'))
 from shellbot import Context, ShellBot, Listener
 
 
+my_bot = ShellBot(ears=Queue(), mouth=Queue())
+my_bot.shell.load_default_commands()
+
 class ListenerTests(unittest.TestCase):
 
     def test_static(self):
 
         logging.info('*** Static test ***')
 
-        bot = ShellBot()
-        bot.shell.load_default_commands()
-
-        listener = Listener(bot=bot)
+        listener = Listener(bot=my_bot)
 
         listener_process = Process(target=listener.work)
         listener_process.daemon = True
@@ -30,11 +30,11 @@ class ListenerTests(unittest.TestCase):
         listener_process.join(0.1)
         if listener_process.is_alive():
             logging.info('Stopping listener')
-            bot.context.set('general.switch', 'off')
+            my_bot.context.set('general.switch', 'off')
             listener_process.join()
 
         self.assertFalse(listener_process.is_alive())
-        self.assertEqual(bot.context.get('listener.counter', 0), 0)
+        self.assertEqual(my_bot.context.get('listener.counter', 0), 0)
 
     def test_dynamic(self):
 
@@ -113,34 +113,31 @@ class ListenerTests(unittest.TestCase):
 
         ]
 
-        bot = ShellBot()
-        bot.shell.load_default_commands()
-
         for item in items:
-            bot.ears.put(item)
+            my_bot.ears.put(item)
 
-        bot.ears.put(Exception('EOQ'))
+        my_bot.ears.put(Exception('EOQ'))
 
         tee = Queue()
-        listener = Listener(bot=bot, tee=tee)
+        listener = Listener(bot=my_bot, tee=tee)
 
         listener.work()
 
-        self.assertEqual(bot.context.get('listener.counter'), 5)
+        self.assertEqual(my_bot.context.get('listener.counter'), 5)
         with self.assertRaises(Exception):
-            bot.ears.get_nowait()
+            my_bot.ears.get_nowait()
         with self.assertRaises(Exception):
-            bot.inbox.get_nowait()
-        self.assertEqual(bot.mouth.get(), 'Shelly version *unknown*')
+            my_bot.inbox.get_nowait()
+        self.assertEqual(my_bot.mouth.get(), 'Shelly version *unknown*')
         self.assertEqual(
-            bot.mouth.get(),
+            my_bot.mouth.get(),
             u'Available commands:\n'
             + u'echo - Echo input string.\nhelp - Show commands and usage.')
         self.assertEqual(
-            bot.mouth.get(),
+            my_bot.mouth.get(),
             u'help - Show commands and usage.\nusage:\nhelp <command>')
         with self.assertRaises(Exception):
-            print(bot.mouth.get_nowait())
+            print(my_bot.mouth.get_nowait())
 
         for item in items:
             self.assertEqual(tee.get(), item)

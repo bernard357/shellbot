@@ -25,7 +25,7 @@ import yaml
 from .context import Context
 from .shell import Shell
 from .listener import Listener
-from .space import SparkSpace
+from .spaces import Space, LocalSpace, SparkSpace
 from .speaker import Speaker
 from .worker import Worker
 from .routes.wrap import Wrap
@@ -44,9 +44,9 @@ class ShellBot(object):
 
         self.context = context if context else Context()
 
-        self.mouth = mouth if mouth else Queue()
-        self.inbox = inbox if inbox else Queue()
-        self.ears = ears if ears else Queue()
+        self.mouth = mouth
+        self.inbox = inbox
+        self.ears = ears
 
         self.space = space if space else SparkSpace(context=self.context,
                                                     ears=self.ears)

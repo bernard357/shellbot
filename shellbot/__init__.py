@@ -18,7 +18,6 @@ from .context import Context
 from .listener import Listener
 from .server import Server
 from .shell import Shell
-from .space import SparkSpace
 from .speaker import Speaker
 from .worker import Worker
 
@@ -36,7 +35,6 @@ __all__ = [
     'Listener',
     'Server',
     'Shell',
-    'SparkSpace',
     'Speaker',
     'Worker',
     'Command',

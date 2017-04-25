@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+from multiprocessing import Process, Queue
 import os
 import sys
 
@@ -41,13 +42,15 @@ my_settings = {
 
 }
 
+my_context = Context(settings=my_settings)
+my_bot = ShellBot(context=my_context, mouth=Queue())
+
 
 class ExampleTests(unittest.TestCase):
 
     def test_steps_steps(self):
 
-        context = Context(settings=my_settings)
-        steps = Steps(context, check=True)
+        steps = Steps(context=my_context, check=True)
 
         step = steps.step
         self.assertTrue(step is None)
@@ -82,11 +85,8 @@ class ExampleTests(unittest.TestCase):
 
     def test_steps_state(self):
 
-        context = Context(settings=my_settings)
-        bot = ShellBot(context=context)
-
-        steps = Steps(context, check=True)
-        s = State(bot=bot, steps=steps)
+        steps = Steps(context=my_context, check=True)
+        s = State(bot=my_bot, steps=steps)
 
         self.assertEqual(s.keyword, 'state')
         self.assertEqual(s.information_message,
@@ -97,17 +97,14 @@ class ExampleTests(unittest.TestCase):
 
         s.execute()
 
-        self.assertEqual(bot.mouth.get(), u'Current state is undefined')
+        self.assertEqual(my_bot.mouth.get(), u'Current state is undefined')
         with self.assertRaises(Exception):
-            bot.mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
     def test_steps_next(self):
 
-        context = Context(settings=my_settings)
-        bot = ShellBot(context=context)
-
-        steps = Steps(context, check=True)
-        n = Next(bot=bot, steps=steps)
+        steps = Steps(context=my_context, check=True)
+        n = Next(bot=my_bot, steps=steps)
 
         self.assertEqual(n.keyword, 'next')
         self.assertEqual(n.information_message, u'Move process to next state.')
@@ -117,88 +114,85 @@ class ExampleTests(unittest.TestCase):
 
         n.execute()
 
-        self.assertEqual(bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get(),
                          u'New state: Level 1 - '
                          + u'Initial capture of information')
         with self.assertRaises(Exception):
-            bot.mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
     def test_steps_lifecycle(self):
 
-        context = Context(settings=my_settings)
-        bot = ShellBot(context=context)
-
-        steps = Steps(context, check=True)
-        s = State(bot=bot, steps=steps)
-        n = Next(bot=bot, steps=steps)
+        steps = Steps(context=my_context, check=True)
+        s = State(bot=my_bot, steps=steps)
+        n = Next(bot=my_bot, steps=steps)
 
         s.execute()
-        self.assertEqual(bot.mouth.get(), u'Current state is undefined')
+        self.assertEqual(my_bot.mouth.get(), u'Current state is undefined')
         with self.assertRaises(Exception):
-            bot.mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get(),
                          u'New state: Level 1 - '
                          + u'Initial capture of information')
         with self.assertRaises(Exception):
-            bot.mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
         s.execute()
-        self.assertEqual(bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get(),
                          u'Current state: Level 1 - '
                          + u'Initial capture of information')
         with self.assertRaises(Exception):
-            bot.mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get(),
                          u'New state: Level 2 - '
                          + u'Escalation to technical experts')
         with self.assertRaises(Exception):
-            bot.mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
         s.execute()
-        self.assertEqual(bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get(),
                          u'Current state: Level 2 - '
                          + u'Escalation to technical experts')
         with self.assertRaises(Exception):
-            bot.mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get(),
                          u'New state: Level 3 - '
                          + u'Escalation to decision stakeholders')
         with self.assertRaises(Exception):
-            bot.mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
         s.execute()
-        self.assertEqual(bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get(),
                          u'Current state: Level 3 - '
                          + u'Escalation to decision stakeholders')
         with self.assertRaises(Exception):
-            bot.mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get(),
                          u'New state: Terminated - '
                          + u'Process is closed, yet conversation can continue')
         with self.assertRaises(Exception):
-            bot.mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
         s.execute()
-        self.assertEqual(bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get(),
                          u'Current state: Terminated - '
                          + u'Process is closed, yet conversation can continue')
         with self.assertRaises(Exception):
-            bot.mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get(),
                          u'Current state: Terminated - '
                          + u'Process is closed, yet conversation can continue')
         with self.assertRaises(Exception):
-            bot.mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
 if __name__ == '__main__':
 

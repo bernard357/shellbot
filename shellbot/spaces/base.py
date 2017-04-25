@@ -22,7 +22,7 @@ import os
 from six import string_types
 import time
 
-from shellbot import Context
+from ..context import Context
 
 
 class Space(object):
@@ -96,7 +96,6 @@ class Space(object):
 
     def __init__(self,
                  context=None,
-                 ears=None,
                  **kwargs):
         """
         Handles a collaborative space
@@ -104,12 +103,8 @@ class Space(object):
         :param context: general settings for the full program
         :type context: Context
 
-        :param ears: the queue for inbound events
-        :type ears: Queue
-
         """
         self.context = context if context else Context()
-        self.ears = ears if ears else Queue()
 
         self.prefix = 'space'
 
