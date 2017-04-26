@@ -25,6 +25,9 @@ class Speaker(object):
     Sends updates to a business messaging space
     """
 
+    EMPTY_DELAY = 0.005   # time to wait if queue is empty
+    NOT_READY_DELAY = 5   # time to wait if space is not ready
+
     def __init__(self, bot=None, tee=None):
         """
         Sends updates to a business messaging space
@@ -75,16 +78,19 @@ class Speaker(object):
 
         try:
             self.context.set('speaker.counter', 0)
+            not_ready_flag = True
             while self.context.get('general.switch', 'on') == 'on':
 
                 if self.mouth.empty():
-                    time.sleep(0.005)
+                    time.sleep(self.EMPTY_DELAY)
                     continue
 
                 if not self.bot.space.is_ready:
-                    logging.debug(
-                        u"Speaker is waiting for space to be ready...")
-                    time.sleep(5)
+                    if not_ready_flag:
+                        logging.debug(
+                            u"Speaker is waiting for space to be ready...")
+                        not_ready_flag = False
+                    time.sleep(self.NOT_READY_DELAY)
                     continue
 
                 try:

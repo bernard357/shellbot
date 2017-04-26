@@ -7,6 +7,8 @@ import mock
 from multiprocessing import Process, Queue
 import os
 import sys
+from threading import Timer
+import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
@@ -73,21 +75,49 @@ class SpeakerTests(unittest.TestCase):
                        space=SpaceFactory.get('local'))
         bot.space.id = '123'
 
-        speaker = Speaker(bot=bot)
-        speaker.process = mock.Mock(side_effect=Exception('unexpected exception'))
-        speaker.mouth.put(('dummy'))
-        speaker.work()
-        self.assertEqual(speaker.context.get('speaker.counter'), 1)
+        bot.speaker.process = mock.Mock(side_effect=Exception('unexpected exception'))
+        bot.mouth.put(('dummy'))
+        bot.speaker.work()
+        self.assertEqual(bot.context.get('speaker.counter'), 1)
 
-        speaker = Speaker(bot=bot)
-        speaker.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
-        speaker.mouth.put(('dummy'))
-        speaker.work()
-        self.assertEqual(speaker.context.get('speaker.counter'), 1)
+        bot.speaker = Speaker(bot=bot)
+        bot.speaker.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
+        bot.mouth.put(('dummy'))
+        bot.speaker.work()
+        self.assertEqual(bot.context.get('speaker.counter'), 1)
+
+    def test_work_wait(self):
+
+        logging.info("*** work/wait while empty and not ready")
+
+        bot = ShellBot(mouth=Queue(),
+                       space=SpaceFactory.get('local'))
+
+        bot.speaker.NOT_READY_DELAY = 0.01
+        speaker_process = Process(target=bot.speaker.work)
+        speaker_process.daemon = True
+        speaker_process.start()
+
+        t = Timer(0.1, bot.mouth.put, ['ping'])
+        t.start()
+
+        def set_ready(space, *args, **kwargs):
+            space.id = '123'
+
+        t = Timer(0.2, set_ready, [bot.space])
+        t.start()
+
+        time.sleep(0.3)
+        bot.context.set('general.switch', 'off')
+        speaker_process.join()
 
     def test_process(self):
 
         logging.info('*** Processing test ***')
+
+        bot = ShellBot()
+        speaker = Speaker(bot=bot)
+        speaker.process('hello world', 1)  # sent to stdout
 
         bot = ShellBot(mouth=Queue(),
                        space=SpaceFactory.get('local'))
