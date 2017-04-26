@@ -237,6 +237,27 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertTrue(space.api.rooms.create.called)
         self.assertEqual(space.id, '*id')
 
+    def test_get_team_mock(self):
+
+        logging.info("*** get_team")
+
+        space = SparkSpace()
+
+        class Team(object):
+            name = '*name'
+            id = '456'
+
+        space.api = FakeApi(teams=[Team()])
+        team = space.get_team(name='*name')
+        self.assertTrue(space.api.teams.list.called)
+        self.assertEqual(team.name, '*name')
+        self.assertEqual(team.id, '456')
+
+        space.api = FakeApi(teams=[Team()])
+        team = space.get_team(name='*unknown')
+        self.assertTrue(space.api.teams.list.called)
+        self.assertEqual(team, None)
+
     def test_add_moderators_mock(self):
 
         logging.info("*** add_moderators")
@@ -333,6 +354,7 @@ class SparkSpaceTests(unittest.TestCase):
         space.api = FakeApi(rooms=[FakeRoom()])
         space.bond(title='*title')
 
+        space.PULL_INTERVAL = 0.001
         mocked = mock.Mock(return_value=[])
         space.pull = mocked
 
@@ -340,7 +362,7 @@ class SparkSpaceTests(unittest.TestCase):
         p.daemon = True
         p.start()
 
-        p.join(1.5)
+        p.join(0.01)
         if p.is_alive():
             logging.info('Stopping puller')
             context.set('general.switch', 'off')
