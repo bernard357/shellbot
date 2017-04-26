@@ -31,6 +31,8 @@ class Sleep(Command):
     is_interactive = False
     is_hidden = True
 
+    DEFAULT_DELAY = 1
+
     def execute(self, arguments):
         """
         Sleeps for a while
@@ -38,5 +40,5 @@ class Sleep(Command):
         try:
             delay = int(arguments) if int(arguments) > 0 else 1
         except ValueError:
-            delay = 1
+            delay = self.DEFAULT_DELAY
         time.sleep(delay)

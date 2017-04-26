@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import logging
 import mock
 from multiprocessing import Process, Queue
 import os
@@ -20,6 +21,8 @@ class CommandsTests(unittest.TestCase):
         my_bot.shell = Shell(bot=my_bot)
 
     def test_base(self):
+
+        logging.info('***** base')
 
         from shellbot.commands import Command
         c = Command(my_bot)
@@ -40,6 +43,8 @@ class CommandsTests(unittest.TestCase):
             my_bot.mouth.get_nowait()
 
     def test_from_base(self):
+
+        logging.info('***** from base')
 
         from shellbot.commands import Command
 
@@ -88,6 +93,8 @@ class CommandsTests(unittest.TestCase):
 
     def test_close(self):
 
+        logging.info('***** close')
+
         my_bot.stop = mock.Mock()
         my_bot.dispose = mock.Mock()
 
@@ -110,6 +117,8 @@ class CommandsTests(unittest.TestCase):
 
     def test_default(self):
 
+        logging.info('***** default')
+
         from shellbot.commands import Default
 
         c = Default(my_bot)
@@ -129,6 +138,8 @@ class CommandsTests(unittest.TestCase):
 
     def test_echo(self):
 
+        logging.info('***** echo')
+
         from shellbot.commands import Echo
 
         c = Echo(my_bot)
@@ -146,6 +157,8 @@ class CommandsTests(unittest.TestCase):
             my_bot.mouth.get_nowait()
 
     def test_empty(self):
+
+        logging.info('***** empty')
 
         my_bot.shell.load_command('shellbot.commands.help')
 
@@ -166,7 +179,17 @@ class CommandsTests(unittest.TestCase):
         with self.assertRaises(Exception):
             print(my_bot.mouth.get_nowait())
 
+        c = Empty(my_bot)
+        c.shell._commands = {}
+        c.execute()
+        self.assertEqual(my_bot.mouth.get(),
+                         u'No help command has been found')
+        with self.assertRaises(Exception):
+            print(my_bot.mouth.get_nowait())
+
     def test_help(self):
+
+        logging.info('***** help')
 
         from shellbot.commands import Help
 
@@ -186,6 +209,8 @@ class CommandsTests(unittest.TestCase):
             print(my_bot.mouth.get_nowait())
 
     def test_help_true(self):
+
+        logging.info('***** help/true')
 
         my_bot.shell.load_command('shellbot.commands.help')
 
@@ -208,6 +233,8 @@ class CommandsTests(unittest.TestCase):
             my_bot.mouth.get_nowait()
 
     def test_help_false(self):
+
+        logging.info('***** help/false')
 
         from shellbot.commands import Help
 
@@ -232,6 +259,8 @@ class CommandsTests(unittest.TestCase):
 
     def test_noop(self):
 
+        logging.info('***** noop')
+
         from shellbot.commands import Noop
 
         c = Noop(my_bot)
@@ -248,6 +277,8 @@ class CommandsTests(unittest.TestCase):
 
     def test_sleep(self):
 
+        logging.info('***** sleep')
+
         from shellbot.commands import Sleep
 
         c = Sleep(my_bot)
@@ -258,15 +289,18 @@ class CommandsTests(unittest.TestCase):
         self.assertFalse(c.is_interactive)
         self.assertTrue(c.is_hidden)
 
+        c.DEFAULT_DELAY = 0.001
         c.execute(u'')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
-        c.execute(u'1')
+        c.execute(u'0.001')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
     def test_version(self):
+
+        logging.info('***** version')
 
         my_bot.shell.configure(settings={
             'bot': {'name': 'testy', 'version': '17.4.1'},

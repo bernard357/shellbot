@@ -35,6 +35,7 @@ class Empty(Command):
             self.help_command = self.shell.command('help')
 
         if self.help_command is None:
-            raise Exception(u"No help command has been found")
+            self.bot.say(u"No help command has been found")
 
-        self.help_command.execute()
+        else:
+            self.help_command.execute()
