@@ -4,13 +4,15 @@
 import unittest
 import logging
 import mock
+from multiprocessing import Process, Queue
 import os
 import sys
-from multiprocessing import Process, Queue
+from threading import Timer
+import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import Context, ShellBot, Listener
+from shellbot import Context, ShellBot, Listener, SpaceFactory
 
 
 my_bot = ShellBot(ears=Queue(), mouth=Queue())
@@ -149,19 +151,35 @@ class ListenerTests(unittest.TestCase):
 
         logging.info("*** work")
 
-        my_bot.context = Context()
+        my_bot.context.set('general.switch', 'on')
+
         listener = Listener(bot=my_bot)
         listener.process = mock.Mock(side_effect=Exception('unexpected exception'))
-        listener.ears.put(('dummy'))
+        my_bot.ears.put(('dummy'))
         listener.work()
-        self.assertEqual(listener.context.get('listener.counter'), 1)
+        self.assertEqual(my_bot.context.get('listener.counter'), 1)
 
-        my_bot.context = Context()
         listener = Listener(bot=my_bot)
         listener.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
-        listener.ears.put(('dummy'))
+        my_bot.ears.put(('dummy'))
         listener.work()
-        self.assertEqual(listener.context.get('listener.counter'), 1)
+        self.assertEqual(my_bot.context.get('listener.counter'), 1)
+
+    def test_work_wait(self):
+
+        logging.info("*** work/wait while empty and not ready")
+
+        my_bot.context.set('general.switch', 'on')
+        listener_process = Process(target=my_bot.listener.work)
+        listener_process.daemon = True
+        listener_process.start()
+
+        t = Timer(0.1, my_bot.ears.put, ['ping'])
+        t.start()
+
+        time.sleep(0.2)
+        my_bot.context.set('general.switch', 'off')
+        listener_process.join()
 
 if __name__ == '__main__':
 

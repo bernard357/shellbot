@@ -24,6 +24,8 @@ class Listener(object):
     Handles messages received from chat space
     """
 
+    EMPTY_DELAY = 0.005   # time to wait if queue is empty
+
     def __init__(self, bot=None, tee=None):
         """
         Handles messages received from chat space
@@ -36,10 +38,6 @@ class Listener(object):
 
         """
         self.bot = bot
-        self.context = bot.context
-        self.ears = bot.ears
-        self.shell = bot.shell
-
         self.tee = tee
 
     def work(self):
@@ -72,18 +70,18 @@ class Listener(object):
         logging.info(u"Starting listener")
 
         try:
-            self.context.set('listener.counter', 0)
-            while self.context.get('general.switch', 'on') == 'on':
+            self.bot.context.set('listener.counter', 0)
+            while self.bot.context.get('general.switch', 'on') == 'on':
 
-                if self.ears.empty():
-                    time.sleep(0.005)
+                if self.bot.ears.empty():
+                    time.sleep(self.EMPTY_DELAY)
                     continue
 
                 try:
-                    item = self.ears.get(True, 0.1)
+                    item = self.bot.ears.get(True, self.EMPTY_DELAY)
                     if isinstance(item, Exception):
                         break
-                    counter = self.context.increment('listener.counter')
+                    counter = self.bot.context.increment('listener.counter')
 
                     if self.tee:
                         self.tee.put(item)
@@ -145,7 +143,7 @@ class Listener(object):
 
         # my own messages
         #
-        if item['personId'] == self.context.get('bot.id'):
+        if item['personId'] == self.bot.context.get('bot.id'):
             logging.debug(u"- sent by me, thrown away")
             return
 
@@ -156,7 +154,7 @@ class Listener(object):
         if input[0] in ['@', '/']:
             input = input[1:]
 
-        bot = self.context.get('bot.name', 'shelly')
+        bot = self.bot.context.get('bot.name', 'shelly')
         if not input.lower().startswith(bot):
             logging.debug(u"- {}".format(input))
             logging.info(u"- not for me, thrown away")
@@ -164,4 +162,4 @@ class Listener(object):
 
         line = input[len(bot):].strip()
 
-        self.shell.do(line)
+        self.bot.shell.do(line)
