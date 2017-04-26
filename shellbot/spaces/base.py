@@ -276,17 +276,13 @@ class Space(object):
 
         :return: True or False
         """
-        try:
-            if self.id is None:
-                self.id = self.context.get(self.prefix+'.id')
+        if self.id is None:
+            self.id = self.context.get(self.prefix+'.id')
 
-            if self.id is None:
-                return False
-
-            return True
-
-        except:
+        if self.id is None:
             return False
+
+        return True
 
     def lookup_space(self, title, **kwargs):
         """

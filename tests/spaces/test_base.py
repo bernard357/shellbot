@@ -117,6 +117,13 @@ class SpaceTests(unittest.TestCase):
         self.assertEqual(space.context.get('space.title'), None)
         self.assertEqual(space.context.get('space.key'), 'my value')
 
+    def test_connect(self):
+
+        logging.info("*** connect")
+
+        space = Space()
+        space.connect()
+
     def test_bond_mock(self):
 
         logging.info("*** bond")
