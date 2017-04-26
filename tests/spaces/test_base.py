@@ -323,12 +323,13 @@ class SpaceTests(unittest.TestCase):
         space = Space()
         space.register = mock.Mock()
         space.pull = mock.Mock()
+        space.PULL_INTERVAL = 0.01
         space.run()
-        time.sleep(0.2)
+        time.sleep(0.1)
         space.context.set('general.switch', 'off')
-        time.sleep(0.2)
+        time.sleep(0.1)
         self.assertFalse(space.register.called)
-        self.assertEqual(space.context.get('puller.counter'), 1)
+        self.assertTrue(space.context.get('puller.counter') > 3)
 
     def test_work(self):
 

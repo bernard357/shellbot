@@ -94,6 +94,8 @@ class Space(object):
             space.run()
     """
 
+    PULL_INTERVAL = 0.2  # time between pulls, when not hooked
+
     def __init__(self,
                  context=None,
                  **kwargs):
@@ -551,7 +553,7 @@ class Space(object):
                 try:
                     self.pull()
                     self.context.increment('puller.counter')
-                    time.sleep(0.2)
+                    time.sleep(self.PULL_INTERVAL)
 
                 except Exception as feedback:
                     logging.debug(feedback)
