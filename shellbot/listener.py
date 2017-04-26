@@ -158,10 +158,7 @@ class Listener(object):
 
         bot = self.context.get('bot.name', 'shelly')
         if not input.lower().startswith(bot):
-            try:
-                logging.debug(u"- {}".format(input))
-            except:
-                pass
+            logging.debug(u"- {}".format(input))
             logging.info(u"- not for me, thrown away")
             return
 
