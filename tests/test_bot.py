@@ -25,7 +25,7 @@ class BotTests(unittest.TestCase):
         bot = ShellBot(context=context)
 
         self.assertEqual(bot.context, context)
-        self.assertTrue(bot.space is not None)
+        self.assertTrue(bot.space is None)
         self.assertTrue(bot.store is None)
         self.assertTrue(bot.mouth is None)
         self.assertTrue(bot.inbox is None)
@@ -65,7 +65,9 @@ class BotTests(unittest.TestCase):
 
         logging.info('*** configure ***')
 
-        bot = ShellBot()
+        context = Context()
+        bot = ShellBot(context=context,
+                       space=LocalSpace(context=context))
 
         with self.assertRaises(KeyError):
             bot.configure({})
@@ -145,7 +147,7 @@ class BotTests(unittest.TestCase):
         }
 
         context = Context(settings)
-        bot = ShellBot(context=context, check=True)
+        bot = ShellBot(context=context, configure=True)
         self.assertEqual(bot.context.get('bot.on_start'), 'Start!')
         self.assertEqual(bot.context.get('bot.on_stop'), 'Stop!')
         self.assertEqual(bot.context.get('spark.room'), 'Support room')
@@ -222,7 +224,9 @@ class BotTests(unittest.TestCase):
 
         logging.info('*** add_moderators ***')
 
-        bot = ShellBot()
+        context = Context()
+        bot = ShellBot(context=context,
+                       space=LocalSpace(context=context))
         with mock.patch.object(bot.space,
                                'add_moderators',
                                return_value=None) as mocked:
@@ -233,7 +237,9 @@ class BotTests(unittest.TestCase):
 
         logging.info('*** add_participants ***')
 
-        bot = ShellBot()
+        context = Context()
+        bot = ShellBot(context=context,
+                       space=LocalSpace(context=context))
         with mock.patch.object(bot.space,
                                'add_participants',
                                return_value=None) as mocked:
@@ -244,7 +250,9 @@ class BotTests(unittest.TestCase):
 
         logging.info('*** dispose ***')
 
-        bot = ShellBot()
+        context = Context()
+        bot = ShellBot(context=context,
+                       space=LocalSpace(context=context))
         with mock.patch.object(bot.space,
                                'dispose',
                                return_value=None) as mocked:

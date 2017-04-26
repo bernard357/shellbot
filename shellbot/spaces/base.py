@@ -154,7 +154,7 @@ class Space(object):
         """
         pass
 
-    def configure(self, settings, do_check=True):
+    def configure(self, settings={}, do_check=True):
         """
         Changes settings of the space
 

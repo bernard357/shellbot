@@ -8,7 +8,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import Context, ShellBot
+from shellbot import Context, ShellBot, SpaceFactory
 from examples.steps import Steps, Next, State
 
 
@@ -43,7 +43,9 @@ my_settings = {
 }
 
 my_context = Context(settings=my_settings)
-my_bot = ShellBot(context=my_context, mouth=Queue())
+my_bot = ShellBot(context=my_context,
+                  mouth=Queue(),
+                  space=SpaceFactory.get('local'))
 
 
 class ExampleTests(unittest.TestCase):

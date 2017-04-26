@@ -129,7 +129,7 @@ context.check('server.hook', '/hook')
 #
 
 bot = ShellBot(context=context,
-               check=True,
+               configure=True,
                ears=Queue(),
                inbox=Queue(),
                mouth=Queue())

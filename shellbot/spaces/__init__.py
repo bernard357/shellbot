@@ -13,12 +13,119 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+
 from .base import Space
 from .local import LocalSpace
 from .ciscospark import SparkSpace
 
 __all__ = [
+    'SpaceFactory',
     'Space',
     'LocalSpace',
     'SparkSpace',
 ]
+
+
+class SpaceFactory(object):
+    """
+    Builds spaces from configuration
+
+    Example::
+
+        context = Context(settings={
+            'spark': {
+                'room': 'My preferred room',
+                'moderators':
+                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+                'participants':
+                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+                'team': 'Anchor team',
+                'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
+                'personal_token': '$MY_FUZZY_SPARK_TOKEN',
+                'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
+                'webhook': "http://73a1e282.ngrok.io",
+            }
+        })
+
+
+        space = SpaceFactory.build(context)
+
+    """
+
+    types = {
+        'space': Space,
+        'local': LocalSpace,
+        'spark': SparkSpace,
+    }
+
+    @classmethod
+    def build(self, context, **kwargs):
+        """
+        Builds an instance based on provided configuration
+
+        :param context: configuration to be used
+        :type context: Context
+
+        :return: a ready-to-use space
+        :rtype: Space
+
+        A ``ValueError`` is raised if no type could be identified.
+        """
+
+        type = self.sense(context)
+        space = self.get(type, context=context, **kwargs)
+        space.configure()
+        return space
+
+    @classmethod
+    def sense(self, context):
+        """
+        Detects type from configuration
+
+        :param context: configuration to be analyzed
+        :type context: Context
+
+        :return: a guessed type
+        :rtype: str
+
+        Example::
+
+            type = SpaceFactory.sense(context)
+
+        A ``ValueError`` is raised if no type could be identified.
+        """
+
+        for type in sorted(self.types.keys()):
+            if context.has(prefix=type):
+                return type
+
+        raise ValueError(
+            u"No space type could be identified from configuration")
+
+    @classmethod
+    def get(self, type, **kwargs):
+        """
+        Loads a space by type
+
+        :param type: the required space
+        :type type: str
+
+        :return: a space instance
+
+        This function seeks for a suitable space class in the library, and
+        return an instance of it.
+
+        Example::
+
+            space = SpaceFactory.get('spark', ex_token='123')
+
+        A ``ValueError`` is raised if the type is unknown.
+        """
+
+        try:
+            return self.types[type](**kwargs)
+
+        except KeyError as feedback:
+            logging.debug(u"Unable to load type {}".format(type))
+            raise ValueError(u"This space type is unknown")

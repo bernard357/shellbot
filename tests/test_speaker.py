@@ -10,7 +10,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import Context, ShellBot, Speaker
+from shellbot import Context, ShellBot, Speaker, SpaceFactory
 
 
 class SpeakerTests(unittest.TestCase):
@@ -39,7 +39,8 @@ class SpeakerTests(unittest.TestCase):
 
         logging.info('*** Dynamic test ***')
 
-        bot = ShellBot(mouth=Queue())
+        bot = ShellBot(mouth=Queue(),
+                       space=SpaceFactory.get('local'))
         bot.space.id = '123'
 
         items = ['hello', 'world']
@@ -68,7 +69,8 @@ class SpeakerTests(unittest.TestCase):
 
         logging.info("*** work")
 
-        bot = ShellBot(mouth=Queue())
+        bot = ShellBot(mouth=Queue(),
+                       space=SpaceFactory.get('local'))
         bot.space.id = '123'
 
         speaker = Speaker(bot=bot)
@@ -87,7 +89,8 @@ class SpeakerTests(unittest.TestCase):
 
         logging.info('*** Processing test ***')
 
-        bot = ShellBot()
+        bot = ShellBot(mouth=Queue(),
+                       space=SpaceFactory.get('local'))
         bot.space.id = '123'
 
         speaker = Speaker(bot=bot)

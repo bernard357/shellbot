@@ -70,7 +70,7 @@ class SparkSpaceTests(unittest.TestCase):
 
     def test_init(self):
 
-        logging.debug("*** init")
+        logging.info("*** init")
 
         space = SparkSpace(ex_token='b', ex_ears='c')
         self.assertTrue(space.context is not None)
@@ -82,7 +82,7 @@ class SparkSpaceTests(unittest.TestCase):
 
     def test_is_ready(self):
 
-        logging.debug("*** is_ready")
+        logging.info("*** is_ready")
 
         space = SparkSpace()
         self.assertFalse(space.is_ready)
@@ -92,7 +92,30 @@ class SparkSpaceTests(unittest.TestCase):
 
     def test_configure(self):
 
-        logging.debug("*** configure")
+        logging.info("*** configure")
+
+        context = Context(settings={  # from settings to member attributes
+            'spark': {
+                'room': 'My preferred room',
+                'moderators':
+                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+                'participants':
+                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+                'team': 'Anchor team',
+                'token': 'hkNWEtMJNkODVGlZWU1NmYtyY',
+                'personal_token': '*personal*secret*token',
+                'webhook': "http://73a1e282.ngrok.io",
+            }
+        })
+
+        space = SparkSpace(context, ex_ears='c')
+        self.assertEqual(space.context, context)
+        self.assertEqual(space.ears, 'c')
+        self.assertEqual(space.token, 'hkNWEtMJNkODVGlZWU1NmYtyY')
+        self.assertEqual(space.personal_token, '*personal*secret*token')
+        self.assertEqual(space.id, None)   #  set after bond()
+        self.assertEqual(space.title, '*unknown*')
+        self.assertEqual(space.teamId, None)
 
         space = SparkSpace(context=Context())
         space.configure({
@@ -147,7 +170,7 @@ class SparkSpaceTests(unittest.TestCase):
 
         if cisco_spark_bearer is not None:
 
-            logging.debug("*** (life cycle)")
+            logging.info("*** (life cycle)")
 
             space = SparkSpace(ex_token=cisco_spark_bearer)
             space.connect()
@@ -165,7 +188,7 @@ class SparkSpaceTests(unittest.TestCase):
 
     def test_bond_mock(self):
 
-        logging.debug("*** bond")
+        logging.info("*** bond")
 
         space = SparkSpace()
         space.api = FakeApi()
@@ -181,7 +204,7 @@ class SparkSpaceTests(unittest.TestCase):
 
     def test_lookup_space_mock(self):
 
-        logging.debug("*** lookup_space")
+        logging.info("*** lookup_space")
 
         space = SparkSpace()
         space.api = FakeApi()
@@ -195,7 +218,7 @@ class SparkSpaceTests(unittest.TestCase):
 
         if cisco_spark_bearer is not None:
 
-            logging.debug("*** lookup_space API")
+            logging.info("*** lookup_space API")
 
             space = SparkSpace(ex_token=cisco_spark_bearer)
             space.connect()
@@ -206,7 +229,7 @@ class SparkSpaceTests(unittest.TestCase):
 
     def test_create_space_mock(self):
 
-        logging.debug("*** create_space")
+        logging.info("*** create_space")
 
         space = SparkSpace()
         space.api = FakeApi()
@@ -216,7 +239,7 @@ class SparkSpaceTests(unittest.TestCase):
 
     def test_add_moderators_mock(self):
 
-        logging.debug("*** add_moderators")
+        logging.info("*** add_moderators")
 
         space = SparkSpace()
         with mock.patch.object(space,
@@ -228,7 +251,7 @@ class SparkSpaceTests(unittest.TestCase):
 
     def test_add_moderator_mock(self):
 
-        logging.debug("*** add_moderator")
+        logging.info("*** add_moderator")
 
         space = SparkSpace()
         space.api = FakeApi()
@@ -239,7 +262,7 @@ class SparkSpaceTests(unittest.TestCase):
 
     def test_add_participants_mock(self):
 
-        logging.debug("*** add_participants")
+        logging.info("*** add_participants")
 
         space = SparkSpace()
         with mock.patch.object(space,
@@ -251,7 +274,7 @@ class SparkSpaceTests(unittest.TestCase):
 
     def test_add_participant_mock(self):
 
-        logging.debug("*** add_participant")
+        logging.info("*** add_participant")
         space = SparkSpace()
         space.api = FakeApi()
 
@@ -261,7 +284,7 @@ class SparkSpaceTests(unittest.TestCase):
 
     def test_dispose_mock(self):
 
-        logging.debug("*** dispose")
+        logging.info("*** dispose")
         space = SparkSpace()
         space.api = FakeApi(rooms=[FakeRoom()])
         space.bond(title='*title')
@@ -272,7 +295,7 @@ class SparkSpaceTests(unittest.TestCase):
 
     def test_post_message_mock(self):
 
-        logging.debug("*** post_message")
+        logging.info("*** post_message")
         space = SparkSpace()
 
         space.api = FakeApi()
@@ -294,7 +317,7 @@ class SparkSpaceTests(unittest.TestCase):
 
     def test_register_mock(self):
 
-        logging.debug("*** register")
+        logging.info("*** register")
         space = SparkSpace()
 
         space.api = FakeApi(rooms=[FakeRoom()])
@@ -304,7 +327,7 @@ class SparkSpaceTests(unittest.TestCase):
 
     def test_work(self):
 
-        logging.debug("*** work")
+        logging.info("*** work")
         context = Context()
         space = SparkSpace(context=context)
         space.api = FakeApi(rooms=[FakeRoom()])
@@ -327,7 +350,7 @@ class SparkSpaceTests(unittest.TestCase):
 
     def test_pull_mock(self):
 
-        logging.debug("*** pull")
+        logging.info("*** pull")
         context = Context()
         space = SparkSpace(context=context)
         space.api = FakeApi(rooms=[FakeRoom()])
@@ -338,7 +361,7 @@ class SparkSpaceTests(unittest.TestCase):
 
     def test_get_bot_mock(self):
 
-        logging.debug("*** get_bot")
+        logging.info("*** get_bot")
         space = SparkSpace()
         space.api = FakeApi()
         space.get_bot()
@@ -348,7 +371,7 @@ class SparkSpaceTests(unittest.TestCase):
 
         if cisco_spark_bearer is not None:
 
-            logging.debug("*** get_bot API")
+            logging.info("*** get_bot API")
 
             space = SparkSpace(bearer=cisco_spark_bearer)
             space.connect()

@@ -39,7 +39,6 @@ class Speaker(object):
         self.bot = bot
         self.context = bot.context
         self.mouth = bot.mouth
-        self.space = bot.space
 
         self.tee = tee
 
@@ -82,7 +81,7 @@ class Speaker(object):
                     time.sleep(0.005)
                     continue
 
-                if not self.space.is_ready:
+                if not self.bot.space.is_ready:
                     logging.debug(
                         u"Speaker is waiting for space to be ready...")
                     time.sleep(5)
@@ -122,12 +121,12 @@ class Speaker(object):
 
         logging.debug(u'Speaker is working on {}'.format(counter))
 
-        if self.space is not None:
+        if self.bot.space is not None:
             if isinstance(item, string_types):
-                self.space.post_message(item)
+                self.bot.space.post_message(item)
             else:
-                self.space.post_message(item.message,
-                                        ex_markdown=item.markdown,
-                                        ex_file_path=item.file)
+                self.bot.space.post_message(item.message,
+                                            ex_markdown=item.markdown,
+                                            ex_file_path=item.file)
         else:
             logging.info(item)

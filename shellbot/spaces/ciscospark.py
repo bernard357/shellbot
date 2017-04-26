@@ -45,7 +45,10 @@ class SparkSpace(Space):
 
         """
         self.prefix = 'spark'
-        self.token = ex_token
+
+        if ex_token is not None:
+            self.context.set('spark.token', ex_token)
+
         self.ears = ex_ears if ex_ears else Queue()
 
     def on_reset(self):
@@ -53,6 +56,9 @@ class SparkSpace(Space):
         Resets extended internal variables
         """
         self.teamId = None
+
+        self.token = self.context.get('spark.token', '*void')
+        self.personal_token = self.context.get('spark.personal_token', '*void')
 
     def check(self):
         """
@@ -136,33 +142,30 @@ class SparkSpace(Space):
         """
         Connects to the back-end API
         """
-        token = self.token if self.token else self.context.get('spark.token')
         try:
-            if token is None:
+            if self.token is None:
                 self.api = None
                 logging.error(u"Unable to access Cisco Spark API")
 
             else:
-                self.api = CiscoSparkAPI(access_token=token)
+                self.api = CiscoSparkAPI(access_token=self.token)
                 logging.debug(u"Connected as bot to Cisco Spark API")
 
         except Exception as feedback:
             logging.error(u"Unable to access Cisco Spark API")
             logging.error(u"- {}".format(str(feedback)))
-            logging.error(u"- token '{}'".format(token))
 
-        token = self.context.get('spark.personal_token')
         try:
-            if token is None:
+            if self.personal_token is None:
                 self.personal_api = None
             else:
-                self.personal_api = CiscoSparkAPI(access_token=token)
+                self.personal_api = CiscoSparkAPI(
+                    access_token=self.personal_token)
                 logging.debug(u"Connected as person to Cisco Spark API")
 
         except Exception as feedback:
             logging.error(u"Unable to access Cisco Spark API")
             logging.error(u"- {}".format(str(feedback)))
-            logging.error(u"- token '{}'".format(token))
 
         try:
             bot = self.get_bot()

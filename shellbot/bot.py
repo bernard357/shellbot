@@ -25,7 +25,7 @@ import yaml
 from .context import Context
 from .shell import Shell
 from .listener import Listener
-from .spaces import Space, LocalSpace, SparkSpace
+from .spaces import SpaceFactory
 from .speaker import Speaker
 from .worker import Worker
 from .routes.wrap import Wrap
@@ -38,7 +38,7 @@ class ShellBot(object):
                  mouth=None,
                  inbox=None,
                  ears=None,
-                 check=False,
+                 configure=False,
                  space=None,
                  store=None):
 
@@ -48,8 +48,7 @@ class ShellBot(object):
         self.inbox = inbox
         self.ears = ears
 
-        self.space = space if space else SparkSpace(context=self.context,
-                                                    ex_ears=self.ears)
+        self.space = space
         self.store = store
 
         self.shell = Shell(bot=self)
@@ -58,7 +57,7 @@ class ShellBot(object):
         self.worker = Worker(bot=self)
         self.listener = Listener(bot=self)
 
-        if check:
+        if configure:
             self.configure()
 
     def configure_from_path(self, path="settings.yaml"):
@@ -116,8 +115,12 @@ class ShellBot(object):
         self.configure_from_dict(settings)
 
         self.shell.configure(settings)
-        self.space.configure(settings)
 
+        if self.space is None:
+            self.space = SpaceFactory.build(self.context)
+            self.space.ears = self.ears
+
+        self.space.configure()
         self.space.connect()
 
     def configure_from_dict(self, settings):

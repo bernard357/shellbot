@@ -100,11 +100,10 @@ context = Context(settings)
 #
 
 bot = ShellBot(context=context,
-               check=True,
+               configure=True,
                ears=Queue(),
                inbox=Queue(),
                mouth=Queue())
-
 
 class Batman(Command):
     keyword = 'whoareyou'

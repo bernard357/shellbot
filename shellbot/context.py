@@ -51,6 +51,10 @@ class Context(object):
     def apply(self, settings={}):
         """
         Applies multiple settings at once
+
+        :param settings: variables to be added to this context
+        :type settings: dict
+
         """
 
         self.lock.acquire()
@@ -213,6 +217,42 @@ class Context(object):
         if imported is None:
             raise AttributeError(u"Missing {}".format(value))
         return imported
+
+    def has(self, prefix):
+        """
+        Checks the presence of some prefix
+
+        :param prefix: key prefix to be checked
+        :type prefix: str
+
+        :return: True if one or more key start with the prefix, else False
+
+        This function looks at keys actually used in this context,
+        and return True if prefix is found. Else it returns False.
+
+        Example::
+
+            context = Context(settings={'space': {'title', 'a title'}})
+
+            >>>context.has('space')
+            True
+
+            >>>context.has('space.title')
+            True
+
+            >>>context.has('spark')
+            False
+
+        """
+
+        self.lock.acquire()
+        try:
+            for key in self.values.keys():
+                if key.startswith(prefix):
+                    return True
+        finally:
+            self.lock.release()
+        return False
 
     def get(self, key, default=None):
         """

@@ -21,7 +21,10 @@ from .shell import Shell
 from .speaker import Speaker
 from .worker import Worker
 
+from .spaces import SpaceFactory
+
 from .commands.base import Command
+
 from .routes.base import Route
 from .routes.notify import Notify
 from .routes.wrap import Wrap
@@ -37,6 +40,7 @@ __all__ = [
     'Shell',
     'Speaker',
     'Worker',
+    'SpaceFactory',
     'Command',
     'Route',
     'Notify',

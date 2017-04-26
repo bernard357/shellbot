@@ -158,6 +158,37 @@ class ContextTests(unittest.TestCase):
         with self.assertRaises(AttributeError):
             Context._filter('$TOTALLY*UNKNOWN*HERE')
 
+    def test_has(self):
+
+        context = Context()
+
+        context.apply({
+            'spark': {
+                'room': 'My preferred room',
+                'moderators':
+                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+                'participants':
+                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+                'team': 'Anchor team',
+                'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
+                'personal_token': '$MY_FUZZY_SPARK_TOKEN',
+                'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
+                'webhook': "http://73a1e282.ngrok.io",
+            }
+        })
+
+        # undefined prefix
+        self.assertFalse(context.has('hello'))
+
+        # top-level prefix
+        self.assertTrue(context.has('spark'))
+
+        # 2-level prefix
+        self.assertTrue(context.has('spark.team'))
+
+        # undefined 2-level prefix
+        self.assertFalse(context.has('.token'))
+
     def test_getter(self):
 
         context = Context()

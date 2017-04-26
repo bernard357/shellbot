@@ -16,9 +16,11 @@ from shellbot import Shell
 from shellbot import ShellBot
 from shellbot import Worker
 from shellbot import Speaker
+from shellbot.spaces import Space
 
 my_bot = ShellBot(ears=Queue(), inbox=Queue(), mouth=Queue())
 my_bot.shell.load_default_commands()
+my_bot.space = Space(my_bot.context)
 my_bot.space.post_message = MagicMock()
 my_bot.space.id = '123'
 
