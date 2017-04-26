@@ -260,8 +260,8 @@ class ShellBot(object):
 
         assert self.context.get('server.url') is not None
         self.space.register(
-            self.context.get('server.url')
-            + self.context.get('server.hook', '/hook'))
+            hook_url=self.context.get('server.url')
+                     + self.context.get('server.hook', '/hook'))
 
     def get_hook(self):
         """

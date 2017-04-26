@@ -7,6 +7,7 @@ import os
 import mock
 from multiprocessing import Process, Queue
 import sys
+import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
@@ -259,11 +260,28 @@ class BotTests(unittest.TestCase):
             bot.dispose(['a', 'b', 'c', 'd'])
             mocked.assert_called_with(['a', 'b', 'c', 'd'])
 
+    def test_hook(self):
+
+        logging.info('*** hook ***')
+
+        context = Context()
+        context.set('server.url', 'http://here.you.go:123')
+        bot = ShellBot(context=context,
+                       space=LocalSpace(context=context))
+        server = mock.Mock()
+        with mock.patch.object(bot.space,
+                               'register',
+                               return_value=None) as mocked:
+            bot.hook(server=server)
+            mocked.assert_called_with(hook_url='http://here.you.go:123/hook')
+
     def test_static(self):
 
         logging.info('*** static test ***')
 
-        bot = ShellBot()
+        bot = ShellBot(ears=Queue(),
+                       inbox=Queue(),
+                       mouth=Queue())
 
         settings = {
             'bot': {'name': 'shelly'},
@@ -275,9 +293,9 @@ class BotTests(unittest.TestCase):
 
         bot.configure(settings)
 
-#        bot.start()
-#        time.sleep(1.0)
-#        bot.stop()
+        bot.start()
+        time.sleep(0.1)
+        bot.stop()
 
         self.assertEqual(bot.context.get('listener.counter', 0), 0)
         self.assertEqual(bot.context.get('worker.counter', 0), 0)
