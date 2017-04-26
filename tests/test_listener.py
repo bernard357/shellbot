@@ -135,10 +135,10 @@ class ListenerTests(unittest.TestCase):
         self.assertEqual(
             my_bot.mouth.get(),
             u'Available commands:\n'
-            + u'echo - Echo input string.\nhelp - Show commands and usage.')
+            + u'echo - Echo input string\nhelp - Show commands and usage')
         self.assertEqual(
             my_bot.mouth.get(),
-            u'help - Show commands and usage.\nusage:\nhelp <command>')
+            u'help - Show commands and usage\nusage: help <command>')
         with self.assertRaises(Exception):
             print(my_bot.mouth.get_nowait())
 
@@ -154,8 +154,9 @@ class ListenerTests(unittest.TestCase):
         my_bot.context.set('general.switch', 'on')
 
         listener = Listener(bot=my_bot)
-        listener.process = mock.Mock(side_effect=Exception('unexpected exception'))
+        listener.process = mock.Mock(side_effect=Exception('Traced in log?'))
         my_bot.ears.put(('dummy'))
+        my_bot.ears.put(Exception('EOQ'))
         listener.work()
         self.assertEqual(my_bot.context.get('listener.counter'), 1)
 

@@ -103,13 +103,13 @@ class CommandsTests(unittest.TestCase):
         c = Close(my_bot)
 
         self.assertEqual(c.keyword, u'close')
-        self.assertEqual(c.information_message, u'Close this room.')
+        self.assertEqual(c.information_message, u'Close this room')
         self.assertEqual(c.usage_message, None)
         self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
         c.execute()
-        self.assertEqual(my_bot.mouth.get(), u'Close this room.')
+        self.assertEqual(my_bot.mouth.get(), u'Close this room')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
         self.assertTrue(my_bot.stop.called)
@@ -124,7 +124,7 @@ class CommandsTests(unittest.TestCase):
         c = Default(my_bot)
 
         self.assertEqual(c.keyword, u'*default')
-        self.assertEqual(c.information_message, u'Handle unmatched command.')
+        self.assertEqual(c.information_message, u'Handle unmatched command')
         self.assertEqual(c.usage_message, None)
         self.assertTrue(c.is_interactive)
         self.assertTrue(c.is_hidden)
@@ -145,7 +145,7 @@ class CommandsTests(unittest.TestCase):
         c = Echo(my_bot)
 
         self.assertEqual(c.keyword, u'echo')
-        self.assertEqual(c.information_message, u'Echo input string.')
+        self.assertEqual(c.information_message, u'Echo input string')
         self.assertEqual(c.usage_message, u'echo "a string to be echoed"')
         self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
@@ -167,7 +167,7 @@ class CommandsTests(unittest.TestCase):
         c = Empty(my_bot)
 
         self.assertEqual(c.keyword, u'*empty')
-        self.assertEqual(c.information_message, u'Handle empty command.')
+        self.assertEqual(c.information_message, u'Handle empty command')
         self.assertEqual(c.usage_message, None)
         self.assertTrue(c.is_interactive)
         self.assertTrue(c.is_hidden)
@@ -175,7 +175,7 @@ class CommandsTests(unittest.TestCase):
         c.execute()
         self.assertEqual(
             my_bot.mouth.get(),
-            u'Available commands:\nhelp - Show commands and usage.')
+            u'Available commands:\nhelp - Show commands and usage')
         with self.assertRaises(Exception):
             print(my_bot.mouth.get_nowait())
 
@@ -183,7 +183,7 @@ class CommandsTests(unittest.TestCase):
         c.shell._commands = {}
         c.execute()
         self.assertEqual(my_bot.mouth.get(),
-                         u'No help command has been found')
+                         u'No help command has been found.')
         with self.assertRaises(Exception):
             print(my_bot.mouth.get_nowait())
 
@@ -198,7 +198,7 @@ class CommandsTests(unittest.TestCase):
         self.assertEqual(c.keyword, u'help')
         self.assertEqual(
             c.information_message,
-            u'Show commands and usage.')
+            u'Show commands and usage')
         self.assertEqual(c.usage_message, u'help <command>')
         self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
@@ -221,14 +221,14 @@ class CommandsTests(unittest.TestCase):
         c.execute()
         self.assertEqual(
             my_bot.mouth.get(),
-            u'Available commands:\nhelp - Show commands and usage.')
+            u'Available commands:\nhelp - Show commands and usage')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute("help")
         self.assertEqual(
             my_bot.mouth.get(),
-            u'help - Show commands and usage.\nusage:\nhelp <command>')
+            u'help - Show commands and usage\nusage: help <command>')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
@@ -266,7 +266,7 @@ class CommandsTests(unittest.TestCase):
         c = Noop(my_bot)
 
         self.assertEqual(c.keyword, u'pass')
-        self.assertEqual(c.information_message, u'Do absolutely nothing.')
+        self.assertEqual(c.information_message, u'Do absolutely nothing')
         self.assertEqual(c.usage_message, None)
         self.assertTrue(c.is_interactive)
         self.assertTrue(c.is_hidden)
@@ -284,7 +284,7 @@ class CommandsTests(unittest.TestCase):
         c = Sleep(my_bot)
 
         self.assertEqual(c.keyword, u'sleep')
-        self.assertEqual(c.information_message, u'Sleep for a while.')
+        self.assertEqual(c.information_message, u'Sleep for a while')
         self.assertEqual(c.usage_message, u'sleep <n>')
         self.assertFalse(c.is_interactive)
         self.assertTrue(c.is_hidden)
@@ -311,7 +311,7 @@ class CommandsTests(unittest.TestCase):
         c = Version(my_bot)
 
         self.assertEqual(c.keyword, u'version')
-        self.assertEqual(c.information_message, u'Display software version.')
+        self.assertEqual(c.information_message, u'Display software version')
         self.assertEqual(c.usage_message, None)
         self.assertTrue(c.is_interactive)
         self.assertTrue(c.is_hidden)

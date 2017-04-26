@@ -24,7 +24,7 @@ class Noop(Command):
     """
 
     keyword = u'pass'
-    information_message = u'Do absolutely nothing.'
+    information_message = u'Do absolutely nothing'
     is_hidden = True
 
     def execute(self, arguments=None):

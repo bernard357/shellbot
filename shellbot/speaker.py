@@ -102,8 +102,7 @@ class Speaker(object):
                     self.process(item, counter)
 
                 except Exception as feedback:
-                    logging.debug(feedback)
-                    break
+                    logging.exception(feedback)
 
         except KeyboardInterrupt:
             pass

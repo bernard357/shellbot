@@ -80,8 +80,7 @@ class Worker(object):
                     self.bot.context.set('worker.busy', False)
 
                 except Exception as feedback:
-                    logging.debug(feedback)
-                    break
+                    logging.exception(feedback)
 
         except KeyboardInterrupt:
             pass

@@ -23,12 +23,10 @@ class Help(Command):
     Lists available commands and related usage information
     """
 
-    def do_help(self, arguments=None):
-        self.bot.say({'markdown': help_markdown})
-
     keyword = u'help'
-    information_message = u'Show commands and usage.'
+    information_message = u'Show commands and usage'
     usage_message = u'help <command>'
+    usage_template = u"usage: {}"
 
     def execute(self, arguments=None):
         """
@@ -60,11 +58,12 @@ class Help(Command):
                 lines.append(u"{} - {}".format(
                     command.keyword,
                     command.information_message))
-                lines.append(u"usage:")
                 if command.usage_message:
-                    lines.append(command.usage_message)
+                    lines.append(
+                        self.usage_template.format(command.usage_message))
                 else:
-                    lines.append(command.keyword)
+                    lines.append(
+                        self.usage_template.format(command.keyword))
 
                 if lines:
                     self.bot.say('\n'.join(lines))

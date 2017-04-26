@@ -27,7 +27,7 @@ class State(Command):
     """
 
     keyword = u'state'
-    information_message = u'Display process current state.'
+    information_message = u'Display current state in process'
     steps = None
 
     def execute(self, arguments=None):

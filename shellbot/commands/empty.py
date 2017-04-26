@@ -24,7 +24,7 @@ class Empty(Command):
     """
 
     keyword = u'*empty'
-    information_message = u'Handle empty command.'
+    information_message = u'Handle empty command'
     is_hidden = True
 
     def execute(self, *args):
@@ -35,7 +35,7 @@ class Empty(Command):
             self.help_command = self.shell.command('help')
 
         if self.help_command is None:
-            self.bot.say(u"No help command has been found")
+            self.bot.say(u"No help command has been found.")
 
         else:
             self.help_command.execute()

@@ -28,7 +28,7 @@ class WorkerTests(unittest.TestCase):
         worker_process.daemon = True
         worker_process.start()
 
-        worker_process.join(1.0)
+        worker_process.join(0.01)
         if worker_process.is_alive():
             logging.info('Stopping worker')
             my_bot.context.set('general.switch', 'off')
@@ -44,7 +44,7 @@ class WorkerTests(unittest.TestCase):
         my_bot.inbox.put(('echo', 'hello world'))
         my_bot.inbox.put(('help', 'help'))
         my_bot.inbox.put(('pass', ''))
-        my_bot.inbox.put(('sleep', '1'))
+        my_bot.inbox.put(('sleep', '0.001'))
         my_bot.inbox.put(('version', ''))
         my_bot.inbox.put(('unknownCommand', ''))
         my_bot.inbox.put(Exception('EOQ'))
@@ -60,7 +60,7 @@ class WorkerTests(unittest.TestCase):
 
         self.assertEqual(
             my_bot.mouth.get(),
-            u'help - Show commands and usage.\nusage:\nhelp <command>')
+            u'help - Show commands and usage\nusage: help <command>')
 
         self.assertEqual(my_bot.mouth.get(), u'Shelly version *unknown*')
 
@@ -79,8 +79,9 @@ class WorkerTests(unittest.TestCase):
 
         my_bot.context = Context()
         worker = Worker(bot=my_bot)
-        worker.process = mock.Mock(side_effect=Exception('unexpected exception'))
+        worker.process = mock.Mock(side_effect=Exception('Traced in log?'))
         my_bot.inbox.put(('do', 'this'))
+        my_bot.inbox.put(Exception('EOQ'))
         worker.work()
         self.assertEqual(my_bot.context.get('worker.counter'), 1)
 

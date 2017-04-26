@@ -75,8 +75,9 @@ class SpeakerTests(unittest.TestCase):
                        space=SpaceFactory.get('local'))
         bot.space.id = '123'
 
-        bot.speaker.process = mock.Mock(side_effect=Exception('unexpected exception'))
+        bot.speaker.process = mock.Mock(side_effect=Exception('Traced in log?'))
         bot.mouth.put(('dummy'))
+        bot.mouth.put(Exception('EOQ'))
         bot.speaker.work()
         self.assertEqual(bot.context.get('speaker.counter'), 1)
 

@@ -26,19 +26,19 @@ class Sleep(Command):
     """
 
     keyword = u'sleep'
-    information_message = u'Sleep for a while.'
+    information_message = u'Sleep for a while'
     usage_message = u'sleep <n>'
     is_interactive = False
     is_hidden = True
 
-    DEFAULT_DELAY = 1
+    DEFAULT_DELAY = 1.0
 
     def execute(self, arguments):
         """
         Sleeps for a while
         """
         try:
-            delay = int(arguments) if int(arguments) > 0 else 1
+            delay = float(arguments) if float(arguments) > 0.0 else 1.0
         except ValueError:
             delay = self.DEFAULT_DELAY
         time.sleep(delay)

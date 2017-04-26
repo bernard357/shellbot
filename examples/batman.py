@@ -133,7 +133,7 @@ class Batsignal(Command):
 
 class Batsuicide(Command):
     keyword = 'suicide'
-    information_message = u"Going back to Hell"
+    information_message = u"Go back to Hell"
     is_interactive = False
 
     def execute(self, arguments=None):

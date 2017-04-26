@@ -419,7 +419,7 @@ class SparkSpace(Space):
             logging.warning(u"Unable to post message")
             logging.warning(feedback)
 
-    def register(self, webhook):
+    def register(self, hook_url):
         """
         Connects in the background to Cisco Spark inbound events
 
@@ -428,14 +428,14 @@ class SparkSpace(Space):
 
         This function registers the provided hook to Cisco Spark.
         """
-        assert webhook is not None
+        assert hook_url is not None
 
         logging.info(u"Registering webhook to Cisco Spark")
-        logging.debug(u"- {}".format(webhook))
+        logging.debug(u"- {}".format(hook_url))
 
         try:
             self.api.webhooks.create(name='shellbot-webhook',
-                                     targetUrl=webhook,
+                                     targetUrl=hook_url,
                                      resource='messages',
                                      event='created',
                                      filter='roomId='+self.id)

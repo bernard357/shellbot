@@ -210,8 +210,8 @@ class ShellTests(unittest.TestCase):
         self.assertEqual(shell.line, 'help help')
         self.assertEqual(shell.count, 3)
         self.assertEqual(shell.bot.mouth.get(),
-                         u'help - Show commands and usage.\n'
-                         + u'usage:\nhelp <command>')
+                         u'help - Show commands and usage\n'
+                         + u'usage: help <command>')
         with self.assertRaises(Exception):
             print(shell.bot.mouth.get_nowait())
         with self.assertRaises(Exception):
@@ -262,7 +262,7 @@ class ShellTests(unittest.TestCase):
         self.assertEqual(
             shell.bot.mouth.get(),
             u'Available commands:\n'
-            + u'echo - Echo input string.\nhelp - Show commands and usage.')
+            + u'echo - Echo input string\nhelp - Show commands and usage')
         with self.assertRaises(Exception):
             print(shell.bot.mouth.get_nowait())
         with self.assertRaises(Exception):

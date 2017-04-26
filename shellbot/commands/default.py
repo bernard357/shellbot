@@ -24,7 +24,7 @@ class Default(Command):
     """
 
     keyword = u'*default'
-    information_message = u'Handle unmatched command.'
+    information_message = u'Handle unmatched command'
     is_hidden = True
 
     def execute(self, arguments):
