@@ -6,7 +6,7 @@ from multiprocessing import Process, Queue
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 from shellbot import Context, ShellBot, SpaceFactory
 from examples.steps import Steps, Next, State
