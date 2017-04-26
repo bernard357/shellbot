@@ -48,7 +48,7 @@ my_bot = ShellBot(context=my_context,
                   space=SpaceFactory.get('local'))
 
 
-class ExampleTests(unittest.TestCase):
+class StepsTests(unittest.TestCase):
 
     def test_steps_steps(self):
 
@@ -92,7 +92,7 @@ class ExampleTests(unittest.TestCase):
 
         self.assertEqual(s.keyword, 'state')
         self.assertEqual(s.information_message,
-                         'Display process current state.')
+                         u'Display current state in process')
         self.assertTrue(s.is_interactive)
         self.assertFalse(s.is_hidden)
         self.assertTrue(s.steps is not None)
@@ -109,7 +109,7 @@ class ExampleTests(unittest.TestCase):
         n = Next(bot=my_bot, steps=steps)
 
         self.assertEqual(n.keyword, 'next')
-        self.assertEqual(n.information_message, u'Move process to next state.')
+        self.assertEqual(n.information_message, u'Move process to next state')
         self.assertTrue(n.is_interactive)
         self.assertFalse(n.is_hidden)
         self.assertTrue(n.steps is not None)
