@@ -338,8 +338,10 @@ class SparkSpace(Space):
         >>>space.delete_space("Obsolete Space")
 
         """
-        if title and self.lookup_space(title=title):
-            pass
+        if title:
+            if not self.lookup_space(title=title):  # set self.id & self.title
+                logging.debug(u"No room to delete")
+                return
 
         elif self.id and self.title:
             pass
