@@ -40,9 +40,6 @@ class Speaker(object):
 
         """
         self.bot = bot
-        self.context = bot.context
-        self.mouth = bot.mouth
-
         self.tee = tee
 
     def work(self):
@@ -77,11 +74,11 @@ class Speaker(object):
         logging.info(u"Starting speaker")
 
         try:
-            self.context.set('speaker.counter', 0)
+            self.bot.context.set('speaker.counter', 0)
             not_ready_flag = True
-            while self.context.get('general.switch', 'on') == 'on':
+            while self.bot.context.get('general.switch', 'on') == 'on':
 
-                if self.mouth.empty():
+                if self.bot.mouth.empty():
                     time.sleep(self.EMPTY_DELAY)
                     continue
 
@@ -94,10 +91,10 @@ class Speaker(object):
                     continue
 
                 try:
-                    item = self.mouth.get(True, 0.1)
+                    item = self.bot.mouth.get(True, 0.1)
                     if isinstance(item, Exception):
                         break
-                    counter = self.context.increment('speaker.counter')
+                    counter = self.bot.context.increment('speaker.counter')
 
                     if self.tee:
                         self.tee.put(item)

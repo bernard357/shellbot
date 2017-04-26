@@ -94,6 +94,7 @@ class SpeakerTests(unittest.TestCase):
                        space=SpaceFactory.get('local'))
 
         bot.speaker.NOT_READY_DELAY = 0.01
+        bot.context.set('general.switch', 'on')
         speaker_process = Process(target=bot.speaker.work)
         speaker_process.daemon = True
         speaker_process.start()
@@ -104,10 +105,10 @@ class SpeakerTests(unittest.TestCase):
         def set_ready(space, *args, **kwargs):
             space.id = '123'
 
-        t = Timer(0.2, set_ready, [bot.space])
+        t = Timer(0.15, set_ready, [bot.space])
         t.start()
 
-        time.sleep(0.3)
+        time.sleep(0.2)
         bot.context.set('general.switch', 'off')
         speaker_process.join()
 
