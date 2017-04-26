@@ -44,7 +44,7 @@ class WorkerTests(unittest.TestCase):
         my_bot.inbox.put(('echo', 'hello world'))
         my_bot.inbox.put(('help', 'help'))
         my_bot.inbox.put(('pass', ''))
-        my_bot.inbox.put(('sleep', '2'))
+        my_bot.inbox.put(('sleep', '1'))
         my_bot.inbox.put(('version', ''))
         my_bot.inbox.put(('unknownCommand', ''))
         my_bot.inbox.put(Exception('EOQ'))
@@ -80,16 +80,16 @@ class WorkerTests(unittest.TestCase):
         my_bot.context = Context()
         worker = Worker(bot=my_bot)
         worker.process = mock.Mock(side_effect=Exception('unexpected exception'))
-        worker.inbox.put(('do', 'this'))
+        my_bot.inbox.put(('do', 'this'))
         worker.work()
-        self.assertEqual(worker.context.get('worker.counter'), 1)
+        self.assertEqual(my_bot.context.get('worker.counter'), 1)
 
         my_bot.context = Context()
         worker = Worker(bot=my_bot)
         worker.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
-        worker.inbox.put(('do', 'that'))
+        my_bot.inbox.put(('do', 'that'))
         worker.work()
-        self.assertEqual(worker.context.get('worker.counter'), 1)
+        self.assertEqual(my_bot.context.get('worker.counter'), 1)
 
     def test_process(self):
 

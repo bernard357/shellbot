@@ -26,9 +26,6 @@ class Worker(object):
 
     def __init__(self, bot=None):
         self.bot = bot
-        self.context = bot.context
-        self.inbox = bot.inbox
-        self.shell = bot.shell
 
     def work(self):
         """
@@ -62,25 +59,25 @@ class Worker(object):
         """
         logging.info(u"Starting worker")
 
-        self.context.set('worker.counter', 0)
-        self.context.set('worker.busy', False)
+        self.bot.context.set('worker.counter', 0)
+        self.bot.context.set('worker.busy', False)
 
         try:
-            while self.context.get('general.switch', 'on') == 'on':
+            while self.bot.context.get('general.switch', 'on') == 'on':
 
-                if self.inbox.empty():
+                if self.bot.inbox.empty():
                     time.sleep(0.005)
                     continue
 
                 try:
-                    item = self.inbox.get(True, 0.1)
+                    item = self.bot.inbox.get(True, 0.1)
                     if isinstance(item, Exception):
                         break
-                    counter = self.context.increment('worker.counter')
+                    counter = self.bot.context.increment('worker.counter')
 
-                    self.context.set('worker.busy', True)
+                    self.bot.context.set('worker.busy', True)
                     self.process(item, counter)
-                    self.context.set('worker.busy', False)
+                    self.bot.context.set('worker.busy', False)
 
                 except Exception as feedback:
                     logging.debug(feedback)
@@ -107,12 +104,12 @@ class Worker(object):
         logging.debug(u'Worker is working on {} ({})'.format(verb, counter))
 
         try:
-            if verb in self.shell.commands:
-                command = self.shell.command(verb)
+            if verb in self.bot.shell.commands:
+                command = self.bot.shell.command(verb)
                 command.execute(arguments)
 
-            elif '*default' in self.shell.commands:
-                command = self.shell.command('*default')
+            elif '*default' in self.bot.shell.commands:
+                command = self.bot.shell.command('*default')
                 command.execute(arguments)
 
             else:
