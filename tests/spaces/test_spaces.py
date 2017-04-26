@@ -160,6 +160,37 @@ class SpaceFactoryTests(unittest.TestCase):
 
         self.assertEqual(SpaceFactory.sense(context), 'space')
 
+        context = Context(settings={  # no recognizable space type
+            'not_a_space_type': {
+                'room': 'My preferred room',
+                'moderators':
+                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+                'participants':
+                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+                'team': 'Anchor team',
+                'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
+                'personal_token': '$MY_FUZZY_SPARK_TOKEN',
+                'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
+                'webhook': "http://73a1e282.ngrok.io",
+            },
+
+            'neither_me': {
+                'room': 'My preferred room',
+                'moderators':
+                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+                'participants':
+                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+                'team': 'Anchor team',
+                'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
+                'personal_token': '$MY_FUZZY_SPARK_TOKEN',
+                'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
+                'webhook': "http://73a1e282.ngrok.io",
+            },
+        })
+
+        with self.assertRaises(ValueError):
+            SpaceFactory.sense(context)
+
     def test_get_space(self):
 
         logging.info("*** get('space')")
