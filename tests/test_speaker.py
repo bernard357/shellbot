@@ -113,7 +113,7 @@ class SpeakerTests(unittest.TestCase):
 
     def test_process(self):
 
-        logging.info('*** Processing test ***')
+        logging.info('*** process ***')
 
         bot = ShellBot()
         speaker = Speaker(bot=bot)
