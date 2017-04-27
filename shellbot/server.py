@@ -71,17 +71,17 @@ class Server(Bottle):
         :type settings: dict
 
         This function reads key ``server`` and below, and update
-        the context accordingly.
+        the context accordingly::
 
-        >>>shell.configure({'server': {
-               'binding': '10.4.2.5',
-               'port': 5000,
-               'debug': True,
-               }})
+            >>>shell.configure({'server': {
+                   'binding': '10.4.2.5',
+                   'port': 5000,
+                   'debug': True,
+                   }})
 
         This can also be written in a more compact form::
 
-        >>>shell.configure({'server.port': 5000})
+            >>>shell.configure({'server.port': 5000})
 
         """
 
@@ -98,8 +98,10 @@ class Server(Bottle):
 
         :return: a list of routes, or []
 
-        >>>server.get_routes()
-        ['/hello', '/world']
+        Example::
+
+            >>>server.get_routes()
+            ['/hello', '/world']
         """
         return sorted(self._routes.keys())
 

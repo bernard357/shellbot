@@ -92,10 +92,11 @@ class Worker(object):
         """
         Processes one action
 
-        Example actions:
+        Example actions::
 
-            ('help', 'some_command')
-            ('version', '')
+            worker.process(item=('help', 'some_command'), counter=234)
+
+            worker.process(item=('version', ''), counter=235)
 
         """
         (verb, arguments) = item

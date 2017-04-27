@@ -22,6 +22,7 @@ Fast, simple and lightweight micro bot-framework for Python.
 
 Shellbot is a fast and simple micro-framework for bot applications.
 It offers actions dispatching with a handy pipeline for non-interactive commands.
+It leverages the Cisco Spark API natively.
 It wraps Bottle for easy interactions over the web. Test coverage of Shellbot
 exceeds 90%; it has been designed to minimize dependencies; we want it to be
 blazing fast.

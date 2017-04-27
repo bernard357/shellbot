@@ -26,7 +26,8 @@ class Context(object):
     Stores settings across multiple independent processing units
 
     This is a basic key-value store, that supports concurrency
-    across multiple processes
+    across multiple processes.
+
     """
 
     def __init__(self, settings=None, filter=None):
@@ -115,29 +116,29 @@ class Context(object):
             context.check('spark.personal_token', filter=True)
 
         When a default value is provided, it is used to initialize
-        properly a missing key.
+        properly a missing key::
 
-        >>>context.check('general.switch', 'on')
+            context.check('general.switch', 'on')
 
-        Another usage is to ensure that a key has been set.
+        Another usage is to ensure that a key has been set::
 
-        >>>context.check('spark.room', is_mandatory=True)
+            context.check('spark.room', is_mandatory=True)
 
-        Additional control can be added with the validation function.
+        Additional control can be added with the validation function::
 
-        >>>context.check('general.switch',
-        ...              validate=lambda x: x in ('on', 'off'))
+            context.check('general.switch',
+                          validate=lambda x: x in ('on', 'off'))
 
         When filter is True, if the value is a string starting with '$',
-        then a variable with the same name is loaded from the environment.
+        then a variable with the same name is loaded from the environment::
 
-        >>>token=context.check('spark.personal_token', filter=True)
-        >>>assert token == os.environ.get('CISCO_SPARK_TOKEN')
-        True
+            >>>token=context.check('spark.personal_token', filter=True)
+            >>>assert token == os.environ.get('CISCO_SPARK_TOKEN')
+            True
 
-        The default filter can be changed at the creation of a context.
+        The default filter can be changed at the creation of a context::
 
-        >>>context=Context(filter=lambda x : x + '...')
+            >>>context=Context(filter=lambda x : x + '...')
 
         This function raises ``KeyError`` if a mandatory key is absent.
         If a validation function is provided, then a ``ValueError`` can be
@@ -187,10 +188,10 @@ class Context(object):
         :rtype: str
 
         If the string provided starts with the char '$', then the function
-        looks for an environment variable of this name and returns its value.
+        looks for an environment variable of this name and returns its value::
 
-        >>>print(context._filter('$HOME'))
-        /Users/bernard
+            >>>print(context._filter('$HOME'))
+            /Users/bernard
 
         This is useful if you want to secure your configuration files.
         Instead of putting secrets in these files, you can store them

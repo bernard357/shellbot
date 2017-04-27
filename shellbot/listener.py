@@ -111,7 +111,7 @@ class Listener(object):
         Commands that require significant processing time are pushed
         to the inbox.
 
-        Example command received from Cisco Spark:
+        Example command received from Cisco Spark::
 
             {
               "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",

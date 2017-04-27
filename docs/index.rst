@@ -11,6 +11,10 @@ The documentation of Shellbot
    HISTORY
    Documentation extracted from the code <shellbot>
 
+Indices and tables
+==================
 
 * :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
 

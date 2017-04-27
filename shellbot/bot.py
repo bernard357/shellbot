@@ -38,6 +38,47 @@ class ShellBot(object):
 
     Example::
 
+        from shellbot import ShellBot, Context, Command
+        Context.set_logger()
+
+        # create a bot and load command
+        #
+        class Hello(Command):
+            keyword = 'hello'
+            information_message = u"Hello, World!"
+
+        bot = ShellBot(command=Hello())
+
+        # load configuration
+        #
+        bot.configure({
+
+            'spark': {
+                'room': 'Hello tutorial',
+                'moderators': '<your e-mail address here>',
+                'token': '<bot token here>',
+            },
+
+            'server': {
+                'url': '<server external URL here>',
+                'hook': '/hook',
+                'binding': '0.0.0.0',
+                'port': 8080,
+            },
+
+        })
+
+        # create a chat room
+        #
+        bot.bond(reset=True)
+
+        # run the bot
+        #
+        bot.run()
+
+        # delete the chat room when the bot is killed
+        #
+        bot.dispose()
 
     """
 
@@ -151,25 +192,25 @@ class ShellBot(object):
 
         This function reads key ``bot`` and below, and update
         the context accordingly.
-        It also reads hook parameters under ``server``.
+        It also reads hook parameters under ``server``::
 
-        >>>shell.configure_fom_dict({
+            shell.configure_fom_dict({
 
-            'bot': {
-                'on_start': 'You can now chat with Batman',
-                'on_stop': 'Batman is now quitting the room, bye',
-            },
+                'bot': {
+                    'on_start': 'You can now chat with Batman',
+                    'on_stop': 'Batman is now quitting the room, bye',
+                },
 
-            'server': {
-                'url': 'http://d9b62df9.ngrok.io',
-                'hook': '/hook',
-            },
+                'server': {
+                    'url': 'http://d9b62df9.ngrok.io',
+                    'hook': '/hook',
+                },
 
-        })
+            })
 
         This can also be written in a more compact form::
 
-        >>>shell.configure({'bot.on_banner': 'Hello, I am here to help'})
+            shell.configure({'bot.on_banner': 'Hello, I am here to help'})
 
         """
 

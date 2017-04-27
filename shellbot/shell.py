@@ -44,18 +44,18 @@ class Shell(object):
         :type settings: dict
 
         This function reads key ``shell`` and below, and update
-        the context accordingly.
+        the context accordingly::
 
-        >>>shell.configure({'shell': {
-               'commands':
-                  ['examples.exception.state', 'examples.exception.next']
-               }})
+            >>>shell.configure({'shell': {
+                   'commands':
+                      ['examples.exception.state', 'examples.exception.next']
+                   }})
 
         This can also be written in a more compact form::
 
-        >>>shell.configure({'shell.commands':
-               ['examples.exception.state', 'examples.exception.next']
-               })
+            >>>shell.configure({'shell.commands':
+                   ['examples.exception.state', 'examples.exception.next']
+                   })
 
         Note that this function does preserve commands that could have been
         loaded previously.
@@ -71,7 +71,9 @@ class Shell(object):
         """
         Says something to the room
 
-        >>>shell.say('Hello, World!')
+        Example::
+
+            >>>shell.say('Hello, World!')
 
         This function is a convenient proxy for the bot itself.
         """
@@ -88,9 +90,10 @@ class Shell(object):
         This function provides with a dynamic inventory of all capabilities
         of this shell.
 
-        Example:
-        >>>print(shell.commands)
-        ['*default', '*empty', 'help']
+        Example::
+
+            >>>print(shell.commands)
+            ['*default', '*empty', 'help']
         """
         return sorted(self._commands.keys())
 
@@ -104,9 +107,11 @@ class Shell(object):
         :return: the instance for this command
         :rtype: command or None
 
-        Example:
-        >>>print(shell.command('help').information_message)
         Lists available commands and related usage information.
+
+        Example::
+
+            >>>print(shell.command('help').information_message)
 
         """
         if keyword in self._commands.keys():
@@ -117,7 +122,8 @@ class Shell(object):
         """
         Loads default commands for this shell
 
-        Example:
+        Example::
+
             >>>shell.load_default_commands()
 
         """
@@ -139,7 +145,8 @@ class Shell(object):
         :param commands: A list of commands to load
         :type commands: List of labels or list of commands
 
-        Example:
+        Example::
+
             >>>commands = ['shellbot.commands.help']
             >>>shell.load_commands(commands)
 
@@ -150,7 +157,8 @@ class Shell(object):
         If objects are provided, they should duck type the command defined
         in ``base.py`` in ``shellbot.commands``.
 
-        Example:
+        Example::
+
             >>>from shellbot.commands.version import Version
             >>>version = Version()
             >>>from shellbot.commands.help import Help
@@ -171,13 +179,15 @@ class Shell(object):
         be used as a command. Check ``base.py`` in ``shellbot.commands`` for
         a clear view of what it means to be a vaid command for this shell.
 
-        Example:
+        Example::
+
             >>>shell.load_command('shellbot.commands.help')
 
         If an object is provided, it should duck type the command defined
         in ``base.py`` in ``shellbot.commands``.
 
-        Example:
+        Example::
+
             >>>from shellbot.commands.version import Version
             >>>command = Version()
             >>>shell.load_command(command)
