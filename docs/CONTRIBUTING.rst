@@ -80,7 +80,7 @@ Ready to contribute? Here's how to set up Shellbot for local development
 
     $ mkvirtualenv shellbot
     $ cd shellbot/
-    $ python setup.py develop
+    $ pip install -e .
 
 4. Create a branch for local development::
 
