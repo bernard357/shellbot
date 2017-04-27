@@ -40,17 +40,14 @@ during development and test::
 from shellbot import ShellBot, Context, Command
 Context.set_logger()
 
-#
 # create a bot and load command
 #
-
 class Hello(Command):
     keyword = 'hello'
     information_message = u"Hello, World!"
 
 bot = ShellBot(command=Hello())
 
-#
 # load configuration
 #
 
@@ -71,20 +68,14 @@ bot.configure({
 
 })
 
-#
 # create a chat room
 #
-
 bot.bond(reset=True)
 
-#
 # run the bot
 #
-
 bot.run()
 
+# delete the chat room when the bot is killed
 #
-# delete the chat room
-#
-
 bot.dispose()
