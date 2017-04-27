@@ -17,7 +17,7 @@
 # limitations under the License.
 
 """
-Flight with Buzz
+Fly with Buzz
 
 In this example we create following commands with some lines of code:
 
@@ -106,10 +106,8 @@ bot = ShellBot(context=context,
                inbox=Queue(),
                mouth=Queue())
 
-from planets import Blast, Explore, Planets
-bot.load_commands([Blast(),
-                   Explore(),
-                   Planets()])
+from planets import PlanetFactory
+bot.load_commands(PlanetFactory.commands())
 
 #
 # initialise a suitable chat room
@@ -129,4 +127,4 @@ if context.get('server.binding') is not None:
 
 bot.run(server=server)
 
-bot.space.dispose()
+bot.dispose()

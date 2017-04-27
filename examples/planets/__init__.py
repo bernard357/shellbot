@@ -21,4 +21,12 @@ __all__ = [
     'Blast',
     'Explore',
     'Planets',
+    'PlanetFactory',
 ]
+
+class PlanetFactory(object):
+
+    @classmethod
+    def commands(self):
+        return [Blast(), Explore(), Planets()]
+
