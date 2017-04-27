@@ -14,7 +14,7 @@ Shellbot
 .. image:: https://img.shields.io/pypi/pyversions/shellbot.svg?maxAge=2592000
    :target: https://www.python.org/
 
-.. image:: https://img.shields.io/pypi/l/shellbot.svg?maxAge=2592000
+.. image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
    :target: http://www.apache.org/licenses/LICENSE-2.0
 
 
