@@ -41,8 +41,8 @@ class SpeakerTests(unittest.TestCase):
 
         logging.info('*** Dynamic test ***')
 
-        bot = ShellBot(mouth=Queue(),
-                       space=SpaceFactory.get('local'))
+        bot = ShellBot(mouth=Queue())
+        bot.space = SpaceFactory.get('local', bot=bot)
         bot.space.id = '123'
 
         items = ['hello', 'world']
@@ -71,8 +71,9 @@ class SpeakerTests(unittest.TestCase):
 
         logging.info("*** work")
 
-        bot = ShellBot(mouth=Queue(),
-                       space=SpaceFactory.get('local'))
+        bot = ShellBot(mouth=Queue())
+        bot.space = SpaceFactory.get('local', bot=bot)
+
         bot.space.id = '123'
 
         bot.speaker.process = mock.Mock(side_effect=Exception('Traced in log?'))
@@ -91,8 +92,8 @@ class SpeakerTests(unittest.TestCase):
 
         logging.info("*** work/wait while empty and not ready")
 
-        bot = ShellBot(mouth=Queue(),
-                       space=SpaceFactory.get('local'))
+        bot = ShellBot(mouth=Queue())
+        bot.space = SpaceFactory.get('local', bot=bot)
 
         bot.speaker.NOT_READY_DELAY = 0.01
         bot.context.set('general.switch', 'on')
@@ -119,10 +120,14 @@ class SpeakerTests(unittest.TestCase):
 
         bot = ShellBot()
         speaker = Speaker(bot=bot)
+
         speaker.process('hello world', 1)  # sent to stdout
 
-        bot = ShellBot(mouth=Queue(),
-                       space=SpaceFactory.get('local'))
+        bot = ShellBot(mouth=Queue())
+        bot.space = SpaceFactory.get('local', bot=bot)
+
+        bot = ShellBot(mouth=Queue())
+        bot.space = SpaceFactory.get('local', bot=bot)
         bot.space.id = '123'
 
         speaker = Speaker(bot=bot)
