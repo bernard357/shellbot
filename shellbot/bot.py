@@ -27,19 +27,31 @@ from .shell import Shell
 from .listener import Listener
 from .spaces import SpaceFactory
 from .speaker import Speaker
+from .server import Server
 from .worker import Worker
 from .routes.wrap import Wrap
 
 
 class ShellBot(object):
+    """
+    Wraps underlying services in a single instance
+
+    Example::
+
+
+    """
 
     def __init__(self,
                  context=None,
+                 command=None,
+                 commands=None,
                  mouth=None,
                  inbox=None,
                  ears=None,
                  configure=False,
+                 settings={},
                  space=None,
+                 server=None,
                  store=None):
 
         self.context = context if context else Context()
@@ -49,6 +61,7 @@ class ShellBot(object):
         self.ears = ears
 
         self.space = space
+        self.server = server
         self.store = store
 
         self.shell = Shell(bot=self)
@@ -57,8 +70,14 @@ class ShellBot(object):
         self.worker = Worker(bot=self)
         self.listener = Listener(bot=self)
 
-        if configure:
-            self.configure()
+        if configure or settings:
+            self.configure(settings)
+
+        if commands:
+            self.load_commands(commands)
+
+        if command:
+            self.load_command(command)
 
     def configure_from_path(self, path="settings.yaml"):
         """
@@ -106,22 +125,22 @@ class ShellBot(object):
         :param settings: configuration information
         :type settings: dict
 
-        The function loads configuration from the dict and from the
-        environment. Port number can be set from the command line.
-
-        Look at the file ``settings.yaml`` that is coming with this project
         """
 
         self.configure_from_dict(settings)
 
-        self.shell.configure(settings)
+        self.shell.configure()
 
         if self.space is None:
-            self.space = SpaceFactory.build(self.context)
-            self.space.ears = self.ears
+            self.space = SpaceFactory.build(self)
 
         self.space.configure()
         self.space.connect()
+
+        if (self.server is None
+            and self.context.get('server.binding') is not None):
+
+            self.server = Server(context=self.context, check=True)
 
     def configure_from_dict(self, settings):
         """
@@ -258,10 +277,10 @@ class ShellBot(object):
                 Wrap(callable=self.get_hook(),
                      route=self.context.get('server.hook', '/hook')))
 
-        assert self.context.get('server.url') is not None
-        self.space.register(
-            hook_url=self.context.get('server.url')
-                     + self.context.get('server.hook', '/hook'))
+        if self.context.get('server.url') is not None:
+            self.space.register(
+                hook_url=self.context.get('server.url')
+                         + self.context.get('server.hook', '/hook'))
 
     def get_hook(self):
         """
@@ -276,15 +295,24 @@ class ShellBot(object):
         :param server: a web server
         :type server: Server
 
-        If a server is provided, it is run in the background. Else
-        a pulling loop is started instead to get messages.
+        If a server is provided, it is run in the background. A server could
+        also have been provided during initialisation, or loaded
+        during configuration check.
+
+        Alternatively, a loop is started to fetch messages.
 
         In both cases, this function does not return, except on interrupt.
         """
+
+        if server is None:
+            server = self.server
+
+        self.hook(server=server)
+
         self.start()
 
         if server is None:
-            self.space.pull_for_ever()
+            self.space.work()
 
         else:
             server.run()
@@ -296,7 +324,15 @@ class ShellBot(object):
 
         logging.warning(u'Starting the bot')
 
-        self.context.set('general.switch', 'on')
+        if self.mouth is None:
+            self.mouth = Queue()
+
+        if self.inbox is None:
+            self.inbox = Queue()
+
+        if self.ears is None:
+            self.ears = Queue()
+
         self.start_processes()
 
         self.say(self.context.get('bot.on_start'))
@@ -307,8 +343,10 @@ class ShellBot(object):
         Starts bot processes
 
         This function starts a separate daemonic process for each
-        main component onf the architecture: listener, speaker, and worker.
+        main component of the architecture: listener, speaker, and worker.
         """
+
+        self.context.set('general.switch', 'on')
 
         p = Process(target=self.speaker.work)
         p.daemon = True

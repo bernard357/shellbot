@@ -36,7 +36,7 @@ class BotTests(unittest.TestCase):
         self.assertTrue(bot.worker is not None)
         self.assertTrue(bot.listener is not None)
 
-        space = SparkSpace(context=context)
+        space = SparkSpace(bot=bot)
         bot = ShellBot(context=context,
                        space=space,
                        mouth='m',
@@ -67,8 +67,8 @@ class BotTests(unittest.TestCase):
         logging.info('*** configure ***')
 
         context = Context()
-        bot = ShellBot(context=context,
-                       space=LocalSpace(context=context))
+        bot = ShellBot(context=context)
+        bot.space=LocalSpace(bot=bot)
 
         with self.assertRaises(KeyError):
             bot.configure({})
@@ -226,8 +226,8 @@ class BotTests(unittest.TestCase):
         logging.info('*** add_moderators ***')
 
         context = Context()
-        bot = ShellBot(context=context,
-                       space=LocalSpace(context=context))
+        bot = ShellBot(context=context)
+        bot.space=LocalSpace(bot=bot)
         with mock.patch.object(bot.space,
                                'add_moderators',
                                return_value=None) as mocked:
@@ -239,8 +239,8 @@ class BotTests(unittest.TestCase):
         logging.info('*** add_participants ***')
 
         context = Context()
-        bot = ShellBot(context=context,
-                       space=LocalSpace(context=context))
+        bot = ShellBot(context=context)
+        bot.space=LocalSpace(bot=bot)
         with mock.patch.object(bot.space,
                                'add_participants',
                                return_value=None) as mocked:
@@ -252,8 +252,8 @@ class BotTests(unittest.TestCase):
         logging.info('*** dispose ***')
 
         context = Context()
-        bot = ShellBot(context=context,
-                       space=LocalSpace(context=context))
+        bot = ShellBot(context=context)
+        bot.space=LocalSpace(bot=bot)
 
         with mock.patch.object(bot.space,
                                'dispose',
@@ -276,7 +276,7 @@ class BotTests(unittest.TestCase):
             },
 
             'server': {
-                'url': '$SERVER_URL',
+                'url': 'http://why.are.here:890',
                 'trigger': '/trigger',
                 'hook': '/hook',
                 'binding': '0.0.0.0',
@@ -301,14 +301,61 @@ class BotTests(unittest.TestCase):
 
         context = Context()
         context.set('server.url', 'http://here.you.go:123')
-        bot = ShellBot(context=context,
-                       space=LocalSpace(context=context))
+        bot = ShellBot(context=context)
+        bot.space=LocalSpace(bot=bot)
         server = mock.Mock()
         with mock.patch.object(bot.space,
                                'register',
                                return_value=None) as mocked:
             bot.hook(server=server)
             mocked.assert_called_with(hook_url='http://here.you.go:123/hook')
+
+    def test_get_hook(self):
+
+        logging.info('*** get_hook ***')
+
+        context = Context()
+        context.set('server.url', 'http://here.you.go:123')
+        bot = ShellBot(context=context)
+        bot.space=LocalSpace(bot=bot)
+        self.assertEqual(bot.get_hook(), bot.space.webhook)
+
+    def test_run(self):
+
+        logging.info('*** run ***')
+
+        bot = ShellBot()
+        bot.space=LocalSpace(bot=bot)
+
+        bot.start = mock.Mock()
+        bot.space.work = mock.Mock()
+
+        bot.run()
+        self.assertTrue(bot.start.called)
+        self.assertTrue(bot.space.work.called)
+
+        server = mock.Mock()
+        bot.run(server=server)
+        self.assertTrue(server.run.called)
+
+    def test_start(self):
+
+        logging.info('*** start ***')
+
+        bot = ShellBot()
+        bot.space=LocalSpace(bot=bot)
+
+        bot.start_processes = mock.Mock()
+        bot.say = mock.Mock()
+        bot.on_start = mock.Mock()
+
+        bot.start()
+        self.assertTrue(bot.ears is not None)
+        self.assertTrue(bot.inbox is not None)
+        self.assertTrue(bot.mouth is not None)
+        self.assertTrue(bot.start_processes.called)
+        self.assertTrue(bot.say.called)
+        self.assertTrue(bot.on_start.called)
 
     def test_static(self):
 
