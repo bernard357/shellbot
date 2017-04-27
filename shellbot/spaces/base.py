@@ -94,6 +94,8 @@ class Space(object):
             space.run()
     """
 
+    DEFAULT_SPACE_TITLE = u'Collaboration space'
+
     PULL_INTERVAL = 0.2  # time between pulls, when not hooked
 
     def __init__(self,
@@ -136,7 +138,7 @@ class Space(object):
         return to normal mode of operation.
         """
         self.id = None
-        self.title = '*unknown*'
+        self.title = self.DEFAULT_SPACE_TITLE
 
         self.hook_url = None
 
@@ -190,6 +192,19 @@ class Space(object):
         """
         pass
 
+    def configured_title(self):
+        """
+        Returns the title of the space as set in configuration
+
+        :return: the configured title, or ``Collaboration space``
+        :rtype: str
+
+        This function should be rewritten in sub-classes if
+        space title does not come from ``space.title`` parameter.
+        """
+        return  self.context.get(self.prefix+'.title',
+                                 self.DEFAULT_SPACE_TITLE)
+
     def connect(self, **kwargs):
         """
         Connects to the back-end API
@@ -232,8 +247,8 @@ class Space(object):
 
         """
 
-        if title is None:
-            title = self.context.get(self.prefix+'.title', 'My room')
+        if title in (None, ''):
+            title = self.configured_title()
 
         assert title not in (None, '')
         self.title = title
@@ -404,8 +419,8 @@ class Space(object):
         return to normal mode of operation.
         """
 
-        if self.title in (None, ''):
-            title = self.context.get(self.prefix+'.title')
+        if self.title in (None, '', self.DEFAULT_SPACE_TITLE):
+            title = self.configured_title()
         else:
             title = self.title
 
@@ -552,7 +567,7 @@ class Space(object):
                     time.sleep(self.PULL_INTERVAL)
 
                 except Exception as feedback:
-                    logging.debug(feedback)
+                    logging.exception(feedback)
                     break
 
         except KeyboardInterrupt:

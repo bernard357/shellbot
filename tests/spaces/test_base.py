@@ -41,7 +41,7 @@ class SpaceTests(unittest.TestCase):
         self.assertTrue(space.context is not None)
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
-        self.assertEqual(space.title, '*unknown*')
+        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space.hook_url, None)
 
         space = Space(context='c', weird='w')
@@ -50,7 +50,7 @@ class SpaceTests(unittest.TestCase):
             self.assertEqual(space.weird, 'w')
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
-        self.assertEqual(space.title, '*unknown*')
+        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space.hook_url, None)
 
         class ExSpace(Space):
@@ -78,7 +78,7 @@ class SpaceTests(unittest.TestCase):
         self.assertTrue(space.context is not None)
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
-        self.assertEqual(space.title, '*unknown*')
+        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space.hook_url, None)
         self.assertEqual(space._my_counter, 123)
 
@@ -90,7 +90,7 @@ class SpaceTests(unittest.TestCase):
         space.reset()
 
         self.assertEqual(space.id, None)
-        self.assertEqual(space.title, '*unknown*')
+        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space.hook_url, None)
         self.assertEqual(space._my_counter, 123)
 
@@ -116,6 +116,24 @@ class SpaceTests(unittest.TestCase):
 
         self.assertEqual(space.context.get('space.title'), None)
         self.assertEqual(space.context.get('space.key'), 'my value')
+
+    def test_configured_title(self):
+
+        logging.info("*** configured_title")
+
+        class ExSpace(Space):
+            def configured_title(self):
+                return self.context.get('spark.room', self.DEFAULT_SPACE_TITLE)
+
+        space = ExSpace()
+
+        self.assertEqual(space.configured_title(),
+                         space.DEFAULT_SPACE_TITLE)
+
+        settings = {'spark.room': 'my room'}
+
+        space.configure(settings=settings, do_check=False)
+        self.assertEqual(space.configured_title(), 'my room')
 
     def test_connect(self):
 
@@ -343,7 +361,7 @@ class SpaceTests(unittest.TestCase):
         logging.info("*** work")
 
         space = Space()
-        space.pull = mock.Mock(side_effect=Exception('unexpected exception'))
+        space.pull = mock.Mock(side_effect=Exception('Traced in log?'))
         space.work()
         self.assertEqual(space.context.get('puller.counter'), 0)
 

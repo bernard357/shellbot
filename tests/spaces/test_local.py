@@ -41,7 +41,7 @@ class LocalSpaceTests(unittest.TestCase):
         self.assertTrue(space.context is not None)
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
-        self.assertEqual(space.title, '*unknown*')
+        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space.hook_url, None)
         self.assertEqual(space.moderators, [])
         self.assertEqual(space.participants, [])

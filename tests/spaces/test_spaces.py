@@ -41,7 +41,7 @@ class SpaceFactoryTests(unittest.TestCase):
         self.assertEqual(space.token, 'hkNWEtMJNkODVGlZWU1NmYtyY')
         self.assertEqual(space.personal_token, '*personal*secret*token')
         self.assertEqual(space.id, None)   #  set after bond()
-        self.assertEqual(space.title, '*unknown*')
+        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space.teamId, None)
 
         context = Context(settings={   # referring to unknown environment
@@ -199,7 +199,7 @@ class SpaceFactoryTests(unittest.TestCase):
         self.assertTrue(space.context is not None)
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
-        self.assertEqual(space.title, '*unknown*')
+        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space.hook_url, None)
 
         space = SpaceFactory.get(type='space', context='c', weird='w')
@@ -208,7 +208,7 @@ class SpaceFactoryTests(unittest.TestCase):
             self.assertEqual(space.weird, 'w')
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
-        self.assertEqual(space.title, '*unknown*')
+        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space.hook_url, None)
 
     def test_get_local(self):
@@ -219,7 +219,7 @@ class SpaceFactoryTests(unittest.TestCase):
         self.assertTrue(space.context is not None)
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
-        self.assertEqual(space.title, '*unknown*')
+        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space.hook_url, None)
         self.assertEqual(space.moderators, [])
         self.assertEqual(space.participants, [])
@@ -233,7 +233,7 @@ class SpaceFactoryTests(unittest.TestCase):
         self.assertEqual(space.token, 'b')
         self.assertEqual(space.ears, 'c')
         self.assertEqual(space.id, None)
-        self.assertEqual(space.title, '*unknown*')
+        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space.teamId, None)
 
     def test_get_unknown(self):

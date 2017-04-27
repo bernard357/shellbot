@@ -77,7 +77,7 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertEqual(space.token, 'b')
         self.assertEqual(space.ears, 'c')
         self.assertEqual(space.id, None)
-        self.assertEqual(space.title, '*unknown*')
+        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space.teamId, None)
 
     def test_is_ready(self):
@@ -114,7 +114,7 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertEqual(space.token, 'hkNWEtMJNkODVGlZWU1NmYtyY')
         self.assertEqual(space.personal_token, '*personal*secret*token')
         self.assertEqual(space.id, None)   #  set after bond()
-        self.assertEqual(space.title, '*unknown*')
+        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space.teamId, None)
 
         space = SparkSpace(context=Context())
@@ -130,6 +130,9 @@ class SparkSpaceTests(unittest.TestCase):
                 'webhook': "http://73a1e282.ngrok.io",
             }
         })
+
+        self.assertEqual(space.configured_title(), 'My preferred room')
+
         self.assertEqual(space.context.get('spark.room'), 'My preferred room')
         self.assertEqual(space.context.get('spark.moderators'),
             ['foo.bar@acme.com', 'joe.bar@corporation.com'])
@@ -183,7 +186,7 @@ class SparkSpaceTests(unittest.TestCase):
 
             space.dispose()
             self.assertEqual(space.id, None)
-            self.assertEqual(space.title, '*unknown*')
+            self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
             self.assertEqual(space.team_id, None)
 
     def test_bond_mock(self):
@@ -328,14 +331,14 @@ class SparkSpaceTests(unittest.TestCase):
         # configured room, room exists
         space.api = FakeApi(rooms=[FakeRoom()])
         space.id = None
-        space.context.set('spark.title', '*title')
+        space.context.set('spark.room', '*title')
         space.delete_space()
         self.assertTrue(space.api.rooms.delete.called)
 
         # no information
         space.api = FakeApi(rooms=[FakeRoom()])
         space.id = None
-        space.context.set('spark.title', None)
+        space.context.set('spark.room', None)
         space.delete_space()
         self.assertFalse(space.api.rooms.delete.called)
 

@@ -138,6 +138,19 @@ class SparkSpace(Space):
         self.context.check('spark.token', filter=True)
         self.context.check('spark.personal_token', filter=True)
 
+    def configured_title(self):
+        """
+        Returns the title of the space as set in configuration
+
+        :return: the configured title, or ``Collaboration space``
+        :rtype: str
+
+        For Cisco Spark configurations, this is coming
+        from ``spark.room`` parameter.
+        """
+        return  self.context.get('spark.room',
+                                 self.DEFAULT_SPACE_TITLE)
+
     def connect(self):
         """
         Connects to the back-end API
@@ -256,6 +269,7 @@ class SparkSpace(Space):
 
         """
         logging.info(u"Bonding to room '{}'".format(room.title))
+
         self.id = room.id
         self.context.set(self.prefix+'.id', self.id)
         logging.debug(u"- id: {}".format(self.id))
@@ -346,9 +360,7 @@ class SparkSpace(Space):
         elif self.id and self.title:
             pass
 
-        elif (self.context.get(self.prefix+'.title')
-              and self.lookup_space(
-                    title=self.context.get(self.prefix+'.title'))):
+        elif self.lookup_space(title=self.configured_title()):
             pass
 
         else:

@@ -254,11 +254,46 @@ class BotTests(unittest.TestCase):
         context = Context()
         bot = ShellBot(context=context,
                        space=LocalSpace(context=context))
+
         with mock.patch.object(bot.space,
                                'dispose',
                                return_value=None) as mocked:
+
             bot.dispose(['a', 'b', 'c', 'd'])
             mocked.assert_called_with(['a', 'b', 'c', 'd'])
+
+        spark_settings = {
+
+            'bot': {
+                'on_start': 'Welcome to this on-demand collaborative room',
+                'on_stop': 'Bot is now quitting the room, bye',
+            },
+
+            'spark': {
+                'room': 'On-demand collaboration',
+                'moderators': 'bernard.paques@dimensiondata.com',
+                'token': '$SHELLY_TOKEN',
+            },
+
+            'server': {
+                'url': '$SERVER_URL',
+                'trigger': '/trigger',
+                'hook': '/hook',
+                'binding': '0.0.0.0',
+                'port': 8080,
+            },
+
+        }
+
+        bot.space = None
+        bot.configure(spark_settings)
+
+        with mock.patch.object(bot.space,
+                               'delete_space',
+                               return_value=None) as mocked:
+
+            bot.dispose()
+            mocked.assert_called_with(title='On-demand collaboration')
 
     def test_hook(self):
 
