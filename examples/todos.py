@@ -59,35 +59,35 @@ during development and test::
 
 """
 
-import logging
-from multiprocessing import Process, Queue
-import os
-import sys
-import time
-
-sys.path.insert(0, os.path.abspath('..'))
-
-from shellbot import ShellBot, Context, Command, Server
+from shellbot import ShellBot, Context
 Context.set_logger()
+
+#
+# create a bot and load commands
+#
+
+from todos import TodoFactory
+factory = TodoFactory([
+    'write down the driving question',
+    'gather facts and related information',
+    'identify information gaps and document assumptions',
+    'formulate scenarios',
+    'select the most appropriate scenario',
+])
+
+bot = ShellBot(commands=TodoFactory.commands())
+bot.factory = factory
 
 #
 # load configuration
 #
 
-settings = {
+bot.configure({
 
     'bot': {
         'on_start': 'You can manage items to do',
         'on_stop': 'Bot is now quitting the room, bye',
     },
-
-    'todos.items': [
-        'write down the driving question',
-        'gather facts and related information',
-        'identify information gaps and document assumptions',
-        'formulate scenarios',
-        'select the most appropriate scenario',
-    ],
 
     'spark': {
         'room': 'Manage Todos',
@@ -102,26 +102,10 @@ settings = {
         'port': 8080,
     },
 
-}
-
-context = Context(settings)
+})
 
 #
-# create a bot and load commands
-#
-
-bot = ShellBot(context=context,
-               configure=True,
-               ears=Queue(),
-               inbox=Queue(),
-               mouth=Queue())
-
-from todos import TodoFactory
-bot.factory = TodoFactory(bot.context.get('todos.items', []))
-bot.load_commands(TodoFactory.commands())
-
-#
-# initialise a suitable chat room
+# initialise a chat room
 #
 
 bot.bond(reset=True)
@@ -130,12 +114,10 @@ bot.bond(reset=True)
 # run the bot
 #
 
-server = None
+bot.run()
 
-if context.get('server.binding') is not None:
-    server = Server(context=context, check=True)
-    bot.hook(server=server)
-
-bot.run(server=server)
+#
+# delete the chat room
+#
 
 bot.space.dispose()

@@ -51,14 +51,12 @@ during development and test::
 """
 
 import logging
-import os
+#import os
 from multiprocessing import Process, Queue
-import sys
+#import sys
 import time
 
-sys.path.insert(0, os.path.abspath('..'))
-
-from shellbot import ShellBot, Context, Command, Server, Notify, Wrap
+from shellbot import ShellBot, Context, Server, Notify, Wrap
 Context.set_logger()
 
 #
@@ -128,14 +126,10 @@ context.check('server.hook', '/hook')
 # create a bot and load commands
 #
 
-bot = ShellBot(context=context,
-               configure=True,
-               ears=Queue(),
-               inbox=Queue(),
-               mouth=Queue())
+bot = ShellBot(context=context, configure=True)
 
 from shellbot.commands import Close
-bot.load_command(Close())  # allow for space deletion from the chat
+bot.load_command(Close())  # allow space deletion from the chat
 
 from steps import StepsFactory, Steps
 bot.steps = Steps(context=context, configure=True)
@@ -170,15 +164,14 @@ class Trigger(object):
 
     def __init__(self, bot, queue):
         self.bot = bot
-        self.context = bot.context
         self.queue = queue if queue else Queue()
 
     def work(self):
         logging.info(u"Waiting for trigger")
 
         try:
-            self.context.set('trigger.counter', 0)
-            while self.context.get('general.switch', 'on') == 'on':
+            self.bot.context.set('trigger.counter', 0)
+            while self.bot.context.get('general.switch', 'on') == 'on':
 
                 if self.queue.empty():
                     time.sleep(self.EMPTY_DELAY)
@@ -188,7 +181,7 @@ class Trigger(object):
                     item = self.queue.get(True, self.EMPTY_DELAY)
                     if isinstance(item, Exception):
                         break
-                    counter = self.context.increment('trigger.counter')
+                    counter = self.bot.context.increment('trigger.counter')
 
                     self.process(item, counter)
 
@@ -212,9 +205,11 @@ class Trigger(object):
 # launch multiple processes to do the job
 #
 
+bot.start()
+
 trigger = Trigger(bot, queue)
 p = Process(target=trigger.work)
+p.daemon = True
 p.start()
 
-bot.start()
 server.run()

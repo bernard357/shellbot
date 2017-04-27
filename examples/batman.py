@@ -56,54 +56,12 @@ during development and test::
 Credit: https://developer.ciscospark.com/blog/blog-details-8110.html
 """
 
-import logging
-from multiprocessing import Process, Queue
-import os
-import sys
-import time
-
-sys.path.insert(0, os.path.abspath('..'))
-
-from shellbot import ShellBot, Context, Command, Server
+from shellbot import ShellBot, Context, Command
 Context.set_logger()
-
-#
-# load configuration
-#
-
-settings = {
-
-    'bot': {
-        'on_start': 'You can now chat with Batman',
-        'on_stop': 'Batman is now quitting the room, bye',
-    },
-
-    'spark': {
-        'room': 'Chat with Batman',
-        'moderators': 'bernard.paques@dimensiondata.com',
-        'token': '$SHELLY_TOKEN',
-    },
-
-    'server': {
-        'url': '$SERVER_URL',
-        'hook': '/hook',
-        'binding': '0.0.0.0',
-        'port': 8080,
-    },
-
-}
-
-context = Context(settings)
 
 #
 # create a bot and load commands
 #
-
-bot = ShellBot(context=context,
-               configure=True,
-               ears=Queue(),
-               inbox=Queue(),
-               mouth=Queue())
 
 class Batman(Command):
     keyword = 'whoareyou'
@@ -142,10 +100,36 @@ class Batsuicide(Command):
         self.bot.stop()
 
 
-bot.load_commands([Batman(), Batcave(), Batsignal(), Batsuicide()])
+bot = ShellBot(commands=[Batman(), Batcave(), Batsignal(), Batsuicide()])
 
 #
-# initialise a suitable chat room
+# load configuration
+#
+
+bot.configure({
+
+    'bot': {
+        'on_start': 'You can now chat with Batman',
+        'on_stop': 'Batman is now quitting the room, bye',
+    },
+
+    'spark': {
+        'room': 'Chat with Batman',
+        'moderators': 'bernard.paques@dimensiondata.com',
+        'token': '$SHELLY_TOKEN',
+    },
+
+    'server': {
+        'url': '$SERVER_URL',
+        'hook': '/hook',
+        'binding': '0.0.0.0',
+        'port': 8080,
+    },
+
+})
+
+#
+# initialise a chat room
 #
 
 bot.bond(reset=True)
@@ -154,12 +138,10 @@ bot.bond(reset=True)
 # run the bot
 #
 
-server = None
+bot.run()
 
-if context.get('server.binding') is not None:
-    server = Server(context=context, check=True)
-    bot.hook(server=server)
+#
+# delete the chat room
+#
 
-bot.run(server=server)
-
-bot.space.dispose()
+bot.dispose()

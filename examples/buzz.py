@@ -46,22 +46,27 @@ during development and test::
 
 """
 
-import logging
-from multiprocessing import Process, Queue
-import os
-import sys
-import time
+#import logging
+#from multiprocessing import Process, Queue
+#import os
+#import sys
+#import time
 
-sys.path.insert(0, os.path.abspath('..'))
-
-from shellbot import ShellBot, Context, Command, Server
+from shellbot import ShellBot, Context
 Context.set_logger()
+
+#
+# create a bot and load commands
+#
+
+from planets import PlanetFactory
+bot = ShellBot(commands=PlanetFactory.commands())
 
 #
 # load configuration
 #
 
-settings = {
+bot.configure({
 
     'bot': {
         'on_start': 'Hello Buzz, welcome to Cape Canaveral',
@@ -92,25 +97,10 @@ settings = {
         'port': 8080,
     },
 
-}
-
-context = Context(settings)
+})
 
 #
-# create a bot and load commands
-#
-
-bot = ShellBot(context=context,
-               configure=True,
-               ears=Queue(),
-               inbox=Queue(),
-               mouth=Queue())
-
-from planets import PlanetFactory
-bot.load_commands(PlanetFactory.commands())
-
-#
-# initialise a suitable chat room
+# initialise a chat room
 #
 
 bot.bond(reset=True)
@@ -119,12 +109,10 @@ bot.bond(reset=True)
 # run the bot
 #
 
-server = None
+bot.run()
 
-if context.get('server.binding') is not None:
-    server = Server(context=context, check=True)
-    bot.hook(server=server)
-
-bot.run(server=server)
+#
+# delete the chat room
+#
 
 bot.dispose()
