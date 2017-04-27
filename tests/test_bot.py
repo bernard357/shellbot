@@ -272,7 +272,7 @@ class BotTests(unittest.TestCase):
             'spark': {
                 'room': 'On-demand collaboration',
                 'moderators': 'bernard.paques@dimensiondata.com',
-                'token': '$SHELLY_TOKEN',
+                'token': '<bot token here>',
             },
 
             'server': {
