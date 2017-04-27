@@ -49,7 +49,7 @@ class ShellTests(unittest.TestCase):
             }
         })
 
-        self.assertEqual(shell.context.get('shell.commands'),
+        self.assertEqual(shell.bot.context.get('shell.commands'),
             ['shellbot.commands.help', 'shellbot.commands.noop'])
 
     def test_load_command(self):
@@ -195,7 +195,7 @@ class ShellTests(unittest.TestCase):
         with self.assertRaises(Exception):
             shell.bot.mouth.get_nowait()
         with self.assertRaises(Exception):
-            shell.inbox.get_nowait()
+            shell.bot.inbox.get_nowait()
 
         shell.do('echo hello world')
         self.assertEqual(shell.line, 'echo hello world')
@@ -204,7 +204,7 @@ class ShellTests(unittest.TestCase):
         with self.assertRaises(Exception):
             shell.bot.mouth.get_nowait()
         with self.assertRaises(Exception):
-            shell.inbox.get_nowait()
+            shell.bot.inbox.get_nowait()
 
         shell.do('help help')
         self.assertEqual(shell.line, 'help help')
@@ -215,7 +215,7 @@ class ShellTests(unittest.TestCase):
         with self.assertRaises(Exception):
             print(shell.bot.mouth.get_nowait())
         with self.assertRaises(Exception):
-            shell.inbox.get_nowait()
+            shell.bot.inbox.get_nowait()
 
         shell.do('pass')
         self.assertEqual(shell.line, 'pass')
@@ -223,29 +223,29 @@ class ShellTests(unittest.TestCase):
         with self.assertRaises(Exception):
             shell.bot.mouth.get_nowait()
         with self.assertRaises(Exception):
-            shell.inbox.get_nowait()
+            shell.bot.inbox.get_nowait()
 
         shell.do('sleep 123')
         self.assertEqual(shell.line, 'sleep 123')
         self.assertEqual(shell.count, 5)
-        shell.context.set('worker.busy', True)
+        shell.bot.context.set('worker.busy', True)
         shell.do('sleep 456')
         self.assertEqual(shell.line, 'sleep 456')
         self.assertEqual(shell.count, 6)
-        shell.context.set('worker.busy', False)
+        shell.bot.context.set('worker.busy', False)
         self.assertEqual(shell.bot.mouth.get(), 'Ok, working on it')
         self.assertEqual(shell.bot.mouth.get(),
                          'Ok, will work on it as soon as possible')
         with self.assertRaises(Exception):
             print(shell.bot.mouth.get_nowait())
-        (command, arguments) = shell.inbox.get()
+        (command, arguments) = shell.bot.inbox.get()
         self.assertEqual(command, 'sleep')
         self.assertEqual(arguments, '123')
-        (command, arguments) = shell.inbox.get()
+        (command, arguments) = shell.bot.inbox.get()
         self.assertEqual(command, 'sleep')
         self.assertEqual(arguments, '456')
         with self.assertRaises(Exception):
-            shell.inbox.get_nowait()
+            shell.bot.inbox.get_nowait()
 
         shell.do('version')
         self.assertEqual(shell.line, 'version')
@@ -254,7 +254,7 @@ class ShellTests(unittest.TestCase):
         with self.assertRaises(Exception):
             shell.bot.mouth.get_nowait()
         with self.assertRaises(Exception):
-            shell.inbox.get_nowait()
+            shell.bot.inbox.get_nowait()
 
         shell.do('')
         self.assertEqual(shell.line, '')
@@ -266,7 +266,7 @@ class ShellTests(unittest.TestCase):
         with self.assertRaises(Exception):
             print(shell.bot.mouth.get_nowait())
         with self.assertRaises(Exception):
-            shell.inbox.get_nowait()
+            shell.bot.inbox.get_nowait()
 
     def test_empty(self):
 

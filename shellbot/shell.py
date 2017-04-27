@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from builtins import str
 import logging
 from six import string_types
 import importlib
@@ -27,17 +28,15 @@ class Shell(object):
 
     def __init__(self, bot):
         self.bot = bot
-        self.context = bot.context
-        self.inbox = bot.inbox
 
         self._commands = {}
-        self.load_commands(self.context.get('shell.commands', []))
+        self.load_commands(self.bot.context.get('shell.commands', []))
 
         self.line = None
         self.count = 0
         self.verb = None
 
-    def configure(self, settings):
+    def configure(self, settings={}):
         """
         Checks settings of the shell
 
@@ -62,11 +61,11 @@ class Shell(object):
         loaded previously.
         """
 
-        self.context.apply(settings)
-        self.context.check('shell.commands', default=[])
+        self.bot.context.apply(settings)
+        self.bot.context.check('shell.commands', default=[])
 
         self.load_default_commands()
-        self.load_commands(self.context.get('shell.commands'))
+        self.load_commands(self.bot.context.get('shell.commands'))
 
     def say(self, *args, **kwargs):
         """
@@ -199,7 +198,7 @@ class Shell(object):
             logging.debug(u"Command '{}' has been replaced".format(
                 command.keyword))
 
-        command.context = self.context
+        command.context = self.bot.context
         command.shell = self
         command.bot = self.bot
 
@@ -221,7 +220,7 @@ class Shell(object):
         Default implementation is provided in ``shellbot.commands.empty``.
 
         """
-        line = line if line else ''  # sanity check
+        line = str(line) if line else ''  # sanity check
 
         logging.info(u"Handling: {}".format(line))
         self.line = line
@@ -244,11 +243,11 @@ class Shell(object):
                     self.verb = verb
                     command.execute(arguments)
                 else:
-                    if not self.context.get('worker.busy', False):
+                    if not self.bot.context.get('worker.busy', False):
                         self.say(u"Ok, working on it")
                     else:
                         self.say(u"Ok, will work on it as soon as possible")
-                    self.inbox.put((command.keyword, arguments))
+                    self.bot.inbox.put((command.keyword, arguments))
 
             elif '*default' in self._commands.keys():
                 command = self._commands['*default']
@@ -256,11 +255,11 @@ class Shell(object):
                     self.verb = verb
                     command.execute(arguments)
                 else:
-                    if not self.context.get('worker.busy', False):
+                    if not self.bot.context.get('worker.busy', False):
                         self.say(u"Ok, working on it")
                     else:
                         self.say(u"Ok, will work on it as soon as possible")
-                    self.inbox.put((verb, arguments))
+                    self.bot.inbox.put((verb, arguments))
 
             else:
                 self.say(
