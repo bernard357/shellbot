@@ -31,45 +31,40 @@ class Space(object):
 
     The life cycle of a space can be described as follows::
 
-    1. A space instance is created and configured
+    1. A space instance is created and configured::
 
-       >>>context = Context(settings)
-       >>>space = Space(context=context)
+           >>>bot = ShellBot(...)
+           >>>space = Space(bot=bot)
 
-       or::
+    2. The space is connected to some back-end API::
 
-       >>>space = Space()
-       >>>space.configure(settings)
+           >>>space.connect()
 
-    2. The space is connected to some back-end API
+    3. The space is shadowed in the cloud::
 
-       >>>space.connect()
+           >>>space.bond()
+           >>>space.is_ready
+           True
 
-    3. The space is shadowed in the cloud
+       In some cases, the space can be disposed first, and recreated later on::
 
-       >>>space.bond()
-       >>>space.is_ready
-       True
+           >>>space.dispose()
+           >>>space.is_ready
+           False
 
-       In some cases, the space can be disposed first, and recreated later on.
+           ...
 
-       >>>space.dispose()
-       >>>space.is_ready
-       False
+           >>>space.bond()
+           >>>space.is_ready
+           True
 
-       ...
+    4. Messages can be posted::
 
-       >>>space.bond()
-       >>>space.is_ready
-       True
+           >>>space.post_message('Hello, World!')
 
-    4. Messages can be posted
+    5. When the space is coming end of life, all resources can be disposed::
 
-       >>>space.post_message('Hello, World!')
-
-    5. When the space is coming end of life, all resources can be disposed:
-
-       >>space.dispose()
+           >>space.dispose()
 
 
     Multiple modes can be considered for the handling of inbound
@@ -99,7 +94,7 @@ class Space(object):
     PULL_INTERVAL = 0.2  # time between pulls, when not hooked
 
     def __init__(self,
-                 context=None,
+                 bot=None,
                  **kwargs):
         """
         Handles a collaborative space
@@ -108,7 +103,7 @@ class Space(object):
         :type context: Context
 
         """
-        self.context = context if context else Context()
+        self.bot = bot
 
         self.prefix = 'space'
 
@@ -171,7 +166,7 @@ class Space(object):
         After a call to this function, ``bond()`` has to be invoked to
         return to normal mode of operation.
         """
-        self.context.apply(settings)
+        self.bot.context.apply(settings)
 
         if do_check:
             self.check()
@@ -187,7 +182,7 @@ class Space(object):
         Example::
 
             def check(self):
-                self.context.check(self.prefix+'.title', is_mandatory=True)
+                self.bot.context.check(self.prefix+'.title', is_mandatory=True)
 
         """
         pass
@@ -202,8 +197,8 @@ class Space(object):
         This function should be rewritten in sub-classes if
         space title does not come from ``space.title`` parameter.
         """
-        return  self.context.get(self.prefix+'.title',
-                                 self.DEFAULT_SPACE_TITLE)
+        return  self.bot.context.get(self.prefix+'.title',
+                                     self.DEFAULT_SPACE_TITLE)
 
     def connect(self, **kwargs):
         """
@@ -260,11 +255,11 @@ class Space(object):
             self.create_space(title=title, **kwargs)
 
             if moderators is None:
-                moderators = self.context.get(self.prefix+'.moderators', [])
+                moderators = self.bot.context.get(self.prefix+'.moderators', [])
             self.add_moderators(moderators)
 
             if participants is None:
-                participants = self.context.get(
+                participants = self.bot.context.get(
                     self.prefix+'.participants', [])
             self.add_participants(participants)
 
@@ -292,7 +287,7 @@ class Space(object):
         :return: True or False
         """
         if self.id is None:
-            self.id = self.context.get(self.prefix+'.id')
+            self.id = self.bot.context.get(self.prefix+'.id')
 
         if self.id is None:
             return False
@@ -558,12 +553,12 @@ class Space(object):
         logging.info(u'Starting puller')
 
         try:
-            self.context.set('puller.counter', 0)
-            while self.context.get('general.switch', 'on') == 'on':
+            self.bot.context.set('puller.counter', 0)
+            while self.bot.context.get('general.switch', 'on') == 'on':
 
                 try:
                     self.pull()
-                    self.context.increment('puller.counter')
+                    self.bot.context.increment('puller.counter')
                     time.sleep(self.PULL_INTERVAL)
 
                 except Exception as feedback:

@@ -50,9 +50,9 @@ class LocalSpace(Space):
         """
         Checks that valid settings are available
         """
-        self.context.check(self.prefix+'.title', is_mandatory=True)
-        self.context.check(self.prefix+'.moderators', [])
-        self.context.check(self.prefix+'.participants', [])
+        self.bot.context.check(self.prefix+'.title', is_mandatory=True)
+        self.bot.context.check(self.prefix+'.moderators', [])
+        self.bot.context.check(self.prefix+'.participants', [])
 
     def on_bond(self):
         """

@@ -11,7 +11,7 @@ import time
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context
+from shellbot import Context, ShellBot
 from shellbot.spaces import SpaceFactory
 
 
@@ -21,7 +21,7 @@ class SpaceFactoryTests(unittest.TestCase):
 
         logging.info("*** build")
 
-        context = Context(settings={  # from settings to member attributes
+        bot = ShellBot(settings={  # from settings to member attributes
             'spark': {
                 'room': 'My preferred room',
                 'moderators':
@@ -35,32 +35,28 @@ class SpaceFactoryTests(unittest.TestCase):
             }
         })
 
-        space = SpaceFactory.build(context, ex_ears='c')
-        self.assertEqual(space.context, context)
-        self.assertEqual(space.ears, 'c')
+        space = SpaceFactory.build(bot=bot)
         self.assertEqual(space.token, 'hkNWEtMJNkODVGlZWU1NmYtyY')
         self.assertEqual(space.personal_token, '*personal*secret*token')
         self.assertEqual(space.id, None)   #  set after bond()
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space.teamId, None)
 
-        context = Context(settings={   # referring to unknown environment
-            'spark': {
-                'room': 'My preferred room',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
-                'participants':
-                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
-                'team': 'Anchor team',
-                'token': 'hkNWEtMJNkODVGlZWU1NmYtyY',
-                'personal_token': '$MY_FUZZY_SPARK_TOKEN',
-                'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
-                'webhook': "http://73a1e282.ngrok.io",
-            }
-        })
-
         with self.assertRaises(AttributeError):
-            space = SpaceFactory.build(context, ex_ears='c')
+            bot = ShellBot(settings={   # referring to unknown environment
+                'spark': {
+                    'room': 'My preferred room',
+                    'moderators':
+                        ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+                    'participants':
+                        ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+                    'team': 'Anchor team',
+                    'token': 'hkNWEtMJNkODVGlZWU1NmYtyY',
+                    'personal_token': '$MY_FUZZY_SPARK_TOKEN',
+                    'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
+                    'webhook': "http://73a1e282.ngrok.io",
+                }
+            })
 
     def test_sense(self):
 
@@ -196,14 +192,14 @@ class SpaceFactoryTests(unittest.TestCase):
         logging.info("*** get('space')")
 
         space = SpaceFactory.get(type='space')
-        self.assertTrue(space.context is not None)
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space.hook_url, None)
 
         space = SpaceFactory.get(type='space', context='c', weird='w')
-        self.assertEqual(space.context, 'c')
+        with self.assertRaises(AttributeError):
+            self.assertEqual(space.context, 'c')
         with self.assertRaises(AttributeError):
             self.assertEqual(space.weird, 'w')
         self.assertEqual(space.prefix, 'space')
@@ -216,7 +212,6 @@ class SpaceFactoryTests(unittest.TestCase):
         logging.info("*** get('local')")
 
         space = SpaceFactory.get(type='local')
-        self.assertTrue(space.context is not None)
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
@@ -228,10 +223,9 @@ class SpaceFactoryTests(unittest.TestCase):
 
         logging.info("*** get('spark')")
 
-        space = SpaceFactory.get(type='spark', ex_token='b', ex_ears='c')
-        self.assertTrue(space.context is not None)
+        bot = ShellBot()
+        space = SpaceFactory.get(type='spark', bot=bot, ex_token='b')
         self.assertEqual(space.token, 'b')
-        self.assertEqual(space.ears, 'c')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space.teamId, None)

@@ -34,22 +34,17 @@ class SparkSpace(Space):
 
     def on_init(self,
                 ex_token=None,
-                ex_ears=None,
                 **kwargs):
         """
         Handles extended initialisation parameters
 
         :param ex_token: authentication token for the Cisco Spark API
 
-        :param ex_ears: queue for inbound messages
-
         """
         self.prefix = 'spark'
 
         if ex_token is not None:
-            self.context.set('spark.token', ex_token)
-
-        self.ears = ex_ears if ex_ears else Queue()
+            self.bot.context.set('spark.token', ex_token)
 
     def on_reset(self):
         """
@@ -57,8 +52,10 @@ class SparkSpace(Space):
         """
         self.teamId = None
 
-        self.token = self.context.get('spark.token', '*void')
-        self.personal_token = self.context.get('spark.personal_token', '*void')
+        self.token = self.bot.context.get('spark.token', '*void')
+        self.personal_token = self.bot.context.get('spark.personal_token', '*void')
+
+        self._last_message_id = 0
 
     def check(self):
         """
@@ -110,33 +107,33 @@ class SparkSpace(Space):
         ['bobby@jah.com']
 
         """
-        values = self.context.get('spark.moderators')
+        values = self.bot.context.get('spark.moderators')
         if isinstance(values, string_types):
-            self.context.set('spark.moderators', [values])
+            self.bot.context.set('spark.moderators', [values])
 
-        values = self.context.get('spark.participants')
+        values = self.bot.context.get('spark.participants')
         if isinstance(values, string_types):
-            self.context.set('spark.participants', [values])
+            self.bot.context.set('spark.participants', [values])
 
-        if self.context.get('spark.personal_token') is None:
+        if self.bot.context.get('spark.personal_token') is None:
             token = os.environ.get('CISCO_SPARK_TOKEN')
             if token:
-                self.context.set('spark.personal_token', token)
+                self.bot.context.set('spark.personal_token', token)
 
-        if self.context.get('spark.token') is None:
+        if self.bot.context.get('spark.token') is None:
             token1 = os.environ.get('CISCO_SPARK_BOT_TOKEN')
-            token2 = self.context.get('spark.personal_token')
+            token2 = self.bot.context.get('spark.personal_token')
             if token1:
-                self.context.set('spark.token', token1)
+                self.bot.context.set('spark.token', token1)
             elif token2:
-                self.context.set('spark.token', token2)
+                self.bot.context.set('spark.token', token2)
 
-        self.context.check('spark.room', is_mandatory=True)
-        self.context.check('spark.moderators', [])
-        self.context.check('spark.participants', [])
-        self.context.check('spark.team')
-        self.context.check('spark.token', filter=True)
-        self.context.check('spark.personal_token', filter=True)
+        self.bot.context.check('spark.room', is_mandatory=True)
+        self.bot.context.check('spark.moderators', [])
+        self.bot.context.check('spark.participants', [])
+        self.bot.context.check('spark.team')
+        self.bot.context.check('spark.token', filter=True)
+        self.bot.context.check('spark.personal_token', filter=True)
 
     def configured_title(self):
         """
@@ -148,7 +145,7 @@ class SparkSpace(Space):
         For Cisco Spark configurations, this is coming
         from ``spark.room`` parameter.
         """
-        return  self.context.get('spark.room',
+        return  self.bot.context.get('spark.room',
                                  self.DEFAULT_SPACE_TITLE)
 
     def connect(self):
@@ -182,11 +179,11 @@ class SparkSpace(Space):
 
         try:
             bot = self.get_bot()
-            self.context.set('bot.name', str(bot.displayName.split(' ')[0]))
-            logging.debug(u"Bot name: {}".format(self.context.get('bot.name')))
+            self.bot.context.set('bot.name', str(bot.displayName.split(' ')[0]))
+            logging.debug(u"Bot name: {}".format(self.bot.context.get('bot.name')))
 
             self.bot_id = bot.id
-            self.context.set('bot.id', bot.id)
+            self.bot.context.set('bot.id', bot.id)
 
         except Exception as feedback:
             logging.warning(u"Unable to retrieve bot id")
@@ -271,11 +268,11 @@ class SparkSpace(Space):
         logging.info(u"Bonding to room '{}'".format(room.title))
 
         self.id = room.id
-        self.context.set(self.prefix+'.id', self.id)
+        self.bot.context.set(self.prefix+'.id', self.id)
         logging.debug(u"- id: {}".format(self.id))
 
         self.title = room.title
-        self.context.set(self.prefix+'.title', self.title)
+        self.bot.context.set(self.prefix+'.title', self.title)
         logging.debug(u"- title: {}".format(self.title))
 
         self.teamId = room.teamId
@@ -415,7 +412,7 @@ class SparkSpace(Space):
         logging.info(u"Posting message")
 
         if self.id is None:
-            self.id = self.context.get(self.prefix+'.id')
+            self.id = self.bot.context.get(self.prefix+'.id')
 
         logging.debug(u"- text: {}".format(text))
 
@@ -440,6 +437,7 @@ class SparkSpace(Space):
 
         This function registers the provided hook to Cisco Spark.
         """
+        assert self.is_ready
         assert hook_url is not None
 
         logging.info(u"Registering webhook to Cisco Spark")
@@ -456,13 +454,17 @@ class SparkSpace(Space):
 
         except Exception as feedback:
             logging.warning(u"Unable to add webhook")
-            logging.warning(feedback)
+            logging.exception(feedback)
 
-    def webhook(self):
+    def webhook(self, message_id=None):
         """
         Processes the flow of events from Cisco Spark
 
-        This function is called from far far away, over the Internet
+        :param message_id: if provided, do not invoke the request object
+
+        This function is called from far far away, over the Internet,
+        when message_id is None, or locally, from test environment, when
+        message_id has a value.
         """
 
         try:
@@ -471,7 +473,8 @@ class SparkSpace(Space):
 
             # step 1 -- we got message id, but no content
             #
-            message_id = request.json['data']['id']
+            if not message_id:
+                message_id = request.json['data']['id']
 
             # step 2 -- get the message itself
             #
@@ -479,9 +482,9 @@ class SparkSpace(Space):
 
             # step 3 -- push it in the handling queue
             #
-            self.ears.put(item._json)
+            self.bot.ears.put(item._json)
 
-            return "OK\n"
+            return "OK"
 
         except Exception as feedback:
             logging.error(u"ABORTED: fatal error has been encountered")
@@ -496,8 +499,10 @@ class SparkSpace(Space):
         to a processing queue.
         """
 
+        assert self.is_ready
+
         logging.info(u'Pulling messages')
-        self.context.increment(u'puller.counter')
+        self.bot.context.increment(u'puller.counter')
 
         new_items = []
         try:
@@ -523,7 +528,7 @@ class SparkSpace(Space):
         while len(new_items):
             item = new_items.pop()
             self._last_message_id = item.id
-            self.ears.put(message._json)
+            self.bot.ears.put(item._json)
 
     def get_bot(self):
         """
