@@ -28,16 +28,15 @@ class State(Command):
 
     keyword = u'state'
     information_message = u'Display current state in process'
-    steps = None
 
     def execute(self, arguments=None):
         """
         Displays process status
         """
-        if self.steps is None:
+        if self.bot.steps is None:
             raise AttributeError(u'State machine has not been initialised')
 
-        step = self.steps.step
+        step = self.bot.steps.step
         if step is None:
             self.bot.say(u"Current state is undefined")
         else:

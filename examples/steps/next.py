@@ -28,17 +28,16 @@ class Next(Command):
 
     keyword = u'next'
     information_message = u'Move process to next state'
-    steps = None
 
     def execute(self, arguments=None):
         """
         Moves process to next state
         """
-        if self.steps is None:
+        if self.bot.steps is None:
             raise AttributeError(u'State machine has not been initialised')
 
-        current = self.steps.step
-        new = self.steps.next()
+        current = self.bot.steps.step
+        new = self.bot.steps.next()
         if new is None:
             self.bot.say(u"Current state is undefined")
             return

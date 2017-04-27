@@ -23,6 +23,8 @@ import importlib
 
 sys.path.insert(0, os.path.abspath('..'))
 
+from shellbot import Context
+
 
 class Step(object):
     """
@@ -59,20 +61,20 @@ class Steps(object):
 
     def __init__(self,
                  context=None,
-                 check=False):
+                 configure=False):
         """
         Handles successive steps in a linear process
 
         :param context: global context for this process
         :type context: Context
 
-        :param check: True to check configuration settings
-        :type check: bool
+        :param configure: True to check configuration settings
+        :type configure: bool
 
         """
-        self.context = Context() if context is None else context
+        self.context = context if context else Context()
 
-        if check:
+        if configure:
             self.configure()
 
     def configure(self, settings={}):

@@ -134,12 +134,12 @@ bot = ShellBot(context=context,
                inbox=Queue(),
                mouth=Queue())
 
-from steps import Steps, State, Next
-steps = Steps(context=context, check=True)
-
 from shellbot.commands import Close
+bot.load_command(Close())  # allow for space deletion from the chat
 
-bot.load_commands([State(steps=steps), Next(steps=steps), Close(bot=bot)])
+from steps import StepsFactory, Steps
+bot.steps = Steps(context=context, configure=True)
+bot.load_commands(StepsFactory.commands())
 
 #
 # a queue of events between the web server and the bot
@@ -166,6 +166,8 @@ server.add_route(Wrap(callable=bot.get_hook(),
 
 class Trigger(object):
 
+    EMPTY_DELAY = 0.005   # time to wait if queue is empty
+
     def __init__(self, bot, queue):
         self.bot = bot
         self.context = bot.context
@@ -177,18 +179,21 @@ class Trigger(object):
         try:
             self.context.set('trigger.counter', 0)
             while self.context.get('general.switch', 'on') == 'on':
+
                 if self.queue.empty():
-                    time.sleep(0.005)
+                    time.sleep(self.EMPTY_DELAY)
                     continue
+
                 try:
-                    item = self.queue.get(True, 0.1)
+                    item = self.queue.get(True, self.EMPTY_DELAY)
                     if isinstance(item, Exception):
                         break
                     counter = self.context.increment('trigger.counter')
+
                     self.process(item, counter)
+
                 except Exception as feedback:
-                    logging.debug(feedback)
-                    break
+                    logging.exception(feedback)
 
         except KeyboardInterrupt:
             pass
