@@ -2,20 +2,20 @@
 Shellbot
 ========
 
-.. image:: https://img.shields.io/pypi/v/shellbot.svg
-        :target: https://pypi.python.org/pypi/shellbot
-
-.. image:: https://img.shields.io/travis/bernard357/shellbot.svg
-        :target: https://travis-ci.org/bernard357/shellbot
-
 .. image:: https://readthedocs.org/projects/shellbot-for-cisco-spark/badge/?version=latest
    :target: http://shellbot-for-cisco-spark.readthedocs.io/en/latest/?badge=latest
 
-.. image:: https://img.shields.io/pypi/l/shellbot.svg?maxAge=2592000
+.. image:: https://img.shields.io/pypi/v/shellbot.svg
    :target: https://pypi.python.org/pypi/shellbot
 
+.. image:: https://img.shields.io/travis/bernard357/shellbot.svg
+   :target: https://travis-ci.org/bernard357/shellbot
+
 .. image:: https://img.shields.io/pypi/pyversions/shellbot.svg?maxAge=2592000
-   :target: https://pypi.python.org/pypi/shellbot
+   :target: https://www.python.org/
+
+.. image:: https://img.shields.io/pypi/l/shellbot.svg?maxAge=2592000
+   :target: http://www.apache.org/licenses/LICENSE-2.0
 
 
 Fast, simple and lightweight micro bot-framework for Python.
