@@ -27,15 +27,7 @@ On Windows:
 Upgrade the shellbot package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Use the following command to retrieve the version of shellbot that has been
-installed on a computer:
-
-.. sourcecode:: bash
-
-    $ python -m shellbot -v
-
-You can compare this information with reference information posted at
-`Shellbot package at PiPy`_. If you have used pip to install the software,
+If you have used pip to install the software,
 then you can use it again to upgrade the package:
 
 .. sourcecode:: bash
@@ -54,5 +46,3 @@ here is the command to remove Shellbot from a python environment:
 
 .. _`available on PyPi`: https://pypi.python.org/pypi/shellbot
 .. _`Shellbot package at PiPy`: https://pypi.python.org/pypi/shellbot
-
-
