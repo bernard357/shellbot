@@ -21,7 +21,7 @@ class Drop(Command):
     """
     Deletes an item from the todo list
 
-    >>>command = Drop(store=store)
+    >>>command = Drop()
     >>>shell.load_command(command)
 
     """
@@ -29,27 +29,26 @@ class Drop(Command):
     keyword = u'drop'
     information_message = u'Delete an item from the todo list'
     usage_message = u'drop [#<n>]'
-    store = None
 
     def execute(self, arguments=None):
         """
         Deletes an item from the todo list
         """
-        if self.store is None:
-            raise AttributeError(u'Todo store has not been initialised')
+        if self.bot.factory is None:
+            raise AttributeError(u'Todo factory has not been initialised')
 
         if arguments in (None, ''):
             index = 1
         else:
-            index = self.store.parse(arguments)
+            index = self.bot.factory.parse(arguments)
 
         if index is None:
             self.bot.say(u"usage: {}".format(self.usage_message))
             return
 
-        if index > len(self.store.items):
+        if index > len(self.bot.factory.items):
             self.bot.say(u"Nothing to do yet.")
 
         else:
-            self.store.delete(index)
+            self.bot.factory.delete(index)
             self.bot.say(u"#{} has been deleted".format(index))

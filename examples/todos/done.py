@@ -21,7 +21,7 @@ class Done(Command):
     """
     Archives an item from the todo list
 
-    >>>command = Done(store=store)
+    >>>command = Done()
     >>>shell.load_command(command)
 
     """
@@ -29,27 +29,26 @@ class Done(Command):
     keyword = u'done'
     information_message = u'Archive an item from the todo list'
     usage_message = u'done [#<n>]'
-    store = None
 
     def execute(self, arguments=None):
         """
         Archives an item from the todo list
         """
-        if self.store is None:
-            raise AttributeError(u'Todo store has not been initialised')
+        if self.bot.factory is None:
+            raise AttributeError(u'Todo factory has not been initialised')
 
         if arguments in (None, ''):
             index = 1
         else:
-            index = self.store.parse(arguments)
+            index = self.bot.factory.parse(arguments)
 
         if index is None:
             self.bot.say(u"usage: {}".format(self.usage_message))
             return
 
-        if index > len(self.store.items):
+        if index > len(self.bot.factory.items):
             self.bot.say(u"Nothing to do yet.")
 
         else:
-            self.store.complete(index)
+            self.bot.factory.complete(index)
             self.bot.say(u"#{} has been archived".format(index))

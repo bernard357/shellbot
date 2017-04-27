@@ -29,19 +29,18 @@ class Todos(Command):
     keyword = u'todos'
     information_message = u'List items to do'
     list_header = u"On the todo list:"
-    store = None
 
     def execute(self, arguments=None):
         """
         Displays the list of items to do
         """
-        if self.store is None:
-            raise AttributeError(u'Todo store has not been initialised')
+        if self.bot.factory is None:
+            raise AttributeError(u'Todo factory has not been initialised')
 
-        if len(self.store.items):
+        if len(self.bot.factory.items):
             lines = []
             index = 1
-            for item in self.store.items:
+            for item in self.bot.factory.items:
                 lines.append(u"#{} {}".format(index, item))
                 index += 1
             self.bot.say(self.list_header

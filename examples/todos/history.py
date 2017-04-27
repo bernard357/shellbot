@@ -29,17 +29,16 @@ class History(Command):
     keyword = u'history'
     information_message = u'List archived items'
     list_header = u"Items that have been archived:"
-    store = None
 
     def execute(self, arguments=None):
         """
         Displays the list of completed items
         """
-        if self.store is None:
-            raise AttributeError(u'Todo store has not been initialised')
+        if self.bot.factory is None:
+            raise AttributeError(u'Todo factory has not been initialised')
 
-        if len(self.store.archive):
+        if len(self.bot.factory.archive):
             self.bot.say(self.list_header
-                         + '\n- ' + '\n- '.join(self.store.archive))
+                         + '\n- ' + '\n- '.join(self.bot.factory.archive))
         else:
             self.bot.say(u"No item has been completed yet.")

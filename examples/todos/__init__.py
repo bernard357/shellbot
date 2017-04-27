@@ -27,10 +27,14 @@ __all__ = [
     'Next',
     'Todo',
     'Todos',
-    'TodoStore',
+    'TodoFactory',
 ]
 
-class TodoStore(object):
+class TodoFactory(object):
+
+    @classmethod
+    def commands(self):
+        return [Done(), Drop(), History(), Next(), Todo(), Todos()]
 
     def __init__(self, items=[], **kwargs):
         self.items = items

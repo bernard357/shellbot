@@ -29,28 +29,28 @@ class Todo(Command):
     keyword = u'todo'
     information_message = u'Append an item to the todo list, or change it'
     usage_message = u'todo [#n] <something to do>'
-    store = None
 
     def execute(self, arguments=None):
         """
         Creates or updates an item to do
         """
-        if self.store is None:
-            raise AttributeError(u'Todo store has not been initialised')
+        if self.bot.factory is None:
+            raise AttributeError(u'Todo factory has not been initialised')
 
         if arguments in (None, ''):
             self.bot.say(u"usage: {}".format(self.usage_message))
             return
 
-        index = self.store.parse(arguments)
+        index = self.bot.factory.parse(arguments)
         if index is None and arguments[0] == '#':
             self.bot.say(u"usage: {}".format(self.usage_message))
             return
 
         if index is None:
-            self.store.create(arguments)
-            self.bot.say(u"#{} {}".format(len(self.store.items), arguments))
+            self.bot.factory.create(arguments)
+            self.bot.say(u"#{} {}".format(len(self.bot.factory.items),
+                                          arguments))
         else:
             (dummy, arguments) = arguments.split(' ', 1)
-            self.store.update(index, arguments)
+            self.bot.factory.update(index, arguments)
             self.bot.say(u"#{} {}".format(index, arguments))

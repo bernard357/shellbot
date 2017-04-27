@@ -28,17 +28,16 @@ class Next(Command):
 
     keyword = u'next'
     information_message = u'Display next item to do'
-    store = None
 
     def execute(self, arguments=None):
         """
         Displays the next item to do
         """
-        if self.store is None:
-            raise AttributeError(u'Todo store has not been initialised')
+        if self.bot.factory is None:
+            raise AttributeError(u'Todo factory has not been initialised')
 
-        item = self.store.read()
+        item = self.bot.factory.read()
         if item is not None:
-            self.bot.say(u"#1 {}".format(item))
+            self.bot.say(u"Coming next: {}".format(item))
         else:
             self.bot.say(u"Nothing to do yet.")

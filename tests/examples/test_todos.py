@@ -9,7 +9,7 @@ import sys
 sys.path.insert(0, os.path.abspath('../..'))
 
 from shellbot import Context, ShellBot, SpaceFactory
-from examples.todos import TodoStore, Done, Drop, History, Next, Todo, Todos
+from examples.todos import TodoFactory, Done, Drop, History, Next, Todo, Todos
 
 
 my_settings = {
@@ -28,18 +28,26 @@ my_context = Context(settings=my_settings)
 my_bot = ShellBot(context=my_context,
                   mouth=Queue(),
                   space=SpaceFactory.get('local'))
-my_store = TodoStore(my_bot.context.get('todos.items', []))
+my_bot.factory = TodoFactory(my_bot.context.get('todos.items', []))
 
 
 class TodosTests(unittest.TestCase):
 
     def setUp(self):
-        my_store.items = my_bot.context.get('todos.items', [])
-        my_store.archive = []
+        my_bot.factory.items = my_bot.context.get('todos.items', [])
+        my_bot.factory.archive = []
+
+    def test_commands(self):
+
+        commands = TodoFactory.commands()
+        self.assertTrue(len(commands) == 6)
+        for command in commands:
+            self.assertTrue(command.keyword in ['done', 'drop', 'history', 'next', 'todo', 'todos'])
+            self.assertTrue(len(command.information_message) > 1)
 
     def test_done(self):
 
-        c = Done(bot=my_bot, store=my_store)
+        c = Done(bot=my_bot)
 
         self.assertEqual(c.keyword, 'done')
         self.assertEqual(c.information_message,
@@ -77,7 +85,7 @@ class TodosTests(unittest.TestCase):
 
     def test_drop(self):
 
-        c = Drop(bot=my_bot, store=my_store)
+        c = Drop(bot=my_bot)
 
         self.assertEqual(c.keyword, 'drop')
         self.assertEqual(c.information_message,
@@ -115,15 +123,15 @@ class TodosTests(unittest.TestCase):
 
     def test_history(self):
 
-        Done(bot=my_bot, store=my_store).execute()
+        Done(bot=my_bot).execute()
         self.assertEqual(my_bot.mouth.get(),
                          u'#1 has been archived')
 
-        Done(bot=my_bot, store=my_store).execute()
+        Done(bot=my_bot).execute()
         self.assertEqual(my_bot.mouth.get(),
                          u'#1 has been archived')
 
-        c = History(bot=my_bot, store=my_store)
+        c = History(bot=my_bot)
 
         self.assertEqual(c.keyword, 'history')
         self.assertEqual(c.information_message,
@@ -149,7 +157,7 @@ class TodosTests(unittest.TestCase):
 
     def test_next(self):
 
-        c = Next(bot=my_bot, store=my_store)
+        c = Next(bot=my_bot)
 
         self.assertEqual(c.keyword, 'next')
         self.assertEqual(c.information_message,
@@ -160,22 +168,22 @@ class TodosTests(unittest.TestCase):
         c.execute()
 
         self.assertEqual(my_bot.mouth.get(),
-                         u'#1 write down the driving question')
+                         u'Coming next: write down the driving question')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(arguments='whatever')
 
         self.assertEqual(my_bot.mouth.get(),
-                         u'#1 write down the driving question')
+                         u'Coming next: write down the driving question')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
     def test_todo(self):
 
-        my_store.items = []
+        my_bot.factory.items = []
 
-        c = Todo(bot=my_bot, store=my_store)
+        c = Todo(bot=my_bot)
 
         self.assertEqual(c.keyword, 'todo')
         self.assertEqual(c.information_message,
@@ -213,19 +221,19 @@ class TodosTests(unittest.TestCase):
 
     def test_todos(self):
 
-        Done(bot=my_bot, store=my_store).execute()
+        Done(bot=my_bot).execute()
         self.assertEqual(my_bot.mouth.get(),
                          u'#1 has been archived')
 
-        Done(bot=my_bot, store=my_store).execute()
+        Done(bot=my_bot).execute()
         self.assertEqual(my_bot.mouth.get(),
                          u'#1 has been archived')
 
-        Done(bot=my_bot, store=my_store).execute()
+        Done(bot=my_bot).execute()
         self.assertEqual(my_bot.mouth.get(),
                          u'#1 has been archived')
 
-        c = Todos(bot=my_bot, store=my_store)
+        c = Todos(bot=my_bot)
 
         self.assertEqual(c.keyword, 'todos')
         self.assertEqual(c.information_message,
@@ -251,12 +259,12 @@ class TodosTests(unittest.TestCase):
 
     def test_steps_lifecycle(self):
 
-        n = Next(bot=my_bot, store=my_store)
-        d = Done(bot=my_bot, store=my_store)
+        n = Next(bot=my_bot)
+        d = Done(bot=my_bot)
 
         n.execute()
         self.assertEqual(my_bot.mouth.get(),
-                         u'#1 write down the driving question')
+                         u'Coming next: write down the driving question')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
@@ -268,7 +276,7 @@ class TodosTests(unittest.TestCase):
 
         n.execute()
         self.assertEqual(my_bot.mouth.get(),
-                         u'#1 gather facts and related information')
+                         u'Coming next: gather facts and related information')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
@@ -280,7 +288,7 @@ class TodosTests(unittest.TestCase):
 
         n.execute()
         self.assertEqual(my_bot.mouth.get(),
-                         u'#1 identify information gaps and document assumptions')
+                        u'Coming next: identify information gaps and document assumptions')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
@@ -292,7 +300,7 @@ class TodosTests(unittest.TestCase):
 
         n.execute()
         self.assertEqual(my_bot.mouth.get(),
-                         u'#1 formulate scenarios')
+                         u'Coming next: formulate scenarios')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
@@ -304,7 +312,7 @@ class TodosTests(unittest.TestCase):
 
         n.execute()
         self.assertEqual(my_bot.mouth.get(),
-                         u'#1 select the most appropriate scenario')
+                         u'Coming next: select the most appropriate scenario')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 

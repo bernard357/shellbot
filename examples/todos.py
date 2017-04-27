@@ -22,13 +22,26 @@ Manage todos
 In this example we create following commands with some lines of code:
 
 - command: todo <something to do>
-- response: The Batcave is silent...
+- show the # of the new item in response
+
+- command: todo #<n> <something to do>
+- show the updated item in response
 
 - command: todos
-- lists on-going items
+- list all thing to do
+
+- command: next
+- show next item to do
+
+- command: done
+- signal that one item has been completed
 
 - command: history
-- lists archived items
+- lists completed items
+
+- command: drop
+- command: drop #<n>
+- to delete one item
 
 To run this script you have to change the configuration below, or set
 environment variables instead.
@@ -103,14 +116,9 @@ bot = ShellBot(context=context,
                inbox=Queue(),
                mouth=Queue())
 
-from todos import TodoStore, Done, Drop, History, Next, Todo, Todos
-store = TodoStore(bot.context.get('todos.items', []))
-bot.load_commands([Done(store=store),
-                   Drop(store=store),
-                   History(store=store),
-                   Next(store=store),
-                   Todo(store=store),
-                   Todos(store=store)])
+from todos import TodoFactory
+bot.factory = TodoFactory(bot.context.get('todos.items', []))
+bot.load_commands(TodoFactory.commands())
 
 #
 # initialise a suitable chat room
