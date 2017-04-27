@@ -8,11 +8,8 @@ Shellbot
 .. image:: https://img.shields.io/travis/bernard357/shellbot.svg
         :target: https://travis-ci.org/bernard357/shellbot
 
-.. image:: https://coveralls.io/repos/github/bernard357/shellbot/badge.svg?branch=master
-   :target: https://coveralls.io/github/bernard357/shellbot?branch=master
-
-.. image:: https://readthedocs.org/projects/shellbot/badge/?version=latest
-   :target: http://shellbot.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/shellbot-for-cisco-spark/badge/?version=latest
+   :target: http://shellbot-for-cisco-spark.readthedocs.io/en/latest/?badge=latest
 
 .. image:: https://img.shields.io/pypi/l/shellbot.svg?maxAge=2592000
    :target: https://pypi.python.org/pypi/shellbot
@@ -21,28 +18,26 @@ Shellbot
    :target: https://pypi.python.org/pypi/shellbot
 
 
-A framework for shell-like interaction in bot
+Fast, simple and lightweight micro bot-framework for Python.
+
+Shellbot is a fast and simple micro-framework for bot applications.
+It offers actions dispatching with a handy pipeline for non-interactive commands.
+It wraps Bottle for easy interactions over the web. Test coverage of Shellbot
+exceeds 90%; it has been designed to minimize dependencies; we want it to be
+blazing fast.
 
 * Documentation: `Shellbot at ReadTheDocs`_
 * Python package: `Shellbot at PyPi`_
 * Source code: `Shellbot at GitHub`_
-* Free software: `Apache License (2.0)`_
+* Free software: `Apache License (2.0)`_  (see LICENSE for details)
 
-Features
---------
-
-* Implement each web hook or route as a separate python class
-* Implement each shell-command as a separate python class
-
-Contributors
-------------
-
-* `Bernard Paques`_ [Dimension Data employee] (development lead)
+Copyright (c) 2017, `Bernard Paques`_ [Dimension Data employee]
 
 
 Credits
 -------
 
+* Bottle_
 * ciscosparkapi_
 * PyYAML_
 * Cookiecutter_
@@ -54,6 +49,7 @@ Credits
 .. _`Apache License (2.0)`: http://www.apache.org/licenses/LICENSE-2.0
 .. _`Bernard Paques`: https://github.com/bernard357
 .. _`Anthony Shaw`: https://github.com/tonybaloney
+.. _Bottle: https://pypi.python.org/pypi/bottle
 .. _ciscosparkapi: https://pypi.python.org/pypi/ciscosparkapi
 .. _PyYAML: https://pypi.python.org/pypi/PyYAML
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
