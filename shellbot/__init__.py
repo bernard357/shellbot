@@ -29,7 +29,7 @@ from .routes.base import Route
 from .routes.notify import Notify
 from .routes.wrap import Wrap
 
-__version__ = '17.4.27'
+__version__ = '17.4.28'
 
 __all__ = [
     __version__,
