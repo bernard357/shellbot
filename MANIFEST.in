@@ -1,11 +1,14 @@
-include docs/CONTRIBUTING.rst
-include docs/HISTORY.rst
-include docs/SETUP.rst
+include docs/*
 include examples/*
+include examples/planets/*
 include examples/steps/*
+include examples/todos/*
 include shellbot/commands/*
 include shellbot/routes/*
+include shellbot/spaces/*
 include tests/*
+include tests/examples/*
+include tests/spaces/*
 include tests/test_messages/*
 include tests/test_settings/*
 include LICENSE
