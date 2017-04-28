@@ -38,23 +38,32 @@ In this example we create following commands with some lines of code:
 - response: Going back to Hell
 - also stops the bot itself on the server
 
-To run this script you have to change the configuration below, or set
-environment variables instead.
+To run this script you have to provide a custom configuration, or set
+environment variables instead::
 
-Put the token received from Cisco Spark for your bot in
-a variable named ``SHELLY_TOKEN``::
+- ``CHAT_ROOM_MODERATORS`` - You have at least your e-mail address
+- ``CHAT_TOKEN`` - Received from Cisco Spark when you register your bot
+- ``SERVER_URL`` - Public link used by Cisco Spark to reach your server
 
-    export SHELLY_TOKEN="<token id from Cisco Spark for Developers>"
+The token is specific to your run-time, please visit Cisco Spark for
+Developers to get more details:
 
-The variable ``SERVER_URL`` has to mention the public IP address and link
-used to reach this server from the Internet. For example, if you use ngrok
-during development and test::
+    https://developer.ciscospark.com/
 
+For example, if you run this script under Linux or macOs with support from
+ngrok for exposing services to the Internet::
+
+    export CHAT_ROOM_MODERATORS="alice@acme.com"
+    export CHAT_TOKEN="<token id from Cisco Spark for Developers>"
     export SERVER_URL="http://1a107f21.ngrok.io"
+    python batman.py
 
 
 Credit: https://developer.ciscospark.com/blog/blog-details-8110.html
 """
+
+import os
+import time
 
 from shellbot import ShellBot, Context, Command
 Context.set_logger()
@@ -62,6 +71,7 @@ Context.set_logger()
 #
 # create a bot and load commands
 #
+
 
 class Batman(Command):
     keyword = 'whoareyou'
@@ -102,46 +112,21 @@ class Batsuicide(Command):
 
 bot = ShellBot(commands=[Batman(), Batcave(), Batsignal(), Batsuicide()])
 
-#
 # load configuration
 #
+os.environ['BOT_ON_START'] = 'You can now chat with Batman'
+os.environ['BOT_ON_STOP'] = 'Batman is now quitting the room, bye'
+os.environ['CHAT_ROOM_TITLE'] = 'Chat with Batman'
+bot.configure()
 
-bot.configure({
-
-    'bot': {
-        'on_start': 'You can now chat with Batman',
-        'on_stop': 'Batman is now quitting the room, bye',
-    },
-
-    'spark': {
-        'room': 'Chat with Batman',
-        'moderators': 'bernard.paques@dimensiondata.com',
-        'token': '$SHELLY_TOKEN',
-    },
-
-    'server': {
-        'url': '$SERVER_URL',
-        'hook': '/hook',
-        'binding': '0.0.0.0',
-        'port': 8080,
-    },
-
-})
-
-#
 # initialise a chat room
 #
-
 bot.bond(reset=True)
 
-#
 # run the bot
 #
-
 bot.run()
 
+# delete the chat room when the bot is stopped
 #
-# delete the chat room
-#
-
 bot.dispose()

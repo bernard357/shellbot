@@ -33,19 +33,25 @@ Then following commands are available from the bot:
 - command: close
 - responses describes the proper archiving of the room
 
-To run this script you have to change the configuration below, or set
-environment variables instead.
+To run this script you have to provide a custom configuration, or set
+environment variables instead::
 
-Put the token received from Cisco Spark for your bot in
-a variable named ``SHELLY_TOKEN``::
+- ``CHAT_ROOM_MODERATORS`` - You have at least your e-mail address
+- ``CHAT_TOKEN`` - Received from Cisco Spark when you register your bot
+- ``SERVER_URL`` - Public link used by Cisco Spark to reach your server
 
-    export SHELLY_TOKEN="<token id from Cisco Spark for Developers>"
+The token is specific to your run-time, please visit Cisco Spark for
+Developers to get more details:
 
-The variable ``SERVER_URL`` has to mention the public IP address and link
-used to reach this server from the Internet. For example, if you use ngrok
-during development and test::
+    https://developer.ciscospark.com/
 
+For example, if you run this script under Linux or macOs with support from
+ngrok for exposing services to the Internet::
+
+    export CHAT_ROOM_MODERATORS="alice@acme.com"
+    export CHAT_TOKEN="<token id from Cisco Spark for Developers>"
     export SERVER_URL="http://1a107f21.ngrok.io"
+    python pushy.py
 
 
 """
@@ -53,7 +59,6 @@ during development and test::
 import logging
 #import os
 from multiprocessing import Process, Queue
-#import sys
 import time
 
 from shellbot import ShellBot, Context, Server, Notify, Wrap
@@ -72,8 +77,8 @@ settings = {
 
     'spark': {
         'room': 'On-demand collaboration',
-        'moderators': 'bernard.paques@dimensiondata.com',
-        'token': '$SHELLY_TOKEN',
+        'moderators': '$CHAT_ROOM_MODERATORS',
+        'token': '$CHAT_TOKEN',
     },
 
     'server': {

@@ -107,14 +107,6 @@ class SparkSpace(Space):
         ['bobby@jah.com']
 
         """
-        values = self.bot.context.get('spark.moderators')
-        if isinstance(values, string_types):
-            self.bot.context.set('spark.moderators', [values])
-
-        values = self.bot.context.get('spark.participants')
-        if isinstance(values, string_types):
-            self.bot.context.set('spark.participants', [values])
-
         if self.bot.context.get('spark.personal_token') is None:
             token = os.environ.get('CISCO_SPARK_TOKEN')
             if token:
@@ -128,12 +120,20 @@ class SparkSpace(Space):
             elif token2:
                 self.bot.context.set('spark.token', token2)
 
-        self.bot.context.check('spark.room', is_mandatory=True)
-        self.bot.context.check('spark.moderators', [])
+        self.bot.context.check('spark.room', filter=True)
+        self.bot.context.check('spark.moderators', [], filter=True)
         self.bot.context.check('spark.participants', [])
         self.bot.context.check('spark.team')
         self.bot.context.check('spark.token', filter=True)
         self.bot.context.check('spark.personal_token', filter=True)
+
+        values = self.bot.context.get('spark.moderators')
+        if isinstance(values, string_types):
+            self.bot.context.set('spark.moderators', [values])
+
+        values = self.bot.context.get('spark.participants')
+        if isinstance(values, string_types):
+            self.bot.context.set('spark.participants', [values])
 
     def configured_title(self):
         """

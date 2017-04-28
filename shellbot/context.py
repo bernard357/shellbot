@@ -153,7 +153,7 @@ class Context(object):
                     self.values[key] = default
                     value = default
 
-            elif (is_mandatory or validate):
+            elif (is_mandatory or validate or filter):
                 try:
                     value = self.values[key]
                 except KeyError:
@@ -170,19 +170,22 @@ class Context(object):
                     u"Invalid value for '{}' in context".format(key))
 
             if filter:
-                self.values[key] = self.filter(value)
+                self.values[key] = self.filter(value, default)
 
         finally:
             self.lock.release()
 
     @classmethod
-    def _filter(self, value):
+    def _filter(self, value, default=None):
         """
         Loads a value from the environment
 
         :param value: if it starts with '$',
             then it names an environment variable
         :type value: str
+
+        :param default: the default value if no variable can be found
+        :type default: str
 
         :return: the same or a different text string
         :rtype: str
@@ -214,7 +217,7 @@ class Context(object):
         if value is None or len(value) < 1 or value[0] != '$':
             return value
 
-        imported = os.environ.get(value[1:])
+        imported = os.environ.get(value[1:], default)
         if imported is None:
             raise AttributeError(u"Missing {}".format(value))
         return imported

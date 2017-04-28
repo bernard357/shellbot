@@ -51,22 +51,7 @@ class ShellBot(object):
 
         # load configuration
         #
-        bot.configure({
-
-            'spark': {
-                'room': 'Hello tutorial',
-                'moderators': '<your e-mail address here>',
-                'token': '<bot token here>',
-            },
-
-            'server': {
-                'url': '<server external URL here>',
-                'hook': '/hook',
-                'binding': '0.0.0.0',
-                'port': 8080,
-            },
-
-        })
+        bot.configure()
 
         # create a chat room
         #
@@ -81,6 +66,28 @@ class ShellBot(object):
         bot.dispose()
 
     """
+
+    DEFAULT_SETTINGS = {
+
+        'bot': {
+            'on_start': '$BOT_ON_START',
+            'on_stop': '$BOT_ON_STOP',
+        },
+
+        'spark': {
+            'room': '$CHAT_ROOM_TITLE',
+            'moderators': '$CHAT_ROOM_MODERATORS',
+            'token': '$CHAT_TOKEN',
+        },
+
+        'server': {
+            'url': '$SERVER_URL',
+            'hook': '/hook',
+            'binding': '0.0.0.0',
+            'port': 8080,
+        },
+
+    }
 
     def __init__(self,
                  context=None,
@@ -159,14 +166,19 @@ class ShellBot(object):
 
         self.configure(settings)
 
-    def configure(self, settings={}):
+    def configure(self, settings=None):
         """
         Checks settings
 
         :param settings: configuration information
         :type settings: dict
 
+        If no settings is provided, then ``self.DEFAULT_SETTINGS`` is used
+        instead.
         """
+
+        if settings is None:
+            settings = self.DEFAULT_SETTINGS
 
         self.configure_from_dict(settings)
 
@@ -215,10 +227,8 @@ class ShellBot(object):
         """
 
         self.context.apply(settings)
-        self.context.check('bot.on_start')
-        self.context.check('bot.on_stop')
-        self.context.check('server.url')
-        self.context.check('server.hook')
+        self.context.check('bot.on_start', '', filter=True)
+        self.context.check('bot.on_stop', '', filter=True)
 
     @property
     def name(self):

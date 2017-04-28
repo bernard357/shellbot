@@ -21,21 +21,30 @@ Hello, World!
 
 In this example we create a shell with one simple command: hello
 
-To run this script you have to change the configuration below, or set
-environment variables instead.
+To run this script you have to provide a custom configuration, or set
+environment variables instead::
 
-Put the token received from Cisco Spark for your bot in
-a variable named ``SHELLY_TOKEN``::
+- ``CHAT_ROOM_MODERATORS`` - You have at least your e-mail address
+- ``CHAT_TOKEN`` - Received from Cisco Spark when you register your bot
+- ``SERVER_URL`` - Public link used by Cisco Spark to reach your server
 
-    export SHELLY_TOKEN="<token id from Cisco Spark for Developers>"
+The token is specific to your run-time, please visit Cisco Spark for
+Developers to get more details:
 
-The variable ``SERVER_URL`` has to mention the public IP address and link
-used to reach this server from the Internet. For example, if you use ngrok
-during development and test::
+    https://developer.ciscospark.com/
 
+For example, if you run this script under Linux or macOs with support from
+ngrok for exposing services to the Internet::
+
+    export CHAT_ROOM_MODERATORS="alice@acme.com"
+    export CHAT_TOKEN="<token id from Cisco Spark for Developers>"
     export SERVER_URL="http://1a107f21.ngrok.io"
+    python hello.py
+
 
 """
+
+import os
 
 from shellbot import ShellBot, Context, Command
 Context.set_logger()
@@ -51,22 +60,8 @@ bot = ShellBot(command=Hello())
 # load configuration
 #
 
-bot.configure({
-
-    'spark': {
-        'room': 'Hello tutorial',
-        'moderators': 'bernard.paques@dimensiondata.com',
-        'token': '$SHELLY_TOKEN',
-    },
-
-    'server': {
-        'url': '$SERVER_URL',
-        'hook': '/hook',
-        'binding': '0.0.0.0',
-        'port': 8080,
-    },
-
-})
+os.environ['CHAT_ROOM_TITLE'] = 'Hello tutorial'
+bot.configure()
 
 # create a chat room
 #
@@ -76,6 +71,6 @@ bot.bond(reset=True)
 #
 bot.run()
 
-# delete the chat room when the bot is killed
+# delete the chat room when the bot is stopped
 #
 bot.dispose()

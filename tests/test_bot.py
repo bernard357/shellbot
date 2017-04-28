@@ -134,7 +134,7 @@ class BotTests(unittest.TestCase):
 
             'spark': {
                 'room': 'Support room',
-                'moderators': 'foo.bar@acme.com',
+                'moderators': 'foo.bar@acme.com',  # to be turned to list
             },
 
             'server': {
@@ -158,6 +158,31 @@ class BotTests(unittest.TestCase):
         self.assertEqual(bot.context.get('server.url'), 'http://to.nowhere/')
         self.assertEqual(bot.context.get('server.hook'), '/hook')
         self.assertEqual(bot.context.get('server.trigger'), '/trigger')
+        self.assertEqual(bot.context.get('server.binding'), '0.0.0.0')
+        self.assertEqual(bot.context.get('server.port'), 8080)
+
+    def test_configure_default(self):
+
+        logging.info('*** configure/default configuration ***')
+
+        os.environ["BOT_ON_START"] = 'Start!'
+        os.environ["BOT_ON_STOP"] = 'Stop!'
+        os.environ["CHAT_ROOM_TITLE"] = 'Support room'
+        os.environ["CHAT_ROOM_MODERATORS"] = 'foo.bar@acme.com'
+        os.environ["CHAT_TOKEN"] = '*token'
+        os.environ["SERVER_URL"] = 'http://to.nowhere/'
+
+        bot = ShellBot()
+        bot.configure()
+
+        self.assertEqual(bot.context.get('bot.on_start'), 'Start!')
+        self.assertEqual(bot.context.get('bot.on_stop'), 'Stop!')
+        self.assertEqual(bot.context.get('spark.room'), 'Support room')
+        self.assertEqual(bot.context.get('spark.moderators'),
+                         ['foo.bar@acme.com'])
+        self.assertEqual(bot.context.get('spark.participants'), [])
+        self.assertEqual(bot.context.get('server.url'), 'http://to.nowhere/')
+        self.assertEqual(bot.context.get('server.hook'), '/hook')
         self.assertEqual(bot.context.get('server.binding'), '0.0.0.0')
         self.assertEqual(bot.context.get('server.port'), 8080)
 

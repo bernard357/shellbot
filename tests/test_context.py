@@ -25,7 +25,7 @@ class ContextTests(unittest.TestCase):
 
     def test_init_filter(self):
 
-        context = Context(filter=lambda x : x + '...')
+        context = Context(filter=lambda x, y : x + '...')
         context.apply({'my.var': 'my value'})
         context.check('my.var', filter=True)
         self.assertEqual(context.get('my.var'), 'my value...')
@@ -107,9 +107,10 @@ class ContextTests(unittest.TestCase):
             context.check('spark.*unknown*key*',
                           validate=lambda line: True)
 
-        # filter does not implies is_mandatory
-        context.check('spark.*unknown*key*',
-                      filter=True)
+        # filter does imply is_mandatory
+        with self.assertRaises(KeyError):
+            context.check('spark.*unknown*key*',
+                          filter=True)
 
         context.check('spark.webhook',
                       validate=lambda line: line.startswith('http'))
