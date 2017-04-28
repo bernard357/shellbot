@@ -42,22 +42,6 @@ class SpaceFactoryTests(unittest.TestCase):
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space.teamId, None)
 
-        with self.assertRaises(AttributeError):
-            bot = ShellBot(settings={   # referring to unknown environment
-                'spark': {
-                    'room': 'My preferred room',
-                    'moderators':
-                        ['foo.bar@acme.com', 'joe.bar@corporation.com'],
-                    'participants':
-                        ['alan.droit@azerty.org', 'bob.nard@support.tv'],
-                    'team': 'Anchor team',
-                    'token': 'hkNWEtMJNkODVGlZWU1NmYtyY',
-                    'personal_token': '$MY_FUZZY_SPARK_TOKEN',
-                    'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
-                    'webhook': "http://73a1e282.ngrok.io",
-                }
-            })
-
     def test_sense(self):
 
         logging.info("*** sense")

@@ -124,8 +124,8 @@ class SparkSpace(Space):
         self.bot.context.check('spark.moderators', [], filter=True)
         self.bot.context.check('spark.participants', [])
         self.bot.context.check('spark.team')
-        self.bot.context.check('spark.token', filter=True)
-        self.bot.context.check('spark.personal_token', filter=True)
+        self.bot.context.check('spark.token', '', filter=True)
+        self.bot.context.check('spark.personal_token', '', filter=True)
 
         values = self.bot.context.get('spark.moderators')
         if isinstance(values, string_types):
