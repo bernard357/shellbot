@@ -59,7 +59,6 @@ bot = ShellBot(command=Hello())
 
 # load configuration
 #
-
 os.environ['CHAT_ROOM_TITLE'] = 'Hello tutorial'
 bot.configure()
 

@@ -33,6 +33,43 @@ Then following commands are available from the bot:
 - command: close
 - responses describes the proper archiving of the room
 
+
+Multiple questions are adressed in this example:
+
+- How to create a room on some external event? Here we wait for a link to be
+  triggered over the internet. This can done directly from the command line
+  with CURL, from a web browser, or from a button connected to the internet, or
+  from an application on a mobile device. When this occurs, a room is created,
+  moderators and participants are added, and people can interact immediately.
+  Look at the class ``Trigger`` below, and at the bottom of the script, to see
+  how this is implemented.
+
+- How to implement a linear process? The typical use case is to let joining
+  people interact in the room, then involve some support experts, then
+  call stakeholders for a decision. These are reflected in the chat room
+  with commands ``state`` and ``next``. Related code is in the ``steps``
+  subdirectory.
+
+
+A typical dialog could be like the following::
+
+    > shelly next
+
+    New state: Level 1 - Initial capture of information
+    If you are on the shop floor:
+    - Take a picture of the faulty part
+    - Describe the issue in the chat box
+
+    As a Stress engineer, engage with shop floor and ask questions. To engage
+    with the design team, type next in the chat box.
+
+    > shelly next
+
+    New state: Level 2 - Escalation to technical experts
+
+    ...
+
+
 To run this script you have to provide a custom configuration, or set
 environment variables instead::
 

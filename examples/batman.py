@@ -35,8 +35,27 @@ In this example we create following commands with some lines of code:
 - also uploads an image to the chat room
 
 - command: suicide
-- response: Going back to Hell
+- delayed response: Going back to Hell
 - also stops the bot itself on the server
+
+Multiple questions are adressed in this example:
+
+- How to build a dynamic response? Look at the command ``cave``, where
+  the message pushed to the chat room depends on the input received. This
+  is done with regular python code in the member function ``execute()``.
+
+- How to upload files? The command ``signal`` demonstrates how to
+  attach a link or a file to a message. Here we use public image, yet the
+  same would work for the upload of a local file.
+
+- What about long-lasting commands? In that case, you can set the command
+  attribute ``is_interactive`` to False. On command submission, the bot
+  will execute it in the background. Look for example at the command
+  ``suicide``, where Batman is waiting for some seconds before acting.
+
+- How to load multiple commands? Since each command is a separate object,
+  you can add them as a list bundle to the bot.
+
 
 To run this script you have to provide a custom configuration, or set
 environment variables instead::

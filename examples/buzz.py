@@ -30,6 +30,44 @@ In this example we create following commands with some lines of code:
 - command: planets
 - list available destinations
 
+
+What is showcased here are commands that take significant time to execute.
+
+Buzz is flying from Earth to some planets and come back. Obviously,
+this is the kind of activity that can take ages, yet here each mission
+lasts about 30 seconds.
+
+Ok. So, when I type ``buzz explore Uranus`` in the chat box, do I have to
+wait for 30 seconds before the next command is considered? Hopefully not!
+
+The two commands ``explore`` and ``blast`` are non-interactive. This means
+that they are pushed to a pipeline for background execution.
+
+With this concept, you can get a dialog similar to the following::
+
+    > buzz explore Mercury
+
+    Ok, I am working on it
+    #1 - Departing to Mercury
+
+    > buzz blast Neptune
+
+    Ok, will work on it as soon as possible
+    #1 - Approaching Mercury
+    #1 - Landed on Mercury
+
+    > buzz planets
+
+    Available destinations:
+    - Venus
+    - Moon
+
+    ...
+
+In other terms, the bot is always responsive, whatever is executing in the
+background. Also, non-interactive commands are executed in the exact
+sequence of their submission.
+
 To run this script you have to provide a custom configuration, or set
 environment variables instead::
 

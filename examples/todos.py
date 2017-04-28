@@ -43,6 +43,10 @@ In this example we create following commands with some lines of code:
 - command: drop #<n>
 - to delete one item
 
+
+Here we showcase how a bot manages information over time. A simple
+todo list is added to a room, and any participant is entitled to act on it.
+
 To run this script you have to provide a custom configuration, or set
 environment variables instead::
 
@@ -61,7 +65,7 @@ ngrok for exposing services to the Internet::
     export CHAT_ROOM_MODERATORS="alice@acme.com"
     export CHAT_TOKEN="<token id from Cisco Spark for Developers>"
     export SERVER_URL="http://1a107f21.ngrok.io"
-    python batman.py
+    python todos.py
 
 
 """
