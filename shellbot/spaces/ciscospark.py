@@ -163,7 +163,7 @@ class SparkSpace(Space):
 
         except Exception as feedback:
             logging.error(u"Unable to access Cisco Spark API")
-            logging.error(u"- {}".format(str(feedback)))
+            logging.exception(feedback)
 
         try:
             if self.personal_token is None:
@@ -175,7 +175,7 @@ class SparkSpace(Space):
 
         except Exception as feedback:
             logging.error(u"Unable to access Cisco Spark API")
-            logging.error(u"- {}".format(str(feedback)))
+            logging.exception(feedback)
 
         try:
             bot = self.get_bot()
@@ -187,7 +187,7 @@ class SparkSpace(Space):
 
         except Exception as feedback:
             logging.warning(u"Unable to retrieve bot id")
-            logging.warning(str(feedback))
+            logging.exception(feedback)
             self.bot_id = None
 
     def lookup_space(self, title, **kwargs):
@@ -218,7 +218,7 @@ class SparkSpace(Space):
 
         except Exception as feedback:
             logging.error(u"Unable to list rooms")
-            logging.error(feedback)
+            logging.exception(feedback)
 
         return False
 
@@ -256,7 +256,7 @@ class SparkSpace(Space):
 
         except Exception as feedback:
             logging.warning(u"Unable to create room ")
-            logging.warning(feedback)
+            logging.exception(feedback)
 
     def use_room(self, room):
         """
@@ -320,7 +320,7 @@ class SparkSpace(Space):
 
         except Exception as feedback:
             logging.warning(u"Unable to add moderator '{}'".format(person))
-            logging.warning(feedback)
+            logging.exception(feedback)
 
     def add_participant(self, person):
         """
@@ -337,7 +337,7 @@ class SparkSpace(Space):
 
         except Exception as feedback:
             logging.warning(u"Unable to add participant '{}'".format(person))
-            logging.warning(feedback)
+            logging.exception(feedback)
 
     def delete_space(self, title=None, **kwargs):
         """
@@ -371,7 +371,7 @@ class SparkSpace(Space):
 
         except Exception as feedback:
             logging.warning(u"Unable to delete room")
-            logging.warning(feedback)
+            logging.exception(feedback)
 
     def post_message(self,
                      text=None,
@@ -426,7 +426,7 @@ class SparkSpace(Space):
 
         except Exception as feedback:
             logging.warning(u"Unable to post message")
-            logging.warning(feedback)
+            logging.exception(feedback)
 
     def register(self, hook_url):
         """
@@ -519,7 +519,7 @@ class SparkSpace(Space):
 
         except Exception as feedback:
             logging.warning(u"Unable to pull messages")
-            logging.warning(feedback)
+            logging.exception(feedback)
             return
 
         if len(new_items):
