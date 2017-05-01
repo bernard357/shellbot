@@ -94,12 +94,11 @@ class Speaker(object):
                     item = self.bot.mouth.get(True, 0.1)
                     if isinstance(item, Exception):
                         break
-                    counter = self.bot.context.increment('speaker.counter')
 
                     if self.tee:
                         self.tee.put(item)
 
-                    self.process(item, counter)
+                    self.process(item)
 
                 except Exception as feedback:
                     logging.exception(feedback)
@@ -109,18 +108,16 @@ class Speaker(object):
 
         logging.info(u"Speaker has been stopped")
 
-    def process(self, item, counter):
+    def process(self, item):
         """
         Sends one update to a business messaging space
 
         :param item: the update to be transmitted
         :type item: str or dict
 
-        :param counter: number of items processed so far
-        :type counter: int
-
         """
 
+        counter = self.bot.context.increment('speaker.counter')
         logging.debug(u'Speaker is working on {}'.format(counter))
 
         if self.bot.space is not None:
