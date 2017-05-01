@@ -79,7 +79,7 @@ class WorkerTests(unittest.TestCase):
 
         my_bot.context = Context()
         worker = Worker(bot=my_bot)
-        worker.process = mock.Mock(side_effect=Exception('Traced in log?'))
+        worker.process = mock.Mock(side_effect=Exception('TEST'))
         my_bot.inbox.put(('do', 'this'))
         my_bot.inbox.put(Exception('EOQ'))
         worker.work()

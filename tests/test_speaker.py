@@ -76,7 +76,7 @@ class SpeakerTests(unittest.TestCase):
 
         bot.space.id = '123'
 
-        bot.speaker.process = mock.Mock(side_effect=Exception('Traced in log?'))
+        bot.speaker.process = mock.Mock(side_effect=Exception('TEST'))
         bot.mouth.put(('dummy'))
         bot.mouth.put(Exception('EOQ'))
         bot.speaker.work()

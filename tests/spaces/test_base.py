@@ -366,7 +366,7 @@ class SpaceTests(unittest.TestCase):
         logging.info("*** work")
 
         space = Space(bot=my_bot)
-        space.pull = mock.Mock(side_effect=Exception('Traced in log?'))
+        space.pull = mock.Mock(side_effect=Exception('TEST'))
         space.work()
         self.assertEqual(space.bot.context.get('puller.counter'), 0)
 

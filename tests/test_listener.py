@@ -154,7 +154,7 @@ class ListenerTests(unittest.TestCase):
         my_bot.context.set('general.switch', 'on')
 
         listener = Listener(bot=my_bot)
-        listener.process = mock.Mock(side_effect=Exception('Traced in log?'))
+        listener.process = mock.Mock(side_effect=Exception('TEST'))
         my_bot.ears.put(('dummy'))
         my_bot.ears.put(Exception('EOQ'))
         listener.work()
