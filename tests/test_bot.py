@@ -181,6 +181,9 @@ class BotTests(unittest.TestCase):
         self.assertEqual(bot.context.get('spark.moderators'),
                          ['foo.bar@acme.com'])
         self.assertEqual(bot.context.get('spark.participants'), [])
+
+        self.assertEqual(bot.context.get('spark.token'), '*token')
+
         self.assertEqual(bot.context.get('server.url'), 'http://to.nowhere/')
         self.assertEqual(bot.context.get('server.hook'), '/hook')
         self.assertEqual(bot.context.get('server.binding'), '0.0.0.0')
@@ -528,6 +531,39 @@ class BotTests(unittest.TestCase):
 #
 #        time.sleep(5.0)
 #        bot.stop()
+
+    def test_say(self):
+
+        logging.info('*** say ***')
+
+        context = Context()
+
+        bot = ShellBot(context=context)
+
+        bot.say('')
+        bot.say(None)
+
+        with mock.patch.object(bot.speaker,
+                               'process',
+                               return_value=None) as mocked:
+
+            bot.say('test')
+            mocked.assert_called_with('test')
+
+            bot.say('test', markdown='test')
+            bot.say('test', file='test.yaml')
+
+        bot.mouth = Queue()
+        bot.mouth.put = mock.Mock()
+        bot.speaker.process = mock.Mock()
+
+        bot.say('test')
+        bot.say('test', markdown='test')
+        bot.say('test', file='test.yaml')
+
+        self.assertTrue(bot.mouth.put.called)
+        self.assertFalse(bot.speaker.process.called)
+
 
 if __name__ == '__main__':
 

@@ -466,15 +466,20 @@ class ShellBot(object):
         if message in (None, ''):
             return
 
+        logging.info(u"Bot says: {}".format(message))
+
         if self.mouth:
+            logging.debug(u"- pushing message to mouth queue")
             if markdown or file:
-                logging.info(u"Bot says: {}".format(message))
                 self.mouth.put(ShellBotMessage(message, markdown, file))
             else:
-                logging.info(u"Bot says: {}".format(message))
                 self.mouth.put(message)
         else:
-            logging.info(u"Bot says: {}".format(message))
+            logging.debug(u"- calling speaker directly")
+            if markdown or file:
+                self.speaker.process(ShellBotMessage(message, markdown, file))
+            else:
+                self.speaker.process(message)
 
 
 class ShellBotMessage(object):
