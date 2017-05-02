@@ -77,20 +77,39 @@ class LocalSpace(Space):
 
         return True
 
-    def create_space(self, title, **kwargs):
+    def create_space(self, title, use_it=True, **kwargs):
         """
         Creates a space
 
         :param title: title of the target space
         :type title: str
 
+        :param use_it: if this should be the underlying space for this instance
+        :type use_it: bool
+
+        :return: a representation of the new room, or None
+
+        On successful space creation, this object usually is configured
+        to use it. You can set the parameter ``use_it`` to False if you need
+        an extra room.
+
         On successful space creation, the object should be initialised
         to use it.
         """
         assert title not in (None, '')
 
-        self.id = '*id'
-        self.title = title
+        if use_it:
+            self.id = '*id'
+            self.title = title
+
+        class LocalRoom(object):
+            pass
+
+        room = LocalRoom()
+        room.id = '*id'
+        room.title = title
+
+        return room
 
     def add_moderator(self, person):
         """

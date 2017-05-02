@@ -224,21 +224,28 @@ class SparkSpace(Space):
 
         return False
 
-    def create_space(self, title, ex_team=None, **kwargs):
+    def create_space(self, title, use_it=True, ex_team=None, **kwargs):
         """
         Creates a space
 
         :param title: title of the target space
         :type title: str
 
+        :param use_it: if this should be the underlying space for this instance
+        :type use_it: bool
+
         :param ex_team: the team attached to this room (optional)
         :type ex_team: str or object
 
-        On successful space creation, the object should be initialised
-        to use it.
+        :return: a representation of the new room, or None
 
         If the parameter ``ex_team`` is provided, then it can be either a
         simple name, or a team object featuring an id.
+
+        On successful space creation, this object usually is configured
+        to use it. You can set the parameter ``use_it`` to False if you need
+        an extra room.
+
         """
         teamId = None
         if ex_team:
@@ -254,7 +261,10 @@ class SparkSpace(Space):
                                          teamId=teamId)
             logging.info(u"- done")
 
-            self.use_room(room)
+            if use_it:
+                self.use_room(room)
+
+            return room
 
         except Exception as feedback:
             logging.warning(u"Unable to create room ")

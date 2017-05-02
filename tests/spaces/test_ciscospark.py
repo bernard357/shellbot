@@ -42,11 +42,13 @@ class FakeMessage(Fake):
 
 class FakeApi(object):
 
-    def __init__(self, rooms=[], teams=[], messages=[]):
+    def __init__(self, rooms=[], teams=[], messages=[], new_room=None):
+
+        new_room = new_room if new_room else FakeRoom()
 
         self.rooms = Fake()
         self.rooms.list = mock.Mock(return_value=rooms)
-        self.rooms.create = mock.Mock(return_value=FakeRoom())
+        self.rooms.create = mock.Mock(return_value=new_room)
         self.rooms.delete = mock.Mock()
 
         self.teams = Fake()
@@ -267,10 +269,21 @@ class SparkSpaceTests(unittest.TestCase):
         logging.info("*** create_space")
 
         space = SparkSpace(bot=my_bot)
+
+        # create a space and use it
         space.api = FakeApi()
         space.create_space(title='*title')
         self.assertTrue(space.api.rooms.create.called)
+        self.assertEqual(space.title, '*title')
         self.assertEqual(space.id, '*id')
+
+        # add an extra space
+        fake = FakeRoom()
+        fake.title = '*another title'
+        space.api = FakeApi(new_room=fake)
+        extra = space.create_space(title='*another title', use_it=False)
+        self.assertEqual(extra.title, '*another title')
+        self.assertEqual(space.title, '*title')
 
     def test_get_team_mock(self):
 
