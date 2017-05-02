@@ -67,6 +67,28 @@ class SpeakerTests(unittest.TestCase):
         for item in items:
             self.assertEqual(tee.get(), item)
 
+    def test_run(self):
+
+        logging.info("*** run")
+
+        bot = ShellBot(mouth=Queue())
+        bot.space = SpaceFactory.get('local', bot=bot)
+        bot.space.id = '123'
+        bot.mouth.put('ping')
+
+        def my_post(item):
+            bot.context.set('speaker.last', item)
+
+        bot.space.post_message = my_post
+        bot.context.set('general.switch', 'on')
+        speaker_process = bot.speaker.run()
+        time.sleep(0.1)
+        bot.context.set('general.switch', 'off')
+        speaker_process.join()
+
+        self.assertEqual(bot.context.get('speaker.counter'), 1)
+        self.assertEqual(bot.context.get('speaker.last'), 'ping')
+
     def test_work(self):
 
         logging.info("*** work")

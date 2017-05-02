@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import logging
+from multiprocessing import Process, Queue
 from six import string_types
 import time
 
@@ -41,6 +42,20 @@ class Speaker(object):
         """
         self.bot = bot
         self.tee = tee
+
+    def run(self):
+        """
+        Starts the speaking process
+
+        :return: either the process that has been started, or None
+
+        This function starts a separate daemonic process to speak
+        in the background.
+        """
+        p = Process(target=self.work)
+        p.daemon = True
+        p.start()
+        return p
 
     def work(self):
         """
