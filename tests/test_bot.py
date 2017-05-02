@@ -189,6 +189,9 @@ class BotTests(unittest.TestCase):
         self.assertEqual(bot.context.get('server.binding'), '0.0.0.0')
         self.assertEqual(bot.context.get('server.port'), 8080)
 
+        os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
+        bot = ShellBot(settings=None, configure=True)
+
     def test_load_commands(self):
 
         logging.info('*** load_commands ***')
