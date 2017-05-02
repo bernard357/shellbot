@@ -80,13 +80,13 @@ class SpeakerTests(unittest.TestCase):
         bot.mouth.put(('dummy'))
         bot.mouth.put(Exception('EOQ'))
         bot.speaker.work()
-        self.assertEqual(bot.context.get('speaker.counter'), 1)
+        self.assertEqual(bot.context.get('speaker.counter'), 0)
 
         bot.speaker = Speaker(bot=bot)
         bot.speaker.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
         bot.mouth.put(('dummy'))
         bot.speaker.work()
-        self.assertEqual(bot.context.get('speaker.counter'), 1)
+        self.assertEqual(bot.context.get('speaker.counter'), 0)
 
     def test_work_wait(self):
 
@@ -121,7 +121,7 @@ class SpeakerTests(unittest.TestCase):
         bot = ShellBot()
         speaker = Speaker(bot=bot)
 
-        speaker.process('hello world', 1)  # sent to stdout
+        speaker.process('hello world')  # sent to stdout
 
         bot = ShellBot(mouth=Queue())
         bot.space = SpaceFactory.get('local', bot=bot)
@@ -136,7 +136,7 @@ class SpeakerTests(unittest.TestCase):
                                'post_message',
                                return_value=None) as mocked:
 
-            speaker.process('hello world', 1)
+            speaker.process('hello world')
             mocked.assert_called_with('hello world')
 
             class WithMarkdown(object):
@@ -145,7 +145,7 @@ class SpeakerTests(unittest.TestCase):
                 file = None
 
             item = WithMarkdown()
-            speaker.process(item, 2)
+            speaker.process(item)
             mocked.assert_called_with('',
                                       ex_markdown='me **too**',
                                       ex_file_path=None)
@@ -156,7 +156,7 @@ class SpeakerTests(unittest.TestCase):
                 file = 'http://a.server/with/file'
 
             item = WithFile()
-            speaker.process(item, 3)
+            speaker.process(item)
             mocked.assert_called_with('*with*attachment',
                                       ex_markdown=None,
                                       ex_file_path='http://a.server/with/file')
@@ -167,7 +167,7 @@ class SpeakerTests(unittest.TestCase):
                 file = 'http://a.server/with/file'
 
             item = WithAll()
-            speaker.process(item, 4)
+            speaker.process(item)
             mocked.assert_called_with('hello world',
                                       ex_markdown='hello **world**',
                                       ex_file_path='http://a.server/with/file')
