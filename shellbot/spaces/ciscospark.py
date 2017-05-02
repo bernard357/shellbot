@@ -146,7 +146,7 @@ class SparkSpace(Space):
         from ``spark.room`` parameter.
         """
         return  self.bot.context.get('spark.room',
-                                 self.DEFAULT_SPACE_TITLE)
+                                     self.DEFAULT_SPACE_TITLE)
 
     def connect(self):
         """
@@ -155,26 +155,28 @@ class SparkSpace(Space):
         try:
             if self.token is None:
                 self.api = None
-                logging.error(u"Unable to access Cisco Spark API")
+                logging.error(u"No token to load Cisco Spark API")
 
             else:
                 self.api = CiscoSparkAPI(access_token=self.token)
-                logging.debug(u"Connected as bot to Cisco Spark API")
+                logging.debug(u"Loaded Cisco Spark API as bot")
 
         except Exception as feedback:
-            logging.error(u"Unable to access Cisco Spark API")
+            logging.error(u"Unable to load Cisco Spark API")
             logging.exception(feedback)
 
         try:
             if self.personal_token is None:
                 self.personal_api = None
+                logging.error(u"No token to load Cisco Spark API as person")
+
             else:
                 self.personal_api = CiscoSparkAPI(
                     access_token=self.personal_token)
-                logging.debug(u"Connected as person to Cisco Spark API")
+                logging.debug(u"Loaded Cisco Spark API as person")
 
         except Exception as feedback:
-            logging.error(u"Unable to access Cisco Spark API")
+            logging.error(u"Unable to load Cisco Spark API")
             logging.exception(feedback)
 
         try:
@@ -187,7 +189,7 @@ class SparkSpace(Space):
 
         except Exception as feedback:
             logging.warning(u"Unable to retrieve bot id")
-            logging.exception(feedback)
+            logging.warning(feedback)
             self.bot_id = None
 
     def lookup_space(self, title, **kwargs):

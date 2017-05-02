@@ -181,6 +181,26 @@ class SparkSpaceTests(unittest.TestCase):
                 }
             })
 
+    def test_configure_2(self):
+
+        logging.info("*** configure/from bot")
+
+        class MySpace(SparkSpace):
+
+            def connect(self):
+                assert self.token == '*another bot token'
+                self.api = FakeApi()
+
+        my_bot.context = Context()
+        space = MySpace(bot=my_bot)
+        my_bot.space = space
+        os.environ['CHAT_ROOM_TITLE'] = '*my room'
+        os.environ['CHAT_ROOM_MODERATORS'] = 'joe.bar@acme.com'
+        os.environ['CHAT_TOKEN'] = '*another bot token'
+
+        my_bot.configure()
+        self.assertEqual(space.token, '*another bot token')
+
     def test_lifecycle(self):
 
         if cisco_spark_bearer is not None:
