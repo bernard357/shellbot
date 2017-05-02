@@ -223,9 +223,8 @@ class Trigger(object):
                     item = self.queue.get(True, self.EMPTY_DELAY)
                     if isinstance(item, Exception):
                         break
-                    counter = self.bot.context.increment('trigger.counter')
 
-                    self.process(item, counter)
+                    self.process(item)
 
                 except Exception as feedback:
                     logging.exception(feedback)
@@ -233,7 +232,9 @@ class Trigger(object):
         except KeyboardInterrupt:
             pass
 
-    def process(self, item, counter):
+    def process(self, item):
+
+        counter = self.bot.context.increment('trigger.counter')
         logging.info(u'Trigger {} {}'.format(item, counter))
 
         if counter == 1:

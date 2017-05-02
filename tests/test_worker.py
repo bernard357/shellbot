@@ -83,14 +83,14 @@ class WorkerTests(unittest.TestCase):
         my_bot.inbox.put(('do', 'this'))
         my_bot.inbox.put(Exception('EOQ'))
         worker.work()
-        self.assertEqual(my_bot.context.get('worker.counter'), 1)
+        self.assertEqual(my_bot.context.get('worker.counter'), 0)
 
         my_bot.context = Context()
         worker = Worker(bot=my_bot)
         worker.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
         my_bot.inbox.put(('do', 'that'))
         worker.work()
-        self.assertEqual(my_bot.context.get('worker.counter'), 1)
+        self.assertEqual(my_bot.context.get('worker.counter'), 0)
 
     def test_process(self):
 
@@ -101,7 +101,7 @@ class WorkerTests(unittest.TestCase):
         worker = Worker(bot=my_bot)
         worker.bot.say = mock.Mock(side_effect=[Exception(), True])
         with self.assertRaises(Exception):
-            worker.process(item=('hello', 'here'), counter=1)
+            worker.process(item=('hello', 'here'))
 
 if __name__ == '__main__':
 

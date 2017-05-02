@@ -158,13 +158,13 @@ class ListenerTests(unittest.TestCase):
         my_bot.ears.put(('dummy'))
         my_bot.ears.put(Exception('EOQ'))
         listener.work()
-        self.assertEqual(my_bot.context.get('listener.counter'), 1)
+        self.assertEqual(my_bot.context.get('listener.counter'), 0)
 
         listener = Listener(bot=my_bot)
         listener.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
         my_bot.ears.put(('dummy'))
         listener.work()
-        self.assertEqual(my_bot.context.get('listener.counter'), 1)
+        self.assertEqual(my_bot.context.get('listener.counter'), 0)
 
     def test_work_wait(self):
 

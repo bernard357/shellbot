@@ -73,10 +73,9 @@ class Worker(object):
                     item = self.bot.inbox.get(True, 0.1)
                     if isinstance(item, Exception):
                         break
-                    counter = self.bot.context.increment('worker.counter')
 
                     self.bot.context.set('worker.busy', True)
-                    self.process(item, counter)
+                    self.process(item)
                     self.bot.context.set('worker.busy', False)
 
                 except Exception as feedback:
@@ -88,19 +87,23 @@ class Worker(object):
         finally:
             logging.info(u"Worker has been stopped")
 
-    def process(self, item, counter):
+    def process(self, item):
         """
         Processes one action
 
+        :param item: the action to perform
+        :type item: list or tuple
+
         Example actions::
 
-            worker.process(item=('help', 'some_command'), counter=234)
+            worker.process(item=('help', 'some_command'))
 
-            worker.process(item=('version', ''), counter=235)
+            worker.process(item=('version', ''))
 
         """
         (verb, arguments) = item
 
+        counter = self.bot.context.increment('worker.counter')
         logging.debug(u'Worker is working on {} ({})'.format(verb, counter))
 
         try:

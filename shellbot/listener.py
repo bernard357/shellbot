@@ -81,12 +81,11 @@ class Listener(object):
                     item = self.bot.ears.get(True, self.EMPTY_DELAY)
                     if isinstance(item, Exception):
                         break
-                    counter = self.bot.context.increment('listener.counter')
 
                     if self.tee:
                         self.tee.put(item)
 
-                    self.process(item, counter)
+                    self.process(item)
 
                 except Exception as feedback:
                     logging.exception(feedback)
@@ -96,15 +95,12 @@ class Listener(object):
 
         logging.info(u"Listener has been stopped")
 
-    def process(self, item, counter):
+    def process(self, item):
         """
         Processes bits coming from Cisco Spark
 
         :param item: the message received
         :type item: dict
-
-        :param counter: number of items processed so far
-        :type counter: int
 
         This function listens for specific commands in the coming flow.
         When a command has been identified, it is acknowledged immediately.
@@ -126,6 +122,7 @@ class Listener(object):
             }
 
         """
+        counter = self.bot.context.increment('listener.counter')
         logging.debug(u'Listener is working on {}'.format(counter))
 
         # sanity check
