@@ -3,6 +3,14 @@
 History
 -------
 
+17.5.2
+~~~~~~~
+* Add example 'notify' to ease introductory use case
+* Minor improvements on code and tests
+* Travis-CI passed on python 2.7 and 3.5
+* 91% test coverage
+* 1117 python statements
+
 17.4.28
 ~~~~~~~
 * Fix the build of ReadTheDocs documentation
