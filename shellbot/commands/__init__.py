@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .audit import Audit
 from .base import Command
 from .close import Close
 from .default import Default
@@ -24,6 +25,7 @@ from .sleep import Sleep
 from .version import Version
 
 __all__ = [
+    'Audit',
     'Command',
     'Close',
     'Default',
