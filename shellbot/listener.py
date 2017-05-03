@@ -26,19 +26,34 @@ class Listener(object):
 
     EMPTY_DELAY = 0.005   # time to wait if queue is empty
 
-    def __init__(self, bot=None, tee=None):
+    def __init__(self, bot=None, filter=None):
         """
         Handles messages received from chat space
 
         :param bot: the overarching bot
         :type bot: ShellBot
 
-        :param tee: if provided, messages received are duplicated there
-        :type tee: queue
+        :param filter: if provided, messages received are filtered
+        :type filter: callable
 
+        If a ``filter`` is provided, then it is called for each item received.
+
+        Example::
+
+            def filter(item):
+
+                # duplicate input stream
+                my_queue.put(item)
+
+                # change input tream
+                item['text'] = item['text'].title()
+
+                return item
+
+            listener = Listener(filter=filter)
         """
         self.bot = bot
-        self.tee = tee
+        self.filter = filter
 
     def work(self):
         """
@@ -81,9 +96,6 @@ class Listener(object):
                     item = self.bot.ears.get(True, self.EMPTY_DELAY)
                     if isinstance(item, Exception):
                         break
-
-                    if self.tee:
-                        self.tee.put(item)
 
                     self.process(item)
 
@@ -136,6 +148,11 @@ class Listener(object):
         if input is None:
             logging.debug(u"- no input in this item, thrown away")
             return
+
+        # filter the input
+        #
+        if self.filter:
+            item = self.filter(item)
 
         # my own messages
         #

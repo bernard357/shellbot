@@ -105,18 +105,10 @@ class LocalSpaceTests(unittest.TestCase):
 
         logging.info("*** create_space")
 
-        # create a space and use it
         space = LocalSpace(bot=my_bot)
         space.create_space(title='hello there')
         self.assertEqual(space.title, 'hello there')
         self.assertEqual(space.id, '*id')
-
-        # create a secondary space
-        extra = space.create_space(title='this is an extra space', use_it=False)
-        self.assertEqual(space.title, 'hello there')
-        self.assertEqual(space.id, '*id')
-        self.assertEqual(extra.title, 'this is an extra space')
-        self.assertEqual(extra.id, '*id')
 
         with self.assertRaises(AssertionError):
             space.create_space(title=None)

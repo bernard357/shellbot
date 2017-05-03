@@ -46,6 +46,8 @@ class SparkSpace(Space):
         if ex_token is not None:
             self.bot.context.set('spark.token', ex_token)
 
+        self.api = None
+
     def on_reset(self):
         """
         Resets extended internal variables
@@ -209,6 +211,7 @@ class SparkSpace(Space):
         assert title not in (None, '')
         logging.info(u"Looking for Cisco Spark room '{}'".format(title))
 
+        assert self.api is not None  # connect() is prerequisite
         try:
             for room in self.api.rooms.list():
                 if title == room.title:
@@ -224,28 +227,21 @@ class SparkSpace(Space):
 
         return False
 
-    def create_space(self, title, use_it=True, ex_team=None, **kwargs):
+    def create_space(self, title, ex_team=None, **kwargs):
         """
         Creates a space
 
         :param title: title of the target space
         :type title: str
 
-        :param use_it: if this should be the underlying space for this instance
-        :type use_it: bool
-
         :param ex_team: the team attached to this room (optional)
         :type ex_team: str or object
-
-        :return: a representation of the new room, or None
 
         If the parameter ``ex_team`` is provided, then it can be either a
         simple name, or a team object featuring an id.
 
-        On successful space creation, this object usually is configured
-        to use it. You can set the parameter ``use_it`` to False if you need
-        an extra room.
-
+        On successful space creation, this object is configured
+        to use it.
         """
         teamId = None
         if ex_team:
@@ -256,15 +252,13 @@ class SparkSpace(Space):
 
         logging.info(u"Creating Cisco Spark room '{}'".format(title))
 
+        assert self.api is not None  # connect() is prerequisite
         try:
             room = self.api.rooms.create(title=title,
                                          teamId=teamId)
             logging.info(u"- done")
 
-            if use_it:
-                self.use_room(room)
-
-            return room
+            self.use_room(room)
 
         except Exception as feedback:
             logging.warning(u"Unable to create room ")
@@ -309,6 +303,7 @@ class SparkSpace(Space):
         """
         logging.info(u"Looking for Cisco Spark team '{}'".format(name))
 
+        assert self.api is not None  # connect() is prerequisite
         for team in self.api.teams.list():
             if name == team.name:
                 logging.info(u"- found it")
@@ -325,6 +320,7 @@ class SparkSpace(Space):
         :type person: str
 
         """
+        assert self.api is not None  # connect() is prerequisite
         try:
             self.api.memberships.create(roomId=self.id,
                                         personEmail=person,
@@ -342,6 +338,7 @@ class SparkSpace(Space):
         :type person: str
 
         """
+        assert self.api is not None  # connect() is prerequisite
         try:
             self.api.memberships.create(roomId=self.id,
                                         personEmail=person,
@@ -378,6 +375,7 @@ class SparkSpace(Space):
 
         logging.info(u"Deleting Cisco Spark room '{}'".format(self.title))
 
+        assert self.api is not None  # connect() is prerequisite
         try:
             self.api.rooms.delete(roomId=self.id)
 
@@ -428,6 +426,7 @@ class SparkSpace(Space):
 
         logging.debug(u"- text: {}".format(text))
 
+        assert self.api is not None  # connect() is prerequisite
         try:
             files = [ex_file_path] if ex_file_path else None
             self.api.messages.create(roomId=self.id,
@@ -455,6 +454,7 @@ class SparkSpace(Space):
         logging.info(u"Registering webhook to Cisco Spark")
         logging.debug(u"- {}".format(hook_url))
 
+        assert self.api is not None  # connect() is prerequisite
         try:
             self.api.webhooks.create(name='shellbot-webhook',
                                      targetUrl=hook_url,
@@ -516,6 +516,7 @@ class SparkSpace(Space):
         logging.info(u'Pulling messages')
         self.bot.context.increment(u'puller.counter')
 
+        assert self.api is not None  # connect() is prerequisite
         new_items = []
         try:
             items = self.api.messages.list(roomId=self.id,
@@ -561,6 +562,7 @@ class SparkSpace(Space):
         """
         logging.info(u"Getting bot attributes")
 
+        assert self.api is not None  # connect() is prerequisite
         item = self.api.people.me()
 
         logging.debug(u"- done")

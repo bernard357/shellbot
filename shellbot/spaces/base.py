@@ -318,31 +318,22 @@ class Space(object):
         """
         return False
 
-    def create_space(self, title, use_it=True, **kwargs):
+    def create_space(self, title, **kwargs):
         """
         Creates a space
 
         :param title: title of the target space
         :type title: str
 
-        :param use_it: if this should be the underlying space for this instance
-        :type use_it: bool
-
-        :return: a representation of the new room, or None
-
-        On successful space creation, this object usually is configured
-        to use it. You can set the parameter ``use_it`` to False if you need
-        an extra room.
+        On successful space creation, this object should be configured
+        to use it.
 
         This function should be implemented in sub-class.
 
         Example::
 
-            def create_space(self, title=None, use_it=True, **kwargs):
-                room = self.api.rooms.create(title=title)
-                if use_it:
-                    self.use_room(room)
-                return room
+            def create_space(self, title=None, **kwargs):
+                self.api.rooms.create(title=title)
 
         """
         raise NotImplementedError()

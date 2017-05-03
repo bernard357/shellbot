@@ -20,6 +20,73 @@ my_bot.shell.load_default_commands()
 
 class ListenerTests(unittest.TestCase):
 
+    def test_work(self):
+
+        logging.info("*** work")
+
+        my_bot.context.set('general.switch', 'on')
+
+        listener = Listener(bot=my_bot)
+        listener.process = mock.Mock(side_effect=Exception('TEST'))
+        my_bot.ears.put(('dummy'))
+        my_bot.ears.put(Exception('EOQ'))
+        listener.work()
+        self.assertEqual(my_bot.context.get('listener.counter'), 0)
+
+        listener = Listener(bot=my_bot)
+        listener.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
+        my_bot.ears.put(('dummy'))
+        listener.work()
+        self.assertEqual(my_bot.context.get('listener.counter'), 0)
+
+    def test_work_wait(self):
+
+        logging.info("*** work/wait while empty and not ready")
+
+        my_bot.context.set('general.switch', 'on')
+        listener_process = Process(target=my_bot.listener.work)
+        listener_process.daemon = True
+        listener_process.start()
+
+        t = Timer(0.1, my_bot.ears.put, ['ping'])
+        t.start()
+
+        time.sleep(0.2)
+        my_bot.context.set('general.switch', 'off')
+        listener_process.join()
+
+    def test_process_filter(self):
+
+        logging.info('*** process/filter ***')
+
+        item = {
+              "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
+              "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+              "roomType" : "group",
+              "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
+              "toPersonEmail" : "julie@example.com",
+              "text" : "The PM for this project is Mike C. and the Engineering Manager is Jane W.",
+              "markdown" : "**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>.",
+              "files" : [ "http://www.example.com/images/media.png" ],
+              "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+              "personEmail" : "matt@example.com",
+              "created" : "2015-10-18T14:26:16+00:00",
+              "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
+            }
+
+
+        def filter(item):
+            my_bot.context.set('listener.last', item['text'].title())
+            return item
+
+        listener = Listener(bot=my_bot, filter=filter)
+
+        my_bot.context.set('listener.counter', 22)
+        listener.process(item)
+        self.assertEqual(my_bot.context.get('listener.counter'), 23)
+        self.assertEqual(my_bot.context.get('listener.last'),
+                         'The Pm For This Project Is Mike C. And The Engineering Manager Is Jane W.')
+
     def test_static(self):
 
         logging.info('*** Static test ***')
@@ -122,7 +189,12 @@ class ListenerTests(unittest.TestCase):
         my_bot.ears.put(Exception('EOQ'))
 
         tee = Queue()
-        listener = Listener(bot=my_bot, tee=tee)
+
+        def filter(item):
+            tee.put(item)
+            return item
+
+        listener = Listener(bot=my_bot, filter=filter)
 
         listener.work()
 
@@ -146,41 +218,6 @@ class ListenerTests(unittest.TestCase):
             self.assertEqual(tee.get(), item)
         with self.assertRaises(Exception):
             print(tee.get_nowait())
-
-    def test_work(self):
-
-        logging.info("*** work")
-
-        my_bot.context.set('general.switch', 'on')
-
-        listener = Listener(bot=my_bot)
-        listener.process = mock.Mock(side_effect=Exception('TEST'))
-        my_bot.ears.put(('dummy'))
-        my_bot.ears.put(Exception('EOQ'))
-        listener.work()
-        self.assertEqual(my_bot.context.get('listener.counter'), 0)
-
-        listener = Listener(bot=my_bot)
-        listener.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
-        my_bot.ears.put(('dummy'))
-        listener.work()
-        self.assertEqual(my_bot.context.get('listener.counter'), 0)
-
-    def test_work_wait(self):
-
-        logging.info("*** work/wait while empty and not ready")
-
-        my_bot.context.set('general.switch', 'on')
-        listener_process = Process(target=my_bot.listener.work)
-        listener_process.daemon = True
-        listener_process.start()
-
-        t = Timer(0.1, my_bot.ears.put, ['ping'])
-        t.start()
-
-        time.sleep(0.2)
-        my_bot.context.set('general.switch', 'off')
-        listener_process.join()
 
 if __name__ == '__main__':
 

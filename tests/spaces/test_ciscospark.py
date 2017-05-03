@@ -223,11 +223,19 @@ class SparkSpaceTests(unittest.TestCase):
             self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
             self.assertEqual(space.team_id, None)
 
-    def test_bond_mock(self):
+    def test_bond(self):
 
         logging.info("*** bond")
 
         space = SparkSpace(bot=my_bot)
+
+        with self.assertRaises(AssertionError):
+            space.bond()
+
+        space.api = None
+        with self.assertRaises(AssertionError):
+            space.bond()
+
         space.api = FakeApi()
         space.add_moderator = mock.Mock()
         space.add_participant = mock.Mock()
@@ -239,11 +247,15 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertTrue(space.add_moderator.called)
         self.assertTrue(space.add_participant.called)
 
-    def test_lookup_space_mock(self):
+    def test_lookup_space(self):
 
         logging.info("*** lookup_space")
 
         space = SparkSpace(bot=my_bot)
+
+        with self.assertRaises(AssertionError):
+            flag = space.lookup_space(title='*does*not*exist*in*this*world')
+
         space.api = FakeApi()
 
         flag = space.lookup_space(title='*does*not*exist*in*this*world')
@@ -270,20 +282,14 @@ class SparkSpaceTests(unittest.TestCase):
 
         space = SparkSpace(bot=my_bot)
 
-        # create a space and use it
+        with self.assertRaises(AssertionError):
+            space.create_space(title='*title')
+
         space.api = FakeApi()
         space.create_space(title='*title')
         self.assertTrue(space.api.rooms.create.called)
         self.assertEqual(space.title, '*title')
         self.assertEqual(space.id, '*id')
-
-        # add an extra space
-        fake = FakeRoom()
-        fake.title = '*another title'
-        space.api = FakeApi(new_room=fake)
-        extra = space.create_space(title='*another title', use_it=False)
-        self.assertEqual(extra.title, '*another title')
-        self.assertEqual(space.title, '*title')
 
     def test_get_team_mock(self):
 
