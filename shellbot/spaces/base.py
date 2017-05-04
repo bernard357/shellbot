@@ -99,21 +99,26 @@ class Space(object):
         """
         Handles a collaborative space
 
-        :param context: general settings for the full program
-        :type context: Context
+        :param bot: the overarching bot
+        :type bot: ShellBot
+
+        Example::
+
+            space = Space(bot=bot)
 
         """
         self.bot = bot
-
-        self.prefix = 'space'
 
         self.on_init(**kwargs)
 
         self.reset()
 
-    def on_init(self, **kwargs):
+    def on_init(self, prefix='space', **kwargs):
         """
         Handles extended initialisation parameters
+
+        :param prefix: the main keyword for configuration of this space
+        :type prefix: str
 
         This function should be expanded in sub-class, where necessary.
 
@@ -123,7 +128,8 @@ class Space(object):
                 self.token = ex_token
 
         """
-        pass
+        assert prefix not in (None, '')
+        self.prefix = prefix
 
     def reset(self):
         """

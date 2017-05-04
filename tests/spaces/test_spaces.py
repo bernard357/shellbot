@@ -208,7 +208,7 @@ class SpaceFactoryTests(unittest.TestCase):
         logging.info("*** get('spark')")
 
         bot = ShellBot()
-        space = SpaceFactory.get(type='spark', bot=bot, ex_token='b')
+        space = SpaceFactory.get(type='spark', bot=bot, token='b')
         self.assertEqual(space.token, 'b')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)

@@ -80,7 +80,7 @@ class SparkSpaceTests(unittest.TestCase):
 
         logging.info("*** init")
 
-        space = SparkSpace(bot=my_bot, ex_token='b')
+        space = SparkSpace(bot=my_bot, token='b')
         self.assertEqual(space.token, 'b')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)

@@ -33,18 +33,29 @@ class SparkSpace(Space):
     """
 
     def on_init(self,
-                ex_token=None,
+                prefix='spark',
+                token=None,
                 **kwargs):
         """
         Handles extended initialisation parameters
 
-        :param ex_token: authentication token for the Cisco Spark API
+        :param prefix: the main keyword for configuration of this space
+        :type prefix: str
 
+        :param token: authentication token for the Cisco Spark API
+
+        Example::
+
+            space = SparkSpace(bot=bot, prefix='spark.audit')
+
+        Here we create a new space powered by Cisco Spark service, and use
+        settings under the key ``spark.audit`` in the context of this bot.
         """
-        self.prefix = 'spark'
+        assert prefix not in (None, '')
+        self.prefix = prefix
 
-        if ex_token is not None:
-            self.bot.context.set('spark.token', ex_token)
+        if token is not None:
+            self.bot.context.set(self.prefix+'.token', token)
 
         self.api = None
 
@@ -54,8 +65,8 @@ class SparkSpace(Space):
         """
         self.teamId = None
 
-        self.token = self.bot.context.get('spark.token', '*void')
-        self.personal_token = self.bot.context.get('spark.personal_token', '*void')
+        self.token = self.bot.context.get(self.prefix+'.token', '*void')
+        self.personal_token = self.bot.context.get(self.prefix+'.personal_token', '*void')
 
         self._last_message_id = 0
 
@@ -109,33 +120,33 @@ class SparkSpace(Space):
         ['bobby@jah.com']
 
         """
-        if self.bot.context.get('spark.personal_token') is None:
+        if self.bot.context.get(self.prefix+'.personal_token') is None:
             token = os.environ.get('CISCO_SPARK_TOKEN')
             if token:
-                self.bot.context.set('spark.personal_token', token)
+                self.bot.context.set(self.prefix+'.personal_token', token)
 
-        if self.bot.context.get('spark.token') is None:
+        if self.bot.context.get(self.prefix+'.token') is None:
             token1 = os.environ.get('CISCO_SPARK_BOT_TOKEN')
-            token2 = self.bot.context.get('spark.personal_token')
+            token2 = self.bot.context.get(self.prefix+'.personal_token')
             if token1:
-                self.bot.context.set('spark.token', token1)
+                self.bot.context.set(self.prefix+'.token', token1)
             elif token2:
-                self.bot.context.set('spark.token', token2)
+                self.bot.context.set(self.prefix+'.token', token2)
 
-        self.bot.context.check('spark.room', filter=True)
-        self.bot.context.check('spark.moderators', [], filter=True)
-        self.bot.context.check('spark.participants', [])
-        self.bot.context.check('spark.team')
-        self.bot.context.check('spark.token', '', filter=True)
-        self.bot.context.check('spark.personal_token', '', filter=True)
+        self.bot.context.check(self.prefix+'.room', filter=True)
+        self.bot.context.check(self.prefix+'.moderators', [], filter=True)
+        self.bot.context.check(self.prefix+'.participants', [])
+        self.bot.context.check(self.prefix+'.team')
+        self.bot.context.check(self.prefix+'.token', '', filter=True)
+        self.bot.context.check(self.prefix+'.personal_token', '', filter=True)
 
-        values = self.bot.context.get('spark.moderators')
+        values = self.bot.context.get(self.prefix+'.moderators')
         if isinstance(values, string_types):
-            self.bot.context.set('spark.moderators', [values])
+            self.bot.context.set(self.prefix+'.moderators', [values])
 
-        values = self.bot.context.get('spark.participants')
+        values = self.bot.context.get(self.prefix+'.participants')
         if isinstance(values, string_types):
-            self.bot.context.set('spark.participants', [values])
+            self.bot.context.set(self.prefix+'.participants', [values])
 
     def configured_title(self):
         """
@@ -147,7 +158,7 @@ class SparkSpace(Space):
         For Cisco Spark configurations, this is coming
         from ``spark.room`` parameter.
         """
-        return  self.bot.context.get('spark.room',
+        return  self.bot.context.get(self.prefix+'.room',
                                      self.DEFAULT_SPACE_TITLE)
 
     def connect(self):

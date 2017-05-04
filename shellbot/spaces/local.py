@@ -39,10 +39,23 @@ class LocalSpace(Space):
 
     """
 
-    def on_init(self, **kwargs):
+    def on_init(self, prefix='space', **kwargs):
         """
         Adds processing to space initialisation
+
+        :param prefix: the main keyword for configuration of this space
+        :type prefix: str
+
+        Example::
+
+            space = LocalSpace(bot=bot, prefix='local.audit')
+
+        Here we create a new local space, and use
+        settings under the key ``local.audit`` in the context of this bot.
         """
+        assert prefix not in (None, '')
+        self.prefix = prefix
+
         self.moderators = []
         self.participants = []
 

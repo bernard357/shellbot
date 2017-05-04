@@ -12,7 +12,7 @@ import time
 sys.path.insert(0, os.path.abspath('../..'))
 
 from shellbot import Context, ShellBot
-from shellbot.spaces import Space
+from shellbot.spaces import Space, LocalSpace
 
 
 class Fake(object):
@@ -66,6 +66,33 @@ class SpaceTests(unittest.TestCase):
             self.assertTrue(space.unknown is not None)
         with self.assertRaises(AttributeError):
             self.assertTrue(space.ex_unknown is not None)
+
+        space = LocalSpace(bot=my_bot, prefix='my.space')
+        with self.assertRaises(KeyError):
+            space.configure({
+                'not.my.space': {
+                    'title': 'Another title',
+                    'moderators':
+                        ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+                    'participants':
+                        ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+                }
+            })
+
+        space = LocalSpace(bot=my_bot, prefix='my.space')
+        space.configure({
+            'my.space': {
+                'title': 'Another title',
+                'moderators':
+                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+                'participants':
+                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+            }
+        })
+        self.assertEqual(space.prefix, 'my.space')
+        self.assertEqual(space.id, None)
+        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
+        self.assertEqual(space.hook_url, None)
 
     def test_reset(self):
 
