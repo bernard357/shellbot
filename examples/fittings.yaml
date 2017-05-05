@@ -1,0 +1,133 @@
+---
+
+information:
+  - "Shellbot examples"
+
+---
+
+regionId: dd-eu
+locationId: EU9
+
+blueprints:
+
+  - single-node:
+
+      domain:
+        name: ShellbotFox
+        ipv4: auto
+
+      ethernet:
+        name: ShellbotNetwork
+        subnet: 10.90.45.0
+
+      nodes:
+        - pushy-01:
+
+            information:
+              - "List security tokens:"
+              - "ssh ubuntu@{{ node.public }}"
+              - "cd shellbot/examples"
+              - "python pushy.py"
+              - "Act on it over the web:"
+              - "http://{{ node.public }}:8080/trigger"
+              - "Manage examples from the command line:"
+              - "ssh ubuntu@{{ node.public }}"
+
+            appliance: 'Ubuntu 14'
+
+            cpu: 1
+            memory: 1
+
+            glue:
+              - internet icmp 22 80 443 8080
+
+            monitoring: essentials
+
+            cloud-config:
+
+              packages:
+                - ntp
+                - git
+                - python-pip
+
+              write_files:
+
+                - path: /etc/init/pushy.conf
+                  permissions: "0755"
+                  content: |
+                      description "pushy service"
+
+                      start on runlevel [234]
+                      stop on runlevel [0156]
+
+                      setuid ubuntu
+
+                      env CHAT_ROOM_MODERATORS="{{ environment.CHAT_ROOM_MODERATORS }}"
+                      export CHAT_ROOM_MODERATORS
+
+                      env CHAT_TOKEN="{{ environment.CHAT_TOKEN }}"
+                      export CHAT_TOKEN
+
+                      env SERVER_URL="http://{{ node.public }}:8080"
+                      export SERVER_URL
+
+                      script
+                          cd /home/ubuntu/shellbot/examples
+                          python pushy.py
+                      end script
+
+                - path: /etc/profile.d/shellbot.sh
+                  permissions: "0755"
+                  content: |
+                    #!/bin/sh
+                    export CHAT_ROOM_MODERATORS="{{ environment.CHAT_ROOM_MODERATORS }}"
+                    export CHAT_TOKEN="{{ environment.CHAT_TOKEN }}"
+                    export SERVER_URL="http://{{ node.public }}:8080"
+
+                - path: /root/hosts.awk
+                  content: |
+                    #!/usr/bin/awk -f
+                    /^{{ node.public }}/ {next}
+                    /^{{ node.private }}/ {next}
+                    {print}
+                    END {
+                     print "{{ node.public }}    {{ node.name }}"
+                     print "{{ node.private }}    {{ node.name }}"
+                    }
+
+              runcmd:
+
+                - echo "===== Handling ubuntu identity"
+                - cp -n /etc/ssh/ssh_host_rsa_key /home/ubuntu/.ssh/id_rsa
+                - cp -n /etc/ssh/ssh_host_rsa_key.pub /home/ubuntu/.ssh/id_rsa.pub
+                - chown ubuntu:ubuntu /home/ubuntu/.ssh/*
+                - sed -i "/StrictHostKeyChecking/s/^.*$/    StrictHostKeyChecking no/" /etc/ssh/ssh_config
+
+                - echo "===== Updating /etc/hosts"
+                - cp -n /etc/hosts /etc/hosts.original
+                - awk -f /root/hosts.awk /etc/hosts >/etc/hosts.new && mv /etc/hosts.new /etc/hosts
+
+                - echo "===== Installing the code"
+                - cd /home/ubuntu/
+                - git clone https://github.com/bernard357/shellbot.git
+                - cd shellbot/
+                - pip install -r requirements.txt
+
+              hostname: "{{ node.name }}"
+
+              ssh_keys:
+                rsa_private: |
+                  {{ rsa_private.key }}
+                rsa_public: "{{ rsa_public.key }}"
+
+              users:
+                - default
+
+                - name: ubuntu
+                  sudo: 'ALL=(ALL) NOPASSWD:ALL'
+                  ssh-authorized-keys:
+                    - "{{ rsa_public.key }}"
+                    - "{{ rsa_public.local }}"
+
+              disable_root: false
+              ssh_pwauth: false
