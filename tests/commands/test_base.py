@@ -29,7 +29,7 @@ class BaseTests(unittest.TestCase):
         my_bot.shell.configure(settings={
             u'hello': u'world',
         })
-        self.assertEqual(c.context.get('general.hello'), u'world')
+        self.assertEqual(my_bot.context.get('general.hello'), u'world')
 
         self.assertEqual(c.keyword, None)
         self.assertEqual(c.information_message, None)

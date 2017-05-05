@@ -32,7 +32,7 @@ class Empty(Command):
         Handles empty command
         """
         if not hasattr(self, 'help_command'):
-            self.help_command = self.shell.command('help')
+            self.help_command = self.bot.shell.command('help')
 
         if self.help_command is None:
             self.bot.say(u"No help command has been found.")

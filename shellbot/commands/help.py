@@ -33,13 +33,13 @@ class Help(Command):
         Lists available commands and related usage information
         """
 
-        if self.shell.commands == []:
+        if self.bot.shell.commands == []:
             self.bot.say(u"No command has been found.")
 
         elif arguments in (None, ''):
             lines = []
-            for key in self.shell.commands:
-                command = self.shell.command(key)
+            for key in self.bot.shell.commands:
+                command = self.bot.shell.command(key)
                 if not command.is_hidden:
                     lines.append(u"{} - {}".format(
                         command.keyword,
@@ -51,7 +51,7 @@ class Help(Command):
                     + '\n'.join(lines))
 
         else:
-            command = self.shell.command(arguments)
+            command = self.bot.shell.command(arguments)
 
             if command:
                 lines = []

@@ -23,8 +23,6 @@ class Command(object):
 
     def __init__(self, bot=None, **kwargs):
         self.bot = bot
-        self.shell = bot.shell if bot else None
-        self.context = bot.context if bot else None
         for key, value in kwargs.items():
             setattr(self, key, value)
 
