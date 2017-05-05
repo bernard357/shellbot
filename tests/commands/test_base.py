@@ -8,23 +8,22 @@ from multiprocessing import Process, Queue
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 from shellbot import Context, ShellBot, Shell
+from shellbot.commands import Command
 
 
 my_bot = ShellBot(mouth=Queue())
+my_bot.shell = Shell(bot=my_bot)
+
 
 class BaseTests(unittest.TestCase):
 
-    def setUp(self):
-        my_bot.shell = Shell(bot=my_bot)
+    def test_init(self):
 
-    def test_base(self):
+        logging.info('***** init')
 
-        logging.info('***** base')
-
-        from shellbot.commands import Command
         c = Command(my_bot)
 
         my_bot.shell.configure(settings={
@@ -45,8 +44,6 @@ class BaseTests(unittest.TestCase):
     def test_from_base(self):
 
         logging.info('***** from base')
-
-        from shellbot.commands import Command
 
         c = Command(my_bot)
         c.keyword = u'bâtman'

@@ -8,27 +8,21 @@ from multiprocessing import Process, Queue
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 from shellbot import Context, ShellBot, Shell
+from shellbot.commands import Version
 
 
 my_bot = ShellBot(mouth=Queue())
+my_bot.shell = Shell(bot=my_bot)
 
-class CommandTests(unittest.TestCase):
 
-    def setUp(self):
-        my_bot.shell = Shell(bot=my_bot)
+class VersionTests(unittest.TestCase):
 
-    def test_version(self):
+    def test_init(self):
 
-        logging.info('***** version')
-
-        my_bot.shell.configure(settings={
-            'bot': {'name': 'testy', 'version': '17.4.1'},
-        })
-
-        from shellbot.commands import Version
+        logging.info('***** init')
 
         c = Version(my_bot)
 
@@ -37,6 +31,16 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(c.usage_message, None)
         self.assertTrue(c.is_interactive)
         self.assertTrue(c.is_hidden)
+
+    def test_execute(self):
+
+        logging.info('***** execute')
+
+        my_bot.shell.configure(settings={
+            'bot': {'name': 'testy', 'version': '17.4.1'},
+        })
+
+        c = Version(my_bot)
 
         c.execute()
         self.assertEqual(my_bot.mouth.get(), 'testy version 17.4.1')

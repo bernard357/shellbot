@@ -8,23 +8,21 @@ from multiprocessing import Process, Queue
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 from shellbot import Context, ShellBot, Shell
+from shellbot.commands import Default
 
 
 my_bot = ShellBot(mouth=Queue())
+my_bot.shell = Shell(bot=my_bot)
 
-class CommandsTests(unittest.TestCase):
 
-    def setUp(self):
-        my_bot.shell = Shell(bot=my_bot)
+class DefaultTests(unittest.TestCase):
 
-    def test_default(self):
+    def test_init(self):
 
-        logging.info('***** default')
-
-        from shellbot.commands import Default
+        logging.info('***** init')
 
         c = Default(my_bot)
 
@@ -33,6 +31,12 @@ class CommandsTests(unittest.TestCase):
         self.assertEqual(c.usage_message, None)
         self.assertTrue(c.is_interactive)
         self.assertTrue(c.is_hidden)
+
+    def test_execute(self):
+
+        logging.info('***** execute')
+
+        c = Default(my_bot)
 
         my_bot.shell.verb = u'*unknown*'
         c.execute('test of default command')

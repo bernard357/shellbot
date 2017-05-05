@@ -8,23 +8,21 @@ from multiprocessing import Process, Queue
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 from shellbot import Context, ShellBot, Shell
+from shellbot.commands import Echo
 
 
 my_bot = ShellBot(mouth=Queue())
+my_bot.shell = Shell(bot=my_bot)
 
-class CommandsTests(unittest.TestCase):
 
-    def setUp(self):
-        my_bot.shell = Shell(bot=my_bot)
+class EchoTests(unittest.TestCase):
 
-    def test_echo(self):
+    def test_init(self):
 
-        logging.info('***** echo')
-
-        from shellbot.commands import Echo
+        logging.info('***** init')
 
         c = Echo(my_bot)
 
@@ -33,6 +31,12 @@ class CommandsTests(unittest.TestCase):
         self.assertEqual(c.usage_message, u'echo "a string to be echoed"')
         self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
+
+    def test_execute(self):
+
+        logging.info('***** execute')
+
+        c = Echo(my_bot)
 
         message = u"hello world"
         c.execute(message)

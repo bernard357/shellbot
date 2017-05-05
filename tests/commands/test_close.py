@@ -8,26 +8,21 @@ from multiprocessing import Process, Queue
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 from shellbot import Context, ShellBot, Shell
+from shellbot.commands import Close
 
 
 my_bot = ShellBot(mouth=Queue())
+my_bot.shell = Shell(bot=my_bot)
 
-class CommandsTests(unittest.TestCase):
 
-    def setUp(self):
-        my_bot.shell = Shell(bot=my_bot)
+class CloseTests(unittest.TestCase):
 
-    def test_close(self):
+    def test_init(self):
 
-        logging.info('***** close')
-
-        my_bot.stop = mock.Mock()
-        my_bot.dispose = mock.Mock()
-
-        from shellbot.commands import Close
+        logging.info('***** init')
 
         c = Close(my_bot)
 
@@ -37,10 +32,20 @@ class CommandsTests(unittest.TestCase):
         self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
+    def test_execute(self):
+
+        logging.info('***** execute')
+
+        my_bot.stop = mock.Mock()
+        my_bot.dispose = mock.Mock()
+
+        c = Close(my_bot)
+
         c.execute()
         self.assertEqual(my_bot.mouth.get(), u'Close this room')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
+
         self.assertTrue(my_bot.stop.called)
         self.assertTrue(my_bot.dispose.called)
 

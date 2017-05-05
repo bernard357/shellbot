@@ -8,25 +8,22 @@ from multiprocessing import Process, Queue
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 from shellbot import Context, ShellBot, Shell
+from shellbot.commands import Empty
 
 
 my_bot = ShellBot(mouth=Queue())
+my_bot.shell = Shell(bot=my_bot)
 
-class CommandsTests(unittest.TestCase):
 
-    def setUp(self):
-        my_bot.shell = Shell(bot=my_bot)
+class EmptyTests(unittest.TestCase):
 
-    def test_empty(self):
 
-        logging.info('***** empty')
+    def test_init(self):
 
-        my_bot.shell.load_command('shellbot.commands.help')
-
-        from shellbot.commands import Empty
+        logging.info('***** init')
 
         c = Empty(my_bot)
 
@@ -35,6 +32,14 @@ class CommandsTests(unittest.TestCase):
         self.assertEqual(c.usage_message, None)
         self.assertTrue(c.is_interactive)
         self.assertTrue(c.is_hidden)
+
+    def test_execute(self):
+
+        logging.info('***** execute')
+
+        my_bot.shell.load_command('shellbot.commands.help')
+
+        c = Empty(my_bot)
 
         c.execute()
         self.assertEqual(

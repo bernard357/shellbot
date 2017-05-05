@@ -8,23 +8,21 @@ from multiprocessing import Process, Queue
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 from shellbot import Context, ShellBot, Shell
+from shellbot.commands import Sleep
 
 
 my_bot = ShellBot(mouth=Queue())
+my_bot.shell = Shell(bot=my_bot)
 
-class CommandsTests(unittest.TestCase):
 
-    def setUp(self):
-        my_bot.shell = Shell(bot=my_bot)
+class SleepTests(unittest.TestCase):
 
-    def test_sleep(self):
+    def test_init(self):
 
-        logging.info('***** sleep')
-
-        from shellbot.commands import Sleep
+        logging.info('***** init')
 
         c = Sleep(my_bot)
 
@@ -33,6 +31,12 @@ class CommandsTests(unittest.TestCase):
         self.assertEqual(c.usage_message, u'sleep <n>')
         self.assertFalse(c.is_interactive)
         self.assertTrue(c.is_hidden)
+
+    def test_execute(self):
+
+        logging.info('***** execute')
+
+        c = Sleep(my_bot)
 
         c.DEFAULT_DELAY = 0.001
         c.execute(u'')
