@@ -15,7 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+from multiprocessing import Process, Queue
+
 from .base import Command
+from ..spaces import SparkSpace
 
 
 class Audit(Command):
@@ -27,17 +31,30 @@ class Audit(Command):
     information_message = u'Check and change audit status'
     usage_message = u'audit [on|off]'
 
+    disabled_message = u'Audit has not been enabled.'
+
     on_message = u'Chat interactions are currently audited.'
     off_message = u'Chat interactions are private. ' \
                   u'Auditing has not been activated.'
     already_on_message = u'Chat interactions are already audited.'
     already_off_message = u'Chat interactions are already private.'
 
+    _armed = False
+    space = None
+    mouth = None
+
     def execute(self, arguments=None):
         """
         Checks and changes audit status
+
+        :param arguments: either 'on' or 'off'
+        :type arguments: str
+
         """
-        if arguments == 'on':
+        if self.armed == False:
+            self.bot.say(self.disabled_message)
+
+        elif arguments == 'on':
             self.audit_on()
 
         elif arguments =='off':
@@ -77,3 +94,89 @@ class Audit(Command):
             self.bot.say(self.on_message)
         else:
             self.bot.say(self.off_message)
+
+    def arm(self, space=None, speaker=None):
+        """
+        Arms the auditing function
+
+        :param space: the target space to use (optional)
+        :type space: Space
+
+        :param speaker: the speaker instance to use (optional)
+        :type speaker: Speaker
+
+        Parameters are provided mainly for test injection.
+        """
+
+        # create a secondary room
+        #
+        self.space = space if space else SparkSpace(bot=self)
+
+        self.space.connect()
+
+        title = u"{} - {}".format(
+            self.bot.context.get('spark.room', 'Test'), u"Audited content")
+
+        self.space.bond(title=title)
+
+        # speak incoming updates
+        #
+        self.mouth = Queue()
+
+        self.speaker = speaker if speaker else Speaker(bot=self)
+        self.speaker.run()
+
+        # audit incoming updates
+        #
+        self.bot.listener.filter = self.filter
+
+    @property
+    def armed(self):
+        """
+        Are we ready for auditing or not?
+        """
+        if self._armed:
+            return True
+
+        if self.space is None:
+            return False
+
+        if self.mouth is None:
+            return False
+
+        if self.bot.listener.filter != self.filter:
+            return False
+
+        return True
+
+    def filter(self, item):
+        """
+        Filters items handled by listener
+
+        :param item: an item received by listener
+        :type item: dict
+
+        :return: a filtered item
+
+        This function implements the actual auditing of incoming messages.
+        """
+        try:
+            self.mouth.put(self.format(item))
+        finally:
+            return item
+
+    def format(self, item):
+        """
+        Prepares an outbound message
+
+        :param item: an inbound message
+        :type item: dict
+
+        :return: outbound message
+        :rtype: str or Message
+
+        """
+        person = item['personEmail']
+        text = item['text']
+        return u'{}: {}'.format(person, text)
+
