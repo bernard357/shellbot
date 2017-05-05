@@ -486,6 +486,4 @@ class ShellBotMessage(object):
     def __init__(self, message, markdown=None, file=None):
         self.message = message
         self.markdown = markdown
-        if message is not None and markdown is not None:
-            self.markdown = message+'\n\n'+markdown
         self.file = file

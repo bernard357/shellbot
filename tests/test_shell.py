@@ -157,7 +157,7 @@ class ShellTests(unittest.TestCase):
         shell.say(message_3, markdown=markdown_3)
         item = shell.bot.mouth.get()
         self.assertEqual(item.message, message_3)
-        self.assertEqual(item.markdown, message_3+'\n\n'+markdown_3)
+        self.assertEqual(item.markdown, markdown_3)
         self.assertEqual(item.file, None)
 
         message_4 = "What'sup Doc?"
@@ -174,7 +174,7 @@ class ShellTests(unittest.TestCase):
         shell.say(message_5, markdown=markdown_5, file=file_5)
         item = shell.bot.mouth.get()
         self.assertEqual(item.message, message_5)
-        self.assertEqual(item.markdown, message_5+'\n\n'+markdown_5)
+        self.assertEqual(item.markdown, markdown_5)
         self.assertEqual(item.file, file_5)
 
     def test_vocabulary(self):
