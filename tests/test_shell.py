@@ -184,6 +184,7 @@ class ShellTests(unittest.TestCase):
         shell = Shell(bot=my_bot)
         shell.load_default_commands()
 
+        self.assertEqual(len(shell.commands), 7)
         self.assertEqual(shell.line, None)
         self.assertEqual(shell.count, 0)
 
@@ -307,7 +308,7 @@ class ShellTests(unittest.TestCase):
 
         class Custom(Default):
             def execute(self, arguments):
-                self.shell.say("{}, really?".format(self.shell.verb))
+                self.shell.say("{}, really?".format(arguments))
 
         shell.load_command(Custom(my_bot))
 

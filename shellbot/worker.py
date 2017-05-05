@@ -113,7 +113,7 @@ class Worker(object):
 
             elif '*default' in self.bot.shell.commands:
                 command = self.bot.shell.command('*default')
-                command.execute(arguments)
+                command.execute(' '.join([verb, arguments]).rstrip())
 
             else:
                 self.bot.say(

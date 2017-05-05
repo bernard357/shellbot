@@ -28,6 +28,7 @@ class Shell(object):
 
     def __init__(self, bot):
         self.bot = bot
+        self.bot.shell = self
 
         self._commands = {}
         self.load_commands(self.bot.context.get('shell.commands', []))
@@ -262,14 +263,13 @@ class Shell(object):
             elif '*default' in self._commands.keys():
                 command = self._commands['*default']
                 if command.is_interactive:
-                    self.verb = verb
-                    command.execute(arguments)
+                    command.execute(line)
                 else:
                     if not self.bot.context.get('worker.busy', False):
                         self.say(u"Ok, working on it")
                     else:
                         self.say(u"Ok, will work on it as soon as possible")
-                    self.bot.inbox.put((verb, arguments))
+                    self.bot.inbox.put((verb, line))
 
             else:
                 self.say(

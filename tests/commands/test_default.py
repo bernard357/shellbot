@@ -38,8 +38,7 @@ class DefaultTests(unittest.TestCase):
 
         c = Default(my_bot)
 
-        my_bot.shell.verb = u'*unknown*'
-        c.execute('test of default command')
+        c.execute('*unknown*')
         self.assertEqual(my_bot.mouth.get(),
                          u"Sorry, I do not know how to handle '*unknown*'")
         with self.assertRaises(Exception):

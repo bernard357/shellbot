@@ -32,4 +32,4 @@ class Default(Command):
         Handles unmatched command
         """
         self.bot.say(
-            u"Sorry, I do not know how to handle '{}'".format(self.shell.verb))
+            u"Sorry, I do not know how to handle '{}'".format(arguments))

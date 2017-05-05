@@ -65,7 +65,7 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(my_bot.mouth.get(), u'Shelly version *unknown*')
 
         self.assertEqual(my_bot.mouth.get(),
-                         "Sorry, I do not know how to handle 'None'")
+                         "Sorry, I do not know how to handle 'unknownCommand'")
 
         with self.assertRaises(Exception):
             print(my_bot.mouth.get_nowait())
