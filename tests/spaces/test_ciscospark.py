@@ -40,6 +40,12 @@ class FakeMessage(Fake):
     _json = '*message'
 
 
+class FakePerson(Fake):
+    id = 'Y2lzY29zcGFyazovL3VzL1RFQU0Yy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5'
+    personEmail = 'a@me.com'
+    displayName = 'dusty (bot)'
+
+
 class FakeApi(object):
 
     def __init__(self, rooms=[], teams=[], messages=[], new_room=None):
@@ -68,7 +74,7 @@ class FakeApi(object):
         self.webhooks.create = mock.Mock()
 
         self.people = Fake()
-        self.people.me = mock.Mock()
+        self.people.me = mock.Mock(return_value=FakePerson())
 
 
 my_bot = ShellBot()
@@ -436,6 +442,23 @@ class SparkSpaceTests(unittest.TestCase):
         space.register('*hook')
         self.assertTrue(space.api.webhooks.create.called)
 
+    def test_on_run(self):
+
+        logging.info("*** on_run")
+        space = SparkSpace(bot=my_bot)
+        space.api = FakeApi()
+        space.on_run()
+        self.assertTrue(space.api.people.me.called)
+
+        if cisco_spark_bearer is not None:
+
+            logging.info("*** on_run API")
+
+            space = SparkSpace(bot=my_bot, bearer=cisco_spark_bearer)
+            space.connect()
+            item = space.on_run()
+            self.assertTrue(my_bot.context.get('bot.id') > 20)
+
     def test_work(self):
 
         logging.info("*** work")
@@ -499,25 +522,6 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertEqual(my_bot.ears.get(), '*message')
         with self.assertRaises(Exception):
             print(my_bot.ears.get_nowait())
-
-    def test_get_bot_mock(self):
-
-        logging.info("*** get_bot")
-        space = SparkSpace(bot=my_bot)
-        space.api = FakeApi()
-        space.get_bot()
-        self.assertTrue(space.api.people.me.called)
-
-    def test_get_bot_api(self):
-
-        if cisco_spark_bearer is not None:
-
-            logging.info("*** get_bot API")
-
-            space = SparkSpace(bot=my_bot, bearer=cisco_spark_bearer)
-            space.connect()
-            item = space.get_bot()
-            self.assertTrue(len(item.id) > 20)
 
 if __name__ == '__main__':
 

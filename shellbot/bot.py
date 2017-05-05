@@ -313,13 +313,13 @@ class ShellBot(object):
 
     def hook(self, server=None):
         """
-        Connects this bot with Cisco Spark
+        Connects this bot with back-end API
 
         :param server: web server to be used
         :type server: Server
 
         This function adds a route to the provided server, and
-        asks Cisco Spark to send messages there.
+        asks the back-end service to send messages there.
         """
 
         if server is not None:
@@ -357,6 +357,8 @@ class ShellBot(object):
 
         if server is None:
             server = self.server
+
+        self.space.on_run()
 
         self.hook(server=server)
 
@@ -416,7 +418,7 @@ class ShellBot(object):
 
     def on_start(self):
         """
-        Do additional stuff on bot start
+        Does additional stuff on bot start
 
         Provide your own implementation in a sub-class where required.
         """

@@ -44,7 +44,6 @@ class SpaceTests(unittest.TestCase):
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
-        self.assertEqual(space.hook_url, None)
 
         space = Space(bot=my_bot, weird='w')
         with self.assertRaises(AttributeError):
@@ -52,7 +51,6 @@ class SpaceTests(unittest.TestCase):
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
-        self.assertEqual(space.hook_url, None)
 
         class ExSpace(Space):
             def on_init(self, ex_token=None, ex_ears=None, **kwargs):
@@ -92,7 +90,6 @@ class SpaceTests(unittest.TestCase):
         self.assertEqual(space.prefix, 'my.space')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
-        self.assertEqual(space.hook_url, None)
 
     def test_reset(self):
 
@@ -106,19 +103,16 @@ class SpaceTests(unittest.TestCase):
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
-        self.assertEqual(space.hook_url, None)
         self.assertEqual(space._my_counter, 123)
 
         space.id = '*id'
         space.title = '*title'
-        space.hook_url = '*hook'
         space._my_counter = 456
 
         space.reset()
 
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
-        self.assertEqual(space.hook_url, None)
         self.assertEqual(space._my_counter, 123)
 
     def test_configure(self):
@@ -377,7 +371,11 @@ class SpaceTests(unittest.TestCase):
         space.register.assert_called_with(hook_url='http:/who.knows/')
         self.assertFalse(space.pull.called)
 
-        space = Space(bot=my_bot)
+        class ExSpace(Space):
+            def on_run(self):
+                self._bot_id = 123
+
+        space = ExSpace(bot=my_bot)
         space.register = mock.Mock()
         space.pull = mock.Mock()
         space.PULL_INTERVAL = 0.01
@@ -387,6 +385,7 @@ class SpaceTests(unittest.TestCase):
         time.sleep(0.1)
         self.assertFalse(space.register.called)
         self.assertTrue(space.bot.context.get('puller.counter') > 3)
+        self.assertEqual(space._bot_id, 123)
 
     def test_work(self):
 

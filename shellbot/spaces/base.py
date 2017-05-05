@@ -141,8 +141,6 @@ class Space(object):
         self.id = None
         self.title = self.DEFAULT_SPACE_TITLE
 
-        self.hook_url = None
-
         self.on_reset()
 
     def on_reset(self):
@@ -524,7 +522,7 @@ class Space(object):
         updates in the background.
         """
 
-        self.hook_url = hook_url
+        self.on_run()
 
         if hook_url:
             self.register(hook_url=hook_url)
@@ -534,6 +532,20 @@ class Space(object):
             p.daemon = True
             p.start()
             return p
+
+    def on_run(self):
+        """
+        Adds processing to space beginning of run
+
+        This function should be expanded in sub-class, where necessary.
+
+        Example::
+
+            def on_run(self):
+                self.find_my_bot_id()
+
+        """
+        pass
 
     def work(self):
         """

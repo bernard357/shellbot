@@ -161,7 +161,7 @@ class SparkSpace(Space):
         return  self.bot.context.get(self.prefix+'.room',
                                      self.DEFAULT_SPACE_TITLE)
 
-    def connect(self):
+    def connect(self, **kwargs):
         """
         Connects to the back-end API
         """
@@ -191,19 +191,6 @@ class SparkSpace(Space):
         except Exception as feedback:
             logging.error(u"Unable to load Cisco Spark API")
             logging.exception(feedback)
-
-        try:
-            bot = self.get_bot()
-            self.bot.context.set('bot.name', str(bot.displayName.split(' ')[0]))
-            logging.debug(u"Bot name: {}".format(self.bot.context.get('bot.name')))
-
-            self.bot_id = bot.id
-            self.bot.context.set('bot.id', bot.id)
-
-        except Exception as feedback:
-            logging.warning(u"Unable to retrieve bot id")
-            logging.warning(feedback)
-            self.bot_id = None
 
     def lookup_space(self, title, **kwargs):
         """
@@ -479,6 +466,29 @@ class SparkSpace(Space):
             logging.warning(u"Unable to add webhook")
             logging.exception(feedback)
 
+    def on_run(self):
+        """
+        Retrieves attributes of this bot
+
+        This function queries the Cisco Spark API to remember the id of this
+        bot. This is used afterwards to filter inbound messages to the shell.
+
+        """
+        assert self.api is not None  # connect() is prerequisite
+
+        try:
+            me = self.api.people.me()
+            self.bot.context.set('bot.name',
+                                 str(me.displayName.split(' ')[0]))
+            logging.debug(u"Bot name: {}".format(
+                self.bot.context.get('bot.name')))
+
+            self.bot.context.set('bot.id', me.id)
+
+        except Exception as feedback:
+            logging.warning(u"Unable to retrieve bot id")
+            logging.exception(feedback)
+
     def webhook(self, message_id=None):
         """
         Processes the flow of events from Cisco Spark
@@ -553,28 +563,3 @@ class SparkSpace(Space):
             item = new_items.pop()
             self._last_message_id = item.id
             self.bot.ears.put(item._json)
-
-    def get_bot(self):
-        """
-        Retrieves attributes of this bot
-
-        :return: the attributes as returned from Cisco Spark
-        :rtype: Person
-
-        >>>print(space.get_bot())
-        Person({"displayName": "handy (bot)",
-                "created": "2016-10-15T14:55:54.739Z",
-                "emails": ["handy@sparkbot.io"],
-                "orgId": "Y2lzY29zcGFyazovL3VzL09SR0FOSVpZS00ODYzY2NmNzIzZDU",
-                "avatar": "https://2b571e1108a5262.cdn.com/V1~6bg==~80",
-                "type": "bot",
-                "id": "Y2lzY29zcGFyazovL3mI4LTQ1MDktYWRkMi0yNTEwNzdlOWUxZWM"})
-
-        """
-        logging.info(u"Getting bot attributes")
-
-        assert self.api is not None  # connect() is prerequisite
-        item = self.api.people.me()
-
-        logging.debug(u"- done")
-        return item

@@ -179,7 +179,6 @@ class SpaceFactoryTests(unittest.TestCase):
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
-        self.assertEqual(space.hook_url, None)
 
         space = SpaceFactory.get(type='space', context='c', weird='w')
         with self.assertRaises(AttributeError):
@@ -189,7 +188,6 @@ class SpaceFactoryTests(unittest.TestCase):
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
-        self.assertEqual(space.hook_url, None)
 
     def test_get_local(self):
 
@@ -199,7 +197,6 @@ class SpaceFactoryTests(unittest.TestCase):
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
-        self.assertEqual(space.hook_url, None)
         self.assertEqual(space.moderators, [])
         self.assertEqual(space.participants, [])
 
