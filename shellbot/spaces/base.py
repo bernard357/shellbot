@@ -124,8 +124,8 @@ class Space(object):
 
         Example::
 
-            def on_init(self, ex_token, **kwargs):
-                self.token = ex_token
+            def on_init(self, prefix='secondary.space', **kwargs):
+                ...
 
         """
         assert prefix not in (None, '')
