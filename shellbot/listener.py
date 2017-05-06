@@ -181,7 +181,7 @@ class Listener(object):
             logging.info(u"- not for me, thrown away")
             return
 
-        if input[0] in ['@', '/', '!']:
+        if len(input) > 0 and input[0] in ['@', '/', '!']:
             input = input[1:]
 
         bot = self.bot.context.get('bot.name', 'shelly')

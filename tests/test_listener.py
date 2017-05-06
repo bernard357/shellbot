@@ -114,6 +114,8 @@ class ListenerTests(unittest.TestCase):
 
         logging.info('*** Dynamic test ***')
 
+        my_bot.ears.put('hello world')
+
         items = [
 
             {
@@ -140,6 +142,22 @@ class ListenerTests(unittest.TestCase):
               "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
               "toPersonEmail" : "julie@example.com",
               "text" : "/shelly version",
+              "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+              "personEmail" : "matt@example.com",
+              "created" : "2015-10-18T14:26:16+00:00",
+              "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
+              "type": "message",
+              "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+              "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
+            },
+
+            {
+              "id" : "2_2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
+              "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+              "roomType" : "group",
+              "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
+              "toPersonEmail" : "julie@example.com",
+              "text" : "",
               "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
               "personEmail" : "matt@example.com",
               "created" : "2015-10-18T14:26:16+00:00",
@@ -216,12 +234,16 @@ class ListenerTests(unittest.TestCase):
 
         listener.work()
 
-        self.assertEqual(my_bot.context.get('listener.counter'), 5)
+        self.assertEqual(my_bot.context.get('listener.counter'), 7)
         with self.assertRaises(Exception):
             my_bot.ears.get_nowait()
         with self.assertRaises(Exception):
             my_bot.inbox.get_nowait()
         self.assertEqual(my_bot.mouth.get(), 'Shelly version *unknown*')
+        self.assertEqual(
+            my_bot.mouth.get(),
+            u'Available commands:\n'
+            + u'echo - Echo input string\nhelp - Show commands and usage')
         self.assertEqual(
             my_bot.mouth.get(),
             u'Available commands:\n'
