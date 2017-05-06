@@ -109,17 +109,33 @@ class Listener(object):
 
     def process(self, item):
         """
-        Processes bits coming from Cisco Spark
+        Processes items sent by the chat space
 
         :param item: the message received
         :type item: dict
 
         This function listens for specific commands in the coming flow.
-        When a command has been identified, it is acknowledged immediately.
+        When a command has been identified, it is responded immediately.
         Commands that require significant processing time are pushed
         to the inbox.
 
-        Example command received from Cisco Spark::
+        This function expects following keys in each item received:
+
+        * ``type`` -- This should have the value ``message``.
+          Other values can be introduced in the future so that the listener
+          has the capability to dispatch multiple events.
+
+        * ``text`` -- This is the input coming from the chat space.
+
+        * ``from_id`` -- This is the id of the sender of the input.
+          This field allows the listener to distinguish between messages
+          from the bot and messages from other chat participants.
+
+        * ``mentioned_ids`` -- A list of targets for this input.
+          This field allows the listener to determine if the input is
+          explicitly for this bot or not.
+
+        Example item received from Cisco Spark after normalization::
 
             {
               "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
@@ -130,16 +146,19 @@ class Listener(object):
               "text" : "/plumby use containers/docker",
               "personId" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
               "personEmail" : "matt@example.com",
+              "mentionedPeople" : ["Y2lzYDMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"],
               "created" : "2015-10-18T14:26:16+00:00",
+              "type" : "message",
+              "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+              "mentioned_ids" : ["Y2lzYDMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"],
             }
 
         """
         counter = self.bot.context.increment('listener.counter')
         logging.debug(u'Listener is working on {}'.format(counter))
 
-        # sanity check
-        #
-        try:
+        try:  # sanity check
+            assert item['type'] == 'message'
             input = item['text']
         except:
             logging.debug(u"- invalid format, thrown away")
@@ -149,30 +168,24 @@ class Listener(object):
             logging.debug(u"- no input in this item, thrown away")
             return
 
-        # filter the input
-        #
         if self.filter:
             item = self.filter(item)
 
-        # my own messages
-        #
-        if item['personId'] == self.bot.context.get('bot.id'):
+#        print(item)
+
+        if item['from_id'] == self.bot.context.get('bot.id'):
             logging.debug(u"- sent by me, thrown away")
             return
 
-#        print(item)
-
-        # we can be called with 'plumby ...' or '@plumby ...' or '/plumby ...'
-        #
-        if input[0] in ['@', '/']:
-            input = input[1:]
-
-        bot = self.bot.context.get('bot.name', 'shelly')
-        if not input.lower().startswith(bot):
-            logging.debug(u"- {}".format(input))
+        if self.bot.context.get('bot.id') not in item['mentioned_ids']:
             logging.info(u"- not for me, thrown away")
             return
 
-        line = input[len(bot):].strip()
+        if input[0] in ['@', '/', '!']:
+            input = input[1:]
 
-        self.bot.shell.do(line)
+        bot = self.bot.context.get('bot.name', 'shelly')
+        if input.lower().startswith(bot):
+            input = input[len(bot):].strip()
+
+        self.bot.shell.do(input)

@@ -495,8 +495,33 @@ class SparkSpace(Space):
 
         :param message_id: if provided, do not invoke the request object
 
+        Example message received from Cisco Spark::
+
+            {
+              "id" : "Y2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
+              "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+              "roomType" : "group",
+              "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
+              "toPersonEmail" : "julie@example.com",
+              "text" : "PROJECT UPDATE - A new project plan has been published on Box: http://box.com/s/lf5vj. The PM for this project is Mike C. and the Engineering Manager is Jane W.",
+              "markdown" : "**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>.",
+              "files" : [ "http://www.example.com/images/media.png" ],
+              "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+              "personEmail" : "matt@example.com",
+              "created" : "2015-10-18T14:26:16+00:00",
+              "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
+            }
+
+        This function adds following keys so that a neutral format
+        can be used with the listener:
+
+        * ``type`` is set to ``message``
+        * ``from_id`` is a copy of ``personId``
+        * ``mentioned_ids`` is a copy of ``mentionedPeople``
+
+
         This function is called from far far away, over the Internet,
-        when message_id is None, or locally, from test environment, when
+        when message_id is None, or called locally, from test environment, when
         message_id has a value.
         """
 
@@ -513,9 +538,16 @@ class SparkSpace(Space):
             #
             item = self.api.messages.get(messageId=message_id)
 
+            # step 3 -- normalize the dict pushed to the queue
+            #
+            message = dict(item._json)
+            message['type'] = 'message'
+            message['from_id'] = message.get('personId', None)
+            message['mentioned_ids'] = message.get('mentionedPeople', [])
+
             # step 3 -- push it in the handling queue
             #
-            self.bot.ears.put(item._json)
+            self.bot.ears.put(message)
 
             return "OK"
 
