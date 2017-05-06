@@ -538,16 +538,9 @@ class SparkSpace(Space):
             #
             item = self.api.messages.get(messageId=message_id)
 
-            # step 3 -- normalize the dict pushed to the queue
-            #
-            message = dict(item._json)
-            message['type'] = 'message'
-            message['from_id'] = message.get('personId', None)
-            message['mentioned_ids'] = message.get('mentionedPeople', [])
-
             # step 3 -- push it in the handling queue
             #
-            self.bot.ears.put(message)
+            self.bot.ears.put(self.normalize_message(item._json))
 
             return "OK"
 
@@ -594,4 +587,21 @@ class SparkSpace(Space):
         while len(new_items):
             item = new_items.pop()
             self._last_message_id = item.id
-            self.bot.ears.put(item._json)
+            self.bot.ears.put(self.normalize_message(item._json))
+
+    def normalize_message(self, message):
+        """
+        Normalizes a message received from Cisco Spark
+
+        This function adds following keys so that a neutral format
+        can be used with the listener:
+
+        * ``type`` is set to ``message``
+        * ``from_id`` is a copy of ``personId``
+        * ``mentioned_ids`` is a copy of ``mentionedPeople``
+
+        """
+        message['type'] = 'message'
+        message['from_id'] = message.get('personId', None)
+        message['mentioned_ids'] = message.get('mentionedPeople', [])
+        return message

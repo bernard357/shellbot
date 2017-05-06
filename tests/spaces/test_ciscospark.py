@@ -37,7 +37,7 @@ class FakeRoom(Fake):
 class FakeMessage(Fake):
     id = '*id'
     message = '*message'
-    _json = '*message'
+    _json = {'text': '*message'}
 
 
 class FakePerson(Fake):
@@ -492,7 +492,8 @@ class SparkSpaceTests(unittest.TestCase):
         my_bot.ears = Queue()
         self.assertEqual(space.webhook(message_id='*123'), 'OK')
         self.assertTrue(space.api.messages.get.called)
-        self.assertEqual(my_bot.ears.get(), '*message')
+        self.assertEqual(my_bot.ears.get(),
+                         {'text': '*message', 'from_id': None, 'type': 'message', 'mentioned_ids': []})
         with self.assertRaises(Exception):
             print(my_bot.ears.get_nowait())
 
@@ -519,7 +520,8 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertEqual(my_bot.context.get('puller.counter'), 3)
         self.assertEqual(space._last_message_id, '*id')
 
-        self.assertEqual(my_bot.ears.get(), '*message')
+        self.assertEqual(my_bot.ears.get(),
+                         {'text': '*message', 'from_id': None, 'type': 'message', 'mentioned_ids': []})
         with self.assertRaises(Exception):
             print(my_bot.ears.get_nowait())
 
