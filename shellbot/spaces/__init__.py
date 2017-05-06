@@ -128,6 +128,5 @@ class SpaceFactory(object):
         try:
             return self.types[type](**kwargs)
 
-        except KeyError as feedback:
-            logging.debug(u"Unable to load type {}".format(type))
-            raise ValueError(u"This space type is unknown")
+        except KeyError:
+            raise ValueError(u"Unable to load space type {}".format(type))
