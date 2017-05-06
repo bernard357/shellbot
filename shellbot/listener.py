@@ -177,7 +177,7 @@ class Listener(object):
             logging.debug(u"- sent by me, thrown away")
             return
 
-        if self.bot.context.get('bot.id') not in item['mentioned_ids']:
+        if self.bot.context.get('bot.id') not in item.get('mentioned_ids', []):
             logging.info(u"- not for me, thrown away")
             return
 
