@@ -99,6 +99,7 @@ class ShellBot(object):
                  configure=False,
                  settings={},
                  space=None,
+                 type=None,
                  server=None,
                  store=None):
 
@@ -108,7 +109,13 @@ class ShellBot(object):
         self.inbox = inbox
         self.ears = ears
 
+        assert space is None or type is None  # not both
+        if type:
+            space = SpaceFactory.get(type=type)
         self.space = space
+        if self.space:
+            self.space.bot = self
+
         self.server = server
         self.store = store
 
@@ -193,6 +200,7 @@ class ShellBot(object):
         if (self.server is None
             and self.context.get('server.binding') is not None):
 
+            logging.debug(u"Adding web server")
             self.server = Server(context=self.context, check=True)
 
     def configure_from_dict(self, settings):
@@ -328,7 +336,9 @@ class ShellBot(object):
                 Wrap(callable=self.get_hook(),
                      route=self.context.get('server.hook', '/hook')))
 
-        if self.context.get('server.url') is not None:
+        if (self.context.get('server.binding') is not None
+            and self.context.get('server.url') is not None):
+
             self.space.register(
                 hook_url=self.context.get('server.url')
                          + self.context.get('server.hook', '/hook'))
@@ -358,11 +368,11 @@ class ShellBot(object):
         if server is None:
             server = self.server
 
-        self.space.on_run()
+        self.start()
 
         self.hook(server=server)
 
-        self.start()
+        self.space.on_run()
 
         if server is None:
             self.space.work()

@@ -104,6 +104,8 @@ class LocalSpaceTests(unittest.TestCase):
         self.assertEqual(space.bot.context.get('local.moderators'), [])
         self.assertEqual(space.bot.context.get('local.participants'), [])
 
+        self.assertEqual(space.bot.context.get('server.binding'), None)
+
         my_bot.context = Context()
         settings = {'local.key': 'my value',}
         space = LocalSpace(bot=my_bot)

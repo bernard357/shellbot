@@ -569,6 +569,7 @@ class Space(object):
         """
 
         logging.info(u'Starting puller')
+        time.sleep(0.2)
 
         try:
             self.bot.context.set('puller.counter', 0)

@@ -36,6 +36,24 @@ class BotTests(unittest.TestCase):
         self.assertTrue(bot.worker is not None)
         self.assertTrue(bot.listener is not None)
 
+        bot = ShellBot(context=context,
+                       type='local',
+                       mouth='m',
+                       inbox='i',
+                       ears='e',
+                       store='s')
+
+        self.assertEqual(bot.context, context)
+        self.assertTrue(bot.space is not None)
+        self.assertEqual(bot.store, 's')
+        self.assertEqual(bot.mouth, 'm')
+        self.assertEqual(bot.inbox, 'i')
+        self.assertEqual(bot.ears, 'e')
+        self.assertTrue(bot.shell is not None)
+        self.assertTrue(bot.speaker is not None)
+        self.assertTrue(bot.worker is not None)
+        self.assertTrue(bot.listener is not None)
+
         space = SparkSpace(bot=bot)
         bot = ShellBot(context=context,
                        space=space,
@@ -336,6 +354,11 @@ class BotTests(unittest.TestCase):
         with mock.patch.object(bot.space,
                                'register',
                                return_value=None) as mocked:
+
+            bot.hook(server=server)
+            self.assertFalse(mocked.called)
+
+            context.set('server.binding', '0.0.0.0')
             bot.hook(server=server)
             mocked.assert_called_with(hook_url='http://here.you.go:123/hook')
 

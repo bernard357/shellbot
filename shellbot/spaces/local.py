@@ -40,6 +40,8 @@ class LocalSpace(Space):
 
     """
 
+    DEFAULT_PROMPT = u'> '
+
     def on_init(self, prefix='local', input=None, **kwargs):
         """
         Adds processing to space initialisation
@@ -71,6 +73,8 @@ class LocalSpace(Space):
         self.input = []
         self.push(input)
 
+        self.prompt = self.DEFAULT_PROMPT
+
         self.moderators = []
         self.participants = []
 
@@ -97,7 +101,14 @@ class LocalSpace(Space):
         to simulate user input. Else stdin is read one line at a time.
         """
         if self.input:
-            self._lines = iter(self.input)
+
+            def read_list():
+                for line in self.input:
+                    sys.stdout.write(line+'\n')
+                    sys.stdout.flush()
+                    yield line
+
+            self._lines = read_list()  #  yield creates an iterator
 
         else:
 
@@ -117,11 +128,13 @@ class LocalSpace(Space):
         self.bot.context.check(self.prefix+'.moderators', [])
         self.bot.context.check(self.prefix+'.participants', [])
 
+        self.bot.context.set('server.binding', None)  # no web server at all
+
     def on_bond(self):
         """
         Adds processing to space bond
         """
-        self.post_message('Connected locally')
+        self.bot.context.set('bot.id', '*bot')
 
     def lookup_space(self, title, **kwargs):
         """
@@ -204,6 +217,13 @@ class LocalSpace(Space):
         """
         print(text)
 
+    def on_run(self):
+        """
+        Adds processing to space beginning of run
+        """
+        sys.stdout.write(u"Type 'help' for guidance, or Ctl-C to exit.\n")
+        sys.stdout.flush()
+
     def pull(self):
         """
         Fetches updates
@@ -212,11 +232,16 @@ class LocalSpace(Space):
         to the listening queue.
 
         """
-        line = next(self._lines, None)
-        if not isinstance(line, string_types):
-            return
+        sys.stdout.write(self.prompt)
+        sys.stdout.flush()
 
-        self.bot.ears.put(self.normalize_message(line))
+        try:
+            line = next(self._lines)
+            self.bot.ears.put(self.normalize_message(line))
+        except StopIteration:
+            sys.stdout.write(u'^C\n')
+            sys.stdout.flush()
+            self.bot.context.set('general.switch', 'off')
 
     def normalize_message(self, text):
         """

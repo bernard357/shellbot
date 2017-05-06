@@ -251,16 +251,24 @@ class SparkSpace(Space):
         logging.info(u"Creating Cisco Spark room '{}'".format(title))
 
         assert self.api is not None  # connect() is prerequisite
-        try:
-            room = self.api.rooms.create(title=title,
-                                         teamId=teamId)
-            logging.info(u"- done")
+        while True:
+            try:
+                room = self.api.rooms.create(title=title,
+                                             teamId=teamId)
+                logging.info(u"- done")
 
-            self.use_room(room)
+                self.use_room(room)
+                break
 
-        except Exception as feedback:
-            logging.warning(u"Unable to create room ")
-            logging.exception(feedback)
+            except Exception as feedback:
+                if str(feedback).startswith('Response Code [503]'):
+                    logging.debug(u'- delayed by server')
+                    time.sleep(3)
+                    continue
+
+                logging.warning(u"Unable to create room ")
+                logging.exception(feedback)
+                break
 
     def use_room(self, room):
         """
@@ -319,6 +327,7 @@ class SparkSpace(Space):
 
         """
         assert self.api is not None  # connect() is prerequisite
+        assert self.id is not None  # bond() is prerequisite
         try:
             self.api.memberships.create(roomId=self.id,
                                         personEmail=person,
@@ -337,6 +346,7 @@ class SparkSpace(Space):
 
         """
         assert self.api is not None  # connect() is prerequisite
+        assert self.id is not None  # bond() is prerequisite
         try:
             self.api.memberships.create(roomId=self.id,
                                         personEmail=person,
@@ -446,8 +456,8 @@ class SparkSpace(Space):
 
         This function registers the provided hook to Cisco Spark.
         """
-        assert self.is_ready
-        assert hook_url is not None
+        assert self.is_ready  # bond() is prerequisite
+        assert hook_url not in (None, '')
 
         logging.info(u"Registering webhook to Cisco Spark")
         logging.debug(u"- {}".format(hook_url))

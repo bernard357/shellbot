@@ -318,7 +318,7 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertTrue(space.api.teams.list.called)
         self.assertEqual(team, None)
 
-    def test_add_moderators_mock(self):
+    def test_add_moderators(self):
 
         logging.info("*** add_moderators")
 
@@ -330,18 +330,19 @@ class SparkSpaceTests(unittest.TestCase):
 
             mocked.assert_called_with('foo.bar@acme.com')
 
-    def test_add_moderator_mock(self):
+    def test_add_moderator(self):
 
         logging.info("*** add_moderator")
 
         space = SparkSpace(bot=my_bot)
         space.api = FakeApi()
+        space.id = '*id'
 
         space.add_moderator(person='foo.bar@acme.com')
 
         self.assertTrue(space.api.memberships.create.called)
 
-    def test_add_participants_mock(self):
+    def test_add_participants(self):
 
         logging.info("*** add_participants")
 
@@ -353,11 +354,12 @@ class SparkSpaceTests(unittest.TestCase):
 
             mocked.assert_called_with('foo.bar@acme.com')
 
-    def test_add_participant_mock(self):
+    def test_add_participant(self):
 
         logging.info("*** add_participant")
         space = SparkSpace(bot=my_bot)
         space.api = FakeApi()
+        space.id = '*id'
 
         space.add_participant(person='foo.bar@acme.com')
 

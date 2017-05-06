@@ -379,7 +379,7 @@ class SpaceTests(unittest.TestCase):
         space.pull = mock.Mock()
         space.PULL_INTERVAL = 0.01
         space.run()
-        time.sleep(0.1)
+        time.sleep(0.4)
         space.bot.context.set('general.switch', 'off')
         time.sleep(0.1)
         self.assertFalse(space.register.called)
