@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import io
 import logging
 import mock
 import os
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 import sys
 import time
 
@@ -39,55 +40,95 @@ class LocalSpaceTests(unittest.TestCase):
 
     def test_init(self):
 
-        logging.info("*** init")
-
         space = LocalSpace(bot=my_bot)
-        self.assertEqual(space.prefix, 'space')
+        self.assertEqual(space.prefix, 'local')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space.moderators, [])
         self.assertEqual(space.participants, [])
 
+    def test_on_init(self):
+
+        space = LocalSpace(bot=my_bot)
+        self.assertEqual(space.input, [])
+
+        space = LocalSpace(bot=my_bot, input='hello world')
+        self.assertEqual(space.input, ['hello world'])
+
+        space = LocalSpace(bot=my_bot, input=['hello', 'world'])
+        self.assertEqual(space.input, ['hello', 'world'])
+
+    def test_push(self):
+
+        space = LocalSpace(bot=my_bot)
+
+        space.push(input=None)
+        self.assertEqual(space.input, [])
+
+        space.push(input='')
+        self.assertEqual(space.input, [])
+
+        space.push(input='hello world')
+        self.assertEqual(space.input, ['hello world'])
+
+        space.push(input=['hello', 'world'])
+        self.assertEqual(space.input, ['hello world', 'hello', 'world'])
+
+    def test_on_reset(self):
+
+        space = LocalSpace(bot=my_bot, input=["hello", "world"])
+        space.on_reset()
+        self.assertEqual(next(space._lines, None), "hello")
+        self.assertEqual(next(space._lines, None), "world")
+        self.assertEqual(next(space._lines, None), None)
+
+        original_stdin = sys.stdin
+        sys.stdin = io.StringIO(u'hello\nworld\n')
+
+        space = LocalSpace(bot=my_bot)
+        space.on_reset()
+        self.assertEqual(next(space._lines, None), u"hello")
+        self.assertEqual(next(space._lines, None), u"world")
+        self.assertEqual(next(space._lines, None), None)
+
+        sys.stdin = original_stdin
+
     def test_configure(self):
 
-        logging.info("*** configure")
-
-        settings = {'space.key': 'my value',}
-        space = LocalSpace(bot=my_bot)
-        with self.assertRaises(KeyError):
-            space.configure(settings=settings)
-        self.assertEqual(space.bot.context.get('space.title'), None)
-        self.assertEqual(space.bot.context.get('space.key'), 'my value')
-        self.assertEqual(space.bot.context.get('space.moderators'), None)
-        self.assertEqual(space.bot.context.get('space.participants'), None)
-
-        settings = {'space.key': 'my value',}
-        space = LocalSpace(bot=my_bot)
-        space.configure(settings=settings, do_check=False)
-        self.assertEqual(space.bot.context.get('space.title'), None)
-        self.assertEqual(space.bot.context.get('space.key'), 'my value')
-        self.assertEqual(space.bot.context.get('space.moderators'), None)
-        self.assertEqual(space.bot.context.get('space.participants'), None)
-
-        settings = {'space.title': 'a title',
-                    'space.key': 'my value',}
+        my_bot.context = Context()
+        settings = {'local.key': 'my value',}
         space = LocalSpace(bot=my_bot)
         space.configure(settings=settings)
-        self.assertEqual(space.bot.context.get('space.title'), 'a title')
-        self.assertEqual(space.bot.context.get('space.key'), 'my value')
-        self.assertEqual(space.bot.context.get('space.moderators'), [])
-        self.assertEqual(space.bot.context.get('space.participants'), [])
+        self.assertEqual(space.bot.context.get('local.title'), 'Local space')
+        self.assertEqual(space.bot.context.get('local.key'), 'my value')
+        self.assertEqual(space.bot.context.get('local.moderators'), [])
+        self.assertEqual(space.bot.context.get('local.participants'), [])
+
+        my_bot.context = Context()
+        settings = {'local.key': 'my value',}
+        space = LocalSpace(bot=my_bot)
+        space.configure(settings=settings, do_check=False)
+        self.assertEqual(space.bot.context.get('local.title'), None)
+        self.assertEqual(space.bot.context.get('local.key'), 'my value')
+        self.assertEqual(space.bot.context.get('local.moderators'), None)
+        self.assertEqual(space.bot.context.get('local.participants'), None)
+
+        my_bot.context = Context()
+        settings = {'local.title': 'a title',
+                    'local.key': 'my value',}
+        space = LocalSpace(bot=my_bot)
+        space.configure(settings=settings)
+        self.assertEqual(space.bot.context.get('local.title'), 'a title')
+        self.assertEqual(space.bot.context.get('local.key'), 'my value')
+        self.assertEqual(space.bot.context.get('local.moderators'), [])
+        self.assertEqual(space.bot.context.get('local.participants'), [])
 
     def test_on_bond(self):
-
-        logging.info("*** on_bond")
 
         space = LocalSpace(bot=my_bot)
         space.on_bond()
 
     def test_lookup_space(self):
-
-        logging.info("*** lookup_space")
 
         space = LocalSpace(bot=my_bot)
         self.assertTrue(space.lookup_space(title='hello there'))
@@ -102,8 +143,6 @@ class LocalSpaceTests(unittest.TestCase):
 
     def test_create_space(self):
 
-        logging.info("*** create_space")
-
         space = LocalSpace(bot=my_bot)
         space.create_space(title='hello there')
         self.assertEqual(space.title, 'hello there')
@@ -117,15 +156,11 @@ class LocalSpaceTests(unittest.TestCase):
 
     def test_add_moderator(self):
 
-        logging.info("*** add_moderator")
-
         space = LocalSpace(bot=my_bot)
         space.add_moderator(person='bob@acme.com')
         self.assertEqual(space.moderators, ['bob@acme.com'])
 
     def test_add_participant(self):
-
-        logging.info("*** add_participant")
 
         space = LocalSpace(bot=my_bot)
         space.add_participant(person='bob@acme.com')
@@ -133,25 +168,43 @@ class LocalSpaceTests(unittest.TestCase):
 
     def test_delete_space(self):
 
-        logging.info("*** delete_space")
-
         space = LocalSpace(bot=my_bot)
         space.delete_space(title='*does*not*exist')
 
     def test_post_message(self):
-
-        logging.info("*** post_message")
 
         space = LocalSpace(bot=my_bot)
         space.post_message(text="What's up, Doc?")
 
     def test_pull(self):
 
-        logging.info("*** pull")
+        space = LocalSpace(bot=my_bot, input="hello world")
+        my_bot.ears = Queue()
+        space.pull()
+        space.pull()
+        space.pull()
+        self.assertEqual(my_bot.ears.get(),
+                         {'text': 'hello world', 'from_id': '*user', 'type': 'message', 'mentioned_ids': ['*bot']})
+
+        original_stdin = sys.stdin
+        sys.stdin = io.StringIO(u'hello world')
 
         space = LocalSpace(bot=my_bot)
-        with self.assertRaises(NotImplementedError):
-            space.pull()
+        my_bot.ears = Queue()
+        space.pull()
+        self.assertEqual(my_bot.ears.get(),
+                         {'text': u'hello world', 'from_id': '*user', 'type': 'message', 'mentioned_ids': ['*bot']})
+
+        sys.stdin = original_stdin
+
+    def test_normalize_message(self):
+
+        space = LocalSpace(bot=my_bot)
+        self.assertEqual(space.normalize_message('hello world'),
+                         {'from_id': '*user',
+                          'mentioned_ids': ['*bot'],
+                          'text': 'hello world',
+                          'type': 'message'})
 
 
 

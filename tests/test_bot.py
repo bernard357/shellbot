@@ -69,9 +69,7 @@ class BotTests(unittest.TestCase):
         context = Context()
         bot = ShellBot(context=context)
         bot.space=LocalSpace(bot=bot)
-
-        with self.assertRaises(KeyError):
-            bot.configure({})
+        bot.configure({})
 
         bot = ShellBot()
         settings = {

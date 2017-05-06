@@ -66,16 +66,15 @@ class SpaceTests(unittest.TestCase):
             self.assertTrue(space.ex_unknown is not None)
 
         space = LocalSpace(bot=my_bot, prefix='my.space')
-        with self.assertRaises(KeyError):
-            space.configure({
-                'not.my.space': {
-                    'title': 'Another title',
-                    'moderators':
-                        ['foo.bar@acme.com', 'joe.bar@corporation.com'],
-                    'participants':
-                        ['alan.droit@azerty.org', 'bob.nard@support.tv'],
-                }
-            })
+        space.configure({
+            'not.my.space': {
+                'title': 'Another title',
+                'moderators':
+                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+                'participants':
+                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+            }
+        })
 
         space = LocalSpace(bot=my_bot, prefix='my.space')
         space.configure({

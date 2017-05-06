@@ -17,9 +17,44 @@ from shellbot.spaces import SpaceFactory
 
 class SpaceFactoryTests(unittest.TestCase):
 
-    def test_build(self):
+    def test_build_space(self):
 
-        logging.info("*** build")
+        bot = ShellBot(settings={  # from settings to member attributes
+            'space': {
+                'room': 'My preferred room',
+                'moderators':
+                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+                'participants':
+                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+                'team': 'Anchor team',
+                'token': 'hkNWEtMJNkODVGlZWU1NmYtyY',
+                'personal_token': '*personal*secret*token',
+                'webhook': "http://73a1e282.ngrok.io",
+            }
+        })
+
+        space = SpaceFactory.build(bot=bot)
+        self.assertEqual(space.id, None)   #  set after bond()
+        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
+
+    def test_build_local(self):
+
+        bot = ShellBot(settings={  # from settings to member attributes
+            'local': {
+                'room': 'My preferred room',
+                'moderators':
+                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+                'participants':
+                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+                'input': ['help', 'version'],
+            }
+        })
+
+        space = SpaceFactory.build(bot=bot)
+        self.assertEqual(space.id, None)   #  set after bond()
+        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
+
+    def test_build_spark(self):
 
         bot = ShellBot(settings={  # from settings to member attributes
             'spark': {
@@ -44,24 +79,18 @@ class SpaceFactoryTests(unittest.TestCase):
 
     def test_sense(self):
 
-        logging.info("*** sense")
-
-        context = Context(settings={  # sense='spark'
-            'spark': {
+        context = Context(settings={  # sense='local'
+            'local': {
                 'room': 'My preferred room',
                 'moderators':
                     ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
-                'team': 'Anchor team',
-                'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
-                'personal_token': '$MY_FUZZY_SPARK_TOKEN',
-                'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
-                'webhook': "http://73a1e282.ngrok.io",
+                'input': ['help', 'version'],
             }
         })
 
-        self.assertEqual(SpaceFactory.sense(context), 'spark')
+        self.assertEqual(SpaceFactory.sense(context), 'local')
 
         context = Context(settings={  # sense='space'
             'space': {
@@ -79,6 +108,23 @@ class SpaceFactoryTests(unittest.TestCase):
         })
 
         self.assertEqual(SpaceFactory.sense(context), 'space')
+
+        context = Context(settings={  # sense='spark'
+            'spark': {
+                'room': 'My preferred room',
+                'moderators':
+                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+                'participants':
+                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+                'team': 'Anchor team',
+                'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
+                'personal_token': '$MY_FUZZY_SPARK_TOKEN',
+                'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
+                'webhook': "http://73a1e282.ngrok.io",
+            }
+        })
+
+        self.assertEqual(SpaceFactory.sense(context), 'spark')
 
         context = Context(settings={  # 'space' is coming before 'spark'
             'spark': {
@@ -173,8 +219,6 @@ class SpaceFactoryTests(unittest.TestCase):
 
     def test_get_space(self):
 
-        logging.info("*** get('space')")
-
         space = SpaceFactory.get(type='space')
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
@@ -191,18 +235,14 @@ class SpaceFactoryTests(unittest.TestCase):
 
     def test_get_local(self):
 
-        logging.info("*** get('local')")
-
-        space = SpaceFactory.get(type='local')
-        self.assertEqual(space.prefix, 'space')
+        space = SpaceFactory.get(type='local', input=['hello', 'world'])
+        self.assertEqual(space.prefix, 'local')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space.moderators, [])
         self.assertEqual(space.participants, [])
 
     def test_get_spark(self):
-
-        logging.info("*** get('spark')")
 
         bot = ShellBot()
         space = SpaceFactory.get(type='spark', bot=bot, token='b')
@@ -212,8 +252,6 @@ class SpaceFactoryTests(unittest.TestCase):
         self.assertEqual(space.teamId, None)
 
     def test_get_unknown(self):
-
-        logging.info("*** get('*unknown')")
 
         with self.assertRaises(ValueError):
             space = SpaceFactory.get(type='*unknown', ex_token='b', ex_ears='c')

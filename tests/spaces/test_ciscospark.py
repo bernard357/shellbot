@@ -483,7 +483,7 @@ class SparkSpaceTests(unittest.TestCase):
 
         self.assertFalse(p.is_alive())
 
-    def test_webhook_mock(self):
+    def test_webhook(self):
 
         logging.info("*** webhook")
         space = SparkSpace(bot=my_bot)
@@ -497,7 +497,7 @@ class SparkSpaceTests(unittest.TestCase):
         with self.assertRaises(Exception):
             print(my_bot.ears.get_nowait())
 
-    def test_pull_mock(self):
+    def test_pull(self):
 
         logging.info("*** pull")
         my_bot.context = Context()

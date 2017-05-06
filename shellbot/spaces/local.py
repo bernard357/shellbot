@@ -20,6 +20,7 @@ import logging
 from multiprocessing import Process, Queue
 import os
 from six import string_types
+import sys
 import time
 
 from .base import Space
@@ -39,12 +40,15 @@ class LocalSpace(Space):
 
     """
 
-    def on_init(self, prefix='space', **kwargs):
+    def on_init(self, prefix='local', input=None, **kwargs):
         """
         Adds processing to space initialisation
 
         :param prefix: the main keyword for configuration of this space
         :type prefix: str
+
+        :param input: Lines of text to be submitted to the chat
+        :type input: str or list of str
 
         Example::
 
@@ -52,18 +56,64 @@ class LocalSpace(Space):
 
         Here we create a new local space, and use
         settings under the key ``local.audit`` in the context of this bot.
+
+        Example::
+
+            space = LocalSpace(bot=bot, input='hello world')
+
+        Here we create a new local space, and simulate a user
+        typing 'hello world' in the chat space.
+
         """
         assert prefix not in (None, '')
         self.prefix = prefix
 
+        self.input = []
+        self.push(input)
+
         self.moderators = []
         self.participants = []
+
+    def push(self, input):
+        """
+        Adds more input to this space
+
+        :parameter input: Simulated user input
+        :type input: str or list of str
+
+        This function is used to simulate input user to the bot.
+        """
+        if input in (None, ''):
+            return
+        if isinstance(input, string_types):
+            input = [input]
+        self.input += input
+
+    def on_reset(self):
+        """
+        Selects the right input for this local space
+
+        If this space got some content on its initialisation, this is used
+        to simulate user input. Else stdin is read one line at a time.
+        """
+        if self.input:
+            self._lines = iter(self.input)
+
+        else:
+
+            def read_stdin():
+                readline = sys.stdin.readline()
+                while readline:
+                    yield readline.rstrip('\n')
+                    readline = sys.stdin.readline()
+
+            self._lines = read_stdin()  #  yield creates an iterator
 
     def check(self):
         """
         Checks that valid settings are available
         """
-        self.bot.context.check(self.prefix+'.title', is_mandatory=True)
+        self.bot.context.check(self.prefix+'.title', 'Local space')
         self.bot.context.check(self.prefix+'.moderators', [])
         self.bot.context.check(self.prefix+'.participants', [])
 
@@ -153,3 +203,38 @@ class LocalSpace(Space):
 
         """
         print(text)
+
+    def pull(self):
+        """
+        Fetches updates
+
+        This function senses most recent items, and pushes them
+        to the listening queue.
+
+        """
+        line = next(self._lines, None)
+        if not isinstance(line, string_types):
+            return
+
+        self.bot.ears.put(self.normalize_message(line))
+
+    def normalize_message(self, text):
+        """
+        Normalizes message for the listener
+
+        This function adds following keys so that a neutral format
+        can be used with the listener:
+
+        * ``type`` is set to ``message``
+        * ``text`` is a copy of provided text
+        * ``from_id`` is ``*user``
+        * ``mentioned_ids`` is ``['*bot']``
+
+        """
+        message = {}
+        message['text'] = text
+        message['type'] = 'message'
+        message['from_id'] = '*user'
+        message['mentioned_ids'] = ['*bot']
+        return message
+
