@@ -54,27 +54,18 @@ from shellbot import ShellBot, Context, Command
 from shellbot.spaces import SpaceFactory
 Context.set_logger(level=logging.INFO)
 
-# create a bot and load command
+# create a local bot and load command
 #
 class Hello(Command):
     keyword = 'hello'
     information_message = u"Hello, World!"
 
 bot = ShellBot(command=Hello(), type='local')
+
+# simulate the execution of commands
+#
 bot.space.push(['help', 'hello', 'help help'])
 
-# load configuration
-#
 bot.configure()
-
-# create a chat room
-#
-bot.bond(reset=True)
-
-# run the bot
-#
+bot.bond()
 bot.run()
-
-# delete the chat room when the bot is stopped
-#
-bot.dispose()
