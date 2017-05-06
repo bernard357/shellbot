@@ -49,12 +49,12 @@ class DefaultTests(unittest.TestCase):
 
         c.call_once(mocked)
         c.execute('answer 1')
-        mocked.assert_called_with('answer 1')
+        mocked.assert_called_with(arguments='answer 1')
         self.assertTrue(c._call_once is None)
 
         c.call_once(mocked)
         c.execute('answer 2')
-        mocked.assert_called_with('answer 2')
+        mocked.assert_called_with(arguments='answer 2')
         self.assertTrue(c._call_once is None)
 
         c.call_once(mocked)
@@ -73,7 +73,7 @@ class DefaultTests(unittest.TestCase):
         c.callback(mocked)
 
         c.execute('*unknown*')
-        mocked.assert_called_with('*unknown*')
+        mocked.assert_called_with(arguments='*unknown*')
         self.assertTrue(c._callback is not None)
 
         with self.assertRaises(AssertionError):

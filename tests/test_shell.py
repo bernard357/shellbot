@@ -337,11 +337,11 @@ class ShellTests(unittest.TestCase):
 
         shell.call_once(mocked)
         shell.do('answer 1')
-        mocked.assert_called_with('answer 1')
+        mocked.assert_called_with(arguments='answer 1')
 
         shell.call_once(mocked)
         shell.do('answer 2')
-        mocked.assert_called_with('answer 2')
+        mocked.assert_called_with(arguments='answer 2')
 
         shell.call_once(mocked)
         with self.assertRaises(AssertionError):
@@ -357,10 +357,10 @@ class ShellTests(unittest.TestCase):
 
         shell.callback(mocked)
         shell.do('answer 1')
-        mocked.assert_called_with('answer 1')
+        mocked.assert_called_with(arguments='answer 1')
 
         shell.do('answer 2')
-        mocked.assert_called_with('answer 2')
+        mocked.assert_called_with(arguments='answer 2')
 
         with self.assertRaises(AssertionError):
             shell.callback(mocked)
