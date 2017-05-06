@@ -295,12 +295,12 @@ class State(object):
         """
         return self.name
 
-    def during(self):
+    def during(self, **kwargs):
         """
         Does some stuff while in this state
         """
         if self._during is not None:
-            self._during()
+            self._during(**kwargs)
 
     def on_enter(self):
         """
@@ -367,7 +367,7 @@ class Transition(object):
         """
         return "{0} => {1}".format(self.source, self.target)
 
-    def condition(self):
+    def condition(self, **kwargs):
         """
         Checks if transition can be triggered
 
@@ -375,11 +375,11 @@ class Transition(object):
 
         Condition default to True if none is provided
         """
-        return True if self._condition is None else self._condition()
+        return True if self._condition is None else self._condition(**kwargs)
 
     def action(self):
         """
-        Does some stuf while transitioning
+        Does some stuff while transitioning
         """
         if self._action is not None:
             self._action()

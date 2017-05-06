@@ -39,6 +39,12 @@ class Helper(object):
     def increment_z(self):
         self.z += 10
 
+    def extended(self, extra=None, **kwargs):
+        self.extra = extra
+
+    def input_is_big(self, gauge=0, **kwargs):
+        return gauge > 23
+
 
 class MachineTests(unittest.TestCase):
 
@@ -52,11 +58,11 @@ class MachineTests(unittest.TestCase):
             print(machine.weird)
 
         class MyMachine(Machine):
-            def on_init(self, weird=None, **kwargs):
-                self.weird = weird
+            def on_init(self, extra=None, **kwargs):
+                self.extra = extra
 
-        machine = MyMachine(bot=my_bot, weird='w')
-        self.assertEqual(machine.weird, 'w')
+        machine = MyMachine(bot=my_bot, extra='w')
+        self.assertEqual(machine.extra, 'w')
 
     def test_build(self):
 
@@ -168,6 +174,29 @@ class MachineTests(unittest.TestCase):
         machine.step()
         self.assertTrue(helper.x == 2)
 
+    def test_extra_during(self):
+        """Tests an extended action being performed while in a state."""
+
+        helper = Helper()
+        states = ['one']
+        transitions = [
+            {'source': 'one', 'target': 'one'},
+        ]
+        during = {
+            'one': helper.extended
+        }
+
+        machine = Machine(bot=my_bot,
+                          states=states,
+                          transitions=transitions,
+                          initial='one',
+                          during=during)
+
+        machine.step()
+        self.assertTrue(helper.extra is None)
+        machine.step(extra=123)
+        self.assertTrue(helper.extra == 123)
+
     def test_simple_on_enter(self):
         """Tests a simple action being performed while entering a state."""
 
@@ -260,6 +289,29 @@ class MachineTests(unittest.TestCase):
         machine.step()
         self.assertTrue(helper.x == 7)
         self.assertTrue(str(machine.state) == 'one')
+
+    def test_extra_condition(self):
+        """Tests an extended condition check before transitioning."""
+
+        helper = Helper()
+        states = ['one', 'two']
+        transitions = [
+            {'source': 'one', 'target': 'two', 'condition': helper.input_is_big},
+            {'source': 'two', 'target': 'one'},
+        ]
+
+        machine = Machine(bot=my_bot,
+                          states=states,
+                          transitions=transitions,
+                          initial='one')
+
+        self.assertTrue(str(machine.state) == 'one')
+        machine.step()
+        self.assertTrue(str(machine.state) == 'one')
+        machine.step(gauge=5)
+        self.assertTrue(str(machine.state) == 'one')
+        machine.step(gauge=50)
+        self.assertTrue(str(machine.state) == 'two')
 
     def test_simple_action(self):
         """Tests a simple action while transitioning."""
@@ -361,6 +413,10 @@ class StateTests(unittest.TestCase):
         state.during()
         self.assertTrue(state._during.called)
 
+        state = State(name='a state', during=mock.Mock())
+        state.during(extra=123)
+        state._during.assert_called_with(extra=123)
+
     def test_on_enter(self):
 
         state = State(name='a state')
@@ -420,6 +476,10 @@ class TransitionTests(unittest.TestCase):
 
         transition = Transition(source=begin, target=end, condition=lambda:False)
         self.assertFalse(transition.condition())
+
+        transition = Transition(source=begin, target=end, condition=mock.Mock(return_value=True))
+        transition.condition(extra=123)
+        transition._condition.assert_called_with(extra=123)
 
     def test_action(self):
 
