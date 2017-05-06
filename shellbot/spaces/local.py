@@ -30,13 +30,17 @@ class LocalSpace(Space):
     """
     Handles chat locally
 
-    This little class allows developers to test their commands interface
+    This class allows developers to test their commands interface
     locally, without the need for a real API back-end.
 
     Example::
 
-        space = LocalSpace()
-        space.post_message('Hello, World!')
+        bot = ShellBot(command=Hello(), type='local')
+        bot.space.push(['help', 'hello', 'help help'])
+
+        bot.configure()
+        bot.bond()
+        bot.run()
 
     """
 
