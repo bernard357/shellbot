@@ -91,7 +91,7 @@ class Space(object):
 
     DEFAULT_SPACE_TITLE = u'Collaboration space'
 
-    PULL_INTERVAL = 0.2  # time between pulls, when not hooked
+    PULL_INTERVAL = 0.05  # time between pulls, when not hooked
 
     def __init__(self,
                  bot=None,
