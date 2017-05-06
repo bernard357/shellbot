@@ -54,13 +54,14 @@ class Default(Command):
                 callable = self._callback
 
             else:
-                callable = self.bot.say
-                arguments = self.default_message.format(arguments)
+                self.bot.say(self.default_message.format(arguments))
+                callable = None
 
         finally:
             self.lock.release()
 
-        callable(arguments)
+        if callable:
+            callable(arguments=arguments)
 
     def call_once(self, callable):
         """
