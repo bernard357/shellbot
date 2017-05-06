@@ -567,6 +567,34 @@ class BotTests(unittest.TestCase):
         self.assertTrue(bot.mouth.put.called)
         self.assertFalse(bot.speaker.process.called)
 
+    def test_ask(self):
+
+        logging.info('*** ask ***')
+
+        bot = ShellBot()
+
+        fn = mock.Mock()
+
+        bot.ask('', callable=fn)
+        bot.ask(None, fn)
+
+        with mock.patch.object(bot.speaker,
+                               'process',
+                               return_value=None) as mocked:
+
+            bot.ask('test', fn)
+            mocked.assert_called_with('test')
+
+        bot.shell.call_once(None)
+        bot.mouth = Queue()
+        bot.mouth.put = mock.Mock()
+        bot.speaker.process = mock.Mock()
+
+        bot.ask('test', fn)
+
+        self.assertTrue(bot.mouth.put.called)
+        self.assertFalse(bot.speaker.process.called)
+
 
 if __name__ == '__main__':
 

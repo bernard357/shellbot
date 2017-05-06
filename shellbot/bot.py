@@ -453,7 +453,7 @@ class ShellBot(object):
 
     def say(self, message, markdown=None, file=None):
         """
-        Sends a response back to the room
+        Sends a message to the chat space
 
         :param message: Plain text message
         :type message: str or None
@@ -482,6 +482,31 @@ class ShellBot(object):
                 self.speaker.process(ShellBotMessage(message, markdown, file))
             else:
                 self.speaker.process(message)
+
+    def ask(self, message, callable):
+        """
+        Asks a question
+
+        :param message: The question
+        :type message: str
+
+        :param callable: A function to process the answer
+        :type callable: str
+
+        """
+        if message in (None, ''):
+            return
+
+        logging.info(u"Bot asks: {}".format(message))
+
+        self.shell.call_once(callable)
+
+        if self.mouth:
+            logging.debug(u"- pushing message to mouth queue")
+            self.mouth.put(message)
+        else:
+            logging.debug(u"- calling speaker directly")
+            self.speaker.process(message)
 
 
 class ShellBotMessage(object):

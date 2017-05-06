@@ -20,6 +20,8 @@ import logging
 from six import string_types
 import importlib
 
+from shellbot.commands import Default
+
 
 class Shell(object):
     """
@@ -115,9 +117,7 @@ class Shell(object):
             >>>print(shell.command('help').information_message)
 
         """
-        if keyword in self._commands.keys():
-            return self._commands[keyword]
-        return None
+        return self._commands.get(keyword, None)
 
     def load_default_commands(self):
         """
@@ -269,7 +269,7 @@ class Shell(object):
                         self.say(u"Ok, working on it")
                     else:
                         self.say(u"Ok, will work on it as soon as possible")
-                    self.bot.inbox.put((verb, line))
+                    self.bot.inbox.put((verb, arguments))
 
             else:
                 self.say(
@@ -279,3 +279,58 @@ class Shell(object):
             self.say(
                 u"Sorry, I do not know how to handle '{}'".format(verb))
             raise
+
+    def call_once(self, callable):
+        """
+        Calls a function on next non-recognized command
+
+        This function is useful to capture user responses.
+
+        Example::
+
+            def save_answer(arguments):
+                context.set('po_number', arguments)
+
+            shell.call_once(save_answer)
+            shell.say("What is the order number please?")
+
+        If you change your mind, you can provide the value None.
+
+        Example::
+
+            shell.call_once(None)
+
+        """
+        default = self.command('*default')
+        if default is None:
+            self.load_command(Default())
+            default = self.command('*default')
+
+        default.call_once(callable)
+
+    def callback(self, callable):
+        """
+        Calls a function on non-recognized command
+
+        This function is useful to add natural language processing to the bot.
+
+        Example::
+
+            nlp_engine = Engine(...)
+
+            shell.callback(nlp_engine.on_input)
+
+        If you change your mind, you can provide the value None.
+
+        Example::
+
+            shell.callback(None)
+
+        """
+        default = self.command('*default')
+        if default is None:
+            self.load_command(Default())
+            default = self.command('*default')
+
+        default.callback(callable)
+
