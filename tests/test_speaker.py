@@ -14,6 +14,8 @@ sys.path.insert(0, os.path.abspath('..'))
 
 from shellbot import Context, ShellBot, Speaker, SpaceFactory
 
+my_mouth = Queue()
+
 
 class SpeakerTests(unittest.TestCase):
 
@@ -21,7 +23,7 @@ class SpeakerTests(unittest.TestCase):
 
         logging.info('*** Static test ***')
 
-        bot = ShellBot(mouth=Queue())
+        bot = ShellBot(mouth=my_mouth)
         speaker = Speaker(bot=bot)
 
         speaker_process = Process(target=speaker.work)
@@ -41,7 +43,7 @@ class SpeakerTests(unittest.TestCase):
 
         logging.info('*** Dynamic test ***')
 
-        bot = ShellBot(mouth=Queue())
+        bot = ShellBot(mouth=my_mouth)
         bot.space = SpaceFactory.get('local', bot=bot)
         bot.space.id = '123'
 
@@ -50,8 +52,7 @@ class SpeakerTests(unittest.TestCase):
             bot.mouth.put(item)
         bot.mouth.put(Exception('EOQ'))
 
-        tee = Queue()
-        speaker = Speaker(bot=bot, tee=tee)
+        speaker = Speaker(bot=bot)
 
         with mock.patch.object(bot.space,
                                'post_message',
@@ -64,14 +65,11 @@ class SpeakerTests(unittest.TestCase):
             with self.assertRaises(Exception):
                 mouth.get_nowait()
 
-        for item in items:
-            self.assertEqual(tee.get(), item)
-
     def test_run(self):
 
         logging.info("*** run")
 
-        bot = ShellBot(mouth=Queue())
+        bot = ShellBot(mouth=my_mouth)
         bot.space = SpaceFactory.get('local', bot=bot)
         bot.space.id = '123'
         bot.mouth.put('ping')
@@ -93,7 +91,7 @@ class SpeakerTests(unittest.TestCase):
 
         logging.info("*** work")
 
-        bot = ShellBot(mouth=Queue())
+        bot = ShellBot(mouth=my_mouth)
         bot.space = SpaceFactory.get('local', bot=bot)
 
         bot.space.id = '123'
@@ -114,7 +112,7 @@ class SpeakerTests(unittest.TestCase):
 
         logging.info("*** work/wait while empty and not ready")
 
-        bot = ShellBot(mouth=Queue())
+        bot = ShellBot(mouth=my_mouth)
         bot.space = SpaceFactory.get('local', bot=bot)
 
         bot.speaker.NOT_READY_DELAY = 0.01
@@ -145,10 +143,10 @@ class SpeakerTests(unittest.TestCase):
 
         speaker.process('hello world')  # sent to stdout
 
-        bot = ShellBot(mouth=Queue())
+        bot = ShellBot(mouth=my_mouth)
         bot.space = SpaceFactory.get('local', bot=bot)
 
-        bot = ShellBot(mouth=Queue())
+        bot = ShellBot(mouth=my_mouth)
         bot.space = SpaceFactory.get('local', bot=bot)
         bot.space.id = '123'
 

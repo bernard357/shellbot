@@ -29,19 +29,15 @@ class Speaker(object):
     EMPTY_DELAY = 0.005   # time to wait if queue is empty
     NOT_READY_DELAY = 5   # time to wait if space is not ready
 
-    def __init__(self, bot=None, tee=None):
+    def __init__(self, bot=None):
         """
         Sends updates to a business messaging space
 
         :param bot: the overarching bot
         :type bot: ShellBot
 
-        :param tee: if provided, messages received are duplicated there
-        :type tee: queue
-
         """
         self.bot = bot
-        self.tee = tee
 
     def run(self):
         """
@@ -109,9 +105,6 @@ class Speaker(object):
                     item = self.bot.mouth.get(True, 0.1)
                     if isinstance(item, Exception):
                         break
-
-                    if self.tee:
-                        self.tee.put(item)
 
                     self.process(item)
 
