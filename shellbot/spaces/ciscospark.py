@@ -21,7 +21,6 @@ from multiprocessing import Process, Queue
 import os
 from six import string_types
 import time
-from ciscosparkapi import CiscoSparkAPI
 
 from ..context import Context
 from .base import Space
@@ -165,6 +164,8 @@ class SparkSpace(Space):
         """
         Connects to the back-end API
         """
+        from ciscosparkapi import CiscoSparkAPI
+
         try:
             if self.token is None:
                 self.api = None
