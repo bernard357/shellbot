@@ -3,6 +3,18 @@
 History
 -------
 
+17.5.7
+~~~~~~~
+* Add example to demonstrate interactive capture of data
+* Add example to demonstrate chat simulator
+* Add serious state machine and use it for asynchronous input
+* Add fittings plan for automated deployment on MCP with plumbery
+* Early development of a new command to audit chats
+* Minor improvements on code and tests
+* Travis-CI passed on python 2.7 and 3.5
+* 93% test coverage
+* 1514 python statements
+
 17.5.2
 ~~~~~~~
 * Add example 'notify' to ease introductory use case
