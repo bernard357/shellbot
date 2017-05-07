@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
 
     shellbot.commands
+    shellbot.machines
     shellbot.routes
     shellbot.spaces
 
