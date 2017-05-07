@@ -568,7 +568,7 @@ class Space(object):
 
         """
 
-        logging.info(u'Starting puller')
+        logging.info(u'Pulling updates')
         time.sleep(0.2)
 
         try:
