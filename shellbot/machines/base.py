@@ -17,6 +17,8 @@
 
 from collections import defaultdict
 import logging
+from multiprocessing import Manager, Lock, Process, Queue
+import time
 
 
 class Machine(object):
@@ -35,25 +37,24 @@ class Machine(object):
     2. The machine is switched on::
 
            >>>machine.start()
-           >>>machine.is_ready
-           True
 
-    3. Machine can process events::
+    3. Machine can process more events than ticks::
 
-           >>>machine.step()
+           >>>machine.execute('hello world')
 
-    4. Some machines can be reset, others will raise exceptions::
+    4. When a machine is expecting data from the chat space, it listens
+       from the ``fan`` queue used by the shell::
 
-           >>>machine.reset()
+           >>>bot.fan.put('special command')
 
-    5. When the machine is coming end of life, resources can be disposed::
+    4. When the machine is coming end of life, resources can be disposed::
 
            >>>machine.stop()
-           >>>machine.is_ready
-           False
 
     credit: Alex Bertsch <abertsch@dropbox.com>   securitybot/state_machine.py
     """
+
+    TICK_DURATION = 0.2  # time to wait between ticks
 
     def __init__(self,
                  bot=None,
@@ -108,6 +109,10 @@ class Machine(object):
         """
         self.bot = bot
 
+        self.lock = Lock()
+        self.mutables = Manager().dict()
+        self.mixer = Queue()
+
         self.on_init(**kwargs)
 
         if states is not None:
@@ -130,6 +135,33 @@ class Machine(object):
         """
         assert prefix not in (None, '')
         self.prefix = prefix
+
+    def get(self, key, default=None):
+        """
+        Retrieves the value of one key
+        """
+
+        self.lock.acquire()
+        value = None
+        try:
+            value = self.mutables.get(key, default)
+
+            if value is None:
+                value = default
+        finally:
+            self.lock.release()
+            return value
+
+    def set(self, key, value):
+        """
+        Remembers the value of one key
+        """
+
+        self.lock.acquire()
+        try:
+            self.mutables[key] = value
+        finally:
+            self.lock.release()
 
     def build(self,
             states,
@@ -182,7 +214,7 @@ class Machine(object):
 
         states = sorted(list(set(states)))
 
-        self._states = {}
+        self._states = dict()
         for state in states:
             self._states[state] = State(state,
                                         during.get(state, None),
@@ -190,7 +222,7 @@ class Machine(object):
                                         on_exit.get(state, None))
 
         try:
-            self.state = self._states[initial]
+            self.mutables['state'] = self._states[initial].name
         except KeyError:
             raise ValueError(u'Invalid initial state {}'.format(initial))
 
@@ -221,6 +253,33 @@ class Machine(object):
 
             self._transitions[transition['source']].append(item)
 
+    def state(self, name):
+        """
+        Provides a state by name
+
+        :param name: The label of the target state
+        :type name: str
+
+        :return: State
+        """
+        return self._states[name]
+
+    @property
+    def current_state(self):
+        """
+        Provides current state
+
+        :return: State
+
+        This function raises AttributeError if it is called before ``build()``.
+        """
+        try:
+            name = self.mutables['state']
+        except KeyError:
+            raise AttributeError('Machine has not been built')
+
+        return self._states[name]
+
     def step(self, **kwargs):
         """
         Brings some life to the state machine
@@ -229,17 +288,108 @@ class Machine(object):
         messages with one or multiple ``self.bot.say("Whatever message")``.
 
         """
-        self.state.during(**kwargs)
+        self.current_state.during(**kwargs)
 
-        for transition in self._transitions[self.state.name]:
+        for transition in self._transitions[self.current_state.name]:
             if transition.condition(**kwargs):
                 logging.debug('Transitioning: {0}'.format(transition))
                 transition.action()
-                self.state.on_exit()
-                self.state = transition.target
-                self.state.on_enter()
+                self.current_state.on_exit()
+                self.mutables['state'] = transition.target.name
+                self.current_state.on_enter()
                 break
 
+    def start(self, tick=None):
+        """
+        Starts the machine
+
+        :param tick: The duration set for each tick
+        :type tick: float
+
+        :return: either the process that has been started, or None
+
+        This function starts a separate thread to tick the machine
+        in the background.
+        """
+        if tick:
+            self.TICK_DURATION = tick
+
+        p = Process(target=self.tick)
+#        p.daemon = True
+        p.start()
+        return p
+
+    def stop(self):
+        """
+        Stops the machine
+        """
+        if self.mixer is not None:
+            self.mixer.put(None)
+
+    def tick(self):
+        """
+        Continuously ticks the machine
+
+        This function is looping in the background, and calls the function
+        ``step()`` at regular intervals.
+
+        The recommended way for stopping the process is to call the function
+        ``stop()``. For example::
+
+            machine.stop()
+
+        The loop is also stopped when the parameter ``general.switch``
+        is changed in the context. For example::
+
+            bot.context.set('general.switch', 'off')
+
+        """
+        logging.info(u"Starting machine")
+        self.set('is_running', True)
+
+        try:
+            while self.bot.context.get('general.switch', 'on') == 'on':
+
+                try:
+                    if self.mixer.empty():
+#                        logging.debug(u"Clocking the machine")
+                        self.step(event='tick')
+                        time.sleep(self.TICK_DURATION)
+                        continue
+
+                    item = self.mixer.get(True, self.TICK_DURATION)
+                    if item is None:
+                        break
+
+                    logging.debug('Processing item')
+                    self.execute(arguments=item)
+
+                except Exception as feedback:
+                    logging.exception(feedback)
+                    break
+
+        except KeyboardInterrupt:
+            pass
+
+        logging.info(u"Machine has been stopped")
+        self.set('is_running', False)
+
+    def execute(self, arguments):
+        """
+        Processes data received from the chat
+
+        This function can be used to feed the machine asynchronously
+        """
+        self.step(event='input', arguments=arguments)
+
+    @property
+    def is_running(self):
+        """
+        Determines if this machine is runnning
+
+        :return: True or False
+        """
+        return self.get('is_running', False)
 
 class State(object):
     """

@@ -7,6 +7,7 @@ import mock
 import os
 from multiprocessing import Process
 import sys
+from threading import Timer
 import time
 
 sys.path.insert(0, os.path.abspath('../..'))
@@ -64,6 +65,28 @@ class MachineTests(unittest.TestCase):
         machine = MyMachine(bot=my_bot, extra='w')
         self.assertEqual(machine.extra, 'w')
 
+    def test_getter(self):
+
+        machine = Machine(bot=my_bot)
+
+        # undefined key
+        self.assertEqual(machine.get('hello'), None)
+
+        # undefined key with default value
+        whatever = 'whatever'
+        self.assertEqual(machine.get('hello', whatever), whatever)
+
+        # set the key
+        machine.set('hello', 'world')
+        self.assertEqual(machine.get('hello'), 'world')
+
+        # default value is meaningless when key has been set
+        self.assertEqual(machine.get('hello', 'whatever'), 'world')
+
+        # except when set to None
+        machine.set('special', None)
+        self.assertEqual(machine.get('special', []), [])
+
     def test_build(self):
 
         machine = Machine(bot=my_bot)
@@ -82,7 +105,7 @@ class MachineTests(unittest.TestCase):
 
         self.assertEqual(sorted(machine._transitions.keys()), ['one', 'three', 'two'])
 
-        self.assertEqual(str(machine.state), 'one')
+        self.assertEqual(machine.current_state.name, 'one')
 
         states = ['one']
         transitions = [
@@ -117,6 +140,40 @@ class MachineTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             machine.build(states=states, transitions=transitions, initial='*weird')
 
+    def test_state(self):
+
+        machine = Machine(bot=my_bot)
+
+        states = ['one', 'two', 'three']
+        transitions = [
+            {'source': 'one', 'target': 'two'},
+            {'source': 'two', 'target': 'three'},
+            {'source': 'three', 'target': 'one'},
+        ]
+        machine.build(states=states,
+                      transitions=transitions,
+                      initial='one')
+
+        self.assertEqual(machine.state('one').name, 'one')
+        self.assertEqual(machine.state('two').name, 'two')
+        self.assertEqual(machine.state('three').name, 'three')
+
+    def test_current_state(self):
+
+        machine = Machine(bot=my_bot)
+
+        states = ['one', 'two', 'three']
+        transitions = [
+            {'source': 'one', 'target': 'two'},
+            {'source': 'two', 'target': 'three'},
+            {'source': 'three', 'target': 'one'},
+        ]
+        machine.build(states=states,
+                      transitions=transitions,
+                      initial='three')
+
+        self.assertEqual(machine.current_state.name, 'three')
+
     def test_step(self):
 
         machine = Machine(bot=my_bot)
@@ -137,13 +194,13 @@ class MachineTests(unittest.TestCase):
                           states=states,
                           transitions=transitions,
                           initial='one')
-        self.assertEqual(str(machine.state), 'one')
+        self.assertEqual(machine.current_state.name, 'one')
         machine.step()
-        self.assertEqual(str(machine.state), 'two')
+        self.assertEqual(machine.current_state.name, 'two')
         machine.step()
-        self.assertEqual(str(machine.state), 'three')
+        self.assertEqual(machine.current_state.name, 'three')
         machine.step()
-        self.assertEqual(str(machine.state), 'one')
+        self.assertEqual(machine.current_state.name, 'one')
 
     def test_simple_during(self):
         """Tests a simple action being performed while in a state."""
@@ -276,19 +333,19 @@ class MachineTests(unittest.TestCase):
 
         for x in range(5):
             self.assertTrue(helper.x == x)
-            self.assertTrue(str(machine.state) == 'one')
+            self.assertTrue(machine.current_state.name == 'one')
             machine.step()
         self.assertTrue(helper.x == 5)
-        self.assertTrue(str(machine.state) == 'two')
+        self.assertTrue(machine.current_state.name == 'two')
         machine.step()
         self.assertTrue(helper.x == 5)
-        self.assertTrue(str(machine.state) == 'one')
+        self.assertTrue(machine.current_state.name == 'one')
         machine.step()
         self.assertTrue(helper.x == 6)
-        self.assertTrue(str(machine.state) == 'one')
+        self.assertTrue(machine.current_state.name == 'one')
         machine.step()
         self.assertTrue(helper.x == 7)
-        self.assertTrue(str(machine.state) == 'one')
+        self.assertTrue(machine.current_state.name == 'one')
 
     def test_extra_condition(self):
         """Tests an extended condition check before transitioning."""
@@ -305,13 +362,13 @@ class MachineTests(unittest.TestCase):
                           transitions=transitions,
                           initial='one')
 
-        self.assertTrue(str(machine.state) == 'one')
+        self.assertTrue(machine.current_state.name == 'one')
         machine.step()
-        self.assertTrue(str(machine.state) == 'one')
+        self.assertTrue(machine.current_state.name == 'one')
         machine.step(gauge=5)
-        self.assertTrue(str(machine.state) == 'one')
+        self.assertTrue(machine.current_state.name == 'one')
         machine.step(gauge=50)
-        self.assertTrue(str(machine.state) == 'two')
+        self.assertTrue(machine.current_state.name == 'two')
 
     def test_simple_action(self):
         """Tests a simple action while transitioning."""
@@ -329,16 +386,16 @@ class MachineTests(unittest.TestCase):
                           initial='one')
 
         self.assertTrue(helper.x == 0)
-        self.assertTrue(str(machine.state) == 'one')
+        self.assertTrue(machine.current_state.name == 'one')
         machine.step()
         self.assertTrue(helper.x == 1)
-        self.assertTrue(str(machine.state) == 'two')
+        self.assertTrue(machine.current_state.name == 'two')
         machine.step()
         self.assertTrue(helper.x == 1)
-        self.assertTrue(str(machine.state) == 'one')
+        self.assertTrue(machine.current_state.name == 'one')
         machine.step()
         self.assertTrue(helper.x == 2)
-        self.assertTrue(str(machine.state) == 'two')
+        self.assertTrue(machine.current_state.name == 'two')
 
     def test_composite(self):
         """Tests that things happen without interference."""
@@ -371,18 +428,143 @@ class MachineTests(unittest.TestCase):
         self.assertTrue(helper.x == 1)
         self.assertTrue(helper.y == 0)
         self.assertTrue(helper.z == 0)
-        self.assertTrue(str(machine.state) == 'one')
+        self.assertTrue(machine.current_state.name == 'one')
         machine.step()
         self.assertTrue(helper.x == 2)
         self.assertTrue(helper.y == 0)
         self.assertTrue(helper.z == 10)
-        self.assertTrue(str(machine.state) == 'two')
+        self.assertTrue(machine.current_state.name == 'two')
         machine.step()
         self.assertTrue(helper.x == 2)
         self.assertTrue(helper.y == 5)
         self.assertTrue(helper.z == 10)
-        self.assertTrue(str(machine.state) == 'one')
+        self.assertTrue(machine.current_state.name == 'one')
 
+    def test_start(self):
+        """Infinite loop stopped via general switch"""
+
+        states = ['one', 'two', 'three', 'four']
+        transitions = [
+            {'source': 'one', 'target': 'two'},
+            {'source': 'two', 'target': 'three'},
+            {'source': 'three', 'target': 'four'},
+        ]
+
+        machine = Machine(bot=my_bot,
+                          states=states,
+                          transitions=transitions,
+                          initial='one')
+
+        my_bot.context.set('general.switch', 'on')
+        machine_process = machine.start(tick=0.001)
+        time.sleep(0.1)
+        my_bot.context.set('general.switch', 'off')
+        machine_process.join()
+
+        self.assertEqual(machine.current_state.name, 'four')
+
+    def test_stop(self):
+        """Machine is stopped after a while"""
+
+        states = ['one', 'two', 'three', 'four']
+        transitions = [
+            {'source': 'one', 'target': 'two'},
+            {'source': 'two', 'target': 'three'},
+            {'source': 'three', 'target': 'four'},
+        ]
+
+        machine = Machine(bot=my_bot,
+                          states=states,
+                          transitions=transitions,
+                          initial='one')
+
+        my_bot.context.set('general.switch', 'on')
+        machine_process = machine.start(tick=0.03)
+        time.sleep(0.05)
+        machine.stop()
+        machine_process.join()
+
+        self.assertTrue(machine.current_state.name != 'one')
+        self.assertTrue(machine.current_state.name != 'four')
+
+    def test_auto_stop(self):
+        """Machine stops itself on last transition"""
+
+        machine = Machine(bot=my_bot)
+
+        states = ['one', 'two', 'three', 'four']
+        transitions = [
+            {'source': 'one', 'target': 'two'},
+            {'source': 'two', 'target': 'three'},
+            {'source': 'three', 'target': 'four'},
+        ]
+        on_enter = { 'four': machine.stop }
+        machine.build(states=states,
+                      transitions=transitions,
+                      initial='one',
+                      on_enter=on_enter)
+
+        my_bot.context.set('general.switch', 'on')
+        machine_process = machine.start(tick=0.001)
+        machine_process.join()
+
+        self.assertEqual(machine.current_state.name, 'four')
+
+    def test_tick(self):
+
+        class MyMachine(Machine):
+
+            def execute(self, arguments):
+                if arguments == 'ctl-c':
+                    raise KeyboardInterrupt()
+                raise Exception('TEST')
+
+        states = ['one', 'two']
+        transitions = [
+            {'source': 'one', 'target': 'two'},
+            {'source': 'two', 'target': 'one'},
+        ]
+
+        machine = MyMachine(bot=my_bot,
+                            states=states,
+                            transitions=transitions,
+                            initial='one')
+
+        my_bot.context.set('general.switch', 'off')
+        machine.tick()  # general switch is off
+
+        my_bot.context.set('general.switch', 'on')
+
+        machine.TICK_DURATION = 0.003
+        t = Timer(0.004, machine.stop)
+        t.start()
+        machine.tick()  # poison pill on delay
+
+        machine.mixer.put(None)
+        machine.tick()  # exit on poison pill
+
+        machine.mixer.put('exception')
+        machine.tick()  # break on Exception
+
+        machine.mixer.put('ctl-c')
+        machine.tick()  # break on KeyboardInterrupt
+
+    def test_execute(self):
+
+        states = ['one', 'two']
+        transitions = [
+            {'source': 'one', 'target': 'two'},
+            {'source': 'two', 'target': 'one'},
+        ]
+
+        machine = Machine(bot=my_bot,
+                          states=states,
+                          transitions=transitions,
+                          initial='one')
+
+        machine.step = mock.Mock()
+        machine.execute('ping pong')
+        machine.step.assert_called_with(arguments='ping pong', event='input')
 
 class StateTests(unittest.TestCase):
 
