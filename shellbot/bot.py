@@ -96,6 +96,7 @@ class ShellBot(object):
                  mouth=None,
                  inbox=None,
                  ears=None,
+                 fan=None,
                  configure=False,
                  settings={},
                  space=None,
@@ -108,6 +109,7 @@ class ShellBot(object):
         self.mouth = mouth
         self.inbox = inbox
         self.ears = ears
+        self.fan = fan
 
         assert space is None or type is None  # not both
         if type:
@@ -188,6 +190,9 @@ class ShellBot(object):
             settings = self.DEFAULT_SETTINGS
 
         self.configure_from_dict(settings)
+
+        if self.fan is None:
+            self.fan = Queue()
 
         self.shell.configure()
 
@@ -313,9 +318,8 @@ class ShellBot(object):
 
     def dispose(self, *args, **kwargs):
         """
-        Disposes the room
+        Disposes all resources
 
-        This function is a convenient proxy for the underlying space.
         """
         self.space.dispose(*args, **kwargs)
 
@@ -492,31 +496,6 @@ class ShellBot(object):
                 self.speaker.process(ShellBotMessage(message, markdown, file))
             else:
                 self.speaker.process(message)
-
-    def ask(self, message, callable):
-        """
-        Asks a question
-
-        :param message: The question
-        :type message: str
-
-        :param callable: A function to process the answer
-        :type callable: str
-
-        """
-        if message in (None, ''):
-            return
-
-        logging.info(u"Bot asks: {}".format(message))
-
-        self.shell.call_once(callable)
-
-        if self.mouth:
-            logging.debug(u"- pushing message to mouth queue")
-            self.mouth.put(message)
-        else:
-            logging.debug(u"- calling speaker directly")
-            self.speaker.process(message)
 
 
 class ShellBotMessage(object):

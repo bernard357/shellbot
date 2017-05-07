@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from multiprocessing import Lock
+import time
 
 from .base import Command
 
@@ -24,7 +24,22 @@ class Default(Command):
     """
     Handles unmatched command
 
-    This is also the right place to catch all user input that is not a command.
+    In this pseudo-command we handle all user input that is not a command.
+    This is actually put to a queue, so that any process can pick it up
+    and use it. Nevertheless, data is pushed to the queue only if some
+    listeners can be sensed in the background. If this is not the case,
+    a message is sent back to the user.
+
+    For a process to receive unmatched statements, the protocol works like this:
+
+    * Check the ``bot.fan`` queue frequently
+
+    * On each check, update the string ``fan.stamp`` in the context with the
+      value of ``time.time()``. This will signal that you are around.
+
+    In this object, we only check the value of ``fan.stamp`` from the context.
+    If this fresh enough, then data is put to the ``bot.fan`` queue. Else
+    a message is sent to the chat space.
     """
 
     keyword = u'*default'
@@ -33,9 +48,7 @@ class Default(Command):
 
     default_message = u"Sorry, I do not know how to handle '{}'"
 
-    lock = Lock()
-    _call_once = None
-    _callback = None
+    FRESH_DURATION = 0.5  # maximum amount of time for listener detection
 
     def execute(self, arguments):
         """
@@ -44,82 +57,16 @@ class Default(Command):
         Arguments provided should include all of the user input, including
         the first token that has not been recognised as a valid command.
         """
-        self.lock.acquire()
-        try:
-            if self._call_once:
-                callable = self._call_once
-                self._call_once = None
+        if self.has_listeners():
+            self.bot.fan.put(arguments)
+        else:
+            self.bot.say(self.default_message.format(arguments))
 
-            elif self._callback:
-                callable = self._callback
-
-            else:
-                self.bot.say(self.default_message.format(arguments))
-                callable = None
-
-        finally:
-            self.lock.release()
-
-        if callable:
-            callable(arguments=arguments)
-
-    def call_once(self, callable):
+    def has_listeners(self):
         """
-        Arms a callback to be used only once
+        Checks if the fan has listeners
 
-        This function is useful to capture user responses.
-
-        Example::
-
-            def save_answer(arguments):
-                context.set('po_number', arguments)
-
-            default = shell.command('*default')
-            default.call_once(save_answer)
-            shell.say("What is the order number please?")
-
-        If you change your mind, you can provide the value None.
-
-        Example::
-
-            default.call_once(None)
-
+        :return: True or False
         """
-        self.lock.acquire()
-        try:
-            if callable:
-                assert self._call_once is None  # should not be called twice
-            self._call_once = callable
-
-        finally:
-            self.lock.release()
-
-    def callback(self, callable):
-        """
-        Defers processing to another place
-
-        This function is useful to add natural language processing to the bot.
-
-        Example::
-
-            nlp_engine = Engine(...)
-
-            default = shell.command('*default')
-            default.callback(nlp_engine.on_input)
-
-        If you change your mind, you can provide the value None.
-
-        Example::
-
-            default.callback(None)
-
-        """
-        self.lock.acquire()
-        try:
-            if callable:
-                assert self._callback is None  # should not be called twice
-            self._callback = callable
-
-        finally:
-            self.lock.release()
-
+        elapsed = time.time() - self.bot.context.get('fan.stamp', 0)
+        return elapsed < self.FRESH_DURATION

@@ -40,48 +40,6 @@ class DefaultTests(unittest.TestCase):
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
-    def test_call_once(self):
-
-        c = Default(my_bot)
-        self.assertTrue(c._call_once is None)
-
-        mocked = mock.Mock()
-
-        c.call_once(mocked)
-        c.execute('answer 1')
-        mocked.assert_called_with(arguments='answer 1')
-        self.assertTrue(c._call_once is None)
-
-        c.call_once(mocked)
-        c.execute('answer 2')
-        mocked.assert_called_with(arguments='answer 2')
-        self.assertTrue(c._call_once is None)
-
-        c.call_once(mocked)
-        with self.assertRaises(AssertionError):
-            c.call_once(mocked)
-
-        c.call_once(None)
-        c.call_once(mocked)
-
-    def test_callback(self):
-
-        c = Default(my_bot)
-        self.assertTrue(c._callback is None)
-
-        mocked = mock.Mock()
-        c.callback(mocked)
-
-        c.execute('*unknown*')
-        mocked.assert_called_with(arguments='*unknown*')
-        self.assertTrue(c._callback is not None)
-
-        with self.assertRaises(AssertionError):
-            c.callback(mocked)
-
-        c.callback(None)
-        c.callback(mocked)
-
 
 if __name__ == '__main__':
 

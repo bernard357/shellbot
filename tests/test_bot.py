@@ -31,6 +31,7 @@ class BotTests(unittest.TestCase):
         self.assertTrue(bot.mouth is None)
         self.assertTrue(bot.inbox is None)
         self.assertTrue(bot.ears is None)
+        self.assertTrue(bot.fan is None)
         self.assertTrue(bot.shell is not None)
         self.assertTrue(bot.speaker is not None)
         self.assertTrue(bot.worker is not None)
@@ -41,6 +42,7 @@ class BotTests(unittest.TestCase):
                        mouth='m',
                        inbox='i',
                        ears='e',
+                       fan='f',
                        store='s')
 
         self.assertEqual(bot.context, context)
@@ -49,6 +51,7 @@ class BotTests(unittest.TestCase):
         self.assertEqual(bot.mouth, 'm')
         self.assertEqual(bot.inbox, 'i')
         self.assertEqual(bot.ears, 'e')
+        self.assertEqual(bot.fan, 'f')
         self.assertTrue(bot.shell is not None)
         self.assertTrue(bot.speaker is not None)
         self.assertTrue(bot.worker is not None)
@@ -60,6 +63,7 @@ class BotTests(unittest.TestCase):
                        mouth='m',
                        inbox='i',
                        ears='e',
+                       fan='f',
                        store='s')
 
         self.assertEqual(bot.context, context)
@@ -68,6 +72,7 @@ class BotTests(unittest.TestCase):
         self.assertEqual(bot.mouth, 'm')
         self.assertEqual(bot.inbox, 'i')
         self.assertEqual(bot.ears, 'e')
+        self.assertEqual(bot.fan, 'f')
         self.assertTrue(bot.shell is not None)
         self.assertTrue(bot.speaker is not None)
         self.assertTrue(bot.worker is not None)
@@ -85,7 +90,7 @@ class BotTests(unittest.TestCase):
         logging.info('*** configure ***')
 
         context = Context()
-        bot = ShellBot(context=context)
+        bot = ShellBot(context=context, fan='f')
         bot.space=LocalSpace(bot=bot)
         bot.configure({})
 
@@ -122,7 +127,7 @@ class BotTests(unittest.TestCase):
         self.assertEqual(bot.context.get('server.url'), 'http://to.no.where')
         self.assertEqual(bot.context.get('server.hook'), '/hook')
 
-        bot = ShellBot()
+        bot = ShellBot(fan='f')
         bot.configure_from_path(os.path.dirname(os.path.abspath(__file__))
                                 + '/test_settings/regular.yaml')
         self.assertEqual(bot.context.get('bot.on_start'),
@@ -164,7 +169,7 @@ class BotTests(unittest.TestCase):
         }
 
         context = Context(settings)
-        bot = ShellBot(context=context, configure=True)
+        bot = ShellBot(context=context, configure=True, fan='f')
         self.assertEqual(bot.context.get('bot.on_start'), 'Start!')
         self.assertEqual(bot.context.get('bot.on_stop'), 'Stop!')
         self.assertEqual(bot.context.get('spark.room'), 'Support room')
@@ -188,7 +193,7 @@ class BotTests(unittest.TestCase):
         os.environ["CHAT_TOKEN"] = '*token'
         os.environ["SERVER_URL"] = 'http://to.nowhere/'
 
-        bot = ShellBot()
+        bot = ShellBot(fan='f')
         bot.configure()
 
         self.assertEqual(bot.context.get('bot.on_start'), 'Start!')
@@ -206,13 +211,13 @@ class BotTests(unittest.TestCase):
         self.assertEqual(bot.context.get('server.port'), 8080)
 
         os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
-        bot = ShellBot(settings=None, configure=True)
+        bot = ShellBot(settings=None, configure=True, fan='f')
 
     def test_load_commands(self):
 
         logging.info('*** load_commands ***')
 
-        bot = ShellBot()
+        bot = ShellBot(fan='f')
         with mock.patch.object(bot.shell,
                                'load_commands',
                                return_value=None) as mocked:
@@ -223,7 +228,7 @@ class BotTests(unittest.TestCase):
 
         logging.info('*** say ***')
 
-        bot = ShellBot(mouth=Queue())
+        bot = ShellBot(mouth=Queue(), fan='f')
 
         message_0 = None
         bot.say(message_0)
@@ -273,7 +278,7 @@ class BotTests(unittest.TestCase):
         logging.info('*** add_moderators ***')
 
         context = Context()
-        bot = ShellBot(context=context)
+        bot = ShellBot(context=context, fan='f')
         bot.space=LocalSpace(bot=bot)
         with mock.patch.object(bot.space,
                                'add_moderators',
@@ -286,7 +291,7 @@ class BotTests(unittest.TestCase):
         logging.info('*** add_participants ***')
 
         context = Context()
-        bot = ShellBot(context=context)
+        bot = ShellBot(context=context, fan='f')
         bot.space=LocalSpace(bot=bot)
         with mock.patch.object(bot.space,
                                'add_participants',
@@ -299,7 +304,7 @@ class BotTests(unittest.TestCase):
         logging.info('*** dispose ***')
 
         context = Context()
-        bot = ShellBot(context=context)
+        bot = ShellBot(context=context, fan='f')
         bot.space=LocalSpace(bot=bot)
 
         with mock.patch.object(bot.space,
@@ -348,7 +353,7 @@ class BotTests(unittest.TestCase):
 
         context = Context()
         context.set('server.url', 'http://here.you.go:123')
-        bot = ShellBot(context=context)
+        bot = ShellBot(context=context, fan='f')
         bot.space=LocalSpace(bot=bot)
         server = mock.Mock()
         with mock.patch.object(bot.space,
@@ -368,7 +373,7 @@ class BotTests(unittest.TestCase):
 
         context = Context()
         context.set('server.url', 'http://here.you.go:123')
-        bot = ShellBot(context=context)
+        bot = ShellBot(context=context, fan='f')
         bot.space=LocalSpace(bot=bot)
         self.assertEqual(bot.get_hook(), bot.space.webhook)
 
@@ -376,7 +381,7 @@ class BotTests(unittest.TestCase):
 
         logging.info('*** run ***')
 
-        bot = ShellBot()
+        bot = ShellBot(fan='f')
         bot.space=LocalSpace(bot=bot)
 
         bot.start = mock.Mock()
@@ -394,7 +399,7 @@ class BotTests(unittest.TestCase):
 
         logging.info('*** start ***')
 
-        bot = ShellBot()
+        bot = ShellBot(fan='f')
         bot.space=LocalSpace(bot=bot)
 
         bot.start_processes = mock.Mock()
@@ -415,7 +420,8 @@ class BotTests(unittest.TestCase):
 
         bot = ShellBot(ears=Queue(),
                        inbox=Queue(),
-                       mouth=Queue())
+                       mouth=Queue(),
+                       fan='f')
 
         settings = {
             'bot': {'name': 'shelly'},
@@ -439,7 +445,7 @@ class BotTests(unittest.TestCase):
 
         logging.info('*** dynamic test ***')
 
-        bot = ShellBot(ears=Queue())
+        bot = ShellBot(ears=Queue(), fan='f')
 
         settings = {
             'bot': {'name': 'shelly'},
@@ -562,7 +568,7 @@ class BotTests(unittest.TestCase):
 
         context = Context()
 
-        bot = ShellBot(context=context)
+        bot = ShellBot(context=context, fan='f')
 
         bot.say('')
         bot.say(None)
@@ -584,34 +590,6 @@ class BotTests(unittest.TestCase):
         bot.say('test')
         bot.say('test', markdown='test')
         bot.say('test', file='test.yaml')
-
-        self.assertTrue(bot.mouth.put.called)
-        self.assertFalse(bot.speaker.process.called)
-
-    def test_ask(self):
-
-        logging.info('*** ask ***')
-
-        bot = ShellBot()
-
-        fn = mock.Mock()
-
-        bot.ask('', callable=fn)
-        bot.ask(None, fn)
-
-        with mock.patch.object(bot.speaker,
-                               'process',
-                               return_value=None) as mocked:
-
-            bot.ask('test', fn)
-            mocked.assert_called_with('test')
-
-        bot.shell.call_once(None)
-        bot.mouth = Queue()
-        bot.mouth.put = mock.Mock()
-        bot.speaker.process = mock.Mock()
-
-        bot.ask('test', fn)
 
         self.assertTrue(bot.mouth.put.called)
         self.assertFalse(bot.speaker.process.called)

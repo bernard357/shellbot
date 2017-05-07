@@ -327,44 +327,6 @@ class ShellTests(unittest.TestCase):
         with self.assertRaises(Exception):
             print(shell.bot.mouth.get_nowait())
 
-    def test_call_once(self):
-
-        logging.debug('***** call_once')
-
-        shell = Shell(bot=my_bot)
-
-        mocked = mock.Mock()
-
-        shell.call_once(mocked)
-        shell.do('answer 1')
-        mocked.assert_called_with(arguments='answer 1')
-
-        shell.call_once(mocked)
-        shell.do('answer 2')
-        mocked.assert_called_with(arguments='answer 2')
-
-        shell.call_once(mocked)
-        with self.assertRaises(AssertionError):
-            shell.call_once(mocked)
-
-    def test_callback(self):
-
-        logging.debug('***** callback')
-
-        shell = Shell(bot=my_bot)
-
-        mocked = mock.Mock()
-
-        shell.callback(mocked)
-        shell.do('answer 1')
-        mocked.assert_called_with(arguments='answer 1')
-
-        shell.do('answer 2')
-        mocked.assert_called_with(arguments='answer 2')
-
-        with self.assertRaises(AssertionError):
-            shell.callback(mocked)
-
 
 if __name__ == '__main__':
 
