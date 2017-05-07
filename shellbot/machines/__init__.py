@@ -14,7 +14,9 @@
 # limitations under the License.
 
 from .base import Machine, State, Transition
+from .input import Input
 
 __all__ = [
+    'Input',
     'Machine',
 ]
