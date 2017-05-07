@@ -239,6 +239,7 @@ class Trigger(object):
 
         if counter == 1:
             self.bot.bond(reset=True)
+            self.bot.space.on_run()
             self.bot.hook()
 
         else:
