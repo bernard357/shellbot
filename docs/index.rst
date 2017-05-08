@@ -8,8 +8,9 @@ The documentation of Shellbot
    README
    SETUP
    CONTRIBUTING
-   HISTORY
+   QUESTIONS
    Documentation extracted from the code <shellbot>
+   HISTORY
 
 Indices and tables
 ==================

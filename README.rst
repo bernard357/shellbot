@@ -20,30 +20,111 @@ Shellbot
 
 Fast, simple and lightweight micro bot-framework for Python.
 
-Shellbot is a fast and simple micro-framework for bot applications.
-It offers actions dispatching with a handy pipeline for non-interactive commands.
-It leverages the Cisco Spark API natively.
-It wraps Bottle for easy interactions over the web. Test coverage of Shellbot
-exceeds 90%; it has been designed to minimize dependencies; we want it to be
-blazing fast.
-
+Features
+--------
+* Comprehensive set of examples is included
+* Create powerful state machines for mastering bot-human interactions
+* Create the exact set of shell commands needed for your application
+* Either respond interactively, or pipeline long-lasting commands
+* Native support of Cisco Spark
+* Local disconnected mode of operation for development and tests
+* Bottle is included for easy interactions over the web
+* Test coverage exceeds 90%
+* Made for python 2.7 and for python 3.x
 * Documentation: `Shellbot at ReadTheDocs`_
 * Python package: `Shellbot at PyPi`_
 * Source code: `Shellbot at GitHub`_
-* Free software: `Apache License (2.0)`_  (see LICENSE for details)
+* Free software: `Apache License (2.0)`_
 
-Copyright (c) 2017, `Bernard Paques`_ [Dimension Data employee]
+The Batman example
+------------------
+
+.. code-block:: python
+
+    from shellbot import ShellBot, Context, Command
+
+    # create a bot and load commands
+    #
+
+    class Batman(Command):
+        keyword = 'whoareyou'
+        information_message = u"I'm Batman!"
+
+    class Batcave(Command):
+        keyword = 'cave'
+        information_message = u"The Batcave is silent..."
+
+        def execute(self, arguments=None):
+            if arguments:
+                self.bot.say(u"The Batcave echoes, '{0}'".format(arguments))
+            else:
+                self.bot.say(self.information_message)
+
+    class Batsignal(Command):
+        keyword = 'signal'
+        information_message = u"NANA NANA NANA NANA"
+        information_file = "https://upload.wikimedia.org/wikipedia/en/c/c6/Bat-signal_1989_film.jpg"
+
+        def execute(self, arguments=None):
+            self.bot.say(self.information_message,
+                         file=self.information_file)
+
+    class Batsuicide(Command):
+        keyword = 'suicide'
+        information_message = u"Go back to Hell"
+        is_interactive = False
+
+        def execute(self, arguments=None):
+            time.sleep(3)
+            self.bot.say(self.information_message)
+            self.bot.stop()
+
+
+    bot = ShellBot(commands=[Batman(), Batcave(), Batsignal(), Batsuicide()])
+
+    # load configuration
+    #
+    os.environ['BOT_ON_START'] = 'You can now chat with Batman'
+    os.environ['BOT_ON_STOP'] = 'Batman is now quitting the room, bye'
+    os.environ['CHAT_ROOM_TITLE'] = 'Chat with Batman'
+    bot.configure()
+
+    # initialise a chat room
+    #
+    bot.bond(reset=True)
+
+    # run the bot
+    #
+    bot.run()
+
+    # delete the chat room when the bot is stopped
+    #
+    bot.dispose()
+
+
+Installation
+------------
+
+To install the shellbot framework, type::
+
+    $ pip install shellbot
+
+If you are not able to use pip, you may also use easy_install from the source directory::
+
+    $ easy_install .
 
 
 Credits
 -------
 
+* securitybot_ from the Dropbox team
 * Bottle_
 * ciscosparkapi_
 * PyYAML_
 * Cookiecutter_
 * `cookiecutter-pypackage`_
 
+.. _securitybot: https://github.com/dropbox/securitybot
 .. _`Shellbot at ReadTheDocs`: http://shellbot-for-cisco-spark.readthedocs.io/en/latest/
 .. _`Shellbot at PyPi`: https://pypi.python.org/pypi/shellbot
 .. _`Shellbot at GitHub`: https://github.com/bernard357/shellbot
