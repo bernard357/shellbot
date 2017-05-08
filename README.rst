@@ -102,17 +102,19 @@ The Batman example
     bot.dispose()
 
 
-Installation
-------------
+Quick installation
+------------------
 
-To install the shellbot framework, type::
+To install the shellbot package, type::
 
     $ pip install shellbot
 
-If you are not able to use pip, you may also use easy_install from the source directory::
+Or, if you prefer to download the full project including examples and documentation,
+and install it, do the following::
 
-    $ easy_install .
-
+    $ git clone https://github.com/bernard357/shellbot.git
+    $ cd shellbot
+    $ pip install -e .
 
 Credits
 -------
