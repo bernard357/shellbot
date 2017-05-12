@@ -101,21 +101,9 @@ class AuditTests(unittest.TestCase):
 
         c = Audit(my_bot)
 
-        space = mock.Mock()
-        speaker = mock.Mock()
-        c.arm(space=space, speaker=speaker)
-
-        self.assertEqual(c.space, space)
-        self.assertTrue(c.space.connect.called)
-        space.connect.assert_called_with()
-        self.assertTrue(c.space.bond.called)
-        space.bond.assert_called_with(title=u'Test - Audited content')
-
-        self.assertEqual(c.speaker, speaker)
-        self.assertTrue(c.speaker.run.called)
-        speaker.run.assert_called_with()
-
-        self.assertTrue(c.mouth is not None)
+        updater = mock.Mock()
+        c.arm(updater=updater)
+        self.assertEqual(c.updater, updater)
 
         self.assertEqual(my_bot.listener.filter, c.filter)
 
@@ -134,46 +122,31 @@ class AuditTests(unittest.TestCase):
         c.space = mock.Mock()
         self.assertFalse(c.armed)
 
-        c.mouth = Queue()
+        c.updater = Queue()
         self.assertFalse(c.armed)
 
-        c.arm(space=mock.Mock(), speaker=mock.Mock())
+        c.arm(updater=Queue())
         self.assertTrue(c.armed)
 
     def test_filter(self):
 
         logging.info('***** filter')
 
+        my_bot.context.set('audit.switch', 'on')
+
         c = Audit(my_bot)
-        c.mouth = None
+        c.updater = None
 
         item = {'text': 'hello world', 'personEmail': 'a@me.com'}
         self.assertEqual(c.filter(item=item), item)
 
-        c.mouth = Queue()
+        c.updater = Queue()
         self.assertEqual(c.filter(item=item), item)
-        self.assertEqual(c.mouth.get(), c.format(item))
+        self.assertEqual(c.updater.get(),
+                         {'text': 'hello world', 'personEmail': 'a@me.com'})
         with self.assertRaises(Exception):
-            c.mouth.get_nowait()
+            c.updater.get_nowait()
 
-    def test_format(self):
-
-        logging.info('***** format')
-
-        c = Audit(my_bot)
-        c.mouth = Queue()
-
-        inbound = 'hello world'
-        with self.assertRaises(Exception):
-            outbound = c.format(item=inbound)
-
-        inbound = {'text': 'hello world'}
-        with self.assertRaises(Exception):
-            outbound = c.format(item=inbound)
-
-        inbound = {'text': 'hello world', 'personEmail': 'a@me.com'}
-        outbound = c.format(item=inbound)
-        self.assertEqual(outbound, u'a@me.com: hello world')
 
 
 if __name__ == '__main__':

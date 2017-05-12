@@ -19,12 +19,26 @@ import logging
 from multiprocessing import Process, Queue
 
 from .base import Command
-from ..spaces import SparkSpace
+from ..updaters import Updater
 
 
 class Audit(Command):
     """
     Checks and changes audit status
+
+    In essence, audit starts with the capture of information in real-time,
+    and continues with the replication of information.
+
+    A typical use case is the monitoring of interactions happening in a space,
+    for security reasons or for compliancy.
+
+    The command Audit() has to be armed beforehand, meaning that it is
+    provided with a callable function that can receive updates, and that
+    it hooks the listener to filter all inbound traffic.
+
+    The command itself allows for suspending or restarting the audit process.
+
+
     """
 
     keyword = u'audit'
@@ -40,8 +54,7 @@ class Audit(Command):
     already_off_message = u'Chat interactions are already private.'
 
     _armed = False
-    space = None
-    mouth = None
+    updater = None
 
     def execute(self, arguments=None):
         """
@@ -95,39 +108,16 @@ class Audit(Command):
         else:
             self.bot.say(self.off_message)
 
-    def arm(self, space=None, speaker=None):
+    def arm(self, updater):
         """
         Arms the auditing function
 
-        :param space: the target space to use (optional)
-        :type space: Space
+        :param updater: the function to be used on each update
+        :type updater: callable
 
-        :param speaker: the speaker instance to use (optional)
-        :type speaker: Speaker
-
-        Parameters are provided mainly for test injection.
         """
-
-        # create a secondary room
-        #
-        self.space = space if space else SparkSpace(bot=self)
-
-        self.space.connect()
-
-        title = u"{} - {}".format(
-            self.bot.context.get('spark.room', 'Test'), u"Audited content")
-
-        self.space.bond(title=title)
-
-        # speak incoming updates
-        #
-        self.mouth = Queue()
-
-        self.speaker = speaker if speaker else Speaker(bot=self)
-        self.speaker.run()
-
-        # audit incoming updates
-        #
+        assert updater is not None
+        self.updater = updater
         self.bot.listener.filter = self.filter
 
     @property
@@ -138,10 +128,7 @@ class Audit(Command):
         if self._armed:
             return True
 
-        if self.space is None:
-            return False
-
-        if self.mouth is None:
+        if self.updater is None:
             return False
 
         if self.bot.listener.filter != self.filter:
@@ -161,22 +148,7 @@ class Audit(Command):
         This function implements the actual auditing of incoming messages.
         """
         try:
-            self.mouth.put(self.format(item))
+            if self.bot.context.get('audit.switch', 'off') == 'on':
+                self.updater.put(item)
         finally:
             return item
-
-    def format(self, item):
-        """
-        Prepares an outbound message
-
-        :param item: an inbound message
-        :type item: dict
-
-        :return: outbound message
-        :rtype: str or Message
-
-        """
-        person = item['personEmail']
-        text = item['text']
-        return u'{}: {}'.format(person, text)
-
