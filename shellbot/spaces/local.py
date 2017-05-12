@@ -219,7 +219,8 @@ class LocalSpace(Space):
         >>>space.post_message(text='hello world')
 
         """
-        print(text)
+        sys.stdout.write(text+'\n')
+        sys.stdout.flush()
 
     def on_run(self):
         """
