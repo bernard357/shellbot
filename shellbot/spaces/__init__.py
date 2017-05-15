@@ -29,7 +29,7 @@ __all__ = [
 
 class SpaceFactory(object):
     """
-    Builds spaces from configuration
+    Builds a space from configuration
 
     Example::
 
@@ -116,7 +116,7 @@ class SpaceFactory(object):
         :return: a space instance
 
         This function seeks for a suitable space class in the library, and
-        return an instance of it.
+        returns an instance of it.
 
         Example::
 
