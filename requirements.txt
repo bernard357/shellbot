@@ -1,5 +1,5 @@
 bottle
+ciscosparkapi
 colorlog
 paste
 PyYAML
-ciscosparkapi
