@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import gc
 import logging
 import os
 import sys
@@ -10,8 +11,14 @@ sys.path.insert(0, os.path.abspath('..'))
 
 from shellbot import Context
 
+my_context = Context()
+
 
 class ContextTests(unittest.TestCase):
+
+    def tearDown(self):
+        collected = gc.collect()
+        logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 
@@ -32,7 +39,8 @@ class ContextTests(unittest.TestCase):
 
     def test_apply(self):
 
-        context = Context()
+        context = my_context
+        context.clear()
 
         self.assertEqual(context.get('general.port'), None)
 
@@ -52,9 +60,41 @@ class ContextTests(unittest.TestCase):
         self.assertEqual(context.get('server.port'), 80)
         self.assertEqual(context.get('server.url'), 'http://www.acme.com/')
 
+    def test_clear(self):
+
+        context = my_context
+        context.clear()
+
+        self.assertEqual(context.get('general.port'), None)
+
+        settings = {
+            'spark': {'CISCO_SPARK_BTTN_BOT': 'who_knows'},
+            'spark.room': 'title',
+            'DEBUG': True,
+            'server': {'port': 80, 'url': 'http://www.acme.com/'},
+        }
+
+        context.apply(settings)
+
+        self.assertEqual(context.get('general.DEBUG'), True)
+        self.assertEqual(context.get('spark.CISCO_SPARK_BTTN_BOT'),
+                         'who_knows')
+        self.assertEqual(context.get('spark.room'), 'title')
+        self.assertEqual(context.get('server.port'), 80)
+        self.assertEqual(context.get('server.url'), 'http://www.acme.com/')
+
+        context.clear()
+
+        self.assertEqual(context.get('general.DEBUG'), None)
+        self.assertEqual(context.get('spark.CISCO_SPARK_BTTN_BOT'), None)
+        self.assertEqual(context.get('spark.room'), None)
+        self.assertEqual(context.get('server.port'), None)
+        self.assertEqual(context.get('server.url'), None)
+
     def test_check(self):
 
-        context = Context()
+        context = my_context
+        context.clear()
 
         self.assertEqual(context.get('spark.room'), None)
 
@@ -161,7 +201,8 @@ class ContextTests(unittest.TestCase):
 
     def test_has(self):
 
-        context = Context()
+        context = my_context
+        context.clear()
 
         context.apply({
             'spark': {
@@ -192,7 +233,8 @@ class ContextTests(unittest.TestCase):
 
     def test_getter(self):
 
-        context = Context()
+        context = my_context
+        context.clear()
 
         # undefined key
         self.assertEqual(context.get('hello'), None)
@@ -214,7 +256,8 @@ class ContextTests(unittest.TestCase):
 
     def test_unicode(self):
 
-        context = Context()
+        context = my_context
+        context.clear()
 
         context.set('hello', 'world')
         self.assertEqual(context.get('hello'), 'world')
@@ -228,7 +271,8 @@ class ContextTests(unittest.TestCase):
 
     def test_gauge(self):
 
-        context = Context()
+        context = my_context
+        context.clear()
 
         # undefined key
         self.assertEqual(context.get('gauge'), None)

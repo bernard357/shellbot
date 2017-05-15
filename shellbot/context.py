@@ -57,7 +57,6 @@ class Context(object):
         :type settings: dict
 
         """
-
         self.lock.acquire()
         try:
             for key in settings.keys():
@@ -68,6 +67,16 @@ class Context(object):
                     self.values[key] = settings[key]
                 else:
                     self.values['general.'+key] = settings[key]
+        finally:
+            self.lock.release()
+
+    def clear(self):
+        """
+        Clears content of a context
+        """
+        self.lock.acquire()
+        try:
+            self.values.clear()
         finally:
             self.lock.release()
 
