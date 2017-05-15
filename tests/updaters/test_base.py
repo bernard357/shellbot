@@ -23,9 +23,9 @@ class BaseTests(unittest.TestCase):
         u = Updater(bot='b')
         self.assertEqual(u.bot, 'b')
 
-    def test_from_base(self):
+    def test_on_init(self):
 
-        logging.info('***** from base')
+        logging.info('***** on_init')
 
         class MyUpdater(Updater):
 
