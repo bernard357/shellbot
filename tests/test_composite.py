@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import gc
 import logging
 from mock import MagicMock
 import os
@@ -27,6 +28,10 @@ my_bot.space.id = '123'
 
 
 class CompositeTests(unittest.TestCase):
+
+    def tearDown(self):
+        collected = gc.collect()
+        logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_static(self):
 

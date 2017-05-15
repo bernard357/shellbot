@@ -109,7 +109,56 @@ class Listener(object):
 
     def process(self, item):
         """
-        Processes items sent by the chat space
+        Processes items received from the chat space
+
+        :param item: the item received
+        :type item: dict
+
+        This function dispatches items based on their type. The type is
+        a key of the provided dict.
+
+        Following events are handled:
+
+        * ``message`` -- This is a textual message, maybe with a file attached.
+          The message is given to the ``on_message()`` function. If a file
+          or a link is provided, the, ``on_attachment()`` function is called
+          as well.
+
+        * ``join`` -- This is when a person join a space. The function
+          ``on_join()`` is called, providing details on the person who joined
+
+        *  ``leave`` -- This is when a person leaves a space. The function
+           ``on_leave()`` is called with details on the leaving person.
+
+        * ``other`` -- on any other case, the function ``on_event()``is
+          called.
+        """
+        counter = self.bot.context.increment('listener.counter')
+        logging.debug(u'Listener is working on {}'.format(counter))
+
+        try:
+            if item['type'] == 'message':
+                logging.debug(u"- dispatching a message event")
+                self.on_message(item)
+
+            elif item['type'] == 'join':
+                logging.debug(u"- dispatching a join event")
+                self.on_join(item)
+
+            elif item['type'] == 'leave':
+                logging.debug(u"- dispatching a leave event")
+                self.on_leave(item)
+
+            else:
+                logging.debug(u"- dispatching another event")
+                self.on_event(item)
+
+        except:
+            logging.debug(u"- invalid format, thrown away")
+
+    def on_message(self, item):
+        """
+        A message has been received
 
         :param item: the message received
         :type item: dict
@@ -120,10 +169,6 @@ class Listener(object):
         to the inbox.
 
         This function expects following keys in each item received:
-
-        * ``type`` -- This should have the value ``message``.
-          Other values can be introduced in the future so that the listener
-          has the capability to dispatch multiple events.
 
         * ``text`` -- This is the input coming from the chat space.
 
@@ -154,15 +199,8 @@ class Listener(object):
             }
 
         """
-        counter = self.bot.context.increment('listener.counter')
-        logging.debug(u'Listener is working on {}'.format(counter))
-
-        try:  # sanity check
-            assert item['type'] == 'message'
-            input = item['text']
-        except:
-            logging.debug(u"- invalid format, thrown away")
-            return
+        assert item['type'] == 'message'  # sanity check
+        input = item['text']
 
         if input is None:
             logging.debug(u"- no input in this item, thrown away")
@@ -189,3 +227,40 @@ class Listener(object):
             input = input[len(bot):].strip()
 
         self.bot.shell.do(input)
+
+    def on_attachment(self, item):
+        """
+        An attachment has been received
+
+        :param item: the message received
+        :type item: dict
+        """
+        assert item['type'] == 'message'  # sanity check
+
+    def on_join(self, item):
+        """
+        A person has joined a space
+
+        :param item: the event received
+        :type item: dict
+        """
+        assert item['type'] == 'join'  # sanity check
+
+    def on_leave(self, item):
+        """
+        A person has leaved a space
+
+        :param item: the event received
+        :type item: dict
+        """
+        assert item['type'] == 'leave'  # sanity check
+
+    def on_event(self, item):
+        """
+        Another event has been received
+
+        :param item: the event received
+        :type item: dict
+        """
+        assert item['type'] not in ('message', 'join', 'leave')  # sanity check
+

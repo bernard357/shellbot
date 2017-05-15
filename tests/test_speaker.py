@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import gc
 import logging
 import mock
 from multiprocessing import Process, Queue
@@ -15,15 +16,20 @@ sys.path.insert(0, os.path.abspath('..'))
 from shellbot import Context, ShellBot, Speaker, SpaceFactory
 
 my_mouth = Queue()
+my_bot = ShellBot(mouth=my_mouth)
 
 
 class SpeakerTests(unittest.TestCase):
+
+    def tearDown(self):
+        collected = gc.collect()
+        logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_static(self):
 
         logging.info('*** Static test ***')
 
-        bot = ShellBot(mouth=my_mouth)
+        bot = my_bot
         speaker = Speaker(bot=bot)
 
         speaker_process = Process(target=speaker.work)
@@ -43,7 +49,7 @@ class SpeakerTests(unittest.TestCase):
 
         logging.info('*** Dynamic test ***')
 
-        bot = ShellBot(mouth=my_mouth)
+        bot = my_bot
         bot.space = SpaceFactory.get('local', bot=bot)
         bot.space.id = '123'
 
@@ -69,7 +75,7 @@ class SpeakerTests(unittest.TestCase):
 
         logging.info("*** run")
 
-        bot = ShellBot(mouth=my_mouth)
+        bot = my_bot
         bot.space = SpaceFactory.get('local', bot=bot)
         bot.space.id = '123'
         bot.mouth.put('ping')
@@ -91,7 +97,7 @@ class SpeakerTests(unittest.TestCase):
 
         logging.info("*** work")
 
-        bot = ShellBot(mouth=my_mouth)
+        bot = my_bot
         bot.space = SpaceFactory.get('local', bot=bot)
 
         bot.space.id = '123'
@@ -112,7 +118,7 @@ class SpeakerTests(unittest.TestCase):
 
         logging.info("*** work/wait while empty and not ready")
 
-        bot = ShellBot(mouth=my_mouth)
+        bot = my_bot
         bot.space = SpaceFactory.get('local', bot=bot)
 
         bot.speaker.NOT_READY_DELAY = 0.01
@@ -143,10 +149,7 @@ class SpeakerTests(unittest.TestCase):
 
         speaker.process('hello world')  # sent to stdout
 
-        bot = ShellBot(mouth=my_mouth)
-        bot.space = SpaceFactory.get('local', bot=bot)
-
-        bot = ShellBot(mouth=my_mouth)
+        bot = my_bot
         bot.space = SpaceFactory.get('local', bot=bot)
         bot.space.id = '123'
 

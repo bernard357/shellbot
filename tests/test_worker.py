@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import gc
 import logging
 import os
 import mock
@@ -17,11 +18,15 @@ my_bot = ShellBot(inbox=Queue(), mouth=Queue())
 
 class WorkerTests(unittest.TestCase):
 
+    def tearDown(self):
+        collected = gc.collect()
+        logging.info("Garbage collector: collected %d objects." % (collected))
+
     def test_static(self):
 
         logging.info('*** Static test ***')
 
-        my_bot.context = Context()
+        my_bot.context.clear()
         worker = Worker(bot=my_bot)
 
         worker_process = Process(target=worker.work)
@@ -49,7 +54,7 @@ class WorkerTests(unittest.TestCase):
         my_bot.inbox.put(('unknownCommand', ''))
         my_bot.inbox.put(Exception('EOQ'))
 
-        my_bot.context = Context()
+        my_bot.context.clear()
         my_bot.shell.load_default_commands()
         worker = Worker(bot=my_bot)
         worker.work()
@@ -77,7 +82,7 @@ class WorkerTests(unittest.TestCase):
 
         logging.info("*** work")
 
-        my_bot.context = Context()
+        my_bot.context.clear()
         worker = Worker(bot=my_bot)
         worker.process = mock.Mock(side_effect=Exception('TEST'))
         my_bot.inbox.put(('do', 'this'))
@@ -85,7 +90,7 @@ class WorkerTests(unittest.TestCase):
         worker.work()
         self.assertEqual(my_bot.context.get('worker.counter'), 0)
 
-        my_bot.context = Context()
+        my_bot.context.clear()
         worker = Worker(bot=my_bot)
         worker.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
         my_bot.inbox.put(('do', 'that'))
@@ -96,7 +101,7 @@ class WorkerTests(unittest.TestCase):
 
         logging.info("*** process")
 
-        my_bot.context = Context()
+        my_bot.context.clear()
         my_bot.shell._commands = {}
         worker = Worker(bot=my_bot)
         worker.bot.say = mock.Mock(side_effect=[Exception(), True])

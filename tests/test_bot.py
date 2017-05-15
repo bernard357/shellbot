@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import gc
 import logging
 import os
 import mock
@@ -16,6 +17,10 @@ from shellbot.spaces import Space, LocalSpace, SparkSpace
 
 
 class BotTests(unittest.TestCase):
+
+    def tearDown(self):
+        collected = gc.collect()
+        logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 

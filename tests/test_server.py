@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import gc
 import logging
 import os
 from multiprocessing import Queue
@@ -16,6 +17,10 @@ from shellbot.routes import Route, Notify, Text, Wrap
 
 
 class ServerTests(unittest.TestCase):
+
+    def tearDown(self):
+        collected = gc.collect()
+        logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 
