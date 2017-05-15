@@ -19,4 +19,4 @@ shellbot.egg-info/
 .settings
 .DS_Store
 .eggs/
-test/local/
+tests/local/
