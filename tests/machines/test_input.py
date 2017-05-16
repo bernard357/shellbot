@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 from shellbot import Context, ShellBot
 from shellbot.machines import Input
+from shellbot.stores import MemoryStore
 
 
 class InputTests(unittest.TestCase):
@@ -171,6 +172,7 @@ class InputTests(unittest.TestCase):
         logging.info("******** execute")
 
         my_bot = ShellBot()
+        my_bot.store = mock.Mock()
         my_bot.say = mock.Mock()
 
         machine = Input(bot=my_bot,
@@ -262,12 +264,14 @@ class InputTests(unittest.TestCase):
 
         logging.info("******** life cycle")
 
+        store = MemoryStore()
+
         class MyBot(ShellBot):
 
             def say(self, message):
                 self.context.set('said', message)
 
-        my_bot = MyBot()
+        my_bot = MyBot(store=store)
         my_bot.fan = Queue()
 
         machine = Input(bot=my_bot,
@@ -280,19 +284,21 @@ class InputTests(unittest.TestCase):
         my_bot.fan.put('here we go')
         p.join()
 
-        self.assertEqual(my_bot.context.get('my.input'), 'here we go')
+        self.assertEqual(my_bot.recall('input'), {u'my.input': u'here we go'})
         self.assertEqual(my_bot.context.get('said'), machine.on_answer)
 
     def test_delayed(self):
 
         logging.info("******** delayed")
 
+        store = MemoryStore()
+
         class MyBot(ShellBot):
 
             def say(self, message):
                 self.context.set('said', message)
 
-        my_bot = MyBot()
+        my_bot = MyBot(store=store)
         my_bot.fan = Queue()
 
         machine = Input(bot=my_bot,
@@ -306,7 +312,7 @@ class InputTests(unittest.TestCase):
         my_bot.fan.put('here we go')
         p.join()
 
-        self.assertEqual(my_bot.context.get('my.input'), 'here we go')
+        self.assertEqual(my_bot.recall('input'), {u'my.input': u'here we go'})
         self.assertEqual(my_bot.context.get('said'), machine.on_answer)
 
     def test_cancelled(self):

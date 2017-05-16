@@ -263,7 +263,7 @@ class Input(Machine):
 
         self.set('answer', arguments)
         if self.key:
-            self.bot.context.set(self.key, arguments)
+            self.bot.update('input', self.key, arguments)
 
         self.bot.say(self.on_answer.format(arguments))
         self.step(event='tick')
