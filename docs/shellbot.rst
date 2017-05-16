@@ -10,6 +10,8 @@ Subpackages
     shellbot.machines
     shellbot.routes
     shellbot.spaces
+    shellbot.stores
+    shellbot.updaters
 
 Submodules
 ----------
