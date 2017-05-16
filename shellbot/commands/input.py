@@ -38,7 +38,7 @@ class Input(Command):
             return
 
         lines = [self.input_header]
-        for key in input.keys():
+        for key in sorted(input.keys()):
             lines.append(u"{} - {}".format(key, input.get(key, '')))
 
         self.bot.say('\n'.join(lines))
