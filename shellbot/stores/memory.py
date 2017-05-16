@@ -98,6 +98,6 @@ class MemoryStore(Store):
 
         """
         if key in (None, ''):
-            self.values = Manager().dict()
+            self.values.clear()
         else:
             self.values[key] = None
