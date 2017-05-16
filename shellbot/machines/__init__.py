@@ -15,8 +15,10 @@
 
 from .base import Machine, State, Transition
 from .input import Input
+from .sequence import Sequence
 
 __all__ = [
     'Input',
     'Machine',
+    'Sequence',
 ]

@@ -49,7 +49,7 @@ import os
 
 from shellbot import ShellBot, Context, Command
 from shellbot.spaces import SpaceFactory
-from shellbot.machines import Input
+from shellbot.machines import Input, Sequence
 Context.set_logger()
 
 # create a local bot
@@ -60,7 +60,7 @@ bot.bond()
 
 # ask some information
 #
-machine = Input(bot=bot,
+order_id = Input(bot=bot,
                 question="PO number please?",
                 mask="9999A",
                 on_retry="PO number should have 4 digits and a letter",
@@ -69,7 +69,18 @@ machine = Input(bot=bot,
                 tip=20,
                 timeout=40,
                 key='order.id')
-machine.start()
+
+description = Input(bot=bot,
+                question="Issue description please?",
+                on_retry="Please enter a one-line description of the issue",
+                on_answer="Ok, description noted: {}",
+                on_cancel="Ok, forget about the description",
+                tip=20,
+                timeout=40,
+                key='description')
+
+sequence = Sequence(machines=[order_id, description])
+sequence.start()
 
 # interact locally
 #

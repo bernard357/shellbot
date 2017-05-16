@@ -391,6 +391,7 @@ class Machine(object):
         """
         return self.get('is_running', False)
 
+
 class State(object):
     """
     Represents a state in the machine
