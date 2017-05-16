@@ -6,7 +6,7 @@ import gc
 import logging
 import os
 import mock
-from multiprocessing import Process, Queue
+from multiprocessing import Manager, Process, Queue
 import sys
 import time
 
@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 from shellbot import Context, ShellBot
 from shellbot.spaces import Space, LocalSpace, SparkSpace
+from shellbot.stores import MemoryStore
 
 
 class BotTests(unittest.TestCase):
@@ -598,6 +599,96 @@ class BotTests(unittest.TestCase):
 
         self.assertTrue(bot.mouth.put.called)
         self.assertFalse(bot.speaker.process.called)
+
+    def test_remember(self):
+
+        logging.info('***** remember')
+
+        store = MemoryStore()
+        bot = ShellBot(store=store)
+
+        self.assertEqual(bot.recall('sca.lar'), None)
+        bot.remember('sca.lar', 'test')
+        self.assertEqual(bot.recall('sca.lar'), 'test')
+
+        self.assertEqual(bot.recall('list'), None)
+        bot.remember('list', ['hello', 'world'])
+        self.assertEqual(bot.recall('list'), ['hello', 'world'])
+
+        self.assertEqual(bot.recall('dict'), None)
+        bot.remember('dict', {'hello': 'world'})
+        self.assertEqual(bot.recall('dict'), {'hello': 'world'})
+
+    def test_recall(self):
+
+        logging.info('***** recall')
+
+        store = MemoryStore()
+        bot = ShellBot(store=store)
+
+        # undefined key
+        self.assertEqual(bot.recall('hello'), None)
+
+        # undefined key with default value
+        whatever = 'whatever'
+        self.assertEqual(bot.recall('hello', whatever), whatever)
+
+        # set the key
+        bot.remember('hello', 'world')
+        self.assertEqual(bot.recall('hello'), 'world')
+
+        # default value is meaningless when key has been set
+        self.assertEqual(bot.recall('hello', 'whatever'), 'world')
+
+        # except when set to None
+        bot.remember('special', None)
+        self.assertEqual(bot.recall('special', []), [])
+
+    def test_forget(self):
+
+        logging.info('***** forget')
+
+        store = MemoryStore()
+        bot = ShellBot(store=store)
+
+        # set the key and then forget it
+        bot.remember('hello', 'world')
+        self.assertEqual(bot.recall('hello'), 'world')
+        bot.forget('hello')
+        self.assertEqual(bot.recall('hello'), None)
+
+        # set multiple keys and then forget all of them
+        bot.remember('hello', 'world')
+        bot.remember('bunny', "What'up, Doc?")
+        self.assertEqual(bot.recall('hello'), 'world')
+        self.assertEqual(bot.recall('bunny'), "What'up, Doc?")
+        bot.forget()
+        self.assertEqual(bot.recall('hello'), None)
+        self.assertEqual(bot.recall('bunny'), None)
+
+    def test_append(self):
+
+        logging.info('***** append')
+
+        store = MemoryStore()
+        bot = ShellBot(store=store)
+
+        bot.append('famous', 'hello, world')
+        bot.append('famous', "What'up, Doc?")
+        self.assertEqual(bot.recall('famous'),
+                         ['hello, world', "What'up, Doc?"])
+
+    def test_update(self):
+
+        logging.info('***** update')
+
+        store = MemoryStore()
+        bot = ShellBot(store=store)
+
+        bot.update('input', 'PO#', '1234A')
+        bot.update('input', 'description', 'part does not fit')
+        self.assertEqual(bot.recall('input'),
+                         {u'PO#': u'1234A', u'description': u'part does not fit'})
 
 
 if __name__ == '__main__':

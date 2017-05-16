@@ -25,9 +25,10 @@ import yaml
 from .context import Context
 from .shell import Shell
 from .listener import Listener
+from .server import Server
 from .spaces import SpaceFactory
 from .speaker import Speaker
-from .server import Server
+from .stores import StoreFactory
 from .worker import Worker
 from .routes.wrap import Wrap
 
@@ -198,9 +199,15 @@ class ShellBot(object):
 
         if self.space is None:
             self.space = SpaceFactory.build(self)
+        else:
+            self.space.configure()
 
-        self.space.configure()
         self.space.connect()
+
+        if self.store is None:
+            self.store = StoreFactory.build(self)
+        else:
+            self.store.configure()
 
         if (self.server is None
             and self.context.get('server.binding') is not None):
@@ -300,11 +307,13 @@ class ShellBot(object):
             participants=self.context.get('spark.participants', []),
         )
 
+        self.store.bond(id=self.space.get_id())
+
     def add_moderators(self, *args, **kwargs):
         """
         Adds moderators to the room
 
-        This function is a convenient proxy for the underlying space.
+        This function is a proxy for the underlying space.
         """
         self.space.add_moderators(*args, **kwargs)
 
@@ -312,7 +321,7 @@ class ShellBot(object):
         """
         Adds participants to the room
 
-        This function is a convenient proxy for the underlying space.
+        This function is a proxy for the underlying space.
         """
         self.space.add_participants(*args, **kwargs)
 
@@ -496,6 +505,108 @@ class ShellBot(object):
                 self.speaker.process(ShellBotMessage(message, markdown, file))
             else:
                 self.speaker.process(message)
+
+    def remember(self, key, value):
+        """
+        Remembers a value
+
+        :param key: name of the value
+        :type key: str
+
+        :param value: actual value
+        :type value: any serializable type is accepted
+
+        This functions stores or updates a value in the back-end storage
+        system.
+
+        Example::
+
+            bot.remember('parameter_123', 'George')
+
+        """
+        self.store.remember(key, value)
+
+    def recall(self, key, default=None):
+        """
+        Recalls a value
+
+        :param key: name of the value
+        :type key: str
+
+        :param default: default value
+        :type default: any serializable type is accepted
+
+        :return: the actual value, or the default value, or None
+
+        Example::
+
+            value = bot.recall('parameter_123')
+
+        """
+        return self.store.recall(key, default)
+
+    def forget(self, key=None):
+        """
+        Forgets a value or all values
+
+        :param key: name of the value to forget, or None
+        :type key: str
+
+        To clear only one value, provides the name of it.
+        For example::
+
+            bot.forget('parameter_123')
+
+        To clear all values in the store, just call the function
+        without a value.
+        For example::
+
+            bot.forget()
+
+        """
+        self.store.forget(key)
+
+    def append(self, key, item):
+        """
+        Appends an item to a list
+
+        :param key: name of the list
+        :type key: str
+
+        :param item: a new item to append
+        :type item: any serializable type is accepted
+
+        Example::
+
+            >>>bot.append('names', 'Alice')
+            >>>bot.append('names', 'Bob')
+            >>>bot.recall('names')
+            ['Alice', 'Bob']
+
+        """
+        self.store.append(key, item)
+
+    def update(self, key, label, item):
+        """
+        Updates a dict
+
+        :param key: name of the dict
+        :type key: str
+
+        :param label: named entry in the dict
+        :type label: str
+
+        :param item: new value of this entry
+        :type item: any serializable type is accepted
+
+        Example::
+
+            >>>bot.update('input', 'PO Number', '1234A')
+            >>>bot.recall('input')
+            {'PO Number': '1234A'}
+
+        """
+        self.store.update(key, label, item)
 
 
 class ShellBotMessage(object):
