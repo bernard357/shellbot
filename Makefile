@@ -44,9 +44,8 @@ clean-test:
 	@rm -fr .tox/
 	@rm -f .coverage
 	@rm -fr htmlcov/
-	@rm -fr demos/test_*.yaml
-	@rm -fr tests/test_*.yaml
-	@rm -fr test_*.yaml
+	@rm -f tests/local/*
+	@echo "OK" >tests/local/files_generated_during_tests_should_go_here
 
 lint:
 	flake8 shellbot tests
