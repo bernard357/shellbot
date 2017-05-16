@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -13,28 +15,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .audit import Audit
 from .base import Command
-from .close import Close
-from .default import Default
-from .echo import Echo
-from .empty import Empty
-from .help import Help
-from .input import Input
-from .noop import Noop
-from .sleep import Sleep
-from .version import Version
 
-__all__ = [
-    'Audit',
-    'Command',
-    'Close',
-    'Default',
-    'Echo',
-    'Empty',
-    'Input',
-    'Help',
-    'Noop',
-    'Sleep',
-    'Version'
-]
+class Input(Command):
+    """
+    Displays input data
+    """
+
+    keyword = u'input'
+    information_message = u'Display all input'
+
+    no_input_message = u'There is nothing to display'
+    input_header =u'Input:'
+
+    def execute(self, arguments=None):
+        """
+        Displays input data
+        """
+        input = self.bot.recall('input')
+        if input in (None, {}):
+            self.bot.say(self.no_input_message)
+            return
+
+        lines = [self.input_header]
+        for key in input.keys():
+            lines.append(u"{} - {}".format(key, input.get(key, '')))
+
+        self.bot.say('\n'.join(lines))

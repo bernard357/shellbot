@@ -54,7 +54,7 @@ Context.set_logger()
 
 # create a local bot
 #
-bot = ShellBot(type='local')
+bot = ShellBot(type='local', command='shellbot.commands.input')
 bot.configure()
 bot.bond()
 
@@ -68,7 +68,7 @@ machine = Input(bot=bot,
                 on_cancel="Ok, forget about the PO number",
                 tip=20,
                 timeout=40,
-                key='parameters.order.id')
+                key='order.id')
 machine.start()
 
 # interact locally
