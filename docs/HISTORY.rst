@@ -3,6 +3,17 @@
 History
 -------
 
+17.5.16
+~~~~~~~
+* Add permanent thread-safe storage to bot (Sqlite as first store)
+* Introduce updaters as flexible mechanism to replicate input messages
+* Add example to demonstrate chat audit in a secondary room
+* Minor improvements on code and tests
+* Force garbage collection in heavy tests
+* Travis-CI passed on python 2.7 and 3.5
+* 93% test coverage
+* 1784 python statements
+
 17.5.7
 ~~~~~~~
 * Add example to demonstrate interactive capture of data
