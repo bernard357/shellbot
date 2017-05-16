@@ -298,6 +298,20 @@ class Space(object):
 
         return True
 
+    def get_id(self):
+        """
+        Gets space unique id
+
+        :return: str or None
+        """
+        if self.id is None:
+            self.id = self.bot.context.get(self.prefix+'.id')
+
+        if self.id:
+            return self.id
+
+        return None
+
     def lookup_space(self, title, **kwargs):
         """
         Looks for an existing space by name

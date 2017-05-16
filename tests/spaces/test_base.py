@@ -227,6 +227,22 @@ class SpaceTests(unittest.TestCase):
         space.id = '*id'
         self.assertTrue(space.is_ready)
 
+    def test_get_id(self):
+
+        logging.info("*** get_id")
+
+        space = Space(bot=my_bot)
+        self.assertTrue(space.get_id() is None)
+
+        context = Context(settings={'space.id': '123'})
+        bot = ShellBot(context=context)
+        space = Space(bot=bot)
+        self.assertEqual(space.get_id(), '123')
+
+        space = Space(bot=my_bot)
+        space.id = '*id'
+        self.assertEqual(space.get_id(), '*id')
+
     def test_lookup_space(self):
 
         logging.info("*** lookup_space")
