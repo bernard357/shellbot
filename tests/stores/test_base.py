@@ -18,6 +18,24 @@ from shellbot.stores import Store
 my_bot = ShellBot()
 
 
+class MyStore(Store):
+
+    def on_init(self, **kwargs):
+        self.values = Manager().dict()
+
+    def _set(self, key, value):
+        self.values[key] = value
+
+    def _get(self, key):
+        return self.values.get(key, None)
+
+    def _clear(self, key):
+        if key in (None, ''):
+            self.values.clear()
+        else:
+            self.values[key] = None
+
+
 class StoreTests(unittest.TestCase):
 
     def test_init(self):
@@ -95,17 +113,6 @@ class StoreTests(unittest.TestCase):
 
         logging.info('***** remember')
 
-        class MyStore(Store):
-
-            def on_init(self, **kwargs):
-                self.values = Manager().dict()
-
-            def _set(self, key, value):
-                self.values[key] = value
-
-            def _get(self, key):
-                return self.values.get(key, None)
-
         store = MyStore()
 
         self.assertEqual(store.recall('sca.lar'), None)
@@ -133,17 +140,6 @@ class StoreTests(unittest.TestCase):
 
         logging.info('***** recall')
 
-        class MyStore(Store):
-
-            def on_init(self, **kwargs):
-                self.values = Manager().dict()
-
-            def _set(self, key, value):
-                self.values[key] = value
-
-            def _get(self, key):
-                return self.values.get(key, None)
-
         store = MyStore()
 
         # undefined key
@@ -167,17 +163,6 @@ class StoreTests(unittest.TestCase):
     def test_unicode(self):
 
         logging.info('***** unicode')
-
-        class MyStore(Store):
-
-            def on_init(self, **kwargs):
-                self.values = Manager().dict()
-
-            def _set(self, key, value):
-                self.values[key] = value
-
-            def _get(self, key):
-                return self.values.get(key, None)
 
         store = MyStore()
 
@@ -203,23 +188,6 @@ class StoreTests(unittest.TestCase):
     def test_forget(self):
 
         logging.info('***** forget')
-
-        class MyStore(Store):
-
-            def on_init(self, **kwargs):
-                self.values = Manager().dict()
-
-            def _set(self, key, value):
-                self.values[key] = value
-
-            def _get(self, key):
-                return self.values.get(key, None)
-
-            def _clear(self, key):
-                if key in (None, ''):
-                    self.values = Manager().dict()
-                else:
-                    self.values[key] = None
 
         store = MyStore()
 
@@ -251,17 +219,6 @@ class StoreTests(unittest.TestCase):
 
         logging.info('***** increment & decrement')
 
-        class MyStore(Store):
-
-            def on_init(self, **kwargs):
-                self.values = Manager().dict()
-
-            def _set(self, key, value):
-                self.values[key] = value
-
-            def _get(self, key):
-                return self.values.get(key, None)
-
         store = MyStore()
 
         # undefined key
@@ -287,21 +244,20 @@ class StoreTests(unittest.TestCase):
         # reset the gauge
         store.remember('gauge', 123)
         self.assertEqual(store.recall('gauge'), 123)
+        value = store.increment('gauge')
+        self.assertEqual(value, 124)
+
+        # a brand new gauge
+        value = store.increment('another gauge')
+        self.assertEqual(value, 1)
+
+        # a brand new gauge
+        value = store.decrement('a gauge')
+        self.assertEqual(value, -1)
 
     def test_append(self):
 
         logging.info('***** append')
-
-        class MyStore(Store):
-
-            def on_init(self, **kwargs):
-                self.values = Manager().dict()
-
-            def _set(self, key, value):
-                self.values[key] = value
-
-            def _get(self, key):
-                return self.values.get(key, None)
 
         store = MyStore()
 
@@ -309,6 +265,17 @@ class StoreTests(unittest.TestCase):
         store.append('famous', "What'up, Doc?")
         self.assertEqual(store.recall('famous'),
                          ['hello, world', "What'up, Doc?"])
+
+    def test_update(self):
+
+        logging.info('***** update')
+
+        store = MyStore()
+
+        store.update('input', 'PO#', '1234A')
+        store.update('input', 'description', 'part does not fit')
+        self.assertEqual(store.recall('input'),
+                         {u'PO#': u'1234A', u'description': u'part does not fit'})
 
     def test_concurrency(self):
 
@@ -323,17 +290,6 @@ class StoreTests(unittest.TestCase):
             logging.info('worker %d:done' % id)
 
         logging.info('Creating a counter')
-
-        class MyStore(Store):
-
-            def on_init(self, **kwargs):
-                self.values = Manager().dict()
-
-            def _set(self, key, value):
-                self.values[key] = value
-
-            def _get(self, key):
-                return self.values.get(key, None)
 
         store = MyStore()
 

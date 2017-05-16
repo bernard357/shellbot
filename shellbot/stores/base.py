@@ -175,8 +175,6 @@ class Store(object):
         self.lock.acquire()
         try:
             self._set(key, self.to_text(value))
-        except IOError as feedback:
-            logging.error(feedback)
         finally:
             self.lock.release()
 
@@ -377,9 +375,9 @@ class Store(object):
 
     def append(self, key, item):
         """
-        Appends an item to a value
+        Appends an item to a list
 
-        :param key: name of the value
+        :param key: name of the list
         :type key: str
 
         :param item: a new item to append
@@ -399,6 +397,38 @@ class Store(object):
             if not isinstance(value, list):
                 value = []
             value.append(item)
+            self._set(key, self.to_text(value))
+        finally:
+            self.lock.release()
+
+    def update(self, key, label, item):
+        """
+        Updates a dict
+
+        :param key: name of the dict
+        :type key: str
+
+        :param label: named entry in the dict
+        :type label: str
+
+        :param item: new value of this entry
+        :type item: any serializable type is accepted
+
+        Example::
+
+            >>>store.update('input', 'PO Number', '1234A')
+            >>>store.recall('input')
+            {'PO Number': '1234A'}
+
+        """
+        assert label not in (None, '')
+
+        self.lock.acquire()
+        try:
+            value = self.from_text(self._get(key))
+            if not isinstance(value, dict):
+                value = {}
+            value[label] = item
             self._set(key, self.to_text(value))
         finally:
             self.lock.release()
