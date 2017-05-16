@@ -157,8 +157,6 @@ class SqliteStore(Store):
         result = cursor.fetchone()
         try:
             return result[0]
-        except AttributeError:
-            return None
         except TypeError:
             return None
 
