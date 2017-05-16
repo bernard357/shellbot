@@ -257,7 +257,6 @@ class Context(object):
             False
 
         """
-
         self.lock.acquire()
         try:
             for key in self.values.keys():
