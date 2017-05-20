@@ -11,6 +11,8 @@ Shellbot
 .. image:: https://img.shields.io/travis/bernard357/shellbot.svg
    :target: https://travis-ci.org/bernard357/shellbot
 
+.. image:: https://img.shields.io/badge/coverage-93%25-green.svg
+
 .. image:: https://img.shields.io/pypi/pyversions/shellbot.svg?maxAge=2592000
    :target: https://www.python.org/
 
