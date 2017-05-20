@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import gc
 import logging
 import mock
 import os
@@ -49,7 +50,13 @@ class Helper(object):
 
 class MachineTests(unittest.TestCase):
 
+    def tearDown(self):
+        collected = gc.collect()
+        logging.info("Garbage collector: collected %d objects." % (collected))
+
     def test_init(self):
+
+        logging.info("***** machine/init")
 
         machine = Machine(bot=my_bot)
         self.assertEqual(machine.bot, my_bot)
@@ -66,6 +73,8 @@ class MachineTests(unittest.TestCase):
         self.assertEqual(machine.extra, 'w')
 
     def test_getter(self):
+
+        logging.info("***** machine/getter")
 
         machine = Machine(bot=my_bot)
 
@@ -88,6 +97,8 @@ class MachineTests(unittest.TestCase):
         self.assertEqual(machine.get('special', []), [])
 
     def test_build(self):
+
+        logging.info("***** machine/build")
 
         machine = Machine(bot=my_bot)
 
@@ -142,6 +153,8 @@ class MachineTests(unittest.TestCase):
 
     def test_state(self):
 
+        logging.info("***** machine/state")
+
         machine = Machine(bot=my_bot)
 
         states = ['one', 'two', 'three']
@@ -160,6 +173,8 @@ class MachineTests(unittest.TestCase):
 
     def test_current_state(self):
 
+        logging.info("***** machine/current_state")
+
         machine = Machine(bot=my_bot)
 
         states = ['one', 'two', 'three']
@@ -176,12 +191,16 @@ class MachineTests(unittest.TestCase):
 
     def test_step(self):
 
+        logging.info("***** machine/step")
+
         machine = Machine(bot=my_bot)
         with self.assertRaises(AttributeError):
             machine.step()
 
     def test_simple_chain(self):
         """Test most basic transition chain."""
+
+        logging.info("***** machine/simple chain")
 
         states = ['one', 'two', 'three']
         transitions = [
@@ -204,6 +223,8 @@ class MachineTests(unittest.TestCase):
 
     def test_simple_during(self):
         """Tests a simple action being performed while in a state."""
+
+        logging.info("***** machine/simple during")
 
         helper = Helper()
         states = ['one', 'two']
@@ -234,6 +255,8 @@ class MachineTests(unittest.TestCase):
     def test_extra_during(self):
         """Tests an extended action being performed while in a state."""
 
+        logging.info("***** machine/extra during")
+
         helper = Helper()
         states = ['one']
         transitions = [
@@ -256,6 +279,8 @@ class MachineTests(unittest.TestCase):
 
     def test_simple_on_enter(self):
         """Tests a simple action being performed while entering a state."""
+
+        logging.info("***** machine/simple on_enter")
 
         helper = Helper()
         states = ['one', 'two']
@@ -286,6 +311,8 @@ class MachineTests(unittest.TestCase):
     def test_simple_on_exit(self):
         """Tests a simple action being performed while exiting a state."""
 
+        logging.info("***** machine/simple on_exit")
+
         helper = Helper()
         states = ['one', 'two']
         transitions = [
@@ -314,6 +341,8 @@ class MachineTests(unittest.TestCase):
 
     def test_simple_condition(self):
         """Tests a simple condition check before transitioning."""
+
+        logging.info("***** machine/simple condition")
 
         helper = Helper()
         states = ['one', 'two']
@@ -350,6 +379,8 @@ class MachineTests(unittest.TestCase):
     def test_extra_condition(self):
         """Tests an extended condition check before transitioning."""
 
+        logging.info("***** machine/extra condition")
+
         helper = Helper()
         states = ['one', 'two']
         transitions = [
@@ -372,6 +403,8 @@ class MachineTests(unittest.TestCase):
 
     def test_simple_action(self):
         """Tests a simple action while transitioning."""
+
+        logging.info("***** machine/simple action")
 
         helper = Helper()
         states = ['one', 'two']
@@ -399,6 +432,8 @@ class MachineTests(unittest.TestCase):
 
     def test_composite(self):
         """Tests that things happen without interference."""
+
+        logging.info("***** machine/composite")
 
         helper = Helper()
         states = ['one', 'two']
@@ -443,6 +478,8 @@ class MachineTests(unittest.TestCase):
     def test_start(self):
         """Infinite loop stopped via general switch"""
 
+        logging.info("***** machine/start")
+
         states = ['one', 'two', 'three', 'four']
         transitions = [
             {'source': 'one', 'target': 'two'},
@@ -466,6 +503,8 @@ class MachineTests(unittest.TestCase):
     def test_stop(self):
         """Machine is stopped after a while"""
 
+        logging.info("***** machine/stop")
+
         states = ['one', 'two', 'three', 'four']
         transitions = [
             {'source': 'one', 'target': 'two'},
@@ -487,8 +526,10 @@ class MachineTests(unittest.TestCase):
         self.assertTrue(machine.current_state.name != 'one')
         self.assertTrue(machine.current_state.name != 'four')
 
-    def test_auto_stop(self):
+    def test_lifecycle(self):
         """Machine stops itself on last transition"""
+
+        logging.info("***** machine/lifecycle")
 
         machine = Machine(bot=my_bot)
 
@@ -511,6 +552,8 @@ class MachineTests(unittest.TestCase):
         self.assertEqual(machine.current_state.name, 'four')
 
     def test_tick(self):
+
+        logging.info("***** machine/tick")
 
         class MyMachine(Machine):
 
@@ -551,6 +594,8 @@ class MachineTests(unittest.TestCase):
 
     def test_execute(self):
 
+        logging.info("***** machine/execute")
+
         states = ['one', 'two']
         transitions = [
             {'source': 'one', 'target': 'two'},
@@ -570,6 +615,8 @@ class StateTests(unittest.TestCase):
 
     def test_init(self):
 
+        logging.info("***** state/init")
+
         state = State(name='a state')
         self.assertEqual(state.name, 'a state')
         self.assertTrue(state._during is None)
@@ -578,15 +625,21 @@ class StateTests(unittest.TestCase):
 
     def test_repr(self):
 
+        logging.info("***** state/repr")
+
         state = State(name='a state')
         self.assertEqual(state.__repr__(), u'State(a state, None, None, None)')
 
     def test_str(self):
 
+        logging.info("***** state/str")
+
         state = State(name='a state')
         self.assertEqual(str(state), 'a state')
 
     def test_during(self):
+
+        logging.info("***** state/during")
 
         state = State(name='a state')
         state.during()
@@ -601,6 +654,8 @@ class StateTests(unittest.TestCase):
 
     def test_on_enter(self):
 
+        logging.info("***** state/on_enter")
+
         state = State(name='a state')
         state.on_enter()
 
@@ -609,6 +664,8 @@ class StateTests(unittest.TestCase):
         self.assertTrue(state._on_enter.called)
 
     def test_on_exit(self):
+
+        logging.info("***** state/on_exit")
 
         state = State(name='a state')
         state.on_exit()
@@ -622,6 +679,8 @@ class TransitionTests(unittest.TestCase):
 
     def test_init(self):
 
+        logging.info("***** transition/init")
+
         begin = State(name='begin')
         end = State(name='end')
         transition = Transition(source=begin, target=end)
@@ -632,6 +691,8 @@ class TransitionTests(unittest.TestCase):
 
     def test_repr(self):
 
+        logging.info("***** transition/repr")
+
         begin = State(name='begin')
         end = State(name='end')
         transition = Transition(source=begin, target=end)
@@ -640,12 +701,16 @@ class TransitionTests(unittest.TestCase):
 
     def test_str(self):
 
+        logging.info("***** transition/str")
+
         begin = State(name='begin')
         end = State(name='end')
         transition = Transition(source=begin, target=end)
         self.assertEqual(str(transition), 'begin => end')
 
     def test_condition(self):
+
+        logging.info("***** transition/condition")
 
         begin = State(name='begin')
         end = State(name='end')
@@ -664,6 +729,8 @@ class TransitionTests(unittest.TestCase):
         transition._condition.assert_called_with(extra=123)
 
     def test_action(self):
+
+        logging.info("***** transition/action")
 
         begin = State(name='begin')
         end = State(name='end')
