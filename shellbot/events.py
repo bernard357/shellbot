@@ -218,3 +218,135 @@ class Message(Event):
 
         """
         return self.attributes.get('space_id')
+
+
+class Attachment(Event):
+    """
+    Represents the attachment of a file to a space
+    """
+
+    type = 'attachment'
+
+    @property
+    def url(self):
+        """
+        Returns link to file content
+
+        :rtype: str
+        """
+        return self.__getattr__('url')
+
+    @property
+    def from_id(self):
+        """
+        Returns the id of the message originator
+
+        :rtype: str or None
+
+        This attribute allows listener to distinguish between messages
+        from the bot and messages from other chat participants.
+        """
+        return self.attributes.get('from_id')
+
+    @property
+    def from_label(self):
+        """
+        Returns the name or title of the message originator
+
+        :rtype: str or None
+
+        This attribute is used by updaters that log messages or copy them
+        for archiving.
+        """
+        return self.attributes.get('from_label')
+
+    @property
+    def space_id(self):
+        """
+        Returns the id of the chat space
+
+        :rtype: str or None
+
+        """
+        return self.attributes.get('space_id')
+
+
+class Join(Event):
+    """
+    Represents the addition of someone to a space
+    """
+
+    type = 'join'
+
+    @property
+    def actor_id(self):
+        """
+        Returns the id of the joining actor
+
+        :rtype: str or None
+
+        This attribute allows listener to identify who joins a space.
+        """
+        return self.__getattr__('actor_id')
+
+    @property
+    def actor_label(self):
+        """
+        Returns the name or title of the joining actor
+
+        :rtype: str or None
+
+        This attribute allows listener to identify who joins a space.
+        """
+        return self.__getattr__('actor_label')
+
+    @property
+    def space_id(self):
+        """
+        Returns the id of the joined space
+
+        :rtype: str or None
+
+        """
+        return self.__getattr__('space_id')
+
+
+class Leave(Event):
+    """
+    Represents the removal of someone to a space
+    """
+
+    type = 'leave'
+
+    @property
+    def actor_id(self):
+        """
+        Returns the id of the leaving actor
+
+        :rtype: str or None
+
+        This attribute allows listener to identify who leaves a space.
+        """
+        return self.__getattr__('actor_id')
+
+    @property
+    def actor_label(self):
+        """
+        Returns the name or title of the leaving actor
+
+        :rtype: str or None
+
+        This attribute allows listener to identify who leaves a space.
+        """
+        return self.__getattr__('actor_label')
+
+    @property
+    def space_id(self):
+        """
+        Returns the id of the left space
+
+        :rtype: str or None
+
+        """
+        return self.__getattr__('space_id')
+

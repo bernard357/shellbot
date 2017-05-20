@@ -12,7 +12,7 @@ import sys
 sys.path.insert(0, os.path.abspath('..'))
 
 from shellbot import Context
-from shellbot.events import Event, Message
+from shellbot.events import Event, Message, Attachment, Join, Leave
 
 my_queue = Queue()
 
@@ -163,6 +163,38 @@ class EventsTests(unittest.TestCase):
         item.update({"type": "message"})
         after = Message(my_queue.get())
         self.assertEqual(after.attributes, item)
+
+    def test_attachment_init(self):
+
+        event = Attachment()
+        self.assertEqual(event.type, 'attachment')
+        with self.assertRaises(AttributeError):
+            url = event.url
+        self.assertEqual(event.from_id, None)
+        self.assertEqual(event.from_label, None)
+        self.assertEqual(event.space_id, None)
+
+    def test_join_init(self):
+
+        event = Join()
+        self.assertEqual(event.type, 'join')
+        with self.assertRaises(AttributeError):
+            value = event.actor_id
+        with self.assertRaises(AttributeError):
+            value = event.actor_label
+        with self.assertRaises(AttributeError):
+            value = event.space_id
+
+    def test_leave_init(self):
+
+        event = Leave()
+        self.assertEqual(event.type, 'leave')
+        with self.assertRaises(AttributeError):
+            value = event.actor_id
+        with self.assertRaises(AttributeError):
+            value = event.actor_label
+        with self.assertRaises(AttributeError):
+            value = event.space_id
 
 
 if __name__ == '__main__':
