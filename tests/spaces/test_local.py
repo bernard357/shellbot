@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import json
 import io
 import logging
 import mock
@@ -34,6 +35,7 @@ class FakeMessage(Fake):
 
 
 my_bot = ShellBot()
+my_queue = Queue()
 
 
 class LocalSpaceTests(unittest.TestCase):
@@ -181,33 +183,34 @@ class LocalSpaceTests(unittest.TestCase):
     def test_pull(self):
 
         space = LocalSpace(bot=my_bot, input="hello world")
-        my_bot.ears = Queue()
+        my_bot.ears = my_queue
         space.pull()
         space.pull()
         space.pull()
-        self.assertEqual(my_bot.ears.get(),
+        self.assertEqual(json.loads(my_bot.ears.get()),
                          {'text': 'hello world', 'from_id': '*user', 'type': 'message', 'mentioned_ids': ['*bot']})
 
         original_stdin = sys.stdin
         sys.stdin = io.StringIO(u'hello world')
 
         space = LocalSpace(bot=my_bot)
-        my_bot.ears = Queue()
+        my_bot.ears = my_queue
         space.pull()
-        self.assertEqual(my_bot.ears.get(),
+        self.assertEqual(json.loads(my_bot.ears.get()),
                          {'text': u'hello world', 'from_id': '*user', 'type': 'message', 'mentioned_ids': ['*bot']})
 
         sys.stdin = original_stdin
 
-    def test_normalize_message(self):
+    def test_on_message(self):
 
         space = LocalSpace(bot=my_bot)
-        self.assertEqual(space.normalize_message('hello world'),
+        space.on_message({'text': 'hello world'}, my_queue)
+
+        self.assertEqual(json.loads(my_queue.get()),
                          {'from_id': '*user',
                           'mentioned_ids': ['*bot'],
                           'text': 'hello world',
                           'type': 'message'})
-
 
 
 if __name__ == '__main__':

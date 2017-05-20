@@ -3,15 +3,18 @@
 
 from bottle import request
 import unittest
+import json
 import logging
 import mock
 import os
 from multiprocessing import Process, Queue
 import sys
+import yaml
 
 sys.path.insert(0, os.path.abspath('../..'))
 
 from shellbot import Context, ShellBot
+from shellbot.events import Event, Message, Attachment, Join, Leave
 from shellbot.spaces import Space, SparkSpace
 
 
@@ -78,6 +81,57 @@ class FakeApi(object):
 
 
 my_bot = ShellBot()
+
+my_queue = Queue()
+
+my_message = {
+    "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
+    "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+    "roomType" : "group",
+    "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
+    "toPersonEmail" : "julie@example.com",
+    "text" : "The PM for this project is Mike C. and the Engineering Manager is Jane W.",
+    "markdown" : "**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>.",
+    "files" : [ "http://www.example.com/images/media.png" ],
+    "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+    "personEmail" : "matt@example.com",
+    "created" : "2015-10-18T14:26:16+00:00",
+    "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
+}
+
+my_join = {
+    "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
+    "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+    "roomType" : "group",
+    "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
+    "toPersonEmail" : "julie@example.com",
+    "text" : "The PM for this project is Mike C. and the Engineering Manager is Jane W.",
+    "markdown" : "**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>.",
+    "files" : [ "http://www.example.com/images/media.png" ],
+    "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+    "personEmail" : "matt@example.com",
+    "created" : "2015-10-18T14:26:16+00:00",
+    "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
+    "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+    "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
+}
+
+my_leave = {
+    "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
+    "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+    "roomType" : "group",
+    "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
+    "toPersonEmail" : "julie@example.com",
+    "text" : "The PM for this project is Mike C. and the Engineering Manager is Jane W.",
+    "markdown" : "**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>.",
+    "files" : [ "http://www.example.com/images/media.png" ],
+    "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+    "personEmail" : "matt@example.com",
+    "created" : "2015-10-18T14:26:16+00:00",
+    "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
+    "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+    "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
+}
 
 
 class SparkSpaceTests(unittest.TestCase):
@@ -494,8 +548,13 @@ class SparkSpaceTests(unittest.TestCase):
         my_bot.ears = Queue()
         self.assertEqual(space.webhook(message_id='*123'), 'OK')
         self.assertTrue(space.api.messages.get.called)
-        self.assertEqual(my_bot.ears.get(),
-                         {'text': '*message', 'from_id': None, 'type': 'message', 'mentioned_ids': []})
+        self.assertEqual(json.loads(my_bot.ears.get()),
+                         {u'text': u'*message',
+                          u'from_id': None,
+                          u'from_label': None,
+                          u'space_id': None,
+                          u'type': u'message',
+                          u'mentioned_ids': []})
         with self.assertRaises(Exception):
             print(my_bot.ears.get_nowait())
 
@@ -522,10 +581,44 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertEqual(my_bot.context.get('puller.counter'), 3)
         self.assertEqual(space._last_message_id, '*id')
 
-        self.assertEqual(my_bot.ears.get(),
-                         {'text': '*message', 'from_id': None, 'type': 'message', 'mentioned_ids': []})
+#        self.assertEqual(json.loads(my_bot.ears.get()),
+        self.assertEqual(yaml.safe_load(my_bot.ears.get()),
+                         {u'text': u'*message',
+                          u'from_id': None,
+                          u'from_label': None,
+                          u'space_id': None,
+                          u'type': u'message',
+                          u'mentioned_ids': []})
         with self.assertRaises(Exception):
             print(my_bot.ears.get_nowait())
+
+    def test_on_message(self):
+
+        logging.info("*** on_message")
+        space = SparkSpace(bot=my_bot)
+
+        space.on_message(my_message, my_queue)
+        message = my_message.copy()
+        message.update({"type": "message"})
+        message.update({"from_id": 'Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY'})
+        message.update({"from_label": 'matt@example.com'})
+        message.update({"mentioned_ids": ['Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM',
+                       'Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg']})
+        message.update({"space_id": 'Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0'})
+        self.assertEqual(yaml.safe_load(my_queue.get()), message)
+
+        attachment = my_message.copy()
+        attachment.update({"type": "attachment"})
+        attachment.update({"url": "http://www.example.com/images/media.png"})
+        attachment.update({"from_id": 'Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY'})
+        attachment.update({"from_label": 'matt@example.com'})
+        attachment.update({"space_id": 'Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0'})
+        self.assertEqual(yaml.safe_load(my_queue.get()), attachment)
+
+        with self.assertRaises(Exception):
+            print(my_queue.get_nowait())
+
+
 
 if __name__ == '__main__':
 

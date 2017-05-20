@@ -23,6 +23,7 @@ from six import string_types
 import sys
 import time
 
+from ..events import Message
 from .base import Space
 
 
@@ -242,29 +243,27 @@ class LocalSpace(Space):
 
         try:
             line = next(self._lines)
-            self.bot.ears.put(self.normalize_message(line))
+            self.on_message({'text': line}, self.bot.ears)
         except StopIteration:
             sys.stdout.write(u'^C\n')
             sys.stdout.flush()
             self.bot.context.set('general.switch', 'off')
 
-    def normalize_message(self, text):
+    def on_message(self, item, queue):
         """
         Normalizes message for the listener
 
-        This function adds following keys so that a neutral format
-        can be used with the listener:
+        :param item: attributes of the inbound message
+        :type item: dict
 
-        * ``type`` is set to ``message``
-        * ``text`` is a copy of provided text
-        * ``from_id`` is ``*user``
-        * ``mentioned_ids`` is ``['*bot']``
+        :param queue: the processing queue
+        :type queue: Queue
+
+        This function prepares a Message and push it to the provided queue.
 
         """
-        message = {}
-        message['text'] = text
-        message['type'] = 'message'
-        message['from_id'] = '*user'
-        message['mentioned_ids'] = ['*bot']
-        return message
+        message = Message(item)
+        message.from_id = '*user'
+        message.mentioned_ids = ['*bot']
 
+        queue.put(str(message))

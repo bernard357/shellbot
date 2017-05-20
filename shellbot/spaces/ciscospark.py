@@ -23,6 +23,7 @@ from six import string_types
 import time
 
 from ..context import Context
+from ..events import Event, Message, Attachment, Join, Leave
 from .base import Space
 
 
@@ -551,7 +552,7 @@ class SparkSpace(Space):
 
             # step 3 -- push it in the handling queue
             #
-            self.bot.ears.put(self.normalize_message(item._json))
+            self.on_message(item._json, self.bot.ears)
 
             return "OK"
 
@@ -598,21 +599,35 @@ class SparkSpace(Space):
         while len(new_items):
             item = new_items.pop()
             self._last_message_id = item.id
-            self.bot.ears.put(self.normalize_message(item._json))
+            self.on_message(item._json, self.bot.ears)
 
-    def normalize_message(self, message):
+    def on_message(self, item, queue):
         """
-        Normalizes a message received from Cisco Spark
+        Normalizes message for the listener
 
-        This function adds following keys so that a neutral format
-        can be used with the listener:
+        :param item: attributes of the inbound message
+        :type item: dict
 
-        * ``type`` is set to ``message``
-        * ``from_id`` is a copy of ``personId``
-        * ``mentioned_ids`` is a copy of ``mentionedPeople``
+        :param queue: the processing queue
+        :type queue: Queue
+
+        This function prepares a Message and push it to the provided queue.
 
         """
-        message['type'] = 'message'
-        message['from_id'] = message.get('personId', None)
-        message['mentioned_ids'] = message.get('mentionedPeople', [])
-        return message
+        message = Message(item.copy())
+        message.from_id = message.get('personId')
+        message.from_label = message.get('personEmail')
+        message.mentioned_ids = message.get('mentionedPeople', [])
+        message.space_id = message.get('roomId')
+
+        queue.put(str(message))
+
+        for url in item.get('files', []):
+            attachment = Attachment(item.copy())
+            attachment.url = url
+            attachment.from_id = item.get('personId', None)
+            attachment.from_label = item.get('personEmail', None)
+            attachment.space_id = item.get('roomId', None)
+
+            queue.put(str(attachment))
+
