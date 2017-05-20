@@ -219,6 +219,54 @@ class BotTests(unittest.TestCase):
         os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
         bot = ShellBot(settings=None, configure=True, fan='f')
 
+    def test_register(self):
+
+        logging.info('*** register ***')
+
+        bot = ShellBot(fan='f')
+
+        bot.register('bond', lambda : 'ok')
+        bot.register('dispose', lambda : 'ok')
+        with self.assertRaises(AssertionError):
+            bot.register('*unknown*event', lambda : 'ok')
+
+        class Counter(object):
+            def __init__(self):
+                self.counter = 0
+            def callback(self):
+                self.counter += 1
+
+        counter = Counter()
+        bot.register('bond', counter.callback)
+        bot.register('dispose', counter.callback)
+        with self.assertRaises(AssertionError):
+            bot.register('*unknown*event', counter.callback)
+
+        self.assertEqual(len(bot.registered['bond']), 2)
+        self.assertEqual(len(bot.registered['dispose']), 2)
+
+    def test_dispatch(self):
+
+        logging.info('*** dispatch ***')
+
+        bot = ShellBot(fan='f')
+
+        class Counter(object):
+            def __init__(self):
+                self.count = 0
+            def callback(self):
+                self.count += 1
+
+        counter = Counter()
+        bot.register('bond', counter.callback)
+        bot.register('dispose', counter.callback)
+        with self.assertRaises(AssertionError):
+            bot.register('*unknown*event', counter.callback)
+
+        bot.dispatch('bond')
+        bot.dispatch('dispose')
+        self.assertEqual(counter.count, 2)
+
     def test_load_commands(self):
 
         logging.info('*** load_commands ***')

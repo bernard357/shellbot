@@ -137,6 +137,8 @@ class ShellBot(object):
         if command:
             self.load_command(command)
 
+        self.registered = { 'bond': [], 'dispose': [] }
+
     def configure_from_path(self, path="settings.yaml"):
         """
         Reads configuration information
@@ -250,6 +252,46 @@ class ShellBot(object):
         self.context.check('bot.on_start', '', filter=True)
         self.context.check('bot.on_stop', '', filter=True)
 
+    def register(self, event, callback):
+        """
+        Registers a function to call on event
+
+        :param event: either 'bond' or 'dispose'
+        :type event: str
+
+        :param callback: a function to be called on event
+        :type callback: callable
+
+        Example::
+
+            def on_init(self):
+                self.bot.register('bond', self.on_bond)
+                self.bot.register('dispose', self.on_dispose)
+
+        """
+        assert event in self.registered.keys()  #  avoid unknown event type
+        assert callable(callback)  #  ensure callback is possible
+
+        self.registered[event].append(callback)
+
+    def dispatch(self, event, **kwargs):
+        """
+        Calls functions that have registered to some event
+
+        :param event: either 'bond' or 'dispose'
+        :type event: str
+
+        Example::
+
+            def on_bond(self):
+                self.dispatch('bond')
+
+        """
+        assert event in self.registered.keys()  #  avoid unknown event type
+
+        for callback in self.registered[event]:
+            callback(**kwargs)
+
     @property
     def name(self):
         """
@@ -309,6 +351,8 @@ class ShellBot(object):
 
         self.store.bond(id=self.space.get_id())
 
+        self.dispatch('bond')
+
     def add_moderators(self, *args, **kwargs):
         """
         Adds moderators to the room
@@ -330,6 +374,8 @@ class ShellBot(object):
         Disposes all resources
 
         """
+        self.dispatch('dispose')
+
         self.space.dispose(*args, **kwargs)
 
     def hook(self, server=None):
