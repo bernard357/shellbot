@@ -11,6 +11,7 @@ import sys
 sys.path.insert(0, os.path.abspath('../..'))
 
 from shellbot import Context, ShellBot, Shell
+from shellbot.events import Message
 from shellbot.updaters import Updater
 
 
@@ -43,14 +44,14 @@ class BaseTests(unittest.TestCase):
         logging.info('***** put')
 
         u = Updater(bot='b')
-        message = {
+        message = Message({
             'personEmail': 'alice@acme.com',
             'text': 'my message',
-        }
+        })
 
         with mock.patch('sys.stdout') as mocked:
             u.put(message)
-            mocked.write.assert_called_with('alice@acme.com: my message\n')
+            mocked.write.assert_called_with('{"text": "my message", "type": "message", "personEmail": "alice@acme.com"}\n')
 
     def test_format(self):
 
@@ -59,20 +60,21 @@ class BaseTests(unittest.TestCase):
         u = Updater(bot='b')
 
         inbound = 'hello world'
-        with self.assertRaises(Exception):
-            outbound = u.format(message=inbound)
+        outbound = u.format(inbound)
+        self.assertEqual(outbound, inbound)
 
-        inbound = {'text': 'hello world'}
-        with self.assertRaises(Exception):
-            outbound = u.format(message=inbound)
+        inbound = Message({'text': 'hello world'})
+        outbound = u.format(inbound)
+        self.assertEqual(outbound, '{"text": "hello world", "type": "message"}')
 
-        inbound = {'personEmail': 'a@me.com'}
-        with self.assertRaises(Exception):
-            outbound = u.format(message=inbound)
+        inbound = Message({'personEmail': 'a@me.com'})
+        outbound = u.format(inbound)
+        self.assertEqual(outbound, '{"type": "message", "personEmail": "a@me.com"}')
 
-        inbound = {'text': 'hello world', 'personEmail': 'a@me.com'}
-        outbound = u.format(message=inbound)
-        self.assertEqual(outbound, u'a@me.com: hello world')
+        inbound = Message({'text': 'hello world', 'personEmail': 'a@me.com'})
+        outbound = u.format(inbound)
+        self.assertEqual(outbound, '{"text": "hello world", "type": "message", "personEmail": "a@me.com"}')
+
 
 if __name__ == '__main__':
 

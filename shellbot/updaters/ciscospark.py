@@ -24,7 +24,7 @@ from .base import Updater
 from ..spaces import SparkSpace
 
 
-class SpaceUpdater(Updater):
+class SparkSpaceUpdater(Updater):
     """
     Replicates messages to a secondary space
     """
@@ -61,15 +61,47 @@ class SpaceUpdater(Updater):
         self.speaker = speaker if speaker else Speaker(bot=self)
         self.speaker.run()
 
-    def put(self, message):
+    def put(self, event):
         """
-        Processes one message
+        Processes one event
 
-        :param message: inbound message
-        :type message: dict
+        :param event: an inbound event
+        :type event: Event or Message or Attachment or Join or Leave
 
-        With this class a string representation of the received item
+        With this class a string representation of the received event
         is forwarded to the speaker queue of a chat space.
         """
-        self.mouth.put(self.format(message))
+        self.mouth.put(self.format(event))
+
+    def format(self, event):
+        """
+        Prepares an outbound line
+
+        :param event: an inbound event
+        :type event: Event or Message or Attachment or Join or Leave
+
+        :return: outbound line
+        :rtype: str
+
+        This function adapts inbound events to the appropriate
+        format. It turns an object with multiple attributes
+        to a single string that can be pushed to a Cisco Spark room.
+
+        """
+        if event.type == 'message':
+            return u"{}: {}".format(event.from_label, event.text)
+
+        if event.type == 'attachment':
+            return u"{} has been shared".format(event.url)
+
+        if event.type == 'join':
+            return u"{} has joined".format(event.actor_label)
+
+        if event.type == 'leave':
+            return u"{} has left".format(event.actor_label)
+
+        return u"an unknown event has been received"
+
+
+
 

@@ -16,10 +16,10 @@
 import logging
 
 from .base import Updater
-from .space import SpaceUpdater
+from .ciscospark import SparkSpaceUpdater
 
 __all__ = [
-    'SpaceUpdater',
+    'SparkSpaceUpdater',
     'Updater',
 ]
 

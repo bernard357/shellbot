@@ -66,34 +66,32 @@ class Updater(object):
         """
         pass
 
-    def put(self, message):
+    def put(self, event):
         """
-        Processes one message
+        Processes one event
 
-        :param message: inbound message
-        :type message: dict
+        :param event: inbound event
+        :type event: Event or Message or Attachment or Join or Leave
 
         The default behaviour is to write text to ``sys.stdout`` so it is easy
         to redirect the stream for any reason.
         """
-        sys.stdout.write(self.format(message)+'\n')
+        sys.stdout.write(self.format(event)+'\n')
 
-    def format(self, message):
+    def format(self, event):
         """
-        Prepares an outbound message
+        Prepares an outbound line
 
-        :param message: an inbound message
-        :type message: dict
+        :param event: an inbound event
+        :type event: Event or Message or Attachment or Join or Leave
 
-        :return: outbound message
+        :return: outbound line
         :rtype: str
 
-        This function adapts inbound messages to the appropriate
-        format. It turns a dict with multiple attributes
+        This function adapts inbound events to the appropriate
+        format. It turns an object with multiple attributes
         to a single string that can be saved in a log file.
 
         """
-        person = message['personEmail']
-        text = message['text']
-        return str(u'{}: {}'.format(person, text))
+        return str(event)
 
