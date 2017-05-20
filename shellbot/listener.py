@@ -15,8 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import logging
+from six import string_types
 import time
+
+from events import Event, Message, Attachment, Join, Leave
 
 
 class Listener(object):
@@ -112,12 +116,12 @@ class Listener(object):
         Processes items received from the chat space
 
         :param item: the item received
-        :type item: dict
+        :type item: dict or json-encoded string
 
         This function dispatches items based on their type. The type is
         a key of the provided dict.
 
-        Following events are handled:
+        Following types are handled:
 
         * ``message`` -- This is a textual message, maybe with a file attached.
           The message is given to the ``on_message()`` function. If a file
@@ -127,82 +131,59 @@ class Listener(object):
         * ``join`` -- This is when a person join a space. The function
           ``on_join()`` is called, providing details on the person who joined
 
-        *  ``leave`` -- This is when a person leaves a space. The function
-           ``on_leave()`` is called with details on the leaving person.
+        * ``leave`` -- This is when a person leaves a space. The function
+          ``on_leave()`` is called with details on the leaving person.
 
-        * ``other`` -- on any other case, the function ``on_event()``is
+        * on any other case, the function ``on_event()``is
           called.
         """
         counter = self.bot.context.increment('listener.counter')
         logging.debug(u'Listener is working on {}'.format(counter))
 
         try:
+            if isinstance(item, string_types):
+                item = json.loads(item)
+
             if item['type'] == 'message':
                 logging.debug(u"- dispatching a message event")
-                self.on_message(item)
+                self.on_message(Message(item))
+
+            elif item['type'] == 'attachment':
+                logging.debug(u"- dispatching an attachment event")
+                self.on_attachment(Attachment(item))
 
             elif item['type'] == 'join':
                 logging.debug(u"- dispatching a join event")
-                self.on_join(item)
+                self.on_join(Join(item))
 
             elif item['type'] == 'leave':
                 logging.debug(u"- dispatching a leave event")
-                self.on_leave(item)
+                self.on_leave(Leave(item))
 
             else:
                 logging.debug(u"- dispatching another event")
-                self.on_event(item)
+                self.on_event(Event(item))
 
-        except:
+        except Exception as feedback:
             logging.debug(u"- invalid format, thrown away")
+            raise
 
     def on_message(self, item):
         """
         A message has been received
 
         :param item: the message received
-        :type item: dict
+        :type item: Message
 
         This function listens for specific commands in the coming flow.
         When a command has been identified, it is responded immediately.
         Commands that require significant processing time are pushed
         to the inbox.
 
-        This function expects following keys in each item received:
-
-        * ``text`` -- This is the input coming from the chat space.
-
-        * ``from_id`` -- This is the id of the sender of the input.
-          This field allows the listener to distinguish between messages
-          from the bot and messages from other chat participants.
-
-        * ``mentioned_ids`` -- A list of targets for this input.
-          This field allows the listener to determine if the input is
-          explicitly for this bot or not.
-
-        Example item received from Cisco Spark after normalization::
-
-            {
-              "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-              "roomId" : "Y2lzY29zcGFyazovNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
-              "roomType" : "group",
-              "toPersonId" : "Y2lzY29zcGFyODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
-              "toPersonEmail" : "julie@example.com",
-              "text" : "/plumby use containers/docker",
-              "personId" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
-              "personEmail" : "matt@example.com",
-              "mentionedPeople" : ["Y2lzYDMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"],
-              "created" : "2015-10-18T14:26:16+00:00",
-              "type" : "message",
-              "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
-              "mentioned_ids" : ["Y2lzYDMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"],
-            }
-
         """
-        assert item['type'] == 'message'  # sanity check
-        input = item['text']
+        assert item.type == 'message'  # sanity check
 
-        if input is None:
+        if item.text is None:
             logging.debug(u"- no input in this item, thrown away")
             return
 
@@ -211,14 +192,15 @@ class Listener(object):
 
 #        print(item)
 
-        if item['from_id'] == self.bot.context.get('bot.id'):
+        if item.from_id == self.bot.context.get('bot.id'):
             logging.debug(u"- sent by me, thrown away")
             return
 
-        if self.bot.context.get('bot.id') not in item.get('mentioned_ids', []):
+        if self.bot.context.get('bot.id') not in item.mentioned_ids:
             logging.info(u"- not for me, thrown away")
             return
 
+        input = item.text
         if len(input) > 0 and input[0] in ['@', '/', '!']:
             input = input[1:]
 
@@ -233,34 +215,34 @@ class Listener(object):
         An attachment has been received
 
         :param item: the message received
-        :type item: dict
+        :type item: Attachment
         """
-        assert item['type'] == 'message'  # sanity check
+        assert item.type == 'attachment'
 
     def on_join(self, item):
         """
         A person has joined a space
 
         :param item: the event received
-        :type item: dict
+        :type item: Join
         """
-        assert item['type'] == 'join'  # sanity check
+        assert item.type == 'join'
 
     def on_leave(self, item):
         """
         A person has leaved a space
 
         :param item: the event received
-        :type item: dict
+        :type item: Leave
         """
-        assert item['type'] == 'leave'  # sanity check
+        assert item.type == 'leave'
 
     def on_event(self, item):
         """
         Another event has been received
 
         :param item: the event received
-        :type item: dict
+        :type item: Event or derivative
         """
-        assert item['type'] not in ('message', 'join', 'leave')  # sanity check
+        assert item.type not in ('message', 'attachment', 'join', 'leave')
 

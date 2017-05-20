@@ -17,6 +17,7 @@ from shellbot import Shell
 from shellbot import ShellBot
 from shellbot import Worker
 from shellbot import Speaker
+from shellbot.events import Message
 from shellbot.spaces import Space
 
 my_bot = ShellBot(ears=Queue(), inbox=Queue(), mouth=Queue())
@@ -78,8 +79,6 @@ class CompositeTests(unittest.TestCase):
         listener_process.start()
 
         items = [
-
-            'hello world',
 
             {
               "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
@@ -167,7 +166,7 @@ class CompositeTests(unittest.TestCase):
         ]
 
         for item in items:
-            my_bot.ears.put(item)
+            my_bot.ears.put(str(Message(item)))
 
         listener_process.join(1.0)
         if listener_process.is_alive():
@@ -177,7 +176,7 @@ class CompositeTests(unittest.TestCase):
             worker_process.join()
             speaker_process.join()
 
-        self.assertEqual(my_bot.context.get('listener.counter', 0), 6)
+        self.assertEqual(my_bot.context.get('listener.counter', 0), 5)
         self.assertEqual(my_bot.context.get('worker.counter', 0), 1)
         self.assertEqual(my_bot.context.get('speaker.counter', 0), 3)
 

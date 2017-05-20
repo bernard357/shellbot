@@ -3,6 +3,7 @@
 
 import unittest
 import gc
+import json
 import logging
 import mock
 from multiprocessing import Process, Queue
@@ -14,13 +15,14 @@ import time
 sys.path.insert(0, os.path.abspath('..'))
 
 from shellbot import Context, ShellBot, Listener, SpaceFactory
+from shellbot.events import Event, Message, Attachment, Join, Leave
 
 
 my_bot = ShellBot(ears=Queue(), mouth=Queue())
 my_bot.context.set('bot.id', "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg")
 my_bot.shell.load_default_commands()
 
-my_message = {
+my_message = Message({
     "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
     "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
     "roomType" : "group",
@@ -33,12 +35,11 @@ my_message = {
     "personEmail" : "matt@example.com",
     "created" : "2015-10-18T14:26:16+00:00",
     "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
-    "type": "message",
     "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
     "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
-}
+})
 
-my_join = {
+my_attachment = Attachment({
     "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
     "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
     "roomType" : "group",
@@ -46,17 +47,16 @@ my_join = {
     "toPersonEmail" : "julie@example.com",
     "text" : "The PM for this project is Mike C. and the Engineering Manager is Jane W.",
     "markdown" : "**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>.",
-    "files" : [ "http://www.example.com/images/media.png" ],
+    "url" : "http://www.example.com/images/media.png",
     "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
     "personEmail" : "matt@example.com",
     "created" : "2015-10-18T14:26:16+00:00",
     "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
-    "type": "join",
     "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
     "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
-}
+})
 
-my_leave = {
+my_join = Join({
     "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
     "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
     "roomType" : "group",
@@ -69,12 +69,11 @@ my_leave = {
     "personEmail" : "matt@example.com",
     "created" : "2015-10-18T14:26:16+00:00",
     "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
-    "type": "leave",
     "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
     "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
-}
+})
 
-my_event = {
+my_leave = Leave({
     "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
     "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
     "roomType" : "group",
@@ -87,10 +86,26 @@ my_event = {
     "personEmail" : "matt@example.com",
     "created" : "2015-10-18T14:26:16+00:00",
     "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
-    "type": "event",
     "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
     "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
-}
+})
+
+my_event = Event({
+    "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
+    "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+    "roomType" : "group",
+    "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
+    "toPersonEmail" : "julie@example.com",
+    "text" : "The PM for this project is Mike C. and the Engineering Manager is Jane W.",
+    "markdown" : "**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>.",
+    "files" : [ "http://www.example.com/images/media.png" ],
+    "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+    "personEmail" : "matt@example.com",
+    "created" : "2015-10-18T14:26:16+00:00",
+    "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
+    "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+    "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
+})
 
 
 
@@ -128,25 +143,61 @@ class ListenerTests(unittest.TestCase):
         listener_process.daemon = True
         listener_process.start()
 
-        t = Timer(0.1, my_bot.ears.put, ['ping'])
+        t = Timer(0.1, my_bot.ears.put, [str(my_message)])
         t.start()
 
         time.sleep(0.2)
         my_bot.context.set('general.switch', 'off')
         listener_process.join()
 
+    def test_process(self):
+
+        logging.info('*** process ***')
+
+        listener = Listener(bot=my_bot)
+
+        my_bot.context.set('listener.counter', 22)
+        with self.assertRaises(ValueError):
+            listener.process('hello world')
+        self.assertEqual(my_bot.context.get('listener.counter'), 23)
+
+        listener.on_message = mock.Mock()
+        listener.process(str(my_message))
+        self.assertEqual(my_bot.context.get('listener.counter'), 24)
+        self.assertTrue(listener.on_message.called)
+
+        listener.on_attachment = mock.Mock()
+        listener.process(str(my_attachment))
+        self.assertEqual(my_bot.context.get('listener.counter'), 25)
+        self.assertTrue(listener.on_attachment.called)
+
+        listener.on_join = mock.Mock()
+        listener.process(str(my_join))
+        self.assertEqual(my_bot.context.get('listener.counter'), 26)
+        self.assertTrue(listener.on_join.called)
+
+        listener.on_leave = mock.Mock()
+        listener.process(str(my_leave))
+        self.assertEqual(my_bot.context.get('listener.counter'), 27)
+        self.assertTrue(listener.on_leave.called)
+
+        listener.on_event = mock.Mock()
+        listener.process(str(my_event))
+        self.assertEqual(my_bot.context.get('listener.counter'), 28)
+        self.assertTrue(listener.on_event.called)
+
     def test_process_filter(self):
 
         logging.info('*** process/filter ***')
 
         def filter(item):
-            my_bot.context.set('listener.last', item['text'].title())
+            my_bot.context.set('listener.last', item.text.title())
             return item
 
         listener = Listener(bot=my_bot, filter=filter)
 
         my_bot.context.set('listener.counter', 22)
-        listener.process(my_message)
+        listener.process(str(my_message))
         self.assertEqual(my_bot.context.get('listener.counter'), 23)
         self.assertEqual(my_bot.context.get('listener.last'),
                          'The Pm For This Project Is Mike C. And The Engineering Manager Is Jane W.')
@@ -158,11 +209,28 @@ class ListenerTests(unittest.TestCase):
         listener = Listener(bot=my_bot)
         listener.on_message(item=my_message)
         with self.assertRaises(AssertionError):
+            listener.on_message(item=my_attachment)
+        with self.assertRaises(AssertionError):
             listener.on_message(item=my_join)
         with self.assertRaises(AssertionError):
             listener.on_message(item=my_leave)
         with self.assertRaises(AssertionError):
             listener.on_message(item=my_event)
+
+    def test_on_attachment(self):
+
+        logging.info('*** on_attachment ***')
+
+        listener = Listener(bot=my_bot)
+        with self.assertRaises(AssertionError):
+            listener.on_attachment(item=my_message)
+        listener.on_attachment(item=my_attachment)
+        with self.assertRaises(AssertionError):
+            listener.on_attachment(item=my_join)
+        with self.assertRaises(AssertionError):
+            listener.on_attachment(item=my_leave)
+        with self.assertRaises(AssertionError):
+            listener.on_attachment(item=my_event)
 
     def test_on_join(self):
 
@@ -171,6 +239,8 @@ class ListenerTests(unittest.TestCase):
         listener = Listener(bot=my_bot)
         with self.assertRaises(AssertionError):
             listener.on_join(item=my_message)
+        with self.assertRaises(AssertionError):
+            listener.on_join(item=my_attachment)
         listener.on_join(item=my_join)
         with self.assertRaises(AssertionError):
             listener.on_join(item=my_leave)
@@ -185,6 +255,8 @@ class ListenerTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             listener.on_leave(item=my_message)
         with self.assertRaises(AssertionError):
+            listener.on_leave(item=my_attachment)
+        with self.assertRaises(AssertionError):
             listener.on_leave(item=my_join)
         listener.on_leave(item=my_leave)
         with self.assertRaises(AssertionError):
@@ -197,6 +269,8 @@ class ListenerTests(unittest.TestCase):
         listener = Listener(bot=my_bot)
         with self.assertRaises(AssertionError):
             listener.on_event(item=my_message)
+        with self.assertRaises(AssertionError):
+            listener.on_event(item=my_attachment)
         with self.assertRaises(AssertionError):
             listener.on_event(item=my_join)
         with self.assertRaises(AssertionError):
@@ -225,8 +299,6 @@ class ListenerTests(unittest.TestCase):
     def test_dynamic(self):
 
         logging.info('*** Dynamic test ***')
-
-        my_bot.ears.put('hello world')
 
         items = [
 
@@ -332,21 +404,21 @@ class ListenerTests(unittest.TestCase):
         ]
 
         for item in items:
-            my_bot.ears.put(item)
+            my_bot.ears.put(str(Message(item)))
 
         my_bot.ears.put(Exception('EOQ'))
 
         tee = Queue()
 
         def filter(item):
-            tee.put(item)
+            tee.put(str(item))
             return item
 
         listener = Listener(bot=my_bot, filter=filter)
 
         listener.work()
 
-        self.assertEqual(my_bot.context.get('listener.counter'), 7)
+        self.assertEqual(my_bot.context.get('listener.counter'), 6)
         with self.assertRaises(Exception):
             my_bot.ears.get_nowait()
         with self.assertRaises(Exception):
@@ -367,7 +439,7 @@ class ListenerTests(unittest.TestCase):
             print(my_bot.mouth.get_nowait())
 
         for item in items:
-            self.assertEqual(tee.get(), item)
+            self.assertEqual(json.loads(tee.get()), item)
         with self.assertRaises(Exception):
             print(tee.get_nowait())
 
