@@ -86,6 +86,21 @@ class BaseTests(unittest.TestCase):
         self.assertEqual(u.count, 1)
 
 
+    def test_filter(self):
+
+        logging.info('***** filter')
+
+        u = Updater()
+        u.put = mock.Mock()
+        message = Message({
+            'personEmail': 'alice@acme.com',
+            'text': 'my message',
+        })
+
+        outcome = u.filter(message)
+        self.assertEqual(outcome.attributes, message.attributes)
+        u.put.assert_called_with(message)
+
     def test_put(self):
 
         logging.info('***** put')

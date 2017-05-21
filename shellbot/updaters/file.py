@@ -62,6 +62,14 @@ class FileUpdater(Updater):
 
         return self.path
 
+    def on_bond(self):
+        """
+        Creates path on space bonding
+        """
+        path = os.path.dirname(self.get_path())
+        if not os.path.exists(path):
+            os.makedirs(path)
+
     def put(self, event):
         """
         Processes one event
@@ -72,24 +80,12 @@ class FileUpdater(Updater):
         The function serializes the event and write it to a file.
         """
         path = self.get_path()
-        try:
-            logging.debug("- updating {}".format(path))
+        logging.debug("- updating {}".format(path))
 
-            dirname = os.path.dirname(path)
-            if not os.path.exists(dirname):
-                try:
-                    os.makedirs(dirname)
-                except OSError as feedback: # prevent race condition
-                    if feedback.errno != errno.EEXIST:
-                        raise
+        if os.path.exists(path):
+            mode = 'a'
+        else:
+            mode = 'w'
 
-            if os.path.exists(path):
-                mode = 'a'
-            else:
-                mode = 'w'
-
-            with open(path, mode) as handle:
-                handle.write(str(event)+'\n')
-
-        except:
-            logging.warning("- could not update {}".format(path))
+        with open(path, mode) as handle:
+            handle.write(str(event)+'\n')

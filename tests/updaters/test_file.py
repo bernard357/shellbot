@@ -16,7 +16,8 @@ from shellbot.events import Message
 from shellbot.updaters import FileUpdater
 
 my_bot = ShellBot()
-my_file = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/local/file_updater.log'
+my_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/local'
+my_file = my_path + '/file_updater.log'
 
 
 class UpdaterTests(unittest.TestCase):
@@ -67,6 +68,24 @@ class UpdaterTests(unittest.TestCase):
         u = FileUpdater(bot=my_bot, path='here.log')
         self.assertEqual(u.get_path(), 'here.log')
 
+    def test_on_bond(self):
+
+        logging.info('***** on_bond')
+
+        try:
+            os.rmdir(my_path+'/on_bond')
+        except:
+            pass
+
+        u = FileUpdater(path=my_path+'/on_bond/file.log')
+        u.on_bond()
+        self.assertTrue(os.path.isdir(my_path+'/on_bond'))
+
+        try:
+            os.rmdir(my_path+'/on_bond')
+        except:
+            pass
+
     def test_put(self):
 
         logging.info('***** put')
@@ -76,7 +95,13 @@ class UpdaterTests(unittest.TestCase):
         except:
             pass
 
+        try:
+            os.rmdir(my_path)
+        except:
+            pass
+
         u = FileUpdater(path=my_file)
+        u.on_bond()
 
         message_1 = Message({
             'person_label': 'alice@acme.com',
@@ -93,6 +118,17 @@ class UpdaterTests(unittest.TestCase):
         expected = '{"person_label": "alice@acme.com", "text": "a first message", "type": "message"}\n{"person_label": "bob@acme.com", "text": "a second message", "type": "message"}\n'
         with open(my_file, 'r') as handle:
             self.assertEqual(handle.read(), expected)
+
+        try:
+            os.remove(my_file)
+        except:
+            pass
+
+        try:
+            os.rmdir(my_path)
+        except:
+            pass
+
 
 if __name__ == '__main__':
 
