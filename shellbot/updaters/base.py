@@ -27,10 +27,36 @@ from ..context import Context
 
 class Updater(object):
     """
-    Handles inbound messages
+    Handles inbound events
 
-    Updaters are useful for proper logging or replication, or side
-    storage, or achiving, of received messages.
+    Updaters are useful for logging or replication, or side
+    storage, or achiving, of received events.
+
+    An event may be a Message, an Attachment, a Join or Leave notification,
+    or any other Event.
+
+    Updaters expose a filtering function that can be connected to the
+    inbound flow of events handled by the Listener.
+
+    Example::
+
+        updater = FileUpdater(path='/var/log/shellbot.log')
+        listener = Listener(filter=updater.filter)
+
+    Here events are written down to a flat file, yet multiple updaters
+    are available.
+
+    For example, push every event to Elasticsearch::
+
+        updater = ElasticsearchUpdater()
+        listener = Listener(filter=updater.filter)
+
+    There is also an updater where events are written to a separate
+    Cisco Spark room. This will be useful in cases where safety or control
+    are specifically important.
+
+    We are looking for new updaters, so please have a careful look at this file
+    and consider to submit your own module.
 
     """
 
@@ -38,7 +64,7 @@ class Updater(object):
                  bot=None,
                  **kwargs):
         """
-        Handles inbound messages
+        Handles inbound events
 
         :param bot: the overarching bot
         :type bot: ShellBot
@@ -46,10 +72,15 @@ class Updater(object):
         Example::
 
             updater = Updater(bot=bot)
-            updater.put(message)
+            updater.put(event)
 
         """
         self.bot = bot
+
+        if self.bot:
+            self.bot.register('bond', self.on_bond)
+            self.bot.register('dispose', self.on_dispose)
+
         self.on_init(**kwargs)
 
     def on_init(self, **kwargs):
@@ -65,6 +96,50 @@ class Updater(object):
 
         """
         pass
+
+    def on_bond(self):
+        """
+        Reacts on space bonding
+
+        This function should be expanded in sub-class, where necessary.
+
+        Example::
+
+            def on_bond(self):
+                self.db = Driver.open()
+
+        """
+        pass
+
+    def on_dispose(self):
+        """
+        Reacts on space disposal
+
+        This function should be expanded in sub-class, where necessary.
+
+        Example::
+
+            def on_disposal(self):
+                self.db = Driver.close()
+
+        """
+        pass
+
+    def filter(self, event):
+        """
+        Filters events handled by listener
+
+        :param event: an event received by listener
+        :type event: Event or Message or Attachment or Join or Leave, etc.
+
+        :return: a filtered event
+
+        This function implements the actual auditing of incoming events.
+        """
+        try:
+            self.put(event)
+        finally:
+            return event
 
     def put(self, event):
         """

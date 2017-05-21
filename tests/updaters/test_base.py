@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import gc
 import logging
 import mock
 from multiprocessing import Process, Queue
@@ -14,15 +15,21 @@ from shellbot import Context, ShellBot, Shell
 from shellbot.events import Message
 from shellbot.updaters import Updater
 
+my_bot = ShellBot()
+
 
 class BaseTests(unittest.TestCase):
+
+    def tearDown(self):
+        collected = gc.collect()
+        logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 
         logging.info('***** init')
 
-        u = Updater(bot='b')
-        self.assertEqual(u.bot, 'b')
+        u = Updater()
+        self.assertEqual(u.bot, None)
 
     def test_on_init(self):
 
@@ -33,17 +40,57 @@ class BaseTests(unittest.TestCase):
             def on_init(self, more=None, **kwargs):
                 self.more = more
 
-        u = MyUpdater(bot='b', more='more', weird='weird')
-        self.assertEqual(u.bot, 'b')
+        u = MyUpdater(more='more', weird='weird')
         self.assertEqual(u.more, 'more')
         with self.assertRaises(AttributeError):
             self.assertEqual(u.weird, 'weird')
+
+    def test_on_bond(self):
+
+        logging.info('***** on_bond')
+
+        u = Updater()
+        u.on_bond()
+
+        class MyUpdater(Updater):
+
+            def on_init(self, **kwargs):
+                self.count = 0
+
+            def on_bond(self):
+                self.count += 1
+
+        u = MyUpdater(bot=my_bot)
+        self.assertEqual(u.count, 0)
+        my_bot.dispatch('bond')
+        self.assertEqual(u.count, 1)
+
+    def test_on_dispose(self):
+
+        logging.info('***** on_dispose')
+
+        u = Updater()
+        u.on_dispose()
+
+        class MyUpdater(Updater):
+
+            def on_init(self, **kwargs):
+                self.count = 0
+
+            def on_dispose(self):
+                self.count += 1
+
+        u = MyUpdater(bot=my_bot)
+        self.assertEqual(u.count, 0)
+        my_bot.dispatch('dispose')
+        self.assertEqual(u.count, 1)
+
 
     def test_put(self):
 
         logging.info('***** put')
 
-        u = Updater(bot='b')
+        u = Updater()
         message = Message({
             'personEmail': 'alice@acme.com',
             'text': 'my message',
@@ -57,7 +104,7 @@ class BaseTests(unittest.TestCase):
 
         logging.info('***** format')
 
-        u = Updater(bot='b')
+        u = Updater()
 
         inbound = 'hello world'
         outbound = u.format(inbound)

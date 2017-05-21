@@ -16,9 +16,11 @@
 import logging
 
 from .base import Updater
+from .file import FileUpdater
 from .ciscospark import SparkSpaceUpdater
 
 __all__ = [
+    'FileUpdater',
     'SparkSpaceUpdater',
     'Updater',
 ]

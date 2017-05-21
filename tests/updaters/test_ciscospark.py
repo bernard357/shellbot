@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import gc
 import logging
 import mock
 from multiprocessing import Process, Queue
@@ -17,14 +18,18 @@ from shellbot.updaters import SparkSpaceUpdater
 
 class UpdaterTests(unittest.TestCase):
 
+    def tearDown(self):
+        collected = gc.collect()
+        logging.info("Garbage collector: collected %d objects." % (collected))
+
     def test_init(self):
 
         logging.info('***** init')
 
         space = mock.Mock()
         speaker = mock.Mock()
-        u = SparkSpaceUpdater(bot='b', space=space, speaker=speaker)
-        self.assertEqual(u.bot, 'b')
+        u = SparkSpaceUpdater(space=space, speaker=speaker)
+        self.assertEqual(u.bot, None)
 
     def test_put(self):
 
@@ -32,7 +37,7 @@ class UpdaterTests(unittest.TestCase):
 
         space = mock.Mock()
         speaker = mock.Mock()
-        u = SparkSpaceUpdater(bot='b', space=space, speaker=speaker)
+        u = SparkSpaceUpdater(space=space, speaker=speaker)
         item = Message({
             'from_label': 'alice@acme.com',
             'text': 'my message',
@@ -49,7 +54,7 @@ class UpdaterTests(unittest.TestCase):
 
         space = mock.Mock()
         speaker = mock.Mock()
-        u = SparkSpaceUpdater(bot='b', space=space, speaker=speaker)
+        u = SparkSpaceUpdater(space=space, speaker=speaker)
 
         inbound = Event({
             'who_cares': 'no attribute will be used anayway',
