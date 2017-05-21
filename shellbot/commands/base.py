@@ -26,6 +26,23 @@ class Command(object):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+        self.on_init()
+
+    def on_init(self):
+        """
+        Handles extended initialisation
+
+        This function should be expanded in sub-class, where necessary.
+
+        Example::
+
+            def on_init(self):
+                self.bot.register('bond', self.on_bond)
+                self.bot.register('dispose', self.on_dispose)
+
+        """
+        pass
+
     def execute(self, arguments=None):
         """
         Executes this command
