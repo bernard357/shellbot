@@ -20,6 +20,7 @@ Submodules
 
    shellbot.bot
    shellbot.context
+   shellbot.events
    shellbot.listener
    shellbot.server
    shellbot.shell
