@@ -19,6 +19,7 @@ import json
 import logging
 from six import string_types
 import time
+import yaml
 
 from events import Event, Message, Attachment, Join, Leave
 
@@ -32,27 +33,29 @@ class Listener(object):
 
     def __init__(self, bot=None, filter=None):
         """
-        Handles messages received from chat space
+        Handles events received from chat space
 
         :param bot: the overarching bot
         :type bot: ShellBot
 
-        :param filter: if provided, messages received are filtered
+        :param filter: if provided, used to filter every event
         :type filter: callable
 
-        If a ``filter`` is provided, then it is called for each item received.
+        If a ``filter`` is provided, then it is called for each event received.
+        An event may be a Message, an Attachment, a Join or Leave notification,
+        or any other Event.
 
         Example::
 
-            def filter(item):
+            def filter(event):
 
                 # duplicate input stream
-                my_queue.put(item)
+                my_queue.put(str(event))
 
-                # change input tream
-                item['text'] = item['text'].title()
+                # change input stream
+                event.text = event.text.title()
 
-                return item
+                return event
 
             listener = Listener(filter=filter)
         """
@@ -142,7 +145,9 @@ class Listener(object):
 
         try:
             if isinstance(item, string_types):
-                item = json.loads(item)
+                item = yaml.safe_load(item)  # better unicode than json.loads()
+
+            assert isinstance(item, dict)  # low-level event representation
 
             if item['type'] == 'message':
                 logging.debug(u"- dispatching a message event")
@@ -161,8 +166,12 @@ class Listener(object):
                 self.on_leave(Leave(item))
 
             else:
-                logging.debug(u"- dispatching another event")
+                logging.debug(u"- dispatching an event")
                 self.on_event(Event(item))
+
+        except AssertionError as feedback:
+            logging.debug(u"- invalid format, thrown away")
+            raise ValueError(feedback)
 
         except Exception as feedback:
             logging.debug(u"- invalid format, thrown away")
@@ -219,6 +228,9 @@ class Listener(object):
         """
         assert item.type == 'attachment'
 
+        if self.filter:
+            item = self.filter(item)
+
     def on_join(self, item):
         """
         A person has joined a space
@@ -227,6 +239,9 @@ class Listener(object):
         :type item: Join
         """
         assert item.type == 'join'
+
+        if self.filter:
+            item = self.filter(item)
 
     def on_leave(self, item):
         """
@@ -237,6 +252,9 @@ class Listener(object):
         """
         assert item.type == 'leave'
 
+        if self.filter:
+            item = self.filter(item)
+
     def on_event(self, item):
         """
         Another event has been received
@@ -245,4 +263,7 @@ class Listener(object):
         :type item: Event or derivative
         """
         assert item.type not in ('message', 'attachment', 'join', 'leave')
+
+        if self.filter:
+            item = self.filter(item)
 

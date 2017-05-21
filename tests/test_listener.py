@@ -190,17 +190,46 @@ class ListenerTests(unittest.TestCase):
 
         logging.info('*** process/filter ***')
 
-        def filter(item):
-            my_bot.context.set('listener.last', item.text.title())
-            return item
+        class Mocked(object):
+            def filter(self, event):
+                self.event = Event(event.attributes.copy())
+                self.event.flag = True
+                text = event.get('text')
+                if text:
+                    self.event.text = text.title()
+                return self.event
 
-        listener = Listener(bot=my_bot, filter=filter)
+        mocked = Mocked()
+
+        listener = Listener(bot=my_bot, filter=mocked.filter)
 
         my_bot.context.set('listener.counter', 22)
+
+        mocked.event = None
         listener.process(str(my_message))
         self.assertEqual(my_bot.context.get('listener.counter'), 23)
-        self.assertEqual(my_bot.context.get('listener.last'),
+        self.assertEqual(mocked.event.text,
                          'The Pm For This Project Is Mike C. And The Engineering Manager Is Jane W.')
+
+        mocked.event = None
+        listener.process(str(my_attachment))
+        self.assertEqual(my_bot.context.get('listener.counter'), 24)
+        self.assertTrue(mocked.event.flag)
+
+        mocked.event = None
+        listener.process(str(my_join))
+        self.assertEqual(my_bot.context.get('listener.counter'), 25)
+        self.assertTrue(mocked.event.flag)
+
+        mocked.event = None
+        listener.process(str(my_leave))
+        self.assertEqual(my_bot.context.get('listener.counter'), 26)
+        self.assertTrue(mocked.event.flag)
+
+        mocked.event = None
+        listener.process(str(my_event))
+        self.assertEqual(my_bot.context.get('listener.counter'), 27)
+        self.assertTrue(mocked.event.flag)
 
     def test_on_message(self):
 
