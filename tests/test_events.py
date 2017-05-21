@@ -8,6 +8,7 @@ import logging
 from multiprocessing import Queue
 import os
 import sys
+import yaml
 
 sys.path.insert(0, os.path.abspath('..'))
 
@@ -52,7 +53,13 @@ class EventsTests(unittest.TestCase):
             value = event.unknown
 
         data = {u'hello': u'wörld', 'number': 123, 'weird': None}
+
         event = Event(attributes=data)
+        self.assertEqual(event.hello, u'wörld')
+        self.assertEqual(event.number, 123)
+        self.assertEqual(event.weird, None)
+
+        event = Event(attributes=json.dumps(data))
         self.assertEqual(event.hello, u'wörld')
         self.assertEqual(event.number, 123)
         self.assertEqual(event.weird, None)
@@ -66,7 +73,14 @@ class EventsTests(unittest.TestCase):
         self.assertEqual(event.get('unknown', 'hye'), 'hye')
 
         data = {u'hellô': u'wörld', 'number': 123, 'weird': None}
+
         event = Event(attributes=data)
+        self.assertEqual(event.get(u'hellô'), u'wörld')
+        self.assertEqual(event.get('number'), 123)
+        self.assertEqual(event.get('weird'), None)
+        self.assertEqual(event.get('weird', []), [])
+
+        event = Event(attributes=json.dumps(data))
         self.assertEqual(event.get(u'hellô'), u'wörld')
         self.assertEqual(event.get('number'), 123)
         self.assertEqual(event.get('weird'), None)
@@ -97,6 +111,7 @@ class EventsTests(unittest.TestCase):
         event = Event(attributes=json.dumps(data))
         data.update({'type': 'event'})
         self.assertEqual(json.loads(str(event)), data)
+        self.assertEqual(yaml.safe_load(str(event)), data)
 
     def test_event_queue(self):
 
@@ -145,6 +160,7 @@ class EventsTests(unittest.TestCase):
 
         item.update({'type': 'message'})
         self.assertEqual(json.loads(str(event)), item)
+        self.assertEqual(yaml.safe_load(str(event)), item)
 
     def test_message_queue(self):
 
