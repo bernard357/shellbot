@@ -146,7 +146,7 @@ class Event(object):
         """
         return "{}({})".format(
             self.__class__.__name__,
-            json.dumps(self.attributes))
+            json.dumps(self.attributes, sort_keys=True))
 
     def __str__(self):
         """
@@ -154,7 +154,7 @@ class Event(object):
         """
         with_type = self.attributes.copy()
         with_type.update({'type': self.type})
-        return json.dumps(with_type)
+        return json.dumps(with_type, sort_keys=True)
 
 
 class Message(Event):

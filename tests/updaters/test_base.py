@@ -3,6 +3,7 @@
 
 import unittest
 import gc
+import json
 import logging
 import mock
 from multiprocessing import Process, Queue
@@ -113,7 +114,7 @@ class BaseTests(unittest.TestCase):
 
         with mock.patch('sys.stdout') as mocked:
             u.put(message)
-            mocked.write.assert_called_with('{"text": "my message", "type": "message", "personEmail": "alice@acme.com"}\n')
+            mocked.write.assert_called_with('{"personEmail": "alice@acme.com", "text": "my message", "type": "message"}\n')
 
     def test_format(self):
 
@@ -127,15 +128,18 @@ class BaseTests(unittest.TestCase):
 
         inbound = Message({'text': 'hello world'})
         outbound = u.format(inbound)
-        self.assertEqual(outbound, '{"text": "hello world", "type": "message"}')
+        self.assertEqual(json.loads(outbound),
+                         {"text": "hello world", "type": "message"})
 
         inbound = Message({'personEmail': 'a@me.com'})
         outbound = u.format(inbound)
-        self.assertEqual(outbound, '{"type": "message", "personEmail": "a@me.com"}')
+        self.assertEqual(json.loads(outbound),
+                         {"type": "message", "personEmail": "a@me.com"})
 
         inbound = Message({'text': 'hello world', 'personEmail': 'a@me.com'})
         outbound = u.format(inbound)
-        self.assertEqual(outbound, '{"text": "hello world", "type": "message", "personEmail": "a@me.com"}')
+        self.assertEqual(json.loads(outbound),
+                         {"text": "hello world", "type": "message", "personEmail": "a@me.com"})
 
 
 if __name__ == '__main__':
