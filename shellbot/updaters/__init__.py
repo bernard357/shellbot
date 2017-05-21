@@ -16,10 +16,12 @@
 import logging
 
 from .base import Updater
+from .elastic import ElasticsearchUpdater
 from .file import FileUpdater
 from .space import SpaceUpdater
 
 __all__ = [
+    'ElasticsearchUpdater',
     'FileUpdater',
     'SpaceUpdater',
     'Updater',
