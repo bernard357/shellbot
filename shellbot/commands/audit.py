@@ -136,19 +136,19 @@ class Audit(Command):
 
         return True
 
-    def filter(self, item):
+    def filter(self, event):
         """
-        Filters items handled by listener
+        Filters events handled by listener
 
-        :param item: an item received by listener
-        :type item: dict
+        :param event: an event received by listener
+        :type event: Event or Message or Attachment or Join or Leave, etc.
 
-        :return: a filtered item
+        :return: a filtered event
 
-        This function implements the actual auditing of incoming messages.
+        This function implements the actual auditing of incoming events.
         """
         try:
             if self.bot.context.get('audit.switch', 'off') == 'on':
-                self.updater.put(item)
+                self.updater.put(str(event))
         finally:
-            return item
+            return event

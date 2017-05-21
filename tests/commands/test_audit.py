@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 from shellbot import Context, ShellBot, Shell
 from shellbot.commands import Audit
+from shellbot.events import Message
 
 
 my_bot = ShellBot(mouth=Queue())
@@ -137,13 +138,12 @@ class AuditTests(unittest.TestCase):
         c = Audit(my_bot)
         c.updater = None
 
-        item = {'text': 'hello world', 'personEmail': 'a@me.com'}
-        self.assertEqual(c.filter(item=item), item)
+        item = Message({'text': 'hello world', 'person_label': 'a@me.com'})
+        self.assertEqual(c.filter(item), item)
 
         c.updater = Queue()
-        self.assertEqual(c.filter(item=item), item)
-        self.assertEqual(c.updater.get(),
-                         {'text': 'hello world', 'personEmail': 'a@me.com'})
+        self.assertEqual(c.filter(item), item)
+        self.assertEqual(c.updater.get(), str(item))
         with self.assertRaises(Exception):
             c.updater.get_nowait()
 
