@@ -12,6 +12,7 @@ Shellbot
    :target: https://travis-ci.org/bernard357/shellbot
 
 .. image:: https://img.shields.io/badge/coverage-93%25-green.svg
+   :target: https://img.shields.io/badge/coverage-93%25-green.svg
 
 .. image:: https://img.shields.io/pypi/pyversions/shellbot.svg?maxAge=2592000
    :target: https://www.python.org/
@@ -28,6 +29,7 @@ Features
 * Create powerful state machines for mastering bot-human interactions
 * Create the exact set of shell commands needed for your application
 * Either respond interactively, or pipeline long-lasting commands
+* Audit dynamically chat interactions
 * Native support of Cisco Spark
 * Local disconnected mode of operation for development and tests
 * Bottle is included for easy interactions over the web
