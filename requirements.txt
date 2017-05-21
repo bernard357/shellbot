@@ -1,5 +1,6 @@
 bottle
 ciscosparkapi
 colorlog
+elasticsearch
 paste
 PyYAML
