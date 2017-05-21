@@ -219,6 +219,38 @@ class BotTests(unittest.TestCase):
         os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
         bot = ShellBot(settings=None, configure=True, fan='f')
 
+    def test_get(self):
+
+        logging.info('*** get ***')
+
+        os.environ["BOT_ON_START"] = 'Start!'
+        os.environ["BOT_ON_STOP"] = 'Stop!'
+        os.environ["CHAT_ROOM_TITLE"] = 'Support room'
+        os.environ["CHAT_ROOM_MODERATORS"] = 'foo.bar@acme.com'
+        os.environ["CHAT_TOKEN"] = '*token'
+        os.environ["SERVER_URL"] = 'http://to.nowhere/'
+
+        bot = ShellBot(fan='f')
+        bot.configure()
+
+        self.assertEqual(bot.get('bot.on_start'), 'Start!')
+        self.assertEqual(bot.get('bot.on_stop'), 'Stop!')
+        self.assertEqual(bot.get('spark.room'), 'Support room')
+        self.assertEqual(bot.get('spark.moderators'),
+                         ['foo.bar@acme.com'])
+        self.assertEqual(bot.get('spark.participants'), [])
+
+        self.assertEqual(bot.get('spark.token'), '*token')
+
+        self.assertEqual(bot.get('server.url'), 'http://to.nowhere/')
+        self.assertEqual(bot.get('server.hook'), '/hook')
+        self.assertEqual(bot.get('server.binding'), '0.0.0.0')
+        self.assertEqual(bot.get('server.port'), 8080)
+
+        os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
+        bot = ShellBot(settings=None, configure=True, fan='f')
+        self.assertEqual(bot.get('spark.room'), 'Notifications')
+
     def test_register(self):
 
         logging.info('*** register ***')

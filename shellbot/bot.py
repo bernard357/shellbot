@@ -252,6 +252,27 @@ class ShellBot(object):
         self.context.check('bot.on_start', '', filter=True)
         self.context.check('bot.on_stop', '', filter=True)
 
+    def get(self, key, default=None):
+        """
+        Retrieves the value of one configuration key
+
+        :param key: name of the value
+        :type key: str
+
+        :param default: default value
+        :type default: any serializable type is accepted
+
+        :return: the actual value, or the default value, or None
+
+        Example::
+
+            message = bot.get('bot.on_start')
+
+        This function is safe on multiprocessing and multithreading.
+
+        """
+        return self.context.get(key, default)
+
     def register(self, event, callback):
         """
         Registers a function to call on event
