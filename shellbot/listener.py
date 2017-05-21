@@ -21,7 +21,7 @@ from six import string_types
 import time
 import yaml
 
-from events import Event, Message, Attachment, Join, Leave
+from .events import Event, Message, Attachment, Join, Leave
 
 
 class Listener(object):
