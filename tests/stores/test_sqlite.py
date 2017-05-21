@@ -15,7 +15,7 @@ from shellbot.stores import SqliteStore
 
 my_bot = ShellBot()
 my_db_name = os.path.dirname(os.path.abspath(__file__)) + '/../local/store.db'
-print(my_db_name)
+
 
 class SqliteStoreTests(unittest.TestCase):
 
