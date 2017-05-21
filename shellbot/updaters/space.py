@@ -24,7 +24,7 @@ from .base import Updater
 from ..spaces import SparkSpace
 
 
-class SparkSpaceUpdater(Updater):
+class SpaceUpdater(Updater):
     """
     Replicates messages to a secondary space
     """

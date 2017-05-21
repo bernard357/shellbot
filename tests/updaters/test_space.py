@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 from shellbot import Context, ShellBot, Shell
 from shellbot.events import Event, Message, Attachment, Join, Leave
-from shellbot.updaters import SparkSpaceUpdater
+from shellbot.updaters import SpaceUpdater
 
 
 class UpdaterTests(unittest.TestCase):
@@ -28,7 +28,7 @@ class UpdaterTests(unittest.TestCase):
 
         space = mock.Mock()
         speaker = mock.Mock()
-        u = SparkSpaceUpdater(space=space, speaker=speaker)
+        u = SpaceUpdater(space=space, speaker=speaker)
         self.assertEqual(u.bot, None)
 
     def test_put(self):
@@ -37,7 +37,7 @@ class UpdaterTests(unittest.TestCase):
 
         space = mock.Mock()
         speaker = mock.Mock()
-        u = SparkSpaceUpdater(space=space, speaker=speaker)
+        u = SpaceUpdater(space=space, speaker=speaker)
         item = Message({
             'from_label': 'alice@acme.com',
             'text': 'my message',
@@ -54,7 +54,7 @@ class UpdaterTests(unittest.TestCase):
 
         space = mock.Mock()
         speaker = mock.Mock()
-        u = SparkSpaceUpdater(space=space, speaker=speaker)
+        u = SpaceUpdater(space=space, speaker=speaker)
 
         inbound = Event({
             'who_cares': 'no attribute will be used anayway',
