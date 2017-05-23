@@ -19,7 +19,10 @@ from bottle import request
 import logging
 from multiprocessing import Process, Queue
 import os
+import re
+import requests
 from six import string_types
+import tempfile
 import time
 
 from ..context import Context
@@ -49,7 +52,7 @@ class SparkSpace(Space):
             space = SparkSpace(bot=bot, prefix='spark.audit')
 
         Here we create a new space powered by Cisco Spark service, and use
-        settings under the key ``spark.audit`` in the context of this bot.
+        settings under the key ``spark`` in the context of this bot.
         """
         assert prefix not in (None, '')
         self.prefix = prefix
@@ -58,6 +61,7 @@ class SparkSpace(Space):
             self.bot.context.set(self.prefix+'.token', token)
 
         self.api = None
+        self.personal_api = None
 
     def on_reset(self):
         """
@@ -65,8 +69,8 @@ class SparkSpace(Space):
         """
         self.teamId = None
 
-        self.token = self.bot.context.get(self.prefix+'.token', '*void')
-        self.personal_token = self.bot.context.get(self.prefix+'.personal_token', '*void')
+        self.token = self.bot.context.get(self.prefix+'.token', '')
+        self.personal_token = self.bot.context.get(self.prefix+'.personal_token', '')
 
         self._last_message_id = 0
 
@@ -167,28 +171,30 @@ class SparkSpace(Space):
         """
         from ciscosparkapi import CiscoSparkAPI
 
+        self.api = None
         try:
-            if self.token is None:
+            if self.token in (None, ''):
                 self.api = None
                 logging.error(u"No token to load Cisco Spark API")
 
             else:
                 self.api = CiscoSparkAPI(access_token=self.token)
-                logging.debug(u"Loaded Cisco Spark API as bot")
+                logging.debug(u"Loading Cisco Spark API as bot")
 
         except Exception as feedback:
             logging.error(u"Unable to load Cisco Spark API")
             logging.exception(feedback)
 
+        self.personal_api = self.api
         try:
-            if self.personal_token is None:
+            if self.personal_token in (None, ''):
                 self.personal_api = None
                 logging.error(u"No token to load Cisco Spark API as person")
 
             else:
                 self.personal_api = CiscoSparkAPI(
                     access_token=self.personal_token)
-                logging.debug(u"Loaded Cisco Spark API as person")
+                logging.debug(u"Loading Cisco Spark API as person")
 
         except Exception as feedback:
             logging.error(u"Unable to load Cisco Spark API")
@@ -328,9 +334,10 @@ class SparkSpace(Space):
         :type person: str
 
         """
-        assert self.api is not None  # connect() is prerequisite
-        assert self.id is not None  # bond() is prerequisite
         try:
+            assert self.api is not None  # connect() is prerequisite
+            assert self.id is not None  # bond() is prerequisite
+
             self.api.memberships.create(roomId=self.id,
                                         personEmail=person,
                                         isModerator=True)
@@ -347,9 +354,10 @@ class SparkSpace(Space):
         :type person: str
 
         """
-        assert self.api is not None  # connect() is prerequisite
-        assert self.id is not None  # bond() is prerequisite
         try:
+            assert self.api is not None  # connect() is prerequisite
+            assert self.id is not None  # bond() is prerequisite
+
             self.api.memberships.create(roomId=self.id,
                                         personEmail=person,
                                         isModerator=True)
@@ -395,19 +403,20 @@ class SparkSpace(Space):
 
     def post_message(self,
                      text=None,
-                     ex_markdown=None,
-                     ex_file_path=None):
+                     content=None,
+                     file=None,
+                     **kwargs):
         """
         Posts a message to a Cisco Spark room
 
-        :param text: content of the message is plain text
-        :type text: str or list of str or ``None``
+        :param text: message in plain text
+        :type text: str
 
-        :param ex_markdown: content of the message as per Markdown
-        :type ex_markdown: str or list of str or ``None``
+        :param content: rich format, such as MArkdown or HTML
+        :type content: str
 
-        :param ex_file_path: location of file to be uploaded or attached
-        :type ex_file_path: str or ``None``
+        :param file: URL or local path for an attachment
+        :type file: str
 
         Example message out of plain text::
 
@@ -415,17 +424,17 @@ class SparkSpace(Space):
 
         Example message with Markdown::
 
-        >>>space.post_message(ex_markdown='this is a **bold** statement')
+        >>>space.post_message(content='this is a **bold** statement')
 
         Example file upload::
 
-        >>>space.post_message(ex_file_path='./my_file.pdf')
+        >>>space.post_message(file='./my_file.pdf')
 
         Of course, you can combine text with the upload of a file::
 
         >>>text = 'This is the presentation that was used for our meeting'
         >>>space.post_message(text=text,
-                              ex_file_path='./my_file.pdf')
+                              file='./my_file.pdf')
 
         """
 
@@ -437,17 +446,24 @@ class SparkSpace(Space):
         logging.debug(u"- text: {}".format(text))
 
         assert self.api is not None  # connect() is prerequisite
-        try:
-            files = [ex_file_path] if ex_file_path else None
-            self.api.messages.create(roomId=self.id,
-                                     text=text,
-                                     markdown=ex_markdown,
-                                     files=files)
-            logging.debug(u"- done")
 
-        except Exception as feedback:
-            logging.warning(u"Unable to post message")
-            logging.exception(feedback)
+        count = 2
+        while count:
+            try:
+                files = [file] if file else None
+                self.api.messages.create(roomId=self.id,
+                                         text=text,
+                                         markdown=content,
+                                         files=files)
+                logging.debug(u"- done")
+                break
+
+            except Exception as feedback:
+                logging.warning(u"Unable to post message")
+                time.sleep(0.1)
+                count -= 1
+                if count == 0:
+                    logging.exception(feedback)
 
     def register(self, hook_url):
         """
@@ -466,11 +482,11 @@ class SparkSpace(Space):
 
         assert self.api is not None  # connect() is prerequisite
         try:
-            self.api.webhooks.create(name='shellbot-webhook',
-                                     targetUrl=hook_url,
-                                     resource='messages',
-                                     event='created',
-                                     filter='roomId='+self.id)
+            self.personal_api.webhooks.create(name='shellbot-webhook',
+                                              targetUrl=hook_url,
+                                              resource='messages',
+                                              event='created',
+                                              filter='roomId='+self.id)
 
             logging.debug(u"- done")
 
@@ -548,7 +564,7 @@ class SparkSpace(Space):
 
             # step 2 -- get the message itself
             #
-            item = self.api.messages.get(messageId=message_id)
+            item = self.personal_api.messages.get(messageId=message_id)
 
             # step 3 -- push it in the handling queue
             #
@@ -615,6 +631,7 @@ class SparkSpace(Space):
 
         """
         message = Message(item.copy())
+        message.content = message.get('html', message.text)
         message.from_id = message.get('personId')
         message.from_label = message.get('personEmail')
         message.mentioned_ids = message.get('mentionedPeople', [])
@@ -631,3 +648,67 @@ class SparkSpace(Space):
 
             queue.put(str(attachment))
 
+    def download_attachment(self, url):
+        """
+        Copies a shared document locally
+        """
+        path = tempfile.gettempdir()+'/'+self.name_attachment(url)
+        logging.debug(u"- writing to {}".format(path))
+        with open(path, "w+b") as handle:
+            handle.write(self.get_attachment(url))
+
+        return path
+
+    def name_attachment(self, url, response=None):
+        """
+        Retrieves a document attached to a room
+        """
+        logging.debug(u"- sensing {}".format(url))
+
+        headers = {}
+        if self.personal_token:
+            headers['Authorization'] = 'Bearer '+self.personal_token
+        elif self.token:
+            headers['Authorization'] = 'Bearer '+self.token
+
+        if not response:
+            response = requests.head(url=url, headers=headers)
+
+        logging.debug(u"- status: {}".format(response.status_code))
+        if response.status_code != 200:
+            raise Exception(u"Unable to download attachment")
+
+        logging.debug(u"- headers: {}".format(response.headers))
+        line = response.headers['Content-Disposition']
+        match = re.search('filename=(.+)', line)
+        if match:
+            name = match.group(1).strip()
+            if name.startswith('"') and name.endswith('"'):
+                name = name[1:-1]
+            return name
+
+        return 'downloadable'
+
+    def get_attachment(self, url, response=None):
+        """
+        Retrieves a document attached to a room
+        """
+        logging.debug(u"- fetching {}".format(url))
+
+        headers = {}
+        if self.personal_token:
+            headers['Authorization'] = 'Bearer '+self.personal_token
+        elif self.token:
+            headers['Authorization'] = 'Bearer '+self.token
+
+        if not response:
+            response = requests.get(url=url, headers=headers)
+
+        logging.debug(u"- status: {}".format(response.status_code))
+        if response.status_code != 200:
+            raise Exception(u"Unable to download attachment")
+
+        logging.debug(u"- headers: {}".format(response.headers))
+        logging.debug(u"- encoding: {}".format(response.encoding))
+        logging.debug(u"- length: {}".format(len(response.content)))
+        return response.content

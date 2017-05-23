@@ -476,14 +476,14 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertTrue(space.api.messages.create.called)
 
         space.api = FakeApi()
-        space.post_message(ex_markdown='hello world')
+        space.post_message(content='hello world')
         self.assertTrue(space.api.messages.create.called)
 
         try:
             space.api = FakeApi()
             space.post_message(text='hello world',
-                               ex_markdown='hello world',
-                               ex_file_path='./test_messages/sample.png')
+                               content='hello world',
+                               file='./test_messages/sample.png')
             self.assertTrue(space.api.messages.create.called)
         except IOError:
             pass
@@ -494,9 +494,10 @@ class SparkSpaceTests(unittest.TestCase):
         space = SparkSpace(bot=my_bot)
 
         space.api = FakeApi(rooms=[FakeRoom()])
+        space.personal_api = FakeApi(rooms=[FakeRoom()])
         space.bond(title='*title')
         space.register('*hook')
-        self.assertTrue(space.api.webhooks.create.called)
+        self.assertTrue(space.personal_api.webhooks.create.called)
 
     def test_on_run(self):
 
@@ -544,17 +545,18 @@ class SparkSpaceTests(unittest.TestCase):
         logging.info("*** webhook")
         space = SparkSpace(bot=my_bot)
 
-        space.api = FakeApi()
+        space.personal_api = FakeApi()
         my_bot.ears = Queue()
         self.assertEqual(space.webhook(message_id='*123'), 'OK')
-        self.assertTrue(space.api.messages.get.called)
-        self.assertEqual(json.loads(my_bot.ears.get()),
-                         {u'text': u'*message',
-                          u'from_id': None,
-                          u'from_label': None,
-                          u'space_id': None,
-                          u'type': u'message',
-                          u'mentioned_ids': []})
+        self.assertTrue(space.personal_api.messages.get.called)
+        self.assertEqual(yaml.safe_load(my_bot.ears.get()),
+                         {'text': '*message',
+                          'content': '*message',
+                          'from_id': None,
+                          'from_label': None,
+                          'space_id': None,
+                          'type': 'message',
+                          'mentioned_ids': []})
         with self.assertRaises(Exception):
             print(my_bot.ears.get_nowait())
 
@@ -562,9 +564,9 @@ class SparkSpaceTests(unittest.TestCase):
 
         logging.info("*** pull")
         my_bot.context = Context()
+        my_bot.ears = Queue()
         space = SparkSpace(bot=my_bot)
         space.api = FakeApi(messages=[FakeMessage()])
-        my_bot.ears = Queue()
         space.bond(title='*title')
 
         self.assertEqual(space._last_message_id, 0)
@@ -581,14 +583,14 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertEqual(my_bot.context.get('puller.counter'), 3)
         self.assertEqual(space._last_message_id, '*id')
 
-#        self.assertEqual(json.loads(my_bot.ears.get()),
         self.assertEqual(yaml.safe_load(my_bot.ears.get()),
-                         {u'text': u'*message',
-                          u'from_id': None,
-                          u'from_label': None,
-                          u'space_id': None,
-                          u'type': u'message',
-                          u'mentioned_ids': []})
+                         {'text': '*message',
+                          'content': '*message',
+                          'from_id': None,
+                          'from_label': None,
+                          'space_id': None,
+                          'type': 'message',
+                          'mentioned_ids': []})
         with self.assertRaises(Exception):
             print(my_bot.ears.get_nowait())
 
@@ -600,11 +602,13 @@ class SparkSpaceTests(unittest.TestCase):
         space.on_message(my_message, my_queue)
         message = my_message.copy()
         message.update({"type": "message"})
+        message.update({"content": message['text']})
         message.update({"from_id": 'Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY'})
         message.update({"from_label": 'matt@example.com'})
         message.update({"mentioned_ids": ['Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM',
                        'Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg']})
         message.update({"space_id": 'Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0'})
+        self.maxDiff = None
         self.assertEqual(yaml.safe_load(my_queue.get()), message)
 
         attachment = my_message.copy()
@@ -618,6 +622,87 @@ class SparkSpaceTests(unittest.TestCase):
         with self.assertRaises(Exception):
             print(my_queue.get_nowait())
 
+    def test_download_attachment(self):
+
+        logging.info("*** download_attachment")
+
+        class MySpace(SparkSpace):
+            def name_attachment(self, url):
+                return 'some_file.pdf'
+
+            def get_attachment(self, url):
+                return 'hello world'
+
+        space = MySpace(bot=my_bot)
+        outcome = space.download_attachment(url='/dummy')
+
+        with open(outcome, "r") as handle:
+            self.assertEqual(handle.read(), space.get_attachment('/dummy'))
+
+        try:
+            os.remove(outcome)
+        except:
+            pass
+
+    def test_name_attachment(self):
+
+        logging.info("*** name_attachment")
+
+        class MyResponse(object):
+            def __init__(self, status_code=200, headers={}):
+                self.status_code = status_code
+                self.headers = headers
+
+        space = SparkSpace(bot=my_bot)
+
+        space.personal_token = '*void'
+        space.token = None
+        response = MyResponse(headers={'Content-Disposition': 'who cares'})
+        self.assertEqual(space.name_attachment(url='/dummy', response=response),
+                         'downloadable')
+
+        space.personal_token = None
+        space.token = '*void'
+        response = MyResponse(headers={'Content-Disposition': 'filename="some_file.pdf"'})
+        self.assertEqual(space.name_attachment(url='/dummy', response=response),
+                         'some_file.pdf')
+
+        space.personal_token = None
+        space.token = None
+        response = MyResponse(status_code=400, headers={'Content-Disposition': 'filename="some_file.pdf"'})
+        with self.assertRaises(Exception):
+            name = space.name_attachment(url='/dummy', response=response)
+
+    def test_get_attachment(self):
+
+        logging.info("*** get_attachment")
+
+        class MyResponse(object):
+            def __init__(self, status_code=200, headers={}):
+                self.status_code = status_code
+                self.headers = headers
+                self.encoding = 'encoding'
+                self.content = 'content'
+
+        space = SparkSpace(bot=my_bot)
+
+        space.personal_token = '*void'
+        space.token = None
+        response = MyResponse(headers={})
+        self.assertEqual(space.get_attachment(url='/dummy', response=response),
+                         'content')
+
+        space.personal_token = None
+        space.token = '*void'
+        response = MyResponse(headers={})
+        self.assertEqual(space.get_attachment(url='/dummy', response=response),
+                         'content')
+
+        space.personal_token = None
+        space.token = None
+        response = MyResponse(status_code=400, headers={})
+        with self.assertRaises(Exception):
+            name = space.get_attachment(url='/dummy', response=response)
 
 
 if __name__ == '__main__':
