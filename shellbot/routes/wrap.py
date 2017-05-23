@@ -24,12 +24,15 @@ class Wrap(Route):
     """
     Calls a function on web request
 
-    >>>def my_callable(**kwargs):
-    ...
-    >>>route = Wrap(callable=my_callable, route='/hook')
-
     When the route is requested over the web, the target function is
     called.
+
+    Example::
+
+        def my_callable(**kwargs):
+            ...
+
+        route = Wrap(callable=my_callable, route='/hook')
 
     Wrapping is triggered on GET, POST, PUT and DELETE verbs.
     """

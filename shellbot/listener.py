@@ -137,7 +137,7 @@ class Listener(object):
         * ``leave`` -- This is when a person leaves a space. The function
           ``on_leave()`` is called with details on the leaving person.
 
-        * on any other case, the function ``on_event()``is
+        * on any other case, the function ``on_event()`` is
           called.
         """
         counter = self.bot.context.increment('listener.counter')

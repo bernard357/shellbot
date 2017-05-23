@@ -61,7 +61,7 @@ is not clear. If you are proposing a feature:
   are welcome :)
 
 How to report a bug?
--------------------
+--------------------
 
 Have you identified some bug? This is great! There is a single place for
 all bugs related to this project:
@@ -124,13 +124,13 @@ For example, here are the typical steps required for the addition of a new tutor
    contributor. Thank you!
 
 How to fix a bug?
-----------------
+-----------------
 
 Look through `the GitHub issues`_ for bugs.
 Anything tagged with "bug" is open to whoever wants to implement it.
 
 How to implement new features?
------------------------------
+------------------------------
 
 Look through `the GitHub issues`_ for features.
 Anything tagged with "enhancement" is open to whoever wants to implement it.
