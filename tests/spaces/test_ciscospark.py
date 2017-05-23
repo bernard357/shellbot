@@ -631,7 +631,7 @@ class SparkSpaceTests(unittest.TestCase):
                 return 'some_file.pdf'
 
             def get_attachment(self, url):
-                return 'hello world'
+                return b'hello world'
 
         space = MySpace(bot=my_bot)
         outcome = space.download_attachment(url='/dummy')
