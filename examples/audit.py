@@ -64,13 +64,14 @@ from shellbot.spaces import SparkSpace
 from shellbot.updaters import SpaceUpdater
 Context.set_logger()
 
-# create an audit command
+# create a bot
 #
-audit = Audit()
+bot = ShellBot()
 
-# create a bot and load command
+# add an audit command
 #
-bot = ShellBot(command=audit)
+audit = Audit(bot=bot)
+bot.load_command(audit)
 
 # load configuration
 #
