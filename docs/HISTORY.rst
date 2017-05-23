@@ -3,6 +3,19 @@
 History
 -------
 
+17.5.22
+~~~~~~~
+* Full mirroring of chat and files in a secondary Cisco Spark room
+* Add updater to Elasticsearch for chat indexing
+* Add updater to file system (useful for archiving chat interactions)
+* Download attachments from a Cisco Spark room
+* Add callbacks at bot level
+* Abstract inbound events from chat space
+* Minor improvements on code and tests
+* Travis-CI passed on python 2.7 and 3.5
+* 94% test coverage
+* 2118 python statements
+
 17.5.16
 ~~~~~~~
 * Add permanent thread-safe storage to bot (Sqlite as first store)
