@@ -18,11 +18,13 @@ import logging
 from .base import Updater
 from .elastic import ElasticsearchUpdater
 from .file import FileUpdater
+from .queue import QueueUpdater
 from .space import SpaceUpdater
 
 __all__ = [
     'ElasticsearchUpdater',
     'FileUpdater',
+    'QueueUpdater',
     'SpaceUpdater',
     'Updater',
 ]
