@@ -636,7 +636,7 @@ class SparkSpaceTests(unittest.TestCase):
         space = MySpace(bot=my_bot)
         outcome = space.download_attachment(url='/dummy')
 
-        with open(outcome, "r") as handle:
+        with open(outcome, "r+b") as handle:
             self.assertEqual(handle.read(), space.get_attachment('/dummy'))
 
         try:
