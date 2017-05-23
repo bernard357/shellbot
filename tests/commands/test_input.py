@@ -42,7 +42,7 @@ class InputTests(unittest.TestCase):
 
         c.execute()
         self.assertEqual(
-            my_bot.mouth.get(),
+            my_bot.mouth.get().text,
             u'There is nothing to display')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
@@ -51,7 +51,7 @@ class InputTests(unittest.TestCase):
         my_bot.update('input', 'description', 'part does not fit')
         c.execute()
         self.assertEqual(
-            my_bot.mouth.get(),
+            my_bot.mouth.get().text,
             u'Input:\nPO# - 1234A\ndescription - part does not fit')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()

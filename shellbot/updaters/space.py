@@ -17,6 +17,7 @@
 
 import logging
 from multiprocessing import Queue
+import os
 
 from ..context import Context
 from ..speaker import Speaker
@@ -71,7 +72,18 @@ class SpaceUpdater(Updater):
         With this class a string representation of the received event
         is forwarded to the speaker queue of a chat space.
         """
-        self.mouth.put(self.format(event))
+        logging.debug(u"- updating with a {} event".format(event.type))
+        logging.debug(event.attributes)
+
+        if event.get('url'):
+            file = self.space.download_attachment(event.url)
+            message = u"{}: {}".format(event.from_label, os.path.basename(file))
+
+            self.mouth.put(WithAttachment(text=message,
+                                          file=file))
+
+        else:
+            self.mouth.put(self.format(event))
 
     def format(self, event):
         """
@@ -89,7 +101,13 @@ class SpaceUpdater(Updater):
 
         """
         if event.type == 'message':
-            return u"{}: {}".format(event.from_label, event.text)
+
+            if event.content == event.text:
+                return u"{}: {}".format(event.from_label, event.text)
+
+            return WithAttachment(text=u"{}: {}".format(event.from_label, event.text),
+                                  content=u"{}: {}".format(event.from_label, event.content),
+                                  file=None)
 
         if event.type == 'attachment':
             return u"{} has been shared".format(event.url)
@@ -103,5 +121,9 @@ class SpaceUpdater(Updater):
         return u"an unknown event has been received"
 
 
-
+class WithAttachment(object):
+    def __init__(self, text, content=None, file=None):
+        self.text = text
+        self.content = content if content else text
+        self.file = file
 

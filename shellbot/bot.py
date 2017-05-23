@@ -137,7 +137,7 @@ class ShellBot(object):
         if command:
             self.load_command(command)
 
-        self.registered = { 'bond': [], 'dispose': [] }
+        self.registered = { 'bond': [], 'dispose': [], 'run': [] }
 
     def configure_from_path(self, path="settings.yaml"):
         """
@@ -299,7 +299,7 @@ class ShellBot(object):
         """
         Calls functions that have registered to some event
 
-        :param event: either 'bond' or 'dispose'
+        :param event: either 'bond' or 'run' or 'dispose'
         :type event: str
 
         Example::
@@ -454,6 +454,8 @@ class ShellBot(object):
 
         self.space.on_run()
 
+        self.dispatch('run')
+
         if server is None:
             self.space.work()
 
@@ -541,37 +543,32 @@ class ShellBot(object):
         """
         pass
 
-    def say(self, message, markdown=None, file=None):
+    def say(self, text, content=None, file=None):
         """
         Sends a message to the chat space
 
-        :param message: Plain text message
-        :type message: str or None
+        :param text: Plain text message
+        :type text: str or None
 
-        :param markdown: A message using Markdown
-        :type markdown: str or None
+        :param content: Rich content such as Markdown or HTML
+        :type content: str or None
 
         :param file: path or URL to a file to attach
         :type file: str or None
 
         """
-        if message in (None, ''):
+        if text in (None, ''):
             return
 
-        logging.info(u"Bot says: {}".format(message))
+        logging.info(u"Bot says: {}".format(text))
 
         if self.mouth:
             logging.debug(u"- pushing message to mouth queue")
-            if markdown or file:
-                self.mouth.put(ShellBotMessage(message, markdown, file))
-            else:
-                self.mouth.put(message)
+            self.mouth.put(ShellBotMessage(text, content, file))
+
         else:
             logging.debug(u"- calling speaker directly")
-            if markdown or file:
-                self.speaker.process(ShellBotMessage(message, markdown, file))
-            else:
-                self.speaker.process(message)
+            self.speaker.process(ShellBotMessage(text, content, file))
 
     def remember(self, key, value):
         """
@@ -677,7 +674,7 @@ class ShellBot(object):
 
 
 class ShellBotMessage(object):
-    def __init__(self, message, markdown=None, file=None):
-        self.message = message
-        self.markdown = markdown
+    def __init__(self, text, content=None, file=None):
+        self.text = text
+        self.content = content
         self.file = file

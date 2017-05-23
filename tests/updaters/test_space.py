@@ -38,6 +38,7 @@ class UpdaterTests(unittest.TestCase):
         space = mock.Mock()
         speaker = mock.Mock()
         u = SpaceUpdater(space=space, speaker=speaker)
+
         item = Message({
             'from_label': 'alice@acme.com',
             'text': 'my message',
@@ -45,6 +46,22 @@ class UpdaterTests(unittest.TestCase):
 
         u.put(item)
         self.assertEqual(u.mouth.get(), 'alice@acme.com: my message')
+        with self.assertRaises(Exception):
+            u.mouth.get_nowait()
+
+        item = Attachment({
+            'from_label': 'alice@acme.com',
+            'text': 'my message',
+            'url': 'http://some.server/some/file',
+        })
+
+        class FakeSpace(object):
+            def download_attachment(self, url):
+                return 'some_file.pdf'
+
+        u.space = FakeSpace()
+        u.put(item)
+        self.assertEqual(u.mouth.get().text, u'alice@acme.com: some_file.pdf')
         with self.assertRaises(Exception):
             u.mouth.get_nowait()
 

@@ -7,6 +7,7 @@ import mock
 from multiprocessing import Process, Queue
 import os
 import sys
+import time
 
 sys.path.insert(0, os.path.abspath('../..'))
 
@@ -38,61 +39,62 @@ class AuditTests(unittest.TestCase):
         logging.info('***** execute')
 
         c = Audit(my_bot)
+        c.off_duration = None
 
         my_bot.context.set('audit.switch', None)
         c.execute(u'')
-        self.assertEqual(my_bot.mouth.get(), c.disabled_message)
+        self.assertEqual(my_bot.mouth.get().text, c.disabled_message)
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c._armed = True
         c.execute(u'')
-        self.assertEqual(my_bot.mouth.get(), c.off_message)
+        self.assertEqual(my_bot.mouth.get().text, c.off_message)
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(u'on')
-        self.assertEqual(my_bot.mouth.get(), c.on_message)
+        self.assertEqual(my_bot.mouth.get().text, c.on_message)
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(u'')
-        self.assertEqual(my_bot.mouth.get(), c.on_message)
+        self.assertEqual(my_bot.mouth.get().text, c.on_message)
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(u'on')
-        self.assertEqual(my_bot.mouth.get(), c.already_on_message)
+        self.assertEqual(my_bot.mouth.get().text, c.already_on_message)
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(u'')
-        self.assertEqual(my_bot.mouth.get(), c.on_message)
+        self.assertEqual(my_bot.mouth.get().text, c.on_message)
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(u'off')
-        self.assertEqual(my_bot.mouth.get(), c.off_message)
+        self.assertEqual(my_bot.mouth.get().text, c.off_message)
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(u'')
-        self.assertEqual(my_bot.mouth.get(), c.off_message)
+        self.assertEqual(my_bot.mouth.get().text, c.off_message)
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(u'off')
-        self.assertEqual(my_bot.mouth.get(), c.already_off_message)
+        self.assertEqual(my_bot.mouth.get().text, c.already_off_message)
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(u'')
-        self.assertEqual(my_bot.mouth.get(), c.off_message)
+        self.assertEqual(my_bot.mouth.get().text, c.off_message)
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(u'*weird')
-        self.assertEqual(my_bot.mouth.get(), 'usage: audit [on|off]')
+        self.assertEqual(my_bot.mouth.get().text, 'usage: audit [on|off]')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
@@ -129,6 +131,39 @@ class AuditTests(unittest.TestCase):
         c.arm(updater=Queue())
         self.assertTrue(c.armed)
 
+    def test_on_init(self):
+
+        logging.info('***** on_init')
+
+        c = Audit(my_bot)
+        c.bot = mock.Mock()
+        c.on_init()
+        self.assertTrue(c.bot.register.called)
+
+    def test_on_run(self):
+
+        logging.info('***** on_run')
+
+        c = Audit(my_bot)
+        c.bot = mock.Mock()
+        c.on_run()
+        self.assertTrue(c.bot.say.called)
+
+    def test_on_off(self):
+
+        logging.info('***** on_off')
+
+        class MyAudit(Audit):
+            def watchdog(self):
+                self.expected = True
+
+        c = MyAudit(my_bot)
+        c.off_duration = 0.001
+        c.bot = mock.Mock()
+        c.on_off()
+        time.sleep(0.003)
+        self.assertTrue(c.expected)
+
     def test_filter(self):
 
         logging.info('***** filter')
@@ -139,14 +174,19 @@ class AuditTests(unittest.TestCase):
         c.updater = None
 
         item = Message({'text': 'hello world', 'person_label': 'a@me.com'})
+        print(str(item))
         self.assertEqual(c.filter(item), item)
 
-        c.updater = Queue()
+        class MyUpdater(object):
+            queue = Queue()
+            def put(self, event):
+                self.queue.put(str(event))
+
+        c.updater = MyUpdater()
         self.assertEqual(c.filter(item), item)
-        self.assertEqual(c.updater.get(), str(item))
+        self.assertEqual(Message(c.updater.queue.get()), item)
         with self.assertRaises(Exception):
             c.updater.get_nowait()
-
 
 
 if __name__ == '__main__':

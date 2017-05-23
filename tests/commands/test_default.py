@@ -35,7 +35,7 @@ class DefaultTests(unittest.TestCase):
         c = Default(my_bot)
 
         c.execute('*unknown*')
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u"Sorry, I do not know how to handle '*unknown*'")
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()

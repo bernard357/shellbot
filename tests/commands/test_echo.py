@@ -40,7 +40,7 @@ class EchoTests(unittest.TestCase):
 
         message = u"hello world"
         c.execute(message)
-        self.assertEqual(my_bot.mouth.get(), message)
+        self.assertEqual(my_bot.mouth.get().text, message)
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 

@@ -61,15 +61,15 @@ class WorkerTests(unittest.TestCase):
 
         self.assertEqual(my_bot.context.get('worker.counter'), 6)
 
-        self.assertEqual(my_bot.mouth.get(), 'hello world')
+        self.assertEqual(my_bot.mouth.get().text, 'hello world')
 
         self.assertEqual(
-            my_bot.mouth.get(),
+            my_bot.mouth.get().text,
             u'help - Show commands and usage\nusage: help <command>')
 
-        self.assertEqual(my_bot.mouth.get(), u'Shelly version *unknown*')
+        self.assertEqual(my_bot.mouth.get().text, u'Shelly version *unknown*')
 
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          "Sorry, I do not know how to handle 'unknownCommand'")
 
         with self.assertRaises(Exception):

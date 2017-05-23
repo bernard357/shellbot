@@ -57,28 +57,28 @@ class TodosTests(unittest.TestCase):
 
         c.execute()
 
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'#1 has been archived')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(arguments='#2')
 
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'#2 has been archived')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(arguments='#2222')
 
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'usage: done [#<n>]')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(arguments='nonsense')
 
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'usage: done [#<n>]')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
@@ -95,28 +95,28 @@ class TodosTests(unittest.TestCase):
 
         c.execute()
 
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'#1 has been deleted')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(arguments='#2')
 
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'#2 has been deleted')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(arguments='#2222')
 
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'usage: drop [#<n>]')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(arguments='nonsense')
 
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'usage: drop [#<n>]')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
@@ -124,11 +124,11 @@ class TodosTests(unittest.TestCase):
     def test_history(self):
 
         Done(bot=my_bot).execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'#1 has been archived')
 
         Done(bot=my_bot).execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'#1 has been archived')
 
         c = History(bot=my_bot)
@@ -140,7 +140,7 @@ class TodosTests(unittest.TestCase):
         self.assertFalse(c.is_hidden)
 
         c.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'Items that have been archived:\n'
                          + u'- write down the driving question\n'
                          + u'- gather facts and related information')
@@ -148,7 +148,7 @@ class TodosTests(unittest.TestCase):
             my_bot.mouth.get_nowait()
 
         c.execute(arguments='whatever')
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'Items that have been archived:\n'
                          + u'- write down the driving question\n'
                          + u'- gather facts and related information')
@@ -167,14 +167,14 @@ class TodosTests(unittest.TestCase):
 
         c.execute()
 
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'Coming next: write down the driving question')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(arguments='whatever')
 
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'Coming next: write down the driving question')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
@@ -193,28 +193,28 @@ class TodosTests(unittest.TestCase):
 
         c.execute()  # no argument
 
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'usage: todo [#n] <something to do>')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(arguments='#2 something to do')  # target does not exist
 
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'usage: todo [#n] <something to do>')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(arguments='something to do')  # item creation
 
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'#1 something to do')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(arguments='#1 something different to do')  # item update
 
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'#1 something different to do')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
@@ -222,15 +222,15 @@ class TodosTests(unittest.TestCase):
     def test_todos(self):
 
         Done(bot=my_bot).execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'#1 has been archived')
 
         Done(bot=my_bot).execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'#1 has been archived')
 
         Done(bot=my_bot).execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'#1 has been archived')
 
         c = Todos(bot=my_bot)
@@ -242,7 +242,7 @@ class TodosTests(unittest.TestCase):
         self.assertFalse(c.is_hidden)
 
         c.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'On the todo list:\n'
                          + u'- #1 formulate scenarios\n'
                          + u'- #2 select the most appropriate scenario')
@@ -250,7 +250,7 @@ class TodosTests(unittest.TestCase):
             my_bot.mouth.get_nowait()
 
         c.execute(arguments='whatever')
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'On the todo list:\n'
                          + u'- #1 formulate scenarios\n'
                          + u'- #2 select the most appropriate scenario')
@@ -263,73 +263,73 @@ class TodosTests(unittest.TestCase):
         d = Done(bot=my_bot)
 
         n.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'Coming next: write down the driving question')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         d.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'#1 has been archived')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'Coming next: gather facts and related information')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         d.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'#1 has been archived')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                         u'Coming next: identify information gaps and document assumptions')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         d.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'#1 has been archived')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'Coming next: formulate scenarios')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         d.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'#1 has been archived')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'Coming next: select the most appropriate scenario')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         d.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'#1 has been archived')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'Nothing to do yet.')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         d.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'Nothing to do yet.')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()

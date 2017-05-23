@@ -183,7 +183,7 @@ class Input(Machine):
         """
         Asks the question in the chat
         """
-        self.bot.say(message=self.question)
+        self.bot.say(self.question)
         self.listen()
         self.start_time = time.time()
 

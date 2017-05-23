@@ -42,7 +42,7 @@ class CloseTests(unittest.TestCase):
         c = Close(my_bot)
 
         c.execute()
-        self.assertEqual(my_bot.mouth.get(), u'Close this room')
+        self.assertEqual(my_bot.mouth.get().text, u'Close this room')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 

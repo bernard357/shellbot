@@ -461,12 +461,20 @@ class Space(object):
 
     def post_message(self,
                      text=None,
+                     content=None,
+                     file=None,
                      **kwargs):
         """
         Posts a message
 
-        :param text: content of the message is plain text
+        :param text: message in plain text
         :type text: str
+
+        :param content: rich format, such as MArkdown or HTML
+        :type content: str
+
+        :param file: URL or local path for an attachment
+        :type file: str
 
         Example message out of plain text::
 

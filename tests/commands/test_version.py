@@ -43,7 +43,7 @@ class VersionTests(unittest.TestCase):
         c = Version(my_bot)
 
         c.execute()
-        self.assertEqual(my_bot.mouth.get(), 'testy version 17.4.1')
+        self.assertEqual(my_bot.mouth.get().text, 'testy version 17.4.1')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 

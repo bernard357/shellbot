@@ -162,38 +162,53 @@ class SpeakerTests(unittest.TestCase):
             speaker.process('hello world')
             mocked.assert_called_with('hello world')
 
-            class WithMarkdown(object):
-                message = ''
-                markdown = 'me **too**'
+            class WithContent(object):
+                text = ''
+                content = 'me **too**'
                 file = None
 
-            item = WithMarkdown()
+            item = WithContent()
             speaker.process(item)
             mocked.assert_called_with('',
-                                      ex_markdown='me **too**',
-                                      ex_file_path=None)
+                                      content='me **too**',
+                                      file=None)
 
             class WithFile(object):
-                message = '*with*attachment'
-                markdown = None
+                text = '*with*attachment'
+                content = None
                 file = 'http://a.server/with/file'
 
             item = WithFile()
             speaker.process(item)
             mocked.assert_called_with('*with*attachment',
-                                      ex_markdown=None,
-                                      ex_file_path='http://a.server/with/file')
+                                      content=None,
+                                      file='http://a.server/with/file')
 
             class WithAll(object):
-                message = 'hello world'
-                markdown = 'hello **world**'
+                text = 'hello world'
+                content = 'hello **world**'
                 file = 'http://a.server/with/file'
 
             item = WithAll()
             speaker.process(item)
             mocked.assert_called_with('hello world',
-                                      ex_markdown='hello **world**',
-                                      ex_file_path='http://a.server/with/file')
+                                      content='hello **world**',
+                                      file='http://a.server/with/file')
+
+            class WithAllAndInit(object):
+                def __init__(self, text, content, file):
+                    self.text = text
+                    self.content = content
+                    self.file = file
+
+            item = WithAllAndInit(text = 'hello world',
+                                  content = 'hello **world**',
+                                  file = 'http://a.server/with/file')
+            speaker.process(item)
+            mocked.assert_called_with('hello world',
+                                      content='hello **world**',
+                                      file='http://a.server/with/file')
+
 
 if __name__ == '__main__':
 

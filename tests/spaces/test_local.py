@@ -178,7 +178,9 @@ class LocalSpaceTests(unittest.TestCase):
     def test_post_message(self):
 
         space = LocalSpace(bot=my_bot)
-        space.post_message(text="What's up, Doc?")
+        space.post_message(text="What's up, Doc?",
+                           content="*unsupported",
+                           file="*unsupported")
 
     def test_pull(self):
 

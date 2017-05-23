@@ -43,7 +43,7 @@ class EmptyTests(unittest.TestCase):
 
         c.execute()
         self.assertEqual(
-            my_bot.mouth.get(),
+            my_bot.mouth.get().text,
             u'Available commands:\nhelp - Show commands and usage')
         with self.assertRaises(Exception):
             print(my_bot.mouth.get_nowait())
@@ -51,7 +51,7 @@ class EmptyTests(unittest.TestCase):
         c = Empty(my_bot)
         my_bot.shell._commands = {}
         c.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'No help command has been found.')
         with self.assertRaises(Exception):
             print(my_bot.mouth.get_nowait())

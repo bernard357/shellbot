@@ -11,6 +11,7 @@ import os
 import sys
 from threading import Timer
 import time
+import yaml
 
 sys.path.insert(0, os.path.abspath('..'))
 
@@ -344,7 +345,6 @@ class ListenerTests(unittest.TestCase):
               "personEmail" : "matt@example.com",
               "created" : "2015-10-18T14:26:16+00:00",
               "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
-              "type": "message",
               "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
             },
 
@@ -359,7 +359,6 @@ class ListenerTests(unittest.TestCase):
               "personEmail" : "matt@example.com",
               "created" : "2015-10-18T14:26:16+00:00",
               "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
-              "type": "message",
               "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
               "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
             },
@@ -375,7 +374,6 @@ class ListenerTests(unittest.TestCase):
               "personEmail" : "matt@example.com",
               "created" : "2015-10-18T14:26:16+00:00",
               "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
-              "type": "message",
               "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
               "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
             },
@@ -391,7 +389,6 @@ class ListenerTests(unittest.TestCase):
               "personEmail" : "matt@example.com",
               "created" : "2015-10-18T14:26:16+00:00",
               "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
-              "type": "message",
               "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
               "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
             },
@@ -407,7 +404,6 @@ class ListenerTests(unittest.TestCase):
               "personEmail" : "matt@example.com",
               "created" : "2015-10-18T14:26:16+00:00",
               "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
-              "type": "message",
               "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
               "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
             },
@@ -425,7 +421,6 @@ class ListenerTests(unittest.TestCase):
               "personEmail" : "matt@example.com",
               "created" : "2015-10-18T14:26:16+00:00",
               "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
-              "type": "message",
               "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
               "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM" ],
             },
@@ -452,23 +447,25 @@ class ListenerTests(unittest.TestCase):
             my_bot.ears.get_nowait()
         with self.assertRaises(Exception):
             my_bot.inbox.get_nowait()
-        self.assertEqual(my_bot.mouth.get(), 'Shelly version *unknown*')
+        self.assertEqual(my_bot.mouth.get().text, 'Shelly version *unknown*')
         self.assertEqual(
-            my_bot.mouth.get(),
+            my_bot.mouth.get().text,
             u'Available commands:\n'
             + u'echo - Echo input string\nhelp - Show commands and usage')
         self.assertEqual(
-            my_bot.mouth.get(),
+            my_bot.mouth.get().text,
             u'Available commands:\n'
             + u'echo - Echo input string\nhelp - Show commands and usage')
         self.assertEqual(
-            my_bot.mouth.get(),
+            my_bot.mouth.get().text,
             u'help - Show commands and usage\nusage: help <command>')
         with self.assertRaises(Exception):
             print(my_bot.mouth.get_nowait())
 
+        self.maxDiff = None
         for item in items:
-            self.assertEqual(json.loads(tee.get()), item)
+            item.update({'type': 'message'})
+            self.assertEqual(yaml.safe_load(tee.get()), item)
         with self.assertRaises(Exception):
             print(tee.get_nowait())
 

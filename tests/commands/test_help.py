@@ -35,7 +35,7 @@ class HelpTests(unittest.TestCase):
         self.assertFalse(c.is_hidden)
 
         c.execute()
-        self.assertEqual(my_bot.mouth.get(), u'No command has been found.')
+        self.assertEqual(my_bot.mouth.get().text, u'No command has been found.')
         with self.assertRaises(Exception):
             print(my_bot.mouth.get_nowait())
 
@@ -50,14 +50,14 @@ class HelpTests(unittest.TestCase):
 
         c.execute()
         self.assertEqual(
-            my_bot.mouth.get(),
+            my_bot.mouth.get().text,
             u'Available commands:\nhelp - Show commands and usage')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute("help")
         self.assertEqual(
-            my_bot.mouth.get(),
+            my_bot.mouth.get().text,
             u'help - Show commands and usage\nusage: help <command>')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
@@ -70,19 +70,19 @@ class HelpTests(unittest.TestCase):
         c = Help(my_bot)
 
         c.execute()
-        self.assertEqual(my_bot.mouth.get(), u'No command has been found.')
+        self.assertEqual(my_bot.mouth.get().text, u'No command has been found.')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         c.execute(u"*unknown*command*")
-        self.assertEqual(my_bot.mouth.get(), u'No command has been found.')
+        self.assertEqual(my_bot.mouth.get().text, u'No command has been found.')
         with self.assertRaises(Exception):
             print(my_bot.mouth.get_nowait())
 
         my_bot.load_command('shellbot.commands.help')
 
         c.execute("*unknown*command*")
-        self.assertEqual(my_bot.mouth.get(), u'This command is unknown.')
+        self.assertEqual(my_bot.mouth.get().text, u'This command is unknown.')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 

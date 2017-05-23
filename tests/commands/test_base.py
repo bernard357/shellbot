@@ -49,7 +49,7 @@ class BaseTests(unittest.TestCase):
         c.keyword = u'bâtman'
         c.information_message = u"I'm Bâtman!"
         c.execute()
-        self.assertEqual(my_bot.mouth.get(), c.information_message)
+        self.assertEqual(my_bot.mouth.get().text, c.information_message)
         with self.assertRaises(Exception):
             print(my_bot.mouth.get_nowait())
 
@@ -66,9 +66,9 @@ class BaseTests(unittest.TestCase):
 
         c = Batcave(my_bot)
         c.execute('')
-        self.assertEqual(my_bot.mouth.get(), u"The Batcave is silent...")
+        self.assertEqual(my_bot.mouth.get().text, u"The Batcave is silent...")
         c.execute(u'hello?')
-        self.assertEqual(my_bot.mouth.get(), u"The Batcave echoes, 'hello?'")
+        self.assertEqual(my_bot.mouth.get().text, u"The Batcave echoes, 'hello?'")
         with self.assertRaises(Exception):
             print(my_bot.mouth.get_nowait())
 
@@ -80,12 +80,12 @@ class BaseTests(unittest.TestCase):
 
             def execute(self, arguments=None):
                 my_bot.say(self.information_message,
-                             file=c.information_file)
+                           file=c.information_file)
 
         c = Batsignal(my_bot)
         c.execute()
         item = my_bot.mouth.get()
-        self.assertEqual(item.message, c.information_message)
+        self.assertEqual(item.text, c.information_message)
         self.assertEqual(item.file, c.information_file)
 
 

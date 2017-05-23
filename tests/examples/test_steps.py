@@ -108,7 +108,7 @@ class StepsTests(unittest.TestCase):
 
         s.execute()
 
-        self.assertEqual(my_bot.mouth.get(), u'Current state is undefined')
+        self.assertEqual(my_bot.mouth.get().text, u'Current state is undefined')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
@@ -125,7 +125,7 @@ class StepsTests(unittest.TestCase):
 
         n.execute()
 
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'New state: Level 1 - '
                          + u'Initial capture of information')
         with self.assertRaises(Exception):
@@ -139,68 +139,68 @@ class StepsTests(unittest.TestCase):
         n = Next(bot=my_bot)
 
         s.execute()
-        self.assertEqual(my_bot.mouth.get(), u'Current state is undefined')
+        self.assertEqual(my_bot.mouth.get().text, u'Current state is undefined')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'New state: Level 1 - '
                          + u'Initial capture of information')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         s.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'Current state: Level 1 - '
                          + u'Initial capture of information')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'New state: Level 2 - '
                          + u'Escalation to technical experts')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         s.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'Current state: Level 2 - '
                          + u'Escalation to technical experts')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'New state: Level 3 - '
                          + u'Escalation to decision stakeholders')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         s.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'Current state: Level 3 - '
                          + u'Escalation to decision stakeholders')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'New state: Terminated - '
                          + u'Process is closed, yet conversation can continue')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         s.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'Current state: Terminated - '
                          + u'Process is closed, yet conversation can continue')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(my_bot.mouth.get(),
+        self.assertEqual(my_bot.mouth.get().text,
                          u'Current state: Terminated - '
                          + u'Process is closed, yet conversation can continue')
         with self.assertRaises(Exception):

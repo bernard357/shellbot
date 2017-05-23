@@ -335,11 +335,11 @@ class BotTests(unittest.TestCase):
         self.assertEqual(bot.mouth.get(), message_2)
 
         message_3 = 'hello'
-        markdown_3 = 'world'
-        bot.say(message_3, markdown=markdown_3)
+        content_3 = 'world'
+        bot.say(message_3, content=content_3)
         item = bot.mouth.get()
         self.assertEqual(item.message, message_3)
-        self.assertEqual(item.markdown, message_3+'\n\n'+markdown_3)
+        self.assertEqual(item.content, content_3)
         self.assertEqual(item.file, None)
 
         message_4 = "What'sup Doc?"
@@ -347,17 +347,32 @@ class BotTests(unittest.TestCase):
         bot.say(message_4, file=file_4)
         item = bot.mouth.get()
         self.assertEqual(item.message, message_4)
-        self.assertEqual(item.markdown, None)
+        self.assertEqual(item.content, None)
         self.assertEqual(item.file, file_4)
 
         message_5 = 'hello'
-        markdown_5 = 'world'
+        content_5 = 'world'
         file_5 = 'http://some.server/some/file'
-        bot.say(message_5, markdown=markdown_5, file=file_5)
+        bot.say(message_5, content=content_5, file=file_5)
         item = bot.mouth.get()
         self.assertEqual(item.message, message_5)
-        self.assertEqual(item.markdown, message_5+'\n\n'+markdown_5)
+        self.assertEqual(item.content, content_5)
         self.assertEqual(item.file, file_5)
+
+    def test_bond(self):
+
+        logging.info('*** bond ***')
+
+        bot = ShellBot(fan='f')
+        bot.space = mock.Mock()
+        bot.store = mock.Mock()
+        bot.dispatch = mock.Mock()
+
+        bot.bond(reset=True)
+        self.assertTrue(bot.space.delete_space.called)
+        self.assertTrue(bot.space.bond.called)
+        self.assertTrue(bot.store.bond.called)
+        self.assertTrue(bot.dispatch.called)
 
     def test_add_moderators(self):
 
@@ -664,9 +679,7 @@ class BotTests(unittest.TestCase):
                                return_value=None) as mocked:
 
             bot.say('test')
-            mocked.assert_called_with('test')
-
-            bot.say('test', markdown='test')
+            bot.say('test', content='test')
             bot.say('test', file='test.yaml')
 
         bot.mouth = Queue()
@@ -674,7 +687,7 @@ class BotTests(unittest.TestCase):
         bot.speaker.process = mock.Mock()
 
         bot.say('test')
-        bot.say('test', markdown='test')
+        bot.say('test', content='test')
         bot.say('test', file='test.yaml')
 
         self.assertTrue(bot.mouth.put.called)

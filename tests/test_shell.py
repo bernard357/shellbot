@@ -152,35 +152,35 @@ class ShellTests(unittest.TestCase):
 
         message_1 = 'hello'
         shell.say(message_1)
-        self.assertEqual(shell.bot.mouth.get(), message_1)
+        self.assertEqual(shell.bot.mouth.get().text, message_1)
 
         message_2 = 'world'
         shell.say(message_2)
-        self.assertEqual(shell.bot.mouth.get(), message_2)
+        self.assertEqual(shell.bot.mouth.get().text, message_2)
 
         message_3 = 'hello'
-        markdown_3 = 'world'
-        shell.say(message_3, markdown=markdown_3)
+        content_3 = 'world'
+        shell.say(message_3, content=content_3)
         item = shell.bot.mouth.get()
-        self.assertEqual(item.message, message_3)
-        self.assertEqual(item.markdown, markdown_3)
+        self.assertEqual(item.text, message_3)
+        self.assertEqual(item.content, content_3)
         self.assertEqual(item.file, None)
 
         message_4 = "What'sup Doc?"
         file_4 = 'http://some.server/some/file'
         shell.say(message_4, file=file_4)
         item = shell.bot.mouth.get()
-        self.assertEqual(item.message, message_4)
-        self.assertEqual(item.markdown, None)
+        self.assertEqual(item.text, message_4)
+        self.assertEqual(item.content, None)
         self.assertEqual(item.file, file_4)
 
         message_5 = 'hello'
-        markdown_5 = 'world'
+        content_5 = 'world'
         file_5 = 'http://some.server/some/file'
-        shell.say(message_5, markdown=markdown_5, file=file_5)
+        shell.say(message_5, content=content_5, file=file_5)
         item = shell.bot.mouth.get()
-        self.assertEqual(item.message, message_5)
-        self.assertEqual(item.markdown, markdown_5)
+        self.assertEqual(item.text, message_5)
+        self.assertEqual(item.content, content_5)
         self.assertEqual(item.file, file_5)
 
     def test_vocabulary(self):
@@ -197,7 +197,7 @@ class ShellTests(unittest.TestCase):
         shell.do('*unknown*')
         self.assertEqual(shell.line, '*unknown*')
         self.assertEqual(shell.count, 1)
-        self.assertEqual(shell.bot.mouth.get(),
+        self.assertEqual(shell.bot.mouth.get().text,
                          "Sorry, I do not know how to handle '*unknown*'")
         with self.assertRaises(Exception):
             shell.bot.mouth.get_nowait()
@@ -207,7 +207,7 @@ class ShellTests(unittest.TestCase):
         shell.do('echo hello world')
         self.assertEqual(shell.line, 'echo hello world')
         self.assertEqual(shell.count, 2)
-        self.assertEqual(shell.bot.mouth.get(), 'hello world')
+        self.assertEqual(shell.bot.mouth.get().text, 'hello world')
         with self.assertRaises(Exception):
             shell.bot.mouth.get_nowait()
         with self.assertRaises(Exception):
@@ -216,7 +216,7 @@ class ShellTests(unittest.TestCase):
         shell.do('help help')
         self.assertEqual(shell.line, 'help help')
         self.assertEqual(shell.count, 3)
-        self.assertEqual(shell.bot.mouth.get(),
+        self.assertEqual(shell.bot.mouth.get().text,
                          u'help - Show commands and usage\n'
                          + u'usage: help <command>')
         with self.assertRaises(Exception):
@@ -240,8 +240,8 @@ class ShellTests(unittest.TestCase):
         self.assertEqual(shell.line, 'sleep 456')
         self.assertEqual(shell.count, 6)
         shell.bot.context.set('worker.busy', False)
-        self.assertEqual(shell.bot.mouth.get(), 'Ok, working on it')
-        self.assertEqual(shell.bot.mouth.get(),
+        self.assertEqual(shell.bot.mouth.get().text, 'Ok, working on it')
+        self.assertEqual(shell.bot.mouth.get().text,
                          'Ok, will work on it as soon as possible')
         with self.assertRaises(Exception):
             print(shell.bot.mouth.get_nowait())
@@ -257,7 +257,7 @@ class ShellTests(unittest.TestCase):
         shell.do('version')
         self.assertEqual(shell.line, 'version')
         self.assertEqual(shell.count, 7)
-        self.assertEqual(shell.bot.mouth.get(), u'Shelly version *unknown*')
+        self.assertEqual(shell.bot.mouth.get().text, u'Shelly version *unknown*')
         with self.assertRaises(Exception):
             shell.bot.mouth.get_nowait()
         with self.assertRaises(Exception):
@@ -267,7 +267,7 @@ class ShellTests(unittest.TestCase):
         self.assertEqual(shell.line, '')
         self.assertEqual(shell.count, 8)
         self.assertEqual(
-            shell.bot.mouth.get(),
+            shell.bot.mouth.get().text,
             u'Available commands:\n'
             + u'echo - Echo input string\nhelp - Show commands and usage')
         with self.assertRaises(Exception):
@@ -293,14 +293,14 @@ class ShellTests(unittest.TestCase):
         shell.do('')
         self.assertEqual(shell.line, '')
         self.assertEqual(shell.count, 1)
-        self.assertEqual(shell.bot.mouth.get(), "What'up Doc?")
+        self.assertEqual(shell.bot.mouth.get().text, "What'up Doc?")
         with self.assertRaises(Exception):
             print(shell.bot.mouth.get_nowait())
 
         shell.do(None)
         self.assertEqual(shell.line, '')
         self.assertEqual(shell.count, 2)
-        self.assertEqual(shell.bot.mouth.get(), "What'up Doc?")
+        self.assertEqual(shell.bot.mouth.get().text, "What'up Doc?")
         with self.assertRaises(Exception):
             print(shell.bot.mouth.get_nowait())
 
@@ -321,14 +321,14 @@ class ShellTests(unittest.TestCase):
         shell.do(12345)
         self.assertEqual(shell.line, '12345')
         self.assertEqual(shell.count, 1)
-        self.assertEqual(shell.bot.mouth.get(), '12345, really?')
+        self.assertEqual(shell.bot.mouth.get().text, '12345, really?')
         with self.assertRaises(Exception):
             print(shell.bot.mouth.get_nowait())
 
         shell.do('azerty')
         self.assertEqual(shell.line, 'azerty')
         self.assertEqual(shell.count, 2)
-        self.assertEqual(shell.bot.mouth.get(), 'azerty, really?')
+        self.assertEqual(shell.bot.mouth.get().text, 'azerty, really?')
         with self.assertRaises(Exception):
             print(shell.bot.mouth.get_nowait())
 

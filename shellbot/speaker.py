@@ -121,7 +121,7 @@ class Speaker(object):
         Sends one update to a business messaging space
 
         :param item: the update to be transmitted
-        :type item: str or dict
+        :type item: str or object
 
         """
 
@@ -132,8 +132,8 @@ class Speaker(object):
             if isinstance(item, string_types):
                 self.bot.space.post_message(item)
             else:
-                self.bot.space.post_message(item.message,
-                                            ex_markdown=item.markdown,
-                                            ex_file_path=item.file)
+                self.bot.space.post_message(item.text,
+                                            content=item.content,
+                                            file=item.file)
         else:
             logging.info(item)
