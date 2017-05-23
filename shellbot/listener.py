@@ -205,10 +205,6 @@ class Listener(object):
             logging.debug(u"- sent by me, thrown away")
             return
 
-        if self.bot.context.get('bot.id') not in item.mentioned_ids:
-            logging.info(u"- not for me, thrown away")
-            return
-
         input = item.text
         if len(input) > 0 and input[0] in ['@', '/', '!']:
             input = input[1:]
@@ -216,6 +212,10 @@ class Listener(object):
         bot = self.bot.context.get('bot.name', 'shelly')
         if input.lower().startswith(bot):
             input = input[len(bot):].strip()
+
+        elif self.bot.context.get('bot.id') not in item.mentioned_ids:
+            logging.info(u"- not for me, thrown away")
+            return
 
         self.bot.shell.do(input)
 
