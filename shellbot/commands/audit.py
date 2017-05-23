@@ -17,6 +17,7 @@
 
 import logging
 from multiprocessing import Process, Queue
+from threading import Timer
 
 from .base import Command
 from ..updaters import Updater
@@ -48,13 +49,17 @@ class Audit(Command):
     disabled_message = u'Audit has not been enabled.'
 
     on_message = u'Chat interactions are currently audited.'
-    off_message = u'Chat interactions are private. ' \
-                  u'Auditing has not been activated.'
+    off_message = u'Chat interactions are not audited.'
     already_on_message = u'Chat interactions are already audited.'
     already_off_message = u'Chat interactions are already private.'
 
-    _armed = False
+    off_duration = 60  # after this time off, back to auditing on
+    temporary_off_message = u"Please note that auditing will restart after {}"
+
     updater = None
+    updater_ruler = u"<br >"
+
+    _armed = False  # for tests only
 
     def execute(self, arguments=None):
         """
@@ -96,6 +101,7 @@ class Audit(Command):
         if self.bot.context.get('audit.switch', 'off') == 'on':
             self.bot.context.set('audit.switch', 'off')
             self.bot.say(self.off_message)
+            self.on_off()
         else:
             self.bot.say(self.already_off_message)
 
@@ -124,6 +130,8 @@ class Audit(Command):
     def armed(self):
         """
         Are we ready for auditing or not?
+
+        :rtype: bool
         """
         if self._armed:
             return True
@@ -136,6 +144,43 @@ class Audit(Command):
 
         return True
 
+    def on_init(self):
+        """
+        Registers callback from bot
+        """
+        logging.debug(u"- registering audit to bot 'run'")
+        self.bot.register('run', self.on_run)
+
+    def on_run(self):
+        """
+        Reacts on bot start
+        """
+        self.bot.say('Tuning audit')
+        self.execute('on')
+
+    def on_off(self):
+        """
+        Triggers watchdog when audit is disabled
+        """
+        if self.off_duration and self.off_duration > 0:
+
+            self.bot.say(
+                self.temporary_off_message.format(
+                    str(self.off_duration)+' seconds'))
+
+            logging.debug(u"- triggering watchdog timer")
+            t = Timer(self.off_duration, self.watchdog)
+            t.start()
+
+    def watchdog(self):
+        """
+        Ensures that audit is restarted
+        """
+        logging.debug(u"Watchdog is cheking audit status")
+        if self.bot.context.get('audit.switch', 'off') == 'off':
+            logging.debug(u"- restarting audit")
+            self.audit_on()
+
     def filter(self, event):
         """
         Filters events handled by listener
@@ -147,8 +192,12 @@ class Audit(Command):
 
         This function implements the actual auditing of incoming events.
         """
+        logging.debug(u"- filtering a {} event".format(event.type))
         try:
             if self.bot.context.get('audit.switch', 'off') == 'on':
-                self.updater.put(str(event))
+                logging.debug(u"- {}".format(str(event)))
+                self.updater.put(event)
+            else:
+                logging.debug(u"- audit has not been switched on")
         finally:
             return event
