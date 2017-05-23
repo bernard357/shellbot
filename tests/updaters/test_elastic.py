@@ -72,7 +72,7 @@ class UpdaterTests(unittest.TestCase):
         logging.info('***** on_bond')
 
         u = ElasticsearchUpdater(host='this.does.not.exist')
-        with self.assertRaises(ConnectionError):
+        with self.assertRaises(Exception):
             u.on_bond()
 
     def test_put(self):
