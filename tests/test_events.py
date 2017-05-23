@@ -113,12 +113,17 @@ class EventsTests(unittest.TestCase):
         self.assertEqual(json.loads(str(event)), data)
         self.assertEqual(yaml.safe_load(str(event)), data)
 
+    def test_event___eq__(self):
+
+        a = Event({"hello": "world"})
+        b = Event({"hello": "world"})
+        self.assertEqual(a, b)
+
     def test_event_queue(self):
 
         data = {u'hello': u'wörld', 'number': 123, 'weird': None}
         before = Event(attributes=data)
         my_queue.put(str(before))
-        data.update({"type": "event"})
         after = Event(my_queue.get())
         self.assertEqual(after.attributes, data)
 
@@ -176,7 +181,6 @@ class EventsTests(unittest.TestCase):
 
         before = Message(item)
         my_queue.put(str(before))
-        item.update({"type": "message"})
         after = Message(my_queue.get())
         self.assertEqual(after.attributes, item)
 

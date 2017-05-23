@@ -63,6 +63,11 @@ class Event(object):
         else:
             self.__dict__['attributes'] = attributes
 
+        try:
+            del self.__dict__['attributes']['type']
+        except:
+            pass
+
     def __getattr__(self, key):
         """
         Provides access to any native attribute
@@ -156,6 +161,22 @@ class Event(object):
         with_type.update({'type': self.type})
         return json.dumps(with_type, sort_keys=True)
 
+    def __eq__(self, other):
+        """
+        Compares with another object
+        """
+        try:
+            if self.type != other.type:
+                return False
+
+            if self.attributes != other.attributes:
+                return False
+
+            return True
+
+        except:
+            return False  # not same duck types
+
 
 class Message(Event):
     """
@@ -170,7 +191,26 @@ class Message(Event):
         Returns message textual content
 
         :rtype: str
+
+        This function returns a bare string that can be handled
+        directly by the shell. This has no tags nor specific binary format.
         """
+        return self.__getattr__('text')
+
+    @property
+    def content(self):
+        """
+        Returns message rich content
+
+        :rtype: str
+
+        This function preserves rich content that was used to create the
+        message, be it Markdown, HTML, or something else.
+        """
+        content = self.attributes.get('content')
+        if content not in (None, ''):
+            return content
+
         return self.__getattr__('text')
 
     @property
