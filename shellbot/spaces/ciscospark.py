@@ -25,8 +25,7 @@ from six import string_types
 import tempfile
 import time
 
-from ..context import Context
-from ..events import Event, Message, Attachment, Join, Leave
+from shellbot.events import Event, Message, Attachment, Join, Leave
 from .base import Space
 
 

@@ -22,8 +22,6 @@ from six import string_types
 import sys
 import time
 
-from ..context import Context
-
 
 class Updater(object):
     """

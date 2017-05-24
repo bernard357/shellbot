@@ -17,6 +17,7 @@
 
 from .base import Command
 
+
 class Input(Command):
     """
     Displays input data

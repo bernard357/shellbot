@@ -20,7 +20,7 @@ from multiprocessing import Process, Queue
 from threading import Timer
 
 from .base import Command
-from ..updaters import Updater
+from shellbot.updaters import Updater
 
 
 class Audit(Command):

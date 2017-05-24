@@ -23,7 +23,6 @@ import sys
 import time
 
 from .base import Updater
-from ..context import Context
 
 
 class FileUpdater(Updater):

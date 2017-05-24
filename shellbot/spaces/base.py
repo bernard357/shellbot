@@ -22,8 +22,6 @@ import os
 from six import string_types
 import time
 
-from ..context import Context
-
 
 class Space(object):
     """

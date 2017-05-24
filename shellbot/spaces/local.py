@@ -23,7 +23,7 @@ from six import string_types
 import sys
 import time
 
-from ..events import Message
+from shellbot.events import Message
 from .base import Space
 
 
