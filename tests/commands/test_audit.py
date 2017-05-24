@@ -140,13 +140,13 @@ class AuditTests(unittest.TestCase):
         c.on_init()
         self.assertTrue(c.bot.register.called)
 
-    def test_on_run(self):
+    def test_on_start(self):
 
-        logging.info('***** on_run')
+        logging.info('***** on_start')
 
         c = Audit(my_bot)
         c.bot = mock.Mock()
-        c.on_run()
+        c.on_start()
         self.assertTrue(c.bot.say.called)
 
     def test_on_off(self):

@@ -104,6 +104,10 @@ class ShellBot(object):
                  type=None,
                  server=None,
                  store=None):
+        """
+        Wraps underlying services in a single instance
+
+        """
 
         self.context = context if context else Context()
 
@@ -137,7 +141,12 @@ class ShellBot(object):
         if command:
             self.load_command(command)
 
-        self.registered = { 'bond': [], 'dispose': [], 'run': [] }
+        self.registered = {
+            'bond': [],     # space has been created, or connected
+            'dispose': [],  # space will be destroyed
+            'start': [],    # starting bot services
+            'stop': [],     # stopping bot services
+        }
 
     def configure_from_path(self, path="settings.yaml"):
         """
@@ -277,17 +286,30 @@ class ShellBot(object):
         """
         Registers a function to call on event
 
-        :param event: either 'bond' or 'dispose'
+        :param event: label, such as 'start' or 'bond'
         :type event: str
 
         :param callback: a function to be called on event
         :type callback: callable
+
+        This function is used to propagate bot events to any module
+        that may need it.
 
         Example::
 
             def on_init(self):
                 self.bot.register('bond', self.on_bond)
                 self.bot.register('dispose', self.on_dispose)
+
+        Following events can be registered:
+
+        - 'bond' - when the bot has connected to a chat space
+
+        - 'dispose' - when resources, including chat space, will be destroyed
+
+        - 'start' - when bot services are started
+
+        - 'stop' - when bot services are stopped
 
         """
         assert event in self.registered.keys()  #  avoid unknown event type
@@ -299,7 +321,7 @@ class ShellBot(object):
         """
         Calls functions that have registered to some event
 
-        :param event: either 'bond' or 'run' or 'dispose'
+        :param event: label of the event
         :type event: str
 
         Example::
@@ -454,8 +476,6 @@ class ShellBot(object):
 
         self.space.on_run()
 
-        self.dispatch('run')
-
         if server is None:
             self.space.work()
 
@@ -482,6 +502,8 @@ class ShellBot(object):
 
         self.say(self.context.get('bot.on_start'))
         self.on_start()
+
+        self.dispatch('start')
 
     def start_processes(self):
         """
@@ -526,8 +548,11 @@ class ShellBot(object):
 
         logging.warning(u'Stopping the bot')
 
-        self.say(self.context.get('bot.on_stop'))
+        self.dispatch('stop')
+
         self.on_stop()
+
+        self.say(self.context.get('bot.on_stop'))
 
         time.sleep(1)
         self.context.set('general.switch', 'off')
@@ -577,7 +602,7 @@ class ShellBot(object):
         :param key: name of the value
         :type key: str
 
-        :param value: actual value
+        :param value: new value
         :type value: any serializable type is accepted
 
         This functions stores or updates a value in the back-end storage
