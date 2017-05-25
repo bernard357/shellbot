@@ -86,6 +86,15 @@ class UpdaterTests(unittest.TestCase):
         outbound = u.format(inbound)
         self.assertEqual(outbound, 'alice@acme.com: my message')
 
+        inbound = Message({
+            'from_label': 'alice@acme.com',
+            'text': 'my message',
+            'content': '<p>my message</p>',
+        })
+        outbound = u.format(inbound)
+        self.assertEqual(outbound.text, 'alice@acme.com: my message')
+        self.assertEqual(outbound.content, 'alice@acme.com: <p>my message</p>')
+
         inbound = Attachment({
             'url': 'http://my.server/my/file',
         })

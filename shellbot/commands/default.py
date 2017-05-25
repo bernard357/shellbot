@@ -30,7 +30,8 @@ class Default(Command):
     listeners can be sensed in the background. If this is not the case,
     a message is sent back to the user.
 
-    For a process to receive unmatched statements, the protocol works like this:
+    For a listener to receive unmatched statements, the protocol works
+    like this:
 
     * Check the ``bot.fan`` queue frequently
 

@@ -41,6 +41,9 @@ class BaseTests(unittest.TestCase):
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
+        c = Command(my_bot, hello='world')
+        self.assertEqual(c.hello, 'world')
+
     def test_from_base(self):
 
         logging.info('***** from base')

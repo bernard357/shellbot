@@ -164,23 +164,34 @@ class AuditTests(unittest.TestCase):
         time.sleep(0.003)
         self.assertTrue(c.expected)
 
-    def test_filter(self):
+    def test_watchdog(self):
 
-        logging.info('***** filter')
-
-        my_bot.context.set('audit.switch', 'on')
+        logging.info('***** watchdog')
 
         c = Audit(my_bot)
-        c.updater = None
+        c.audit_on = mock.Mock()
+        my_bot.context.set('audit.switch', 'off')
+        c.watchdog()
+        self.assertTrue(c.audit_on.called)
 
-        item = Message({'text': 'hello world', 'person_label': 'a@me.com'})
-        print(str(item))
-        self.assertEqual(c.filter(item), item)
+    def test_filter_on(self):
+
+        logging.info('***** filter on')
+
+        c = Audit(my_bot)
 
         class MyUpdater(object):
             queue = Queue()
             def put(self, event):
                 self.queue.put(str(event))
+
+        my_bot.context.set('audit.switch', 'on')
+
+        c.updater = None
+
+        item = Message({'text': 'hello world', 'person_label': 'a@me.com'})
+        print(str(item))
+        self.assertEqual(c.filter(item), item)
 
         c.updater = MyUpdater()
         self.assertEqual(c.filter(item), item)
@@ -188,6 +199,28 @@ class AuditTests(unittest.TestCase):
         with self.assertRaises(Exception):
             c.updater.get_nowait()
 
+    def test_filter_off(self):
+
+        logging.info('***** filter off')
+
+        c = Audit(my_bot)
+
+        class MyUpdater(object):
+            queue = Queue()
+            def put(self, event):
+                self.queue.put(str(event))
+
+        my_bot.context.set('audit.switch', 'off')
+
+        c.updater = None
+
+        item = Message({'text': 'hello world', 'person_label': 'a@me.com'})
+        self.assertEqual(c.filter(item), item)
+
+        c.updater = MyUpdater()
+        self.assertEqual(c.filter(item), item)
+        with self.assertRaises(Exception):
+            c.updater.get_nowait()
 
 if __name__ == '__main__':
 

@@ -11,7 +11,7 @@ import sys
 sys.path.insert(0, os.path.abspath('../..'))
 
 from shellbot import Context, ShellBot, Shell
-from shellbot.commands import Help
+from shellbot.commands import Command, Help
 
 
 my_bot = ShellBot(mouth=Queue())
@@ -38,6 +38,38 @@ class HelpTests(unittest.TestCase):
         self.assertEqual(my_bot.mouth.get().text, u'No command has been found.')
         with self.assertRaises(Exception):
             print(my_bot.mouth.get_nowait())
+
+    def test_execute_no_usage(self):
+
+        logging.info('***** execute/no_usage')
+
+        my_bot.shell = Shell(bot=my_bot)
+
+        my_bot.shell.load_command(Command(keyword='hello',
+                                          information_message='world'))
+
+        c = Help(my_bot)
+
+        c.execute()
+        self.assertEqual(
+            my_bot.mouth.get().text,
+            u'Available commands:\nhello - world')
+        with self.assertRaises(Exception):
+            my_bot.mouth.get_nowait()
+
+        c.execute('hello')
+        self.assertEqual(
+            my_bot.mouth.get().text,
+            u'hello - world\nusage: hello')
+        with self.assertRaises(Exception):
+            my_bot.mouth.get_nowait()
+
+        c.execute('*unknown*')
+        self.assertEqual(
+            my_bot.mouth.get().text,
+            u'This command is unknown.')
+        with self.assertRaises(Exception):
+            my_bot.mouth.get_nowait()
 
     def test_help_true(self):
 

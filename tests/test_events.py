@@ -119,6 +119,25 @@ class EventsTests(unittest.TestCase):
         b = Event({"hello": "world"})
         self.assertEqual(a, b)
 
+        a = Event({"hello": "world"})
+        b = Event({"hello": "world"})
+        self.assertTrue(a.__eq__(b))
+        self.assertTrue(b.__eq__(a))
+
+        a = Event({"hello": "world"})
+        b = Event({"hello": "moon"})
+        self.assertFalse(a.__eq__(b))
+        self.assertFalse(b.__eq__(a))
+
+        a = Event({"hello": "world"})
+        b = Message({"hello": "world"})
+        self.assertFalse(a.__eq__(b))
+        self.assertFalse(b.__eq__(a))
+
+        a = Event({"hello": "world"})
+        b = {"hello": "world"}
+        self.assertFalse(a.__eq__(b))
+
     def test_event_queue(self):
 
         data = {u'hello': u'wörld', 'number': 123, 'weird': None}
@@ -144,6 +163,7 @@ class EventsTests(unittest.TestCase):
               "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
               "space_id" : "Y2lzY29zcGFyazovNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
               "text" : "/plumby use containers/docker",
+              "content" : "<p>/plumby use containers/docker</p>",
               "created" : "2015-10-18T14:26:16+00:00",
               "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
               "from_label" : "Masked Cucumber",
@@ -154,6 +174,8 @@ class EventsTests(unittest.TestCase):
         self.assertEqual(event.type, 'message')
         self.assertEqual(event.text,
                          "/plumby use containers/docker")
+        self.assertEqual(event.content,
+                         "<p>/plumby use containers/docker</p>")
         self.assertEqual(event.from_id,
                          "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY")
         self.assertEqual(event.from_label,
@@ -166,6 +188,19 @@ class EventsTests(unittest.TestCase):
         item.update({'type': 'message'})
         self.assertEqual(json.loads(str(event)), item)
         self.assertEqual(yaml.safe_load(str(event)), item)
+
+        item = {
+              "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
+              "space_id" : "Y2lzY29zcGFyazovNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+              "text" : "/plumby use containers/docker",
+              "created" : "2015-10-18T14:26:16+00:00",
+              "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+              "from_label" : "Masked Cucumber",
+              "mentioned_ids" : ["Y2lzYDMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"],
+            }
+
+        event = Message(item)
+        self.assertEqual(event.text, event.content)
 
     def test_message_queue(self):
 

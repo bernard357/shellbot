@@ -206,6 +206,10 @@ class Message(Event):
 
         This function preserves rich content that was used to create the
         message, be it Markdown, HTML, or something else.
+
+        If no rich content is provided, than this attribute is equivalent
+        to ``self.text``
+
         """
         content = self.attributes.get('content')
         if content not in (None, ''):
