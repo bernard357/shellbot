@@ -134,55 +134,6 @@ class ShellTests(unittest.TestCase):
             shell.commands,
             ['*default', '*empty', 'echo', 'help', 'pass', 'sleep', 'version'])
 
-    def test_say(self):
-
-        logging.debug('***** say')
-
-        shell = Shell(bot=my_bot)
-
-        message_0 = None
-        shell.say(message_0)
-        with self.assertRaises(Exception):
-            shell.bot.mouth.get_nowait()
-
-        message_0 = ''
-        shell.say(message_0)
-        with self.assertRaises(Exception):
-            shell.bot.mouth.get_nowait()
-
-        message_1 = 'hello'
-        shell.say(message_1)
-        self.assertEqual(shell.bot.mouth.get().text, message_1)
-
-        message_2 = 'world'
-        shell.say(message_2)
-        self.assertEqual(shell.bot.mouth.get().text, message_2)
-
-        message_3 = 'hello'
-        content_3 = 'world'
-        shell.say(message_3, content=content_3)
-        item = shell.bot.mouth.get()
-        self.assertEqual(item.text, message_3)
-        self.assertEqual(item.content, content_3)
-        self.assertEqual(item.file, None)
-
-        message_4 = "What'sup Doc?"
-        file_4 = 'http://some.server/some/file'
-        shell.say(message_4, file=file_4)
-        item = shell.bot.mouth.get()
-        self.assertEqual(item.text, message_4)
-        self.assertEqual(item.content, None)
-        self.assertEqual(item.file, file_4)
-
-        message_5 = 'hello'
-        content_5 = 'world'
-        file_5 = 'http://some.server/some/file'
-        shell.say(message_5, content=content_5, file=file_5)
-        item = shell.bot.mouth.get()
-        self.assertEqual(item.text, message_5)
-        self.assertEqual(item.content, content_5)
-        self.assertEqual(item.file, file_5)
-
     def test_vocabulary(self):
 
         logging.debug('***** vocabulary')
@@ -280,12 +231,13 @@ class ShellTests(unittest.TestCase):
         logging.debug('***** empty')
 
         shell = Shell(bot=my_bot)
+        my_bot.mouth = Queue()
 
         from shellbot.commands.empty import Empty
 
         class Doc(Empty):
             def execute(self, *args):
-                self.shell.say("What'up Doc?")
+                self.bot.say("What'up Doc?")
 
         doc = Doc(my_bot)
         shell.load_command(doc)
@@ -310,28 +262,54 @@ class ShellTests(unittest.TestCase):
 
         shell = Shell(bot=my_bot)
 
+        shell.do(12345)
+        self.assertEqual(shell.line, '12345')
+        self.assertEqual(shell.count, 1)
+        self.assertEqual(shell.bot.mouth.get().text,
+                         u"Sorry, I do not know how to handle '12345'")
+        with self.assertRaises(Exception):
+            print(shell.bot.mouth.get_nowait())
+
         from shellbot.commands.default import Default
 
         class Custom(Default):
             def execute(self, arguments):
-                self.shell.say("{}, really?".format(arguments))
+                self.bot.say("{}, really?".format(arguments))
 
         shell.load_command(Custom(my_bot))
 
         shell.do(12345)
         self.assertEqual(shell.line, '12345')
-        self.assertEqual(shell.count, 1)
+        self.assertEqual(shell.count, 2)
         self.assertEqual(shell.bot.mouth.get().text, '12345, really?')
         with self.assertRaises(Exception):
             print(shell.bot.mouth.get_nowait())
 
         shell.do('azerty')
         self.assertEqual(shell.line, 'azerty')
-        self.assertEqual(shell.count, 2)
+        self.assertEqual(shell.count, 3)
         self.assertEqual(shell.bot.mouth.get().text, 'azerty, really?')
         with self.assertRaises(Exception):
             print(shell.bot.mouth.get_nowait())
 
+    def test_exception(self):
+
+        logging.debug('***** exception')
+
+        class Intruder(object):
+            def keys(self):
+                raise Exception('*boom*')
+
+        shell = Shell(bot=my_bot)
+        shell._commands = Intruder()
+
+        with self.assertRaises(Exception):
+            shell.do(12345)
+
+        self.assertEqual(shell.bot.mouth.get().text,
+                         u"Sorry, I do not know how to handle '12345'")
+        with self.assertRaises(Exception):
+            print(shell.bot.mouth.get_nowait())
 
 if __name__ == '__main__':
 

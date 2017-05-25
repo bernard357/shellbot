@@ -710,6 +710,51 @@ class BotTests(unittest.TestCase):
         self.assertTrue(bot.mouth.put.called)
         self.assertFalse(bot.speaker.process.called)
 
+        bot.mouth = Queue()
+
+        message_0 = None
+        bot.say(message_0)
+        with self.assertRaises(Exception):
+            bot.mouth.get_nowait()
+
+        message_0 = ''
+        bot.say(message_0)
+        with self.assertRaises(Exception):
+            bot.mouth.get_nowait()
+
+        message_1 = 'hello'
+        bot.say(message_1)
+        self.assertEqual(bot.mouth.get().text, message_1)
+
+        message_2 = 'world'
+        bot.say(message_2)
+        self.assertEqual(bot.mouth.get().text, message_2)
+
+        message_3 = 'hello'
+        content_3 = 'world'
+        bot.say(message_3, content=content_3)
+        item = bot.mouth.get()
+        self.assertEqual(item.text, message_3)
+        self.assertEqual(item.content, content_3)
+        self.assertEqual(item.file, None)
+
+        message_4 = "What'sup Doc?"
+        file_4 = 'http://some.server/some/file'
+        bot.say(message_4, file=file_4)
+        item = bot.mouth.get()
+        self.assertEqual(item.text, message_4)
+        self.assertEqual(item.content, None)
+        self.assertEqual(item.file, file_4)
+
+        message_5 = 'hello'
+        content_5 = 'world'
+        file_5 = 'http://some.server/some/file'
+        bot.say(message_5, content=content_5, file=file_5)
+        item = bot.mouth.get()
+        self.assertEqual(item.text, message_5)
+        self.assertEqual(item.content, content_5)
+        self.assertEqual(item.file, file_5)
+
     def test_remember(self):
 
         logging.info('***** remember')

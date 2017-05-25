@@ -117,7 +117,7 @@ class ShellBot(object):
         self.ears = ears
         self.fan = fan
 
-        assert space is None or type is None  # not both
+        assert space is None or type is None  # use only one
         if type:
             space = SpaceFactory.get(type=type)
         self.space = space

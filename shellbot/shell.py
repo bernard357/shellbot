@@ -71,18 +71,6 @@ class Shell(object):
         self.load_default_commands()
         self.load_commands(self.bot.context.get('shell.commands'))
 
-    def say(self, *args, **kwargs):
-        """
-        Says something to the room
-
-        Example::
-
-            >>>shell.say('Hello, World!')
-
-        This function is a convenient proxy for the bot itself.
-        """
-        self.bot.say(*args, **kwargs)
-
     @property
     def commands(self):
         """
@@ -256,9 +244,10 @@ class Shell(object):
                     command.execute(arguments)
                 else:
                     if not self.bot.context.get('worker.busy', False):
-                        self.say(u"Ok, working on it")
+                        self.bot.say(u"Ok, working on it")
                     else:
-                        self.say(u"Ok, will work on it as soon as possible")
+                        self.bot.say(
+                            u"Ok, will work on it as soon as possible")
                     self.bot.inbox.put((command.keyword, arguments))
 
             elif '*default' in self._commands.keys():
@@ -266,10 +255,10 @@ class Shell(object):
                 command.execute(line)  # assume this is always interactive
 
             else:
-                self.say(
+                self.bot.say(
                     u"Sorry, I do not know how to handle '{}'".format(verb))
 
         except Exception:
-            self.say(
+            self.bot.say(
                 u"Sorry, I do not know how to handle '{}'".format(verb))
             raise
