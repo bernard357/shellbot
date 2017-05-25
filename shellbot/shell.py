@@ -263,14 +263,7 @@ class Shell(object):
 
             elif '*default' in self._commands.keys():
                 command = self._commands['*default']
-                if command.is_interactive:
-                    command.execute(line)
-                else:
-                    if not self.bot.context.get('worker.busy', False):
-                        self.say(u"Ok, working on it")
-                    else:
-                        self.say(u"Ok, will work on it as soon as possible")
-                    self.bot.inbox.put((verb, arguments))
+                command.execute(line)  # assume this is always interactive
 
             else:
                 self.say(
