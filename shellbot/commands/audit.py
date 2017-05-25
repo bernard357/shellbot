@@ -149,7 +149,7 @@ class Audit(Command):
         Registers callback from bot
         """
         logging.debug(u"- registering audit to bot 'run'")
-        self.bot.register('start', self.on_start)
+        self.bot.register('start', self)
 
     def on_start(self):
         """
