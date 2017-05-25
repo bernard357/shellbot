@@ -17,6 +17,20 @@ from shellbot.spaces import Space, LocalSpace, SparkSpace
 from shellbot.stores import MemoryStore
 
 
+class MyCounter(object):
+    def __init__(self, name='counter'):
+        self.name = name
+        self.count = 0
+    def on_bond(self):
+        logging.info('{}.on_bond'.format(self.name))
+        self.count += 1
+    def on_dispose(self):
+        logging.info('{}.on_dispose'.format(self.name))
+        self.count += 1
+    def __del__(self):
+        logging.info('(Deleting {})'.format(self.name))
+
+
 class BotTests(unittest.TestCase):
 
     def tearDown(self):
@@ -257,25 +271,29 @@ class BotTests(unittest.TestCase):
 
         bot = ShellBot(fan='f')
 
-        bot.register('bond', lambda : 'ok')
-        bot.register('dispose', lambda : 'ok')
         with self.assertRaises(AssertionError):
             bot.register('*unknown*event', lambda : 'ok')
+        with self.assertRaises(AttributeError):
+            bot.register('bond', lambda : 'ok')
+        with self.assertRaises(AttributeError):
+            bot.register('dispose', lambda : 'ok')
 
-        class Counter(object):
-            def __init__(self):
-                self.counter = 0
-            def callback(self):
-                self.counter += 1
-
-        counter = Counter()
-        bot.register('bond', counter.callback)
-        bot.register('dispose', counter.callback)
+        counter = MyCounter('counter #1')
+        bot.register('bond', counter)
+        bot.register('dispose', counter)
+        with self.assertRaises(AttributeError):
+            bot.register('start', counter)
+        with self.assertRaises(AttributeError):
+            bot.register('stop', counter)
         with self.assertRaises(AssertionError):
-            bot.register('*unknown*event', counter.callback)
+            bot.register('*unknown*event', counter)
+
+        bot.register('bond', MyCounter('counter #2'))
 
         self.assertEqual(len(bot.registered['bond']), 2)
-        self.assertEqual(len(bot.registered['dispose']), 2)
+        self.assertEqual(len(bot.registered['dispose']), 1)
+        self.assertEqual(len(bot.registered['start']), 0)
+        self.assertEqual(len(bot.registered['stop']), 0)
 
     def test_dispatch(self):
 
@@ -283,20 +301,19 @@ class BotTests(unittest.TestCase):
 
         bot = ShellBot(fan='f')
 
-        class Counter(object):
-            def __init__(self):
-                self.count = 0
-            def callback(self):
-                self.count += 1
+        counter = MyCounter('counter #1')
+        bot.register('bond', counter)
+        bot.register('dispose', counter)
 
-        counter = Counter()
-        bot.register('bond', counter.callback)
-        bot.register('dispose', counter.callback)
-        with self.assertRaises(AssertionError):
-            bot.register('*unknown*event', counter.callback)
+        bot.register('bond', MyCounter('counter #2'))
+        bot.register('dispose', MyCounter('counter #3'))
 
         bot.dispatch('bond')
         bot.dispatch('dispose')
+
+        with self.assertRaises(AssertionError):
+            bot.dispatch('*unknown*event')
+
         self.assertEqual(counter.count, 2)
 
     def test_load_commands(self):

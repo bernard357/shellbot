@@ -21,6 +21,7 @@ from multiprocessing import Process, Queue
 import sys
 import time
 import yaml
+import weakref
 
 from .context import Context
 from .shell import Shell
@@ -142,7 +143,7 @@ class ShellBot(object):
             self.load_command(command)
 
         self.registered = {
-            'bond': [],     # space has been created, or connected
+            'bond': [],     # connected to a space
             'dispose': [],  # space will be destroyed
             'start': [],    # starting bot services
             'stop': [],     # stopping bot services
@@ -282,15 +283,15 @@ class ShellBot(object):
         """
         return self.context.get(key, default)
 
-    def register(self, event, callback):
+    def register(self, event, instance):
         """
-        Registers a function to call on event
+        Registers an object to process an event
 
         :param event: label, such as 'start' or 'bond'
         :type event: str
 
-        :param callback: a function to be called on event
-        :type callback: callable
+        :param instance: an object that will handle the event
+        :type instance: object
 
         This function is used to propagate bot events to any module
         that may need it.
@@ -298,8 +299,8 @@ class ShellBot(object):
         Example::
 
             def on_init(self):
-                self.bot.register('bond', self.on_bond)
-                self.bot.register('dispose', self.on_dispose)
+                self.bot.register('bond', self)  # call self.on_bond()
+                self.bot.register('dispose', self) # call self.on_dispose()
 
         Following events can be registered:
 
@@ -311,15 +312,25 @@ class ShellBot(object):
 
         - 'stop' - when bot services are stopped
 
+        On each event, the bot will look for a related member function
+        in the target instance and call it. For example for the event
+        'start' it will look for the member function 'on_start', etc.
+
+        Registration uses weakref so that it affords the unattended deletion
+        of registered objects.
         """
         assert event in self.registered.keys()  #  avoid unknown event type
-        assert callable(callback)  #  ensure callback is possible
 
-        self.registered[event].append(callback)
+        name = 'on_' + event
+        callback = getattr(instance, name)
+        assert callable(callback) # ensure the event is supported
+
+        handle = weakref.proxy(instance)
+        self.registered[event].append(handle)
 
     def dispatch(self, event, **kwargs):
         """
-        Calls functions that have registered to some event
+        Triggers objects that have registered to some event
 
         :param event: label of the event
         :type event: str
@@ -329,11 +340,22 @@ class ShellBot(object):
             def on_bond(self):
                 self.dispatch('bond')
 
+        For each registered object, the bot will look for a related member
+        function and call it. For example for the event
+        'bond' it will look for the member function 'on_bond', etc.
+
+        Dispatch uses weakref so that it affords the unattended deletion
+        of registered objects.
         """
         assert event in self.registered.keys()  #  avoid unknown event type
 
-        for callback in self.registered[event]:
-            callback(**kwargs)
+        name = 'on_' + event
+        for handle in self.registered[event]:
+            try:
+                callback = getattr(handle, name)
+                callback(**kwargs)
+            except weakref.ReferenceError:
+                logging.debug(u"Dispatch: registered object no longer exists")
 
     @property
     def name(self):
