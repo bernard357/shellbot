@@ -146,6 +146,10 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space.teamId, None)
 
+        space = SparkSpace(bot=my_bot, token='b', personal_token='c')
+        self.assertEqual(space.token, 'b')
+        self.assertEqual(space.personal_token, 'c')
+
     def test_is_ready(self):
 
         logging.info("*** is_ready")
@@ -307,6 +311,44 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertTrue(space.add_moderator.called)
         self.assertTrue(space.add_participant.called)
 
+    def test_connect(self):
+
+        logging.info("*** connect")
+
+        class MyAPI(object):
+            def __init__(self, access_token):
+                self.token = access_token
+
+        def my_factory(access_token):
+            return MyAPI(access_token)
+
+        space = SparkSpace(bot=my_bot)
+        space.token = None
+        space.personal_token = None
+        with self.assertRaises(AssertionError):
+            space.connect()
+
+        space = SparkSpace(bot=my_bot)
+        space.token = 'a'
+        space.personal_token = None
+        space.connect(factory=my_factory)
+        self.assertEqual(space.api.token, 'a')
+        self.assertEqual(space.personal_api.token, 'a')
+
+        space = SparkSpace(bot=my_bot)
+        space.token = None
+        space.personal_token = 'b'
+        space.connect(factory=my_factory)
+        self.assertEqual(space.api.token, 'b')
+        self.assertEqual(space.personal_api.token, 'b')
+
+        space = SparkSpace(bot=my_bot)
+        space.token = 'a'
+        space.personal_token = 'b'
+        space.connect(factory=my_factory)
+        self.assertEqual(space.api.token, 'a')
+        self.assertEqual(space.personal_api.token, 'b')
+
     def test_lookup_space(self):
 
         logging.info("*** lookup_space")
@@ -317,11 +359,15 @@ class SparkSpaceTests(unittest.TestCase):
             flag = space.lookup_space(title='*does*not*exist*in*this*world')
 
         space.api = FakeApi()
-
-        flag = space.lookup_space(title='*does*not*exist*in*this*world')
-
-        self.assertFalse(flag)
+        self.assertFalse(space.lookup_space(title='*does*not*exist'))
         self.assertTrue(space.api.rooms.list.called)
+
+        class Intruder(object):
+            def list(self):
+                raise Exception('TEST')
+
+        space.api.rooms = Intruder()
+        self.assertFalse(space.lookup_space(title='any'))
 
     def test_lookup_space_api(self):
 
@@ -389,12 +435,12 @@ class SparkSpaceTests(unittest.TestCase):
         logging.info("*** add_moderator")
 
         space = SparkSpace(bot=my_bot)
-        space.api = FakeApi()
+        space.personal_api = FakeApi()
         space.id = '*id'
 
         space.add_moderator(person='foo.bar@acme.com')
 
-        self.assertTrue(space.api.memberships.create.called)
+        self.assertTrue(space.personal_api.memberships.create.called)
 
     def test_add_participants(self):
 
@@ -504,8 +550,10 @@ class SparkSpaceTests(unittest.TestCase):
         logging.info("*** on_run")
         space = SparkSpace(bot=my_bot)
         space.api = FakeApi()
+        space.personal_api = FakeApi()
         space.on_run()
         self.assertTrue(space.api.people.me.called)
+        self.assertTrue(space.personal_api.people.me.called)
 
         if cisco_spark_bearer is not None:
 

@@ -32,11 +32,48 @@ from .base import Space
 class SparkSpace(Space):
     """
     Handles a Cisco Spark room
+
+    This is a representation of a chat space hosted at Cisco Spark.
+
+    In normal mode of usage, two tokens whould be provided, one for
+    the Cisco Spark bot, and one for a regular Cisco Spark account. This
+    allows shellbot to see all the traffic coming from the chat room, even
+    messages sent to other chat participants.
+
+    If only the Cisco Spark bot token is provided, then shellbot will get
+    visibility and rights limited to what Cisco Spark exposes to bots.
+    For example, the audit command will see only messages sent to the bot, or
+    those where the bot is mentioned. Other messages will not been seen.
+
+    If no Cisco Spark bot token is provided, but only a personal token,
+    then shellbot will act entirely on behalf of this account. This is
+    equivalent to a full Cisco Spark integration, through direct
+    configuration od shellbot.
+
+    The space maintains two separate API instances internally. One
+    is bound to the bot token, and another one is bound to the personal token.
+
+    Cisco Spark API is invoked with one or the other, depending on the role
+    played by shellbot:
+
+    - list rooms - bot token - list rooms visible by the bot itself
+    - create room - bot token - make obvious which rooms bot has created
+    - add moderator - personal token - because bot cannot do it
+    - add participant - bot token - explicit bot action
+    - delete room - bot token - limit action to scope given to bot
+    - post message - bot token - explicit bot action
+    - create webhook - personal token - required to receive all messages
+    - people me - bot token - retrieve bot name and id
+    - people me - personal token - retrieve moderator email address
+
+    If one token is missing, then the other one is used for everything.
+
     """
 
     def on_init(self,
                 prefix='spark',
                 token=None,
+                personal_token=None,
                 **kwargs):
         """
         Handles extended initialisation parameters
@@ -44,7 +81,11 @@ class SparkSpace(Space):
         :param prefix: the main keyword for configuration of this space
         :type prefix: str
 
-        :param token: authentication token for the Cisco Spark API
+        :param token: bot authentication token for the Cisco Spark API
+        :type token: str
+
+        :param personal_token: person authentication token for the Cisco Spark API
+        :type token: str
 
         Example::
 
@@ -56,8 +97,11 @@ class SparkSpace(Space):
         assert prefix not in (None, '')
         self.prefix = prefix
 
-        if token is not None:
+        if token not in (None, ''):
             self.bot.context.set(self.prefix+'.token', token)
+
+        if personal_token not in (None, ''):
+            self.bot.context.set(self.prefix+'.personal_token', personal_token)
 
         self.api = None
         self.personal_api = None
@@ -69,7 +113,9 @@ class SparkSpace(Space):
         self.teamId = None
 
         self.token = self.bot.context.get(self.prefix+'.token', '')
-        self.personal_token = self.bot.context.get(self.prefix+'.personal_token', '')
+
+        self.personal_token = self.bot.context.get(
+            self.prefix+'.personal_token', '')
 
         self._last_message_id = 0
 
@@ -78,70 +124,72 @@ class SparkSpace(Space):
         Checks settings of the space
 
         This function reads key ``spark`` and below, and update
-        the context accordingly.
+        the context accordingly::
 
-        >>>space.configure({'spark': {
+           space.configure({'spark': {
                'room': 'My preferred room',
                'moderators':
                   ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                'participants':
                   ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                'team': 'Anchor team',
-               'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
-               'personal_token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
+               'token': '$MY_BOT_TOKEN',
+               'personal_token': '$MY_PERSONAL_TOKEN',
                }})
 
         This can also be written in a more compact form::
 
-        >>>space.configure({'spark.room': 'My preferred room',
-               'spark.token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
+           space.configure({'spark.room': 'My preferred room',
+               'spark.token': '$MY_BOT_TOKEN',
+               'spark.personal_token': '$MY_PERSONAL_TOKEN',
                })
 
         This function handles following parameters:
 
-        * ``spark.room`` - title of the associated Cisco Spark room
+        * ``spark.room`` - title of the associated Cisco Spark room.
+          This can refer to an environment variable if it starts
+          with ``$``, e.g., ``$ROOM_TITLE``.
 
         * ``spark.moderators`` - list of persons assigned as room moderators
+          This can refer to an environment variable if it starts
+          with ``$``, e.g., ``$ROOM_MODERATORS``.
 
         * ``spark.participants`` - list of initial participants
 
         * ``spark.team`` - title of a team associated with this room
 
         * ``spark.token`` - private token of the bot, given by Cisco Spark.
+          Instead of putting the real value of the token you are encouraged
+          to use an environment variable instead,
+          e.g., ``$MY_BOT_TOKEN``.
           If ``spark.token`` is not provided, then the function looks for an
           environment variable ``CISCO_SPARK_BOT_TOKEN`` instead.
 
         * ``spark.personal_token`` - private token of a human being
+          Instead of putting the real value of the token you are encouraged
+          to use an environment variable instead,
+          e.g., ``$MY_PERSONAL_TOKEN``.
           If ``spark.personal_token`` is not provided, then the function looks
           for an environment variable ``CISCO_SPARK_TOKEN`` instead.
 
         If a single value is provided for ``moderators`` or for
         ``participants`` then it is turned automatically to a list.
 
-        >>>space.configure({'spark.moderators': 'bobby@jah.com'})
-        >>>space.context.get('spark.moderators')
-        ['bobby@jah.com']
+        Example::
+
+            >>>space.configure({'spark.moderators': 'bobby@jah.com'})
+            >>>space.context.get('spark.moderators')
+            ['bobby@jah.com']
 
         """
-        if self.bot.context.get(self.prefix+'.personal_token') is None:
-            token = os.environ.get('CISCO_SPARK_TOKEN')
-            if token:
-                self.bot.context.set(self.prefix+'.personal_token', token)
-
-        if self.bot.context.get(self.prefix+'.token') is None:
-            token1 = os.environ.get('CISCO_SPARK_BOT_TOKEN')
-            token2 = self.bot.context.get(self.prefix+'.personal_token')
-            if token1:
-                self.bot.context.set(self.prefix+'.token', token1)
-            elif token2:
-                self.bot.context.set(self.prefix+'.token', token2)
-
         self.bot.context.check(self.prefix+'.room', filter=True)
         self.bot.context.check(self.prefix+'.moderators', [], filter=True)
         self.bot.context.check(self.prefix+'.participants', [])
         self.bot.context.check(self.prefix+'.team')
-        self.bot.context.check(self.prefix+'.token', '', filter=True)
-        self.bot.context.check(self.prefix+'.personal_token', '', filter=True)
+        self.bot.context.check(self.prefix+'.token',
+                               '$CISCO_SPARK_BOT_TOKEN', filter=True)
+        self.bot.context.check(self.prefix+'.personal_token',
+                               '$CISCO_SPARK_TOKEN', filter=True)
 
         values = self.bot.context.get(self.prefix+'.moderators')
         if isinstance(values, string_types):
@@ -164,36 +212,49 @@ class SparkSpace(Space):
         return  self.bot.context.get(self.prefix+'.room',
                                      self.DEFAULT_SPACE_TITLE)
 
-    def connect(self, **kwargs):
+    def connect(self, factory=None, **kwargs):
         """
         Connects to the back-end API
+
+        :parameter factory: an API factory, for test purpose
+        :type: object
+
+        This function loads two instances of Cisco Spark API, one using
+        the bot token, and one using the personal token. If only one
+        token is available, then it is used for both.
+
+        If a factory is provided, it is used to get API instances. Else
+        the regular CiscoSparkAPI is invoked instead.
+
         """
-        from ciscosparkapi import CiscoSparkAPI
+        assert (self.token not in (None, '') or
+                self.personal_token not in (None, '')) # some token is needed
+
+        if not factory:
+            from ciscosparkapi import CiscoSparkAPI
+            factory = CiscoSparkAPI
 
         self.api = None
         try:
-            if self.token in (None, ''):
-                self.api = None
-                logging.error(u"No token to load Cisco Spark API")
+            if self.token:
+                logging.debug(u"Loading Cisco Spark API as bot")
+                self.api = factory(access_token=self.token)
 
             else:
-                self.api = CiscoSparkAPI(access_token=self.token)
-                logging.debug(u"Loading Cisco Spark API as bot")
+                self.api = factory(access_token=self.personal_token)
 
         except Exception as feedback:
             logging.error(u"Unable to load Cisco Spark API")
             logging.exception(feedback)
 
-        self.personal_api = self.api
+        self.personal_api = None
         try:
-            if self.personal_token in (None, ''):
-                self.personal_api = None
-                logging.error(u"No token to load Cisco Spark API as person")
+            if self.personal_token:
+                logging.debug(u"Loading Cisco Spark API as person")
+                self.personal_api = factory(access_token=self.personal_token)
 
             else:
-                self.personal_api = CiscoSparkAPI(
-                    access_token=self.personal_token)
-                logging.debug(u"Loading Cisco Spark API as person")
+                self.personal_api = factory(access_token=self.token)
 
         except Exception as feedback:
             logging.error(u"Unable to load Cisco Spark API")
@@ -334,12 +395,12 @@ class SparkSpace(Space):
 
         """
         try:
-            assert self.api is not None  # connect() is prerequisite
+            assert self.personal_api is not None  # connect() is prerequisite
             assert self.id is not None  # bond() is prerequisite
 
-            self.api.memberships.create(roomId=self.id,
-                                        personEmail=person,
-                                        isModerator=True)
+            self.personal_api.memberships.create(roomId=self.id,
+                                                 personEmail=person,
+                                                 isModerator=True)
 
         except Exception as feedback:
             logging.warning(u"Unable to add moderator '{}'".format(person))
@@ -419,20 +480,20 @@ class SparkSpace(Space):
 
         Example message out of plain text::
 
-        >>>space.post_message(text='hello world')
+           space.post_message(text='hello world')
 
         Example message with Markdown::
 
-        >>>space.post_message(content='this is a **bold** statement')
+           space.post_message(content='this is a **bold** statement')
 
         Example file upload::
 
-        >>>space.post_message(file='./my_file.pdf')
+           space.post_message(file='./my_file.pdf')
 
         Of course, you can combine text with the upload of a file::
 
-        >>>text = 'This is the presentation that was used for our meeting'
-        >>>space.post_message(text=text,
+           text = 'This is the presentation that was used for our meeting'
+           space.post_message(text=text,
                               file='./my_file.pdf')
 
         """
@@ -479,7 +540,7 @@ class SparkSpace(Space):
         logging.info(u"Registering webhook to Cisco Spark")
         logging.debug(u"- {}".format(hook_url))
 
-        assert self.api is not None  # connect() is prerequisite
+        assert self.personal_api is not None  # connect() is prerequisite
         try:
             self.personal_api.webhooks.create(name='shellbot-webhook',
                                               targetUrl=hook_url,
@@ -500,21 +561,51 @@ class SparkSpace(Space):
         This function queries the Cisco Spark API to remember the id of this
         bot. This is used afterwards to filter inbound messages to the shell.
 
+
+
         """
         assert self.api is not None  # connect() is prerequisite
 
-        try:
-            me = self.api.people.me()
-            self.bot.context.set('bot.name',
-                                 str(me.displayName.split(' ')[0]))
-            logging.debug(u"Bot name: {}".format(
-                self.bot.context.get('bot.name')))
+        count = 2
+        while count:
+            try:
+                me = self.api.people.me()
+                self.bot.context.set('bot.name',
+                                     str(me.displayName.split(' ')[0]))
+                logging.debug(u"Bot name: {}".format(
+                    self.bot.context.get('bot.name')))
 
-            self.bot.context.set('bot.id', me.id)
+                self.bot.context.set('bot.id', me.id)
+                break
 
-        except Exception as feedback:
-            logging.warning(u"Unable to retrieve bot id")
-            logging.exception(feedback)
+            except Exception as feedback:
+                logging.warning(u"Unable to retrieve bot id")
+                logging.exception(feedback)
+                time.sleep(0.1)
+                count -= 1
+                if count == 0:
+                    logging.exception(feedback)
+
+        assert self.personal_api is not None  # connect() is prerequisite
+
+        count = 2
+        while count:
+            try:
+                me = self.personal_api.people.me()
+                self.bot.context.set('bot.moderator',
+                                     str(me.displayName))
+                logging.debug(u"Bot moderator: {}".format(
+                    self.bot.context.get('bot.moderator')))
+
+                break
+
+            except Exception as feedback:
+                logging.warning(u"Unable to retrieve moderator e-mail")
+                logging.exception(feedback)
+                time.sleep(0.1)
+                count -= 1
+                if count == 0:
+                    logging.exception(feedback)
 
     def webhook(self, message_id=None):
         """
