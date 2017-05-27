@@ -354,7 +354,7 @@ class ShellBot(object):
             try:
                 callback = getattr(handle, name)
                 callback(**kwargs)
-            except weakref.ReferenceError:
+            except ReferenceError:
                 logging.debug(u"Dispatch: registered object no longer exists")
 
     @property
