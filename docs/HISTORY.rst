@@ -3,6 +3,16 @@
 History
 -------
 
+17.5.27
+~~~~~~~
+* Fix package content
+* Add events 'start' and 'stop' to bot
+* Use weakref with bot event listeners
+* Minor improvements on code and tests
+* Travis-CI passed on python 2.7
+* 95% test coverage
+* 2128 python statements
+
 17.5.22
 ~~~~~~~
 * Full mirroring of chat and files in a secondary Cisco Spark room
