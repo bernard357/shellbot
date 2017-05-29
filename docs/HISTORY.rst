@@ -3,6 +3,14 @@
 History
 -------
 
+17.5.28
+~~~~~~~
+* Fix examples
+* Minor improvements on code and tests
+* Travis-CI passed on python 2.7 and 3.5
+* 95% test coverage
+* 2130 python statements
+
 17.5.27
 ~~~~~~~
 * Fix package content
