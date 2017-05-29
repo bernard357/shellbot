@@ -58,7 +58,7 @@ class SparkSpace(Space):
 
     - list rooms - bot token - list rooms visible by the bot itself
     - create room - bot token - make obvious which rooms bot has created
-    - add moderator - personal token - because bot cannot do it
+    - add moderator - bot token - because bot cannot do it
     - add participant - bot token - explicit bot action
     - delete room - bot token - limit action to scope given to bot
     - post message - bot token - explicit bot action
@@ -395,12 +395,12 @@ class SparkSpace(Space):
 
         """
         try:
-            assert self.personal_api is not None  # connect() is prerequisite
+            assert self.api is not None  # connect() is prerequisite
             assert self.id is not None  # bond() is prerequisite
 
-            self.personal_api.memberships.create(roomId=self.id,
-                                                 personEmail=person,
-                                                 isModerator=True)
+            self.api.memberships.create(roomId=self.id,
+                                        personEmail=person,
+                                        isModerator=True)
 
         except Exception as feedback:
             logging.warning(u"Unable to add moderator '{}'".format(person))
@@ -579,12 +579,13 @@ class SparkSpace(Space):
                 break
 
             except Exception as feedback:
-                logging.warning(u"Unable to retrieve bot id")
-                logging.exception(feedback)
-                time.sleep(0.1)
                 count -= 1
                 if count == 0:
+                    logging.warning(u"Unable to retrieve bot id")
                     logging.exception(feedback)
+                else:
+                    logging.warning(u"Unable to retrieve bot id, retrying")
+                time.sleep(0.1)
 
         assert self.personal_api is not None  # connect() is prerequisite
 
@@ -600,12 +601,13 @@ class SparkSpace(Space):
                 break
 
             except Exception as feedback:
-                logging.warning(u"Unable to retrieve moderator e-mail")
-                logging.exception(feedback)
                 time.sleep(0.1)
                 count -= 1
                 if count == 0:
+                    logging.warning(u"Unable to retrieve moderator e-mail")
                     logging.exception(feedback)
+                else:
+                    logging.warning(u"Unable to retrieve moderator e-mail, retrying")
 
     def webhook(self, message_id=None):
         """

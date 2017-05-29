@@ -19,6 +19,7 @@ import logging
 from multiprocessing import Queue
 import os
 
+from shellbot.context import Context
 from shellbot.speaker import Speaker
 from .base import Updater
 from shellbot.spaces import SparkSpace
@@ -55,6 +56,7 @@ class SpaceUpdater(Updater):
 
         # speak incoming updates
         #
+        self.context = Context()
         self.mouth = Queue()
 
         self.speaker = speaker if speaker else Speaker(bot=self)

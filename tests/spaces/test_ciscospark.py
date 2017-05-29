@@ -435,12 +435,12 @@ class SparkSpaceTests(unittest.TestCase):
         logging.info("*** add_moderator")
 
         space = SparkSpace(bot=my_bot)
-        space.personal_api = FakeApi()
+        space.api = FakeApi()
         space.id = '*id'
 
         space.add_moderator(person='foo.bar@acme.com')
 
-        self.assertTrue(space.personal_api.memberships.create.called)
+        self.assertTrue(space.api.memberships.create.called)
 
     def test_add_participants(self):
 
