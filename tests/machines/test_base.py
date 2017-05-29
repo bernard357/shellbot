@@ -519,7 +519,7 @@ class MachineTests(unittest.TestCase):
 
         my_bot.context.set('general.switch', 'on')
         machine_process = machine.start(tick=0.03)
-        machine.step()
+#        machine.step()
         time.sleep(0.05)
         machine.stop()
         machine_process.join()
