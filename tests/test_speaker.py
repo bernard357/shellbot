@@ -81,12 +81,20 @@ class SpeakerTests(unittest.TestCase):
         bot.mouth.put('ping')
 
         def my_post(item):
+            logging.info("- speaking")
             bot.context.set('speaker.last', item)
 
         bot.space.post_message = my_post
         bot.context.set('general.switch', 'on')
-        speaker_process = bot.speaker.run()
-        time.sleep(0.1)
+        bot.context.set('speaker.counter', 0) # do not wait for run()
+
+        speaker = Speaker(bot=bot)
+        speaker_process = speaker.run()
+        while True:
+            counter = bot.context.get('speaker.counter', 0)
+            if counter > 0:
+                logging.info("- speaker.counter > 0")
+                break
         bot.context.set('general.switch', 'off')
         speaker_process.join()
 
