@@ -136,7 +136,7 @@ settings = {
                 + u'* Describe the issue in the chat box\n'
                 + u'\n'
                 + u'As a Stress engineer, engage with shop floor and ask questions.'
-                + u' To engage with the design team, type **next** in the chat box.'
+                + u' To engage with the design team, type **escalate** in the chat box.'
         },
 
         {

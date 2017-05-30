@@ -446,6 +446,10 @@ class SparkSpace(Space):
         """
         try:
             assert self.api is not None  # connect() is prerequisite
+
+            if self.id is None:
+                self.id = self.bot.context.get(self.prefix+'.id')
+
             assert self.id is not None  # bond() is prerequisite
 
             self.api.memberships.create(roomId=self.id,
