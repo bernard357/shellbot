@@ -609,7 +609,7 @@ class SparkSpace(Space):
         try:
             logging.debug(u"Listing webhooks")
             for webhook in self.personal_api.webhooks.list():
-                logging.debug(u"- {}".format(str(webhook))
+                logging.debug(u"- {}".format(str(webhook)))
                 if webhook.name == 'shellbot-webhook':
                     logging.debug(u"- deleting webhook")
                     self.personal_api.webhooks.delete(webhookId=webhook.id)
