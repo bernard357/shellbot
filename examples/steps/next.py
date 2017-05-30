@@ -26,7 +26,7 @@ class Next(Command):
 
     """
 
-    keyword = u'next'
+    keyword = u'escalate'
     information_message = u'Move process to next state'
 
     def execute(self, arguments=None):

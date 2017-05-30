@@ -142,13 +142,13 @@ settings = {
         {
             'label': u'Level 2',
             'message': u'Escalation to technical experts',
-            'participants': 'bernard.paques@gmail.com',
+            'participants': 'guillain.sanchez@dimensiondata.com',
         },
 
         {
             'label': u'Level 3',
             'message': u'Escalation to decision stakeholders',
-            'participants': 'bernard.paques@laposte.net',
+            'participants': 'sandrine.granjean@dimensiondata.com',
         },
 
         {
@@ -197,7 +197,7 @@ order_id = Input(bot=bot,
                 on_cancel="Ok, forget about the PO number",
                 tip=20,
                 timeout=40,
-                key='order.id')
+                key='order_id')
 
 description = Input(bot=bot,
                 question="Issue description please?",
