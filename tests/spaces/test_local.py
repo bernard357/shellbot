@@ -132,6 +132,19 @@ class LocalSpaceTests(unittest.TestCase):
         space = LocalSpace(bot=my_bot)
         space.on_bond()
 
+    def test_use_space(self):
+
+        space = LocalSpace(bot=my_bot)
+        self.assertTrue(space.use_space(id='12357'))
+        self.assertEqual(space.title, 'a title')
+        self.assertEqual(space.id, '12357')
+
+        with self.assertRaises(AssertionError):
+            space.use_space(id=None)
+
+        with self.assertRaises(AssertionError):
+            space.use_space(id='')
+
     def test_lookup_space(self):
 
         space = LocalSpace(bot=my_bot)

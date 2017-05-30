@@ -260,6 +260,40 @@ class SparkSpace(Space):
             logging.error(u"Unable to load Cisco Spark API")
             logging.exception(feedback)
 
+    def use_space(self, id, **kwargs):
+        """
+        Uses an existing space
+
+        :param id: title of the target space
+        :type id: str
+
+        :return: True on success, False otherwise
+
+        If a space already exists with this id, this object is
+        configured to use it and the function returns True.
+
+        Else the function returns False.
+
+        """
+        assert id not in (None, '')
+        logging.info(u"Using Cisco Spark room '{}'".format(id))
+
+        assert self.api is not None  # connect() is prerequisite
+        try:
+            for room in self.api.rooms.list():
+                if id == room.id:
+                    logging.info(u"- found it")
+                    self.use_room(room)
+                    return True
+
+            logging.info(u"- not found")
+
+        except Exception as feedback:
+            logging.error(u"Unable to list rooms")
+            logging.exception(feedback)
+
+        return False
+
     def lookup_space(self, title, **kwargs):
         """
         Looks for an existing space by name
@@ -347,6 +381,8 @@ class SparkSpace(Space):
         """
         logging.info(u"Bonding to room '{}'".format(room.title))
 
+        logging.debug(u"- {}".format(str(room)
+        ))
         self.id = room.id
         self.bot.context.set(self.prefix+'.id', self.id)
         logging.debug(u"- id: {}".format(self.id))
@@ -355,7 +391,21 @@ class SparkSpace(Space):
         self.bot.context.set(self.prefix+'.title', self.title)
         logging.debug(u"- title: {}".format(self.title))
 
+        logging.debug(u"- type: {}".format(room.type))
+        self.is_direct = True if room.type == "direct" else False
+        self.is_group = True if room.type == "group" else False
+        self.is_team = True if room.type == "team" else False
+
+        self.is_locked = True if room.isLocked else False
+        logging.debug(u"- is_locked: {}".format(self.is_locked))
+
         self.teamId = room.teamId
+
+#        self.on_run()
+#        bot_moderator = self.bot.context.get('bot.moderator')
+#        if bot_moderator:
+#            logging.debug(u"- adding bot moderator: {}".format(bot_moderator))
+#            self.add_moderator(bot_moderator)
 
     def get_team(self, name):
         """

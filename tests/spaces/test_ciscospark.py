@@ -349,6 +349,28 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertEqual(space.api.token, 'a')
         self.assertEqual(space.personal_api.token, 'b')
 
+    def test_use_space(self):
+
+        logging.info("*** use_space")
+
+        space = SparkSpace(bot=my_bot)
+
+        with self.assertRaises(AssertionError):
+            flag = space.use_space(id='*no*api*anyway')
+
+        space.api = FakeApi(rooms=[FakeRoom()])
+        self.assertFalse(space.use_space(id='*does*not*exist'))
+        self.assertTrue(space.api.rooms.list.called)
+
+        self.assertTrue(space.use_space(id='*id'))
+
+        class Intruder(object):
+            def list(self):
+                raise Exception('TEST')
+
+        space.api.rooms = Intruder()
+        self.assertFalse(space.use_space(id='any'))
+
     def test_lookup_space(self):
 
         logging.info("*** lookup_space")
@@ -356,11 +378,13 @@ class SparkSpaceTests(unittest.TestCase):
         space = SparkSpace(bot=my_bot)
 
         with self.assertRaises(AssertionError):
-            flag = space.lookup_space(title='*does*not*exist*in*this*world')
+            flag = space.use_space(id='*no*api*anyway')
 
-        space.api = FakeApi()
+        space.api = FakeApi(rooms=[FakeRoom()])
         self.assertFalse(space.lookup_space(title='*does*not*exist'))
         self.assertTrue(space.api.rooms.list.called)
+
+        self.assertTrue(space.lookup_space(title='*title'))
 
         class Intruder(object):
             def list(self):

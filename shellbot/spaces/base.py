@@ -243,14 +243,11 @@ class Space(object):
         if necessary. In later case it also adds moderators and participants.
 
         """
-
         if title in (None, ''):
             title = self.configured_title()
 
         assert title not in (None, '')
         self.title = title
-
-        # we should probably use a lock if multithread
 
         if not self.lookup_space(title=title, **kwargs):
 
@@ -310,7 +307,31 @@ class Space(object):
 
         return None
 
-    def lookup_space(self, title, **kwargs):
+    def use_space(self, id, **kwargs):
+        """
+        Uses an existing space
+
+        :param id: title of the target space
+        :type id: str
+
+        :return: True on success, False otherwise
+
+        If a space already exists with this id, this object is
+        configured to use it and the function returns True.
+
+        Else the function returns False.
+
+        This function should be implemented in sub-class.
+
+        Example::
+
+            def use_space(self, id, **kwargs):
+                return self.api.rooms.lookup(id=id)
+
+        """
+        return False
+
+    def lookup_space(self, title=None, **kwargs):
         """
         Looks for an existing space by name
 
@@ -328,7 +349,7 @@ class Space(object):
 
         Example::
 
-            def lookup_space(self, title=None, **kwargs):
+            def lookup_space(self, title, **kwargs):
                 return self.api.rooms.lookup(title=title)
 
         """

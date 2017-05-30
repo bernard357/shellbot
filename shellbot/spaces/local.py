@@ -141,6 +141,29 @@ class LocalSpace(Space):
         """
         self.bot.context.set('bot.id', '*bot')
 
+    def use_space(self, id, **kwargs):
+        """
+        Uses an existing space
+
+        :param id: title of the target space
+        :type id: str
+
+        :return: True on success, False otherwise
+
+        If a space already exists with this id, this object is
+        configured to use it and the function returns True.
+
+        Else the function returns False.
+
+        This function should be
+        """
+        assert id not in (None, '')
+
+        self.id = id
+        self.title = self.configured_title()
+
+        return True
+
     def lookup_space(self, title, **kwargs):
         """
         Looks for an existing space by name

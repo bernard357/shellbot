@@ -243,6 +243,13 @@ class SpaceTests(unittest.TestCase):
         space.id = '*id'
         self.assertEqual(space.get_id(), '*id')
 
+    def test_use_space(self):
+
+        logging.info("*** use_space")
+
+        space = Space(bot=my_bot)
+        self.assertFalse(space.use_space(id='*id'))
+
     def test_lookup_space(self):
 
         logging.info("*** lookup_space")
