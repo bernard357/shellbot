@@ -291,7 +291,7 @@ bot.start()
 
 trigger = Trigger(bot, queue)
 p = Process(target=trigger.work)
-p.daemon = True
+#p.daemon = True
 p.start()
 
 server.run()
