@@ -468,7 +468,7 @@ class SparkSpace(Space):
             assert self.api is not None  # connect() is prerequisite
 
             if self.id is None:
-                self.id = self.bot.context.set(self.prefix+'.id')
+                self.id = self.bot.context.get(self.prefix+'.id')
 
             assert self.id is not None  # bond() is prerequisite
 
