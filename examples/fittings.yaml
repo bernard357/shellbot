@@ -17,7 +17,7 @@ blueprints:
 
       ethernet:
         name: ShellbotNetwork
-        subnet: 10.9.45.0
+        subnet: 10.90.45.0
 
       nodes:
         - shellbot-01:
@@ -49,7 +49,7 @@ blueprints:
                 - path: /etc/init/shellbot.conf
                   permissions: "0755"
                   content: |
-                      description "MCP watch service"
+                      description "Shellbot example"
 
                       start on runlevel [234]
                       stop on runlevel [0156]
@@ -65,7 +65,7 @@ blueprints:
                       env CHAT_ROOM_MODERATORS="{{ environment.CHAT_ROOM_MODERATORS }}"
                       export CHAT_ROOM_MODERATORS
 
-                      env SERVER_URL="http://{{ node.public }}"
+                      env SERVER_URL="http://{{ node.public }}:8080"
                       export SERVER_URL
 
                       script
@@ -80,7 +80,7 @@ blueprints:
                     export CHAT_TOKEN="{{ environment.CHAT_TOKEN }}"
                     export CISCO_SPARK_TOKEN="{{ environment.CISCO_SPARK_TOKEN }}"
                     export CHAT_ROOM_MODERATORS="{{ environment.CHAT_ROOM_MODERATORS }}"
-                    export SERVER_URL="http://{{ node.public }}"
+                    export SERVER_URL="http://{{ node.public }}:8080"
 
                 - path: /root/hosts.awk
                   content: |
