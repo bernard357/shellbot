@@ -31,6 +31,8 @@ class Listener(object):
 
     EMPTY_DELAY = 0.005   # time to wait if queue is empty
 
+    FRESH_DURATION = 0.5  # maximum amount of time for listener detection
+
     def __init__(self, bot=None, filter=None):
         """
         Handles events received from chat space
@@ -208,6 +210,10 @@ class Listener(object):
         input = item.text
         if len(input) > 0 and input[0] in ['@', '/', '!']:
             input = input[1:]
+
+        elapsed = time.time() - self.bot.context.get('fan.stamp', 0)
+        if elapsed < self.FRESH_DURATION:
+            self.bot.fan.put(input)
 
         bot = self.bot.context.get('bot.name', 'shelly')
         if input.lower().startswith(bot):
