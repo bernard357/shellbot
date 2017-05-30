@@ -381,8 +381,8 @@ class SparkSpace(Space):
         """
         logging.info(u"Bonding to room '{}'".format(room.title))
 
-        logging.debug(u"- {}".format(str(room)
-        ))
+        logging.debug(u"- {}".format(str(room)))
+
         self.id = room.id
         self.bot.context.set(self.prefix+'.id', self.id)
         logging.debug(u"- id: {}".format(self.id))
@@ -466,6 +466,10 @@ class SparkSpace(Space):
         """
         try:
             assert self.api is not None  # connect() is prerequisite
+
+            if self.id is None:
+                self.id = self.bot.context.set(self.prefix+'.id')
+
             assert self.id is not None  # bond() is prerequisite
 
             self.api.memberships.create(roomId=self.id,
