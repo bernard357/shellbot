@@ -273,7 +273,8 @@ class Trigger(object):
         logging.info(u'Trigger {} {}'.format(item, counter))
 
         if counter == 1:
-            self.bot.bond(reset=True)
+#            self.bot.bond(reset=True)
+            self.bot.bond()
             self.bot.space.on_run()
             self.bot.hook()
 
