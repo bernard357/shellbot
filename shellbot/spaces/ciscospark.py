@@ -554,6 +554,7 @@ class SparkSpace(Space):
             self.id = self.bot.context.get(self.prefix+'.id')
 
         logging.debug(u"- text: {}".format(text))
+        logging.debug(u"- roomId: {}".format(self.id))
 
         assert self.api is not None  # connect() is prerequisite
 
