@@ -600,6 +600,24 @@ class SparkSpace(Space):
         logging.debug(u"- {}".format(hook_url))
 
         assert self.personal_api is not None  # connect() is prerequisite
+
+        if self.id is None:
+            self.id = self.bot.context.get(self.prefix+'.id')
+
+        logging.debug(u"- roomId: {}".format(self.id))
+
+#        try:
+#            logging.debug(u"Listing webhooks")
+#            for webhook in self.personal_api.webhooks.list():
+#                logging.debug(u"- {}".format(str(webhook))
+#                if webhook.name == 'shellbot-webhook':
+#                    logging.debug(u"- deleting webhook")
+#                    self.personal_api.webhooks.delete(webhookId=webhook.id)
+#
+#        except Exception as feedback:
+#            logging.warning(u"Unable to handle webhook")
+#            logging.exception(feedback)
+
         try:
             self.personal_api.webhooks.create(name='shellbot-webhook',
                                               targetUrl=hook_url,
