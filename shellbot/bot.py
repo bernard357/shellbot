@@ -38,7 +38,17 @@ class ShellBot(object):
     """
     Wraps underlying services in a single instance
 
-    Example::
+    Shellbot allows the creation of bots with a given set of commands.
+    Each bot instance is bonded to a single chat space. The chat space can be
+    either created by the bot itself, or the bot can join an existing space.
+
+    The first use case is adapted when a collaboration space is created for
+    semi-automated interactions between human and machines.
+    In the example below, the bot controls the entire life cycle of the chat
+    space. A chat space is created when the program is launched. And it is
+    deleted when the program is stopped.
+
+    Chat space creation example::
 
         from shellbot import ShellBot, Context, Command
         Context.set_logger()
@@ -55,7 +65,7 @@ class ShellBot(object):
         #
         bot.configure()
 
-        # create a chat room
+        # create a chat room, or connect to an existing one
         #
         bot.bond(reset=True)
 
@@ -67,6 +77,18 @@ class ShellBot(object):
         #
         bot.dispose()
 
+    A second interesting use case is when a bot is invited to an existing chat
+    space. On such an event, a new bot instance can be created and bonded
+    to the chat space.
+
+    Chat space bonding example::
+
+        def on_invitation(self, space_id):
+            bot = ShellBot()
+            bot.configure()
+            bot.use_space(id=space_id)
+            bot.run()
+            return bot
     """
 
     DEFAULT_SETTINGS = {

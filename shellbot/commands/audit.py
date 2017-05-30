@@ -176,7 +176,7 @@ class Audit(Command):
         """
         Ensures that audit is restarted
         """
-        logging.debug(u"Watchdog is cheking audit status")
+        logging.debug(u"Watchdog is checking audit status")
         if self.bot.context.get('audit.switch', 'off') == 'off':
             logging.debug(u"- restarting audit")
             self.audit_on()

@@ -284,7 +284,7 @@ class Machine(object):
         """
         Brings some life to the state machine
 
-        This function should report on progress by sending
+        This machine should report on progress by sending
         messages with one or multiple ``self.bot.say("Whatever message")``.
 
         """
