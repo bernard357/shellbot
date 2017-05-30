@@ -114,7 +114,7 @@ settings = {
 
     'spark': {
         'room': 'On-demand collaboration',
-        'moderators': '$CHAT_ROOM_MODERATORS',
+        'moderators': 'guillain.sanchez@dimensiondata.com',
         'token': '$CHAT_TOKEN',
     },
 
@@ -136,19 +136,19 @@ settings = {
                 + u'* Describe the issue in the chat box\n'
                 + u'\n'
                 + u'As a Stress engineer, engage with shop floor and ask questions.'
-                + u' To engage with the design team, type **escalate** in the chat box.'
+                + u' To engage with the design team, type **escalate** in the chat box.',
+            'participants': 'bernard.paques@dimensiondata.com',
         },
 
         {
             'label': u'Level 2',
             'message': u'Escalation to technical experts',
-            'participants': 'guillain.sanchez@dimensiondata.com',
+            'participants': 'sandrine.granjean@dimensiondata.com',
         },
 
         {
             'label': u'Level 3',
             'message': u'Escalation to decision stakeholders',
-            'participants': 'sandrine.granjean@dimensiondata.com',
         },
 
         {
