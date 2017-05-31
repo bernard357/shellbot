@@ -56,7 +56,7 @@ class StepsTests(unittest.TestCase):
         commands = StepsFactory.commands()
         self.assertTrue(len(commands) == 2)
         for command in commands:
-            self.assertTrue(command.keyword in ['next', 'state'])
+            self.assertTrue(command.keyword in ['escalate', 'state'])
             self.assertTrue(len(command.information_message) > 1)
 
     def test_steps(self):
@@ -118,7 +118,7 @@ class StepsTests(unittest.TestCase):
         my_bot.steps = steps
         n = Next(bot=my_bot)
 
-        self.assertEqual(n.keyword, 'next')
+        self.assertEqual(n.keyword, 'escalate')
         self.assertEqual(n.information_message, u'Move process to next state')
         self.assertTrue(n.is_interactive)
         self.assertFalse(n.is_hidden)

@@ -596,16 +596,6 @@ class SparkSpace(Space):
         assert self.is_ready  # bond() is prerequisite
         assert hook_url not in (None, '')
 
-        logging.info(u"Registering webhook to Cisco Spark")
-        logging.debug(u"- {}".format(hook_url))
-
-        assert self.personal_api is not None  # connect() is prerequisite
-
-        if self.id is None:
-            self.id = self.bot.context.get(self.prefix+'.id')
-
-        logging.debug(u"- roomId: {}".format(self.id))
-
         try:
             logging.debug(u"Listing webhooks")
             for webhook in self.personal_api.webhooks.list():
@@ -617,6 +607,16 @@ class SparkSpace(Space):
         except Exception as feedback:
             logging.warning(u"Unable to handle webhook")
             logging.exception(feedback)
+
+        logging.info(u"Registering webhook to Cisco Spark")
+        logging.debug(u"- {}".format(hook_url))
+
+        assert self.personal_api is not None  # connect() is prerequisite
+
+        if self.id is None:
+            self.id = self.bot.context.get(self.prefix+'.id')
+
+        logging.debug(u"- roomId: {}".format(self.id))
 
         try:
             self.personal_api.webhooks.create(name='shellbot-webhook',

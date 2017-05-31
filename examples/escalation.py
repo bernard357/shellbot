@@ -114,7 +114,7 @@ settings = {
 
     'spark': {
         'room': 'On-demand collaboration',
-        'moderators': 'guillain.sanchez@dimensiondata.com',
+        'moderators': '$CHAT_ROOM_MODERATORS',
         'token': '$CHAT_TOKEN',
     },
 

@@ -33,7 +33,9 @@ class Fake(object):
 
 class FakeRoom(Fake):
     id = '*id'
+    isLocked = False
     title = '*title'
+    type = 'group'
     teamId = None
 
 
@@ -74,6 +76,7 @@ class FakeApi(object):
         self.messages.get = mock.Mock(return_value=FakeMessage())
 
         self.webhooks = Fake()
+        self.webhooks.list = mock.Mock(return_value=[])
         self.webhooks.create = mock.Mock()
 
         self.people = Fake()
