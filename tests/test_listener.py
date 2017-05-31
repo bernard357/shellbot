@@ -20,7 +20,6 @@ from shellbot.events import Event, Message, Attachment, Join, Leave
 
 
 my_bot = ShellBot(ears=Queue(), mouth=Queue())
-my_bot.context.set('bot.id', "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg")
 my_bot.shell.load_default_commands()
 
 my_message = Message({
@@ -112,6 +111,9 @@ my_event = Event({
 
 class ListenerTests(unittest.TestCase):
 
+    def setUp(self):
+        my_bot.context.set('bot.id', "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg")
+
     def tearDown(self):
         collected = gc.collect()
         logging.info("Garbage collector: collected %d objects." % (collected))
@@ -193,12 +195,12 @@ class ListenerTests(unittest.TestCase):
 
         class Mocked(object):
             def filter(self, event):
-                self.event = Event(event.attributes.copy())
-                self.event.flag = True
+                event.flag = True
                 text = event.get('text')
                 if text:
-                    self.event.text = text.title()
-                return self.event
+                    event.text = text.title()
+                self.event = event
+                return event
 
         mocked = Mocked()
 
@@ -211,6 +213,7 @@ class ListenerTests(unittest.TestCase):
         self.assertEqual(my_bot.context.get('listener.counter'), 23)
         self.assertEqual(mocked.event.text,
                          'The Pm For This Project Is Mike C. And The Engineering Manager Is Jane W.')
+        self.assertTrue(mocked.event.flag)
 
         mocked.event = None
         listener.process(str(my_attachment))
@@ -246,6 +249,28 @@ class ListenerTests(unittest.TestCase):
             listener.on_message(item=my_leave)
         with self.assertRaises(AssertionError):
             listener.on_message(item=my_event)
+
+    def test_on_message_fan(self):
+
+        logging.info('*** on_message/fan ***')
+
+        class MyFan(object):
+            def __init__(self):
+                self.called = False
+            def put(self, arguments):
+                self.called = True
+
+        my_bot.fan = MyFan()
+        my_bot.context.set('bot.id', "*not*me")
+
+        listener = Listener(bot=my_bot)
+
+        listener.on_message(item=my_message)
+        self.assertFalse(my_bot.fan.called)
+
+        my_bot.context.set('fan.stamp', time.time())
+        listener.on_message(item=my_message)
+        self.assertTrue(my_bot.fan.called)
 
     def test_on_attachment(self):
 

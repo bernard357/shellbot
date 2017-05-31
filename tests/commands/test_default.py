@@ -40,21 +40,6 @@ class DefaultTests(unittest.TestCase):
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
-    def test_fan(self):
-
-        class MyFan(Default):
-            def put(self, arguments):
-                assert arguments == '*unknown*'
-
-        my_bot.fan = MyFan()
-
-        c = Default(my_bot)
-
-        with mock.patch.object(c,
-                               'has_listeners',
-                               return_value=True) as mocked:
-            c.execute('*unknown*')
-
 
 if __name__ == '__main__':
 

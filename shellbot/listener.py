@@ -129,9 +129,10 @@ class Listener(object):
         Following types are handled:
 
         * ``message`` -- This is a textual message, maybe with a file attached.
-          The message is given to the ``on_message()`` function. If a file
-          or a link is provided, the, ``on_attachment()`` function is called
-          as well.
+          The message is given to the ``on_message()`` function.
+
+        * ``attachment`` -- A file has been attached to the chat space. The
+          ``on_attachment()`` function is invoked.
 
         * ``join`` -- This is when a person join a space. The function
           ``on_join()`` is called, providing details on the person who joined
@@ -152,24 +153,39 @@ class Listener(object):
             assert isinstance(item, dict)  # low-level event representation
 
             if item['type'] == 'message':
-                logging.debug(u"- dispatching a message event")
-                self.on_message(Message(item))
+                logging.debug(u"- dispatching a 'message' event")
+                event = Message(item)
+                if self.filter:
+                    event = self.filter(event)
+                self.on_message(event)
 
             elif item['type'] == 'attachment':
-                logging.debug(u"- dispatching an attachment event")
-                self.on_attachment(Attachment(item))
+                logging.debug(u"- dispatching an 'attachment' event")
+                event = Attachment(item)
+                if self.filter:
+                    event = self.filter(event)
+                self.on_attachment(event)
 
             elif item['type'] == 'join':
-                logging.debug(u"- dispatching a join event")
-                self.on_join(Join(item))
+                logging.debug(u"- dispatching a 'join' event")
+                event = Join(item)
+                if self.filter:
+                    event = self.filter(event)
+                self.on_join(event)
 
             elif item['type'] == 'leave':
-                logging.debug(u"- dispatching a leave event")
-                self.on_leave(Leave(item))
+                logging.debug(u"- dispatching a 'leave' event")
+                event = Leave(item)
+                if self.filter:
+                    event = self.filter(event)
+                self.on_leave(event)
 
             else:
                 logging.debug(u"- dispatching an event")
-                self.on_event(Event(item))
+                event = Event(item)
+                if self.filter:
+                    event = self.filter(event)
+                self.on_event(event)
 
         except AssertionError as feedback:
             logging.debug(u"- invalid format, thrown away")
@@ -186,40 +202,53 @@ class Listener(object):
         :param item: the message received
         :type item: Message
 
-        This function listens for specific commands in the coming flow.
-        When a command has been identified, it is responded immediately.
-        Commands that require significant processing time are pushed
-        to the inbox.
+        When a message is directed to the bot it is submitted directly to the
+        shell. This is handled as a command, that can be executed immediately,
+        or pushed to the inbox and processed by the worker  when possible.
 
+        All other messages are thrown away, except if there is some
+        downwards listeners. In that situation the message is pushed to a queue
+        so that some process can pick it up and process it.
+
+        The protocol for downwards listener works like this:
+
+        * Check the ``bot.fan`` queue frequently
+
+        * On each check, update the string ``fan.stamp`` in the context with
+          the value of ``time.time()``. This will signal that you are around.
+
+        The value of ``fan.stamp`` is checked on every message that is not
+        for the bot itself. If this is fresh enough, then data is put to the
+        ``bot.fan`` queue. Else message is just thrown away.
         """
         assert item.type == 'message'  # sanity check
-
-        if item.text is None:
-            logging.debug(u"- no input in this item, thrown away")
-            return
-
-        if self.filter:
-            item = self.filter(item)
-
-#        print(item)
 
         if item.from_id == self.bot.context.get('bot.id'):
             logging.debug(u"- sent by me, thrown away")
             return
 
         input = item.text
+
+        if input is None:
+            logging.debug(u"- no input in this item, thrown away")
+            return
+
         if len(input) > 0 and input[0] in ['@', '/', '!']:
             input = input[1:]
-
-        elapsed = time.time() - self.bot.context.get('fan.stamp', 0)
-        if elapsed < self.FRESH_DURATION:
-            self.bot.fan.put(input)
 
         bot = self.bot.context.get('bot.name', 'shelly')
         if input.lower().startswith(bot):
             input = input[len(bot):].strip()
 
-        elif self.bot.context.get('bot.id') not in item.mentioned_ids:
+        elif self.bot.context.get('bot.id') in item.mentioned_ids:
+            pass # send to the shell
+
+        else: # not explicitly intended for the bot
+
+            elapsed = time.time() - self.bot.context.get('fan.stamp', 0)
+            if elapsed < self.FRESH_DURATION:
+                self.bot.fan.put(input)  # forward downstream
+
             logging.info(u"- not for me, thrown away")
             return
 
@@ -234,9 +263,6 @@ class Listener(object):
         """
         assert item.type == 'attachment'
 
-        if self.filter:
-            item = self.filter(item)
-
     def on_join(self, item):
         """
         A person has joined a space
@@ -245,9 +271,6 @@ class Listener(object):
         :type item: Join
         """
         assert item.type == 'join'
-
-        if self.filter:
-            item = self.filter(item)
 
     def on_leave(self, item):
         """
@@ -258,9 +281,6 @@ class Listener(object):
         """
         assert item.type == 'leave'
 
-        if self.filter:
-            item = self.filter(item)
-
     def on_event(self, item):
         """
         Another event has been received
@@ -269,7 +289,4 @@ class Listener(object):
         :type item: Event or derivative
         """
         assert item.type not in ('message', 'attachment', 'join', 'leave')
-
-        if self.filter:
-            item = self.filter(item)
 
