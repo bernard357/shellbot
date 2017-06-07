@@ -147,12 +147,9 @@ class Server(Bottle):
         for route in self.routes:
             logging.debug(u'- {}'.format(route))
 
-        try:
-            self.httpd.run(host=self.context.get('server.address', '0.0.0.0'),
-                           port=self.context.get('server.port', 80),
-                           debug=self.context.get('server.debug', False),
-                           server='paste')
-        except:
-            pass
+        self.httpd.run(host=self.context.get('server.address', '0.0.0.0'),
+                       port=self.context.get('server.port', 80),
+                       debug=self.context.get('server.debug', False),
+                       server='paste')
 
         logging.info(u'Web server has been stopped')
