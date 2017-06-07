@@ -19,6 +19,7 @@ import colorlog
 import logging
 import os
 from multiprocessing import Lock, Manager
+import signal
 
 from .base import Store
 
@@ -40,7 +41,13 @@ class MemoryStore(Store):
         """
         Adds processing to initialization
         """
+        # prevent Manager() process to be interrupted
+        handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+
         self.values = Manager().dict()
+
+        # restore current handler for the rest of the program
+        signal.signal(signal.SIGINT, handler)
 
     def _set(self, key, value):
         """

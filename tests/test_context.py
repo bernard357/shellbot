@@ -269,6 +269,36 @@ class ContextTests(unittest.TestCase):
         context.set(u'hello', u'wôrld')
         self.assertEqual(context.get(u'hello'), u'wôrld')
 
+    def test_increment(self):
+
+        context = my_context
+
+        context.clear()
+
+        self.assertEqual(context.get('gauge'), None)
+        value = context.increment('gauge')
+        self.assertEqual(value, 1)
+
+        context.set('gauge', 'world')
+        self.assertEqual(context.get('gauge'), 'world')
+        value = context.increment('gauge')
+        self.assertEqual(value, 1)
+
+    def test_decrement(self):
+
+        context = my_context
+
+        context.clear()
+
+        self.assertEqual(context.get('gauge'), None)
+        value = context.decrement('gauge')
+        self.assertEqual(value, -1)
+
+        context.set('gauge', 'world')
+        self.assertEqual(context.get('gauge'), 'world')
+        value = context.decrement('gauge')
+        self.assertEqual(value, -1)
+
     def test_gauge(self):
 
         context = my_context

@@ -19,6 +19,7 @@ import colorlog
 import logging
 import os
 from multiprocessing import Lock, Manager
+import signal
 
 
 class Context(object):
@@ -41,8 +42,15 @@ class Context(object):
         :type filter: callable
 
         """
+
+        # prevent Manager() process to be interrupted
+        handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+
         self.lock = Lock()
         self.values = Manager().dict()
+
+        # restore current handler for the rest of the program
+        signal.signal(signal.SIGINT, handler)
 
         self.filter = filter if filter else self._filter
 
@@ -57,8 +65,8 @@ class Context(object):
         :type settings: dict
 
         """
-        self.lock.acquire()
-        try:
+        with self.lock:
+
             for key in settings.keys():
                 if isinstance(settings[key], dict):
                     for label in settings[key].keys():
@@ -67,18 +75,13 @@ class Context(object):
                     self.values[key] = settings[key]
                 else:
                     self.values['general.'+key] = settings[key]
-        finally:
-            self.lock.release()
 
     def clear(self):
         """
         Clears content of a context
         """
-        self.lock.acquire()
-        try:
+        with self.lock:
             self.values.clear()
-        finally:
-            self.lock.release()
 
     def check(self,
               key,
@@ -153,8 +156,7 @@ class Context(object):
         If a validation function is provided, then a ``ValueError`` can be
         raised as well in some situations.
         """
-        self.lock.acquire()
-        try:
+        with self.lock:
 
             if default is not None:
                 value = self.values.get(key, None)
@@ -180,9 +182,6 @@ class Context(object):
 
             if filter:
                 self.values[key] = self.filter(value, default)
-
-        finally:
-            self.lock.release()
 
     @classmethod
     def _filter(self, value, default=None):
@@ -257,74 +256,89 @@ class Context(object):
             False
 
         """
-        self.lock.acquire()
-        try:
+        with self.lock:
+
             for key in self.values.keys():
                 if key.startswith(prefix):
                     return True
-        finally:
-            self.lock.release()
+
         return False
 
     def get(self, key, default=None):
         """
-        Retrieves the value of one key
-        """
+        Retrieves the value of one configurationkey
 
-        self.lock.acquire()
-        value = None
-        try:
+        :param key: name of the value
+        :type key: str
+
+        :param default: default value
+        :type default: any serializable type is accepted
+
+        :return: the actual value, or the default value, or None
+
+        Example::
+
+            message = context.get('bot.on_start')
+
+        This function is safe on multiprocessing and multithreading.
+
+        """
+        with self.lock:
+
             value = self.values.get(key, default)
 
-            if value is None:
-                value = default
-        finally:
-            self.lock.release()
-            return value
+            if value is not None:
+                return value
+
+            return default
 
     def set(self, key, value):
         """
-        Remembers the value of one key
-        """
+        Changes the value of one configuration key
 
-        self.lock.acquire()
-        try:
+        :param key: name of the value
+        :type key: str
+
+        :param value: new value
+        :type value: any serializable type is accepted
+
+        Example::
+
+            context.set('bot.on_start', 'hello world')
+
+        This function is safe on multiprocessing and multithreading.
+
+        """
+        with self.lock:
+
             self.values[key] = value
-        except IOError as feedback:
-            logging.error(feedback)
-        finally:
-            self.lock.release()
 
     def increment(self, key, delta=1):
         """
         Increments a value
         """
+        with self.lock:
 
-        self.lock.acquire()
-        try:
             value = self.values.get(key, 0)
             if not isinstance(value, int):
                 value = 0
             value += delta
             self.values[key] = value
-        finally:
-            self.lock.release()
+
             return value
 
     def decrement(self, key, delta=1):
         """
         Decrements a value
         """
+        with self.lock:
 
-        self.lock.acquire()
-        try:
             value = self.values.get(key, 0)
             if not isinstance(value, int):
                 value = 0
             value -= delta
             self.values[key] = value
-        finally:
-            self.lock.release()
+
             return value
 
     @classmethod
