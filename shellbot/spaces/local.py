@@ -139,7 +139,7 @@ class LocalSpace(Space):
         """
         Adds processing to space bond
         """
-        self.bot.context.set('bot.id', '*bot')
+        self.bot.set('bot.id', '*bot')
 
     def use_space(self, id, **kwargs):
         """
@@ -159,7 +159,7 @@ class LocalSpace(Space):
         """
         assert id not in (None, '')
 
-        self.id = id
+        self.set('id', id)
         self.title = self.configured_title()
 
         return True
@@ -176,7 +176,7 @@ class LocalSpace(Space):
         """
         assert title not in (None, '')
 
-        self.id = '*id'
+        self.set('id', '*id')
         self.title = title
 
         return True
@@ -194,7 +194,7 @@ class LocalSpace(Space):
         """
         assert title not in (None, '')
 
-        self.id = '*id'
+        self.set('id', '*id')
         self.title = title
 
     def add_moderator(self, person):
@@ -228,6 +228,7 @@ class LocalSpace(Space):
 
         """
         pass
+
     def post_message(self,
                      text=None,
                      content=None,
@@ -300,6 +301,6 @@ class LocalSpace(Space):
         """
         message = Message(item)
         message.from_id = '*user'
-        message.mentioned_ids = ['*bot']
+        message.mentioned_ids = []
 
         queue.put(str(message))

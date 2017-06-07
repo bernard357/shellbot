@@ -51,7 +51,7 @@ class SpeakerTests(unittest.TestCase):
 
         bot = my_bot
         bot.space = SpaceFactory.get('local', bot=bot)
-        bot.space.id = '123'
+        bot.set('local.id', '123')
 
         items = ['hello', 'world']
         for item in items:
@@ -77,7 +77,7 @@ class SpeakerTests(unittest.TestCase):
 
         bot = my_bot
         bot.space = SpaceFactory.get('local', bot=bot)
-        bot.space.id = '123'
+        bot.set('local.id', '123')
         bot.mouth.put('ping')
 
         def my_post(item):
@@ -108,7 +108,7 @@ class SpeakerTests(unittest.TestCase):
         bot = my_bot
         bot.space = SpaceFactory.get('local', bot=bot)
 
-        bot.space.id = '123'
+        bot.set('space.id', '123')
 
         bot.speaker.process = mock.Mock(side_effect=Exception('TEST'))
         bot.mouth.put(('dummy'))
@@ -138,10 +138,10 @@ class SpeakerTests(unittest.TestCase):
         t = Timer(0.1, bot.mouth.put, ['ping'])
         t.start()
 
-        def set_ready(space, *args, **kwargs):
-            space.id = '123'
+        def set_ready(bot, *args, **kwargs):
+            bot.set('space.id', '123')
 
-        t = Timer(0.15, set_ready, [bot.space])
+        t = Timer(0.15, set_ready, [bot])
         t.start()
 
         time.sleep(0.2)
@@ -159,7 +159,7 @@ class SpeakerTests(unittest.TestCase):
 
         bot = my_bot
         bot.space = SpaceFactory.get('local', bot=bot)
-        bot.space.id = '123'
+        bot.set('space.id', '123')
 
         speaker = Speaker(bot=bot)
 

@@ -98,10 +98,10 @@ class SparkSpace(Space):
         self.prefix = prefix
 
         if token not in (None, ''):
-            self.bot.context.set(self.prefix+'.token', token)
+            self.set('token', token)
 
         if personal_token not in (None, ''):
-            self.bot.context.set(self.prefix+'.personal_token', personal_token)
+            self.set('personal_token', personal_token)
 
         self.api = None
         self.personal_api = None
@@ -110,12 +110,13 @@ class SparkSpace(Space):
         """
         Resets extended internal variables
         """
+        logging.debug(u"- Cisco Spark reset")
+
         self.teamId = None
 
-        self.token = self.bot.context.get(self.prefix+'.token', '')
+        self.token = self.get('token', '')
 
-        self.personal_token = self.bot.context.get(
-            self.prefix+'.personal_token', '')
+        self.personal_token = self.get('personal_token', '')
 
         self._last_message_id = 0
 
@@ -206,11 +207,10 @@ class SparkSpace(Space):
         :return: the configured title, or ``Collaboration space``
         :rtype: str
 
-        For Cisco Spark configurations, this is coming
-        from ``spark.room`` parameter.
+        This function should be rewritten in sub-classes if
+        space title does not come from ``space.room`` parameter.
         """
-        return  self.bot.context.get(self.prefix+'.room',
-                                     self.DEFAULT_SPACE_TITLE)
+        return self.get('room', self.DEFAULT_SPACE_TITLE)
 
     def connect(self, factory=None, **kwargs):
         """
@@ -383,12 +383,11 @@ class SparkSpace(Space):
 
         logging.debug(u"- {}".format(str(room)))
 
-        self.id = room.id
-        self.bot.context.set(self.prefix+'.id', self.id)
-        logging.debug(u"- id: {}".format(self.id))
+        self.set('id', room.id)
+        logging.debug(u"- {}.id: {}".format(self.prefix, self.id))
 
         self.title = room.title
-        self.bot.context.set(self.prefix+'.title', self.title)
+        self.set('title', self.title)
         logging.debug(u"- title: {}".format(self.title))
 
         logging.debug(u"- type: {}".format(room.type))
@@ -446,11 +445,9 @@ class SparkSpace(Space):
         """
         try:
             assert self.api is not None  # connect() is prerequisite
-
-            if self.id is None:
-                self.id = self.bot.context.get(self.prefix+'.id')
-
             assert self.id is not None  # bond() is prerequisite
+
+            logging.debug(u"- roomID: {}".format(self.id))
 
             self.api.memberships.create(roomId=self.id,
                                         personEmail=person,
@@ -470,10 +467,6 @@ class SparkSpace(Space):
         """
         try:
             assert self.api is not None  # connect() is prerequisite
-
-            if self.id is None:
-                self.id = self.bot.context.get(self.prefix+'.id')
-
             assert self.id is not None  # bond() is prerequisite
 
             self.api.memberships.create(roomId=self.id,
@@ -510,6 +503,7 @@ class SparkSpace(Space):
             return
 
         logging.info(u"Deleting Cisco Spark room '{}'".format(self.title))
+        logging.debug(u"- roomID: {}".format(self.id))
 
         assert self.api is not None  # connect() is prerequisite
         try:
@@ -557,10 +551,6 @@ class SparkSpace(Space):
         """
 
         logging.info(u"Posting message")
-
-        if self.id is None:
-            self.id = self.bot.context.get(self.prefix+'.id')
-
         logging.debug(u"- text: {}".format(text))
         logging.debug(u"- roomId: {}".format(self.id))
 
@@ -613,16 +603,21 @@ class SparkSpace(Space):
 
         assert self.personal_api is not None  # connect() is prerequisite
 
-        if self.id is None:
-            self.id = self.bot.context.get(self.prefix+'.id')
-
         logging.debug(u"- roomId: {}".format(self.id))
 
         try:
+            logging.debug(u"- for messages")
             self.personal_api.webhooks.create(name='shellbot-webhook',
                                               targetUrl=hook_url,
                                               resource='messages',
                                               event='created',
+                                              filter='roomId='+self.id)
+
+            logging.debug(u"- for memberships")
+            self.personal_api.webhooks.create(name='shellbot-webhook',
+                                              targetUrl=hook_url,
+                                              resource='memberships',
+                                              event='all',
                                               filter='roomId='+self.id)
 
             logging.debug(u"- done")
@@ -709,14 +704,6 @@ class SparkSpace(Space):
               "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
             }
 
-        This function adds following keys so that a neutral format
-        can be used with the listener:
-
-        * ``type`` is set to ``message``
-        * ``from_id`` is a copy of ``personId``
-        * ``mentioned_ids`` is a copy of ``mentionedPeople``
-
-
         This function is called from far far away, over the Internet,
         when message_id is None, or called locally, from test environment, when
         message_id has a value.
@@ -726,18 +713,40 @@ class SparkSpace(Space):
 
             logging.debug(u'Receiving data from webhook')
 
-            # step 1 -- we got message id, but no content
-            #
-            if not message_id:
-                message_id = request.json['data']['id']
+            if message_id:
+                resource = 'messages'
+                event = 'created'
 
-            # step 2 -- get the message itself
-            #
-            item = self.personal_api.messages.get(messageId=message_id)
+            else:
+                resource = request.json['resource']
+                event = request.json['event']
+                data = request.json['data']
 
-            # step 3 -- push it in the handling queue
-            #
-            self.on_message(item._json, self.bot.ears)
+            if resource == 'messages' and event == 'created':
+                logging.debug(u"- handling {}:{}".format(resource, event))
+
+                if not message_id:
+                    message_id = data['id']
+
+                item = self.personal_api.messages.get(messageId=message_id)
+                self.on_message(item._json, self.bot.ears)
+
+            elif resource == 'memberships' and event == 'created':
+                logging.debug(u"- handling {}:{}".format(resource, event))
+                logging.debug(u"- {}".format(data))
+
+                item = self.personal_api.memberships.get(membershipId=data['id'])
+                self.on_join(item._json, self.bot.ears)
+
+            elif resource == 'memberships' and event == 'deleted':
+                logging.debug(u"- handling {}:{}".format(resource, event))
+                logging.debug(u"- {}".format(data))
+
+                self.on_leave(data, self.bot.ears)
+
+            else:
+                logging.debug(u"- throwing away {}:{}".format(resource, event))
+                logging.debug(u"- {}".format(data))
 
             return "OK"
 
@@ -797,6 +806,15 @@ class SparkSpace(Space):
         :type queue: Queue
 
         This function prepares a Message and push it to the provided queue.
+
+        This function adds following keys to messages so that a neutral format
+        can be used with the listener:
+
+        * ``type`` is set to ``message``
+        * ``content`` is a copy of ``html``
+        * ``from_id`` is a copy of ``personId``
+        * ``from_label`` is a copy of ``personEmail``
+        * ``mentioned_ids`` is a copy of ``mentionedPeople``
 
         """
         message = Message(item.copy())
@@ -881,3 +899,85 @@ class SparkSpace(Space):
         logging.debug(u"- encoding: {}".format(response.encoding))
         logging.debug(u"- length: {}".format(len(response.content)))
         return response.content
+
+    def on_join(self, item, queue):
+        """
+        Normalizes message for the listener
+
+        :param item: attributes of the inbound message
+        :type item: dict
+
+        :param queue: the processing queue
+        :type queue: Queue
+
+        Example item received on memberships:create::
+
+            {
+                'isMonitor': False,
+                'created': '2017-05-31T21:25:30.424Z',
+                'personId': 'Y2lzY29zcGFyazovL3VRiMTAtODZkYy02YzU0Yjg5ODA5N2U',
+                'isModerator': False,
+                'personOrgId': 'Y2lzY29zcGFyazovL3V0FOSVpBVElPTi9jb25zdW1lcg',
+                'personDisplayName': 'foo.bar@acme.com',
+                'personEmail': 'foo.bar@acme.com',
+                'roomId': 'Y2lzY29zcGFyazovL3VzL1JP3LTk5MDAtMDU5MDI2YjBiNDUz',
+                'id': 'Y2lzY29zcGFyazovL3VzDctMTFlNy05OTAwLTA1OTAyNmIwYjQ1Mw'
+            }
+
+        This function prepares a Join and push it to the provided queue.
+
+        * ``type`` is set to ``join``
+        * ``actor_id`` is a copy of ``personId``
+        * ``actor_address`` is a copy of ``personEmail``
+        * ``actor_label`` is a copy of ``personDisplayName``
+
+        """
+        join = Join(item.copy())
+        join.actor_id = join.get('personId')
+        join.actor_address = join.get('personEmail')
+        join.actor_label = join.get('personDisplayName')
+        join.space_id = join.get('roomId')
+
+        queue.put(str(join))
+
+    def on_leave(self, item, queue):
+        """
+        Normalizes message for the listener
+
+        :param item: attributes of the inbound message
+        :type item: dict
+
+        :param queue: the processing queue
+        :type queue: Queue
+
+        Example item received on memberships:delete::
+
+            {
+                'isMonitor': False,
+                'created': '2017-05-31T21:25:30.424Z',
+                'personId': 'Y2lzY29zcGFyazovL3VRiMTAtODZkYy02YzU0Yjg5ODA5N2U',
+                'isModerator': False,
+                'personOrgId': 'Y2lzY29zcGFyazovL3V0FOSVpBVElPTi9jb25zdW1lcg',
+                'personDisplayName': 'foo.bar@acme.com',
+                'personEmail': 'foo.bar@acme.com',
+                'roomId': 'Y2lzY29zcGFyazovL3VzL1JP3LTk5MDAtMDU5MDI2YjBiNDUz',
+                'id': 'Y2lzY29zcGFyazovL3VzDctMTFlNy05OTAwLTA1OTAyNmIwYjQ1Mw'
+            }
+
+        This function prepares a Join and push it to the provided queue.
+
+        * ``type`` is set to ``leave``
+        * ``actor_id`` is a copy of ``personId``
+        * ``actor_address`` is a copy of ``personEmail``
+        * ``actor_label`` is a copy of ``personDisplayName``
+
+        """
+        leave = Leave(item.copy())
+        leave.actor_id = leave.get('personId')
+        leave.actor_address = leave.get('personEmail')
+        leave.actor_label = leave.get('personDisplayName')
+        leave.space_id = leave.get('roomId')
+
+        queue.put(str(leave))
+
+

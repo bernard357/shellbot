@@ -104,7 +104,7 @@ class SpaceTests(unittest.TestCase):
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space._my_counter, 123)
 
-        space.id = '*id'
+        my_bot.set('space.id', '*id')
         space.title = '*title'
         space._my_counter = 456
 
@@ -218,30 +218,8 @@ class SpaceTests(unittest.TestCase):
         space = Space(bot=my_bot)
         self.assertFalse(space.is_ready)
 
-        context = Context(settings={'space.id': '123'})
-        bot = ShellBot(context=context)
-        space = Space(bot=bot)
+        space.set('id', '*id')
         self.assertTrue(space.is_ready)
-
-        space = Space(bot=my_bot)
-        space.id = '*id'
-        self.assertTrue(space.is_ready)
-
-    def test_get_id(self):
-
-        logging.info("*** get_id")
-
-        space = Space(bot=my_bot)
-        self.assertTrue(space.get_id() is None)
-
-        context = Context(settings={'space.id': '123'})
-        bot = ShellBot(context=context)
-        space = Space(bot=bot)
-        self.assertEqual(space.get_id(), '123')
-
-        space = Space(bot=my_bot)
-        space.id = '*id'
-        self.assertEqual(space.get_id(), '*id')
 
     def test_use_space(self):
 

@@ -100,6 +100,7 @@ class SpaceFactory(object):
 
         for type in sorted(self.types.keys()):
             if context.has(prefix=type):
+                logging.debug(u"- sensing space of type {}".format(type))
                 return type
 
         raise ValueError(

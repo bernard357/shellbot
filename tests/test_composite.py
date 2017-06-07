@@ -21,11 +21,11 @@ from shellbot.events import Message
 from shellbot.spaces import Space
 
 my_bot = ShellBot(ears=Queue(), inbox=Queue(), mouth=Queue())
-my_bot.context.set('bot.id', "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg")
+my_bot.set('bot.id', "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg")
 my_bot.shell.load_default_commands()
 my_bot.space = Space(my_bot.context)
 my_bot.space.post_message = MagicMock()
-my_bot.space.id = '123'
+my_bot.set('space.id', '123')
 
 
 class CompositeTests(unittest.TestCase):
@@ -61,6 +61,7 @@ class CompositeTests(unittest.TestCase):
         self.assertEqual(my_bot.context.get('listener.counter', 0), 0)
         self.assertEqual(my_bot.context.get('worker.counter', 0), 0)
         self.assertEqual(my_bot.context.get('speaker.counter', 0), 0)
+
 
     def test_dynamic(self):
 

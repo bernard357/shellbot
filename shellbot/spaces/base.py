@@ -129,6 +129,15 @@ class Space(object):
         assert prefix not in (None, '')
         self.prefix = prefix
 
+    def get(self, key, default=None):
+        try:
+            return self.bot.get(self.prefix+'.'+key, default)
+        except AttributeError:
+            return default
+
+    def set(self, key, value):
+        self.bot.set(self.prefix+'.'+key, value)
+
     def reset(self):
         """
         Resets a space
@@ -136,7 +145,11 @@ class Space(object):
         After a call to this function, ``bond()`` has to be invoked to
         return to normal mode of operation.
         """
-        self.id = None
+        try:
+            self.set('id', None)
+        except AttributeError:
+            pass
+
         self.title = self.DEFAULT_SPACE_TITLE
 
         self.on_reset()
@@ -199,8 +212,7 @@ class Space(object):
         This function should be rewritten in sub-classes if
         space title does not come from ``space.title`` parameter.
         """
-        return  self.bot.context.get(self.prefix+'.title',
-                                     self.DEFAULT_SPACE_TITLE)
+        return self.get('title', self.DEFAULT_SPACE_TITLE)
 
     def connect(self, **kwargs):
         """
@@ -254,12 +266,11 @@ class Space(object):
             self.create_space(title=title, **kwargs)
 
             if moderators is None:
-                moderators = self.bot.context.get(self.prefix+'.moderators', [])
+                moderators = self.bot.get(self.prefix+'.moderators', [])
             self.add_moderators(moderators)
 
             if participants is None:
-                participants = self.bot.context.get(
-                    self.prefix+'.participants', [])
+                participants = self.bot.get(self.prefix+'.participants', [])
             self.add_participants(participants)
 
         self.on_bond()
@@ -286,26 +297,16 @@ class Space(object):
         :return: True or False
         """
         if self.id is None:
-            self.id = self.bot.context.get(self.prefix+'.id')
-
-        if self.id is None:
             return False
 
         return True
 
-    def get_id(self):
+    @property
+    def id(self):
         """
-        Gets space unique id
-
-        :return: str or None
+        Retrieves id of this space
         """
-        if self.id is None:
-            self.id = self.bot.context.get(self.prefix+'.id')
-
-        if self.id:
-            return self.id
-
-        return None
+        return self.get('id')
 
     def use_space(self, id, **kwargs):
         """

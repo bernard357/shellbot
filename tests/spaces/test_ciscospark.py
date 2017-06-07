@@ -167,7 +167,7 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertTrue(space.is_ready)
 
         space = Space(bot=my_bot)
-        space.id = '*id'
+        space.set('id', '*id')
         self.assertTrue(space.is_ready)
 
     def test_configure(self):
@@ -352,6 +352,41 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertEqual(space.api.token, 'a')
         self.assertEqual(space.personal_api.token, 'b')
 
+    def test_is_ready(self):
+
+        logging.info("*** is_ready")
+
+        space = SparkSpace(bot=my_bot)
+        self.assertFalse(space.is_ready)
+
+#        context = Context(settings={'space.id': '123'})
+#        bot = ShellBot(context=context)
+#        space = Space(bot=bot)
+#        self.assertTrue(space.is_ready)
+
+        space = SparkSpace(bot=my_bot)
+        space.set('id', '*id')
+        self.assertTrue(space.is_ready)
+
+    def test_id(self):
+
+        logging.info("*** id")
+
+        space = SparkSpace(bot=my_bot)
+        self.assertTrue(space.id is None)
+
+#        context = Context(settings={'space.id': '123'})
+#        print(context.get('space.id'))
+#        bot = ShellBot(context=context)
+#        print(bot.get('space.id'))
+#        space = Space(bot=bot)
+#        print(space.bot.get('space.id'))
+#        self.assertEqual(space.id, '123')
+
+        space = SparkSpace(bot=my_bot)
+        space.set('id', '*id')
+        self.assertEqual(space.id, '*id')
+
     def test_use_space(self):
 
         logging.info("*** use_space")
@@ -463,7 +498,7 @@ class SparkSpaceTests(unittest.TestCase):
 
         space = SparkSpace(bot=my_bot)
         space.api = FakeApi()
-        space.id = '*id'
+        space.set('id', '*id')
 
         space.add_moderator(person='foo.bar@acme.com')
 
@@ -486,7 +521,7 @@ class SparkSpaceTests(unittest.TestCase):
         logging.info("*** add_participant")
         space = SparkSpace(bot=my_bot)
         space.api = FakeApi()
-        space.id = '*id'
+        space.set('id', '*id')
 
         space.add_participant(person='foo.bar@acme.com')
 
@@ -509,21 +544,21 @@ class SparkSpaceTests(unittest.TestCase):
 
         # bonded room
         space.api = FakeApi(rooms=[FakeRoom()])
-        space.id = '*id'
+        space.set('id', '*id')
         space.title = '*title'
         space.delete_space()
         self.assertTrue(space.api.rooms.delete.called)
 
         # configured room, room exists
         space.api = FakeApi(rooms=[FakeRoom()])
-        space.id = None
+        space.set('id', None)
         space.bot.context.set('spark.room', '*title')
         space.delete_space()
         self.assertTrue(space.api.rooms.delete.called)
 
         # no information
         space.api = FakeApi(rooms=[FakeRoom()])
-        space.id = None
+        space.set('id', None)
         space.bot.context.set('spark.room', None)
         space.delete_space()
         self.assertFalse(space.api.rooms.delete.called)
