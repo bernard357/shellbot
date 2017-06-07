@@ -265,6 +265,22 @@ class BotTests(unittest.TestCase):
         bot = ShellBot(settings=None, configure=True, fan='f')
         self.assertEqual(bot.get('spark.room'), 'Notifications')
 
+    def test_set(self):
+
+        logging.info('*** set ***')
+
+        bot = ShellBot(fan='f')
+
+        bot.set('hello', 'world')
+        self.assertEqual(bot.get('hello'), 'world')
+        self.assertEqual(bot.get(u'hello'), 'world')
+
+        bot.set('hello', u'wôrld')
+        self.assertEqual(bot.get('hello'), u'wôrld')
+
+        bot.set(u'hello', u'wôrld')
+        self.assertEqual(bot.get(u'hello'), u'wôrld')
+
     def test_register(self):
 
         logging.info('*** register ***')
@@ -290,10 +306,46 @@ class BotTests(unittest.TestCase):
 
         bot.register('bond', MyCounter('counter #2'))
 
-        self.assertEqual(len(bot.registered['bond']), 2)
-        self.assertEqual(len(bot.registered['dispose']), 1)
-        self.assertEqual(len(bot.registered['start']), 0)
-        self.assertEqual(len(bot.registered['stop']), 0)
+        class AllEvents(object):
+            def on_bond(self):
+                pass
+            def on_dispose(self):
+                pass
+            def on_start(self):
+                pass
+            def on_stop(self):
+                pass
+            def on_message(self):
+                pass
+            def on_attachment(self):
+                pass
+            def on_join(self):
+                pass
+            def on_leave(self):
+                pass
+            def on_inbound(self):
+                pass
+
+        all_events = AllEvents()
+        bot.register('bond', all_events)
+        bot.register('dispose', all_events)
+        bot.register('start', all_events)
+        bot.register('stop', all_events)
+        bot.register('message', all_events)
+        bot.register('attachment', all_events)
+        bot.register('join', all_events)
+        bot.register('leave', all_events)
+        bot.register('inbound', all_events)
+
+        self.assertEqual(len(bot.registered['bond']), 3)
+        self.assertEqual(len(bot.registered['dispose']), 2)
+        self.assertEqual(len(bot.registered['start']), 1)
+        self.assertEqual(len(bot.registered['stop']), 1)
+        self.assertEqual(len(bot.registered['message']), 1)
+        self.assertEqual(len(bot.registered['attachment']), 1)
+        self.assertEqual(len(bot.registered['join']), 1)
+        self.assertEqual(len(bot.registered['leave']), 1)
+        self.assertEqual(len(bot.registered['inbound']), 1)
 
     def test_dispatch(self):
 
@@ -308,13 +360,60 @@ class BotTests(unittest.TestCase):
         bot.register('bond', MyCounter('counter #2'))
         bot.register('dispose', MyCounter('counter #3'))
 
+        class AllEvents(object):
+            def __init__(self):
+                self.events = []
+            def on_bond(self):
+                self.events.append('bond')
+            def on_dispose(self):
+                self.events.append('dispose')
+            def on_start(self):
+                self.events.append('start')
+            def on_stop(self):
+                self.events.append('stop')
+            def on_message(self, received):
+                assert received == '*void'
+                self.events.append('message')
+            def on_attachment(self, received):
+                assert received == '*void'
+                self.events.append('attachment')
+            def on_join(self, received):
+                assert received == '*void'
+                self.events.append('join')
+            def on_leave(self, received):
+                assert received == '*void'
+                self.events.append('leave')
+            def on_inbound(self, received):
+                assert received == '*void'
+                self.events.append('inbound')
+
+        all_events = AllEvents()
+        bot.register('bond', all_events)
+        bot.register('dispose', all_events)
+        bot.register('start', all_events)
+        bot.register('stop', all_events)
+        bot.register('message', all_events)
+        bot.register('attachment', all_events)
+        bot.register('join', all_events)
+        bot.register('leave', all_events)
+        bot.register('inbound', all_events)
+
         bot.dispatch('bond')
         bot.dispatch('dispose')
+        bot.dispatch('start')
+        bot.dispatch('stop')
+        bot.dispatch('message', received='*void')
+        bot.dispatch('attachment', received='*void')
+        bot.dispatch('join', received='*void')
+        bot.dispatch('leave', received='*void')
+        bot.dispatch('inbound', received='*void')
 
         with self.assertRaises(AssertionError):
             bot.dispatch('*unknown*event')
 
         self.assertEqual(counter.count, 2)
+        self.assertEqual(all_events.events,
+                         ['bond', 'dispose', 'start', 'stop', 'message', 'attachment', 'join', 'leave', 'inbound'])
 
     def test_load_commands(self):
 
@@ -456,6 +555,7 @@ class BotTests(unittest.TestCase):
         }
 
         bot.space = None
+        bot.context.clear()
         bot.configure(spark_settings)
 
         with mock.patch.object(bot.space,
@@ -511,7 +611,6 @@ class BotTests(unittest.TestCase):
 
         server = mock.Mock()
         bot.run(server=server)
-        self.assertTrue(server.run.called)
 
     def test_start(self):
 

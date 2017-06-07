@@ -165,10 +165,15 @@ class ShellBot(object):
             self.load_command(command)
 
         self.registered = {
-            'bond': [],     # connected to a space
-            'dispose': [],  # space will be destroyed
-            'start': [],    # starting bot services
-            'stop': [],     # stopping bot services
+            'bond': [],       # connected to a space
+            'dispose': [],    # space will be destroyed
+            'start': [],      # starting bot services
+            'stop': [],       # stopping bot services
+            'message': [],    # message received (with message)
+            'attachment': [], # attachment received (with attachment)
+            'join': [],       # joining a space (with person)
+            'leave': [],      # leaving a space (with person)
+            'inbound': [],    # other event received from space (with event)
         }
 
     def configure_from_path(self, path="settings.yaml"):
@@ -232,6 +237,7 @@ class ShellBot(object):
         self.shell.configure()
 
         if self.space is None:
+            logging.debug(u"- building new space")
             self.space = SpaceFactory.build(self)
         else:
             self.space.configure()
@@ -305,6 +311,25 @@ class ShellBot(object):
         """
         return self.context.get(key, default)
 
+    def set(self, key, value):
+        """
+        Changes the value of one configuration key
+
+        :param key: name of the value
+        :type key: str
+
+        :param value: new value
+        :type value: any serializable type is accepted
+
+        Example::
+
+            bot.set('bot.on_start', 'hello world')
+
+        This function is safe on multiprocessing and multithreading.
+
+        """
+        self.context.set(key, value)
+
     def register(self, event, instance):
         """
         Registers an object to process an event
@@ -333,6 +358,10 @@ class ShellBot(object):
         - 'start' - when bot services are started
 
         - 'stop' - when bot services are stopped
+
+        - 'join' - when a person is joining a space
+
+        - 'leave' - when a person is leaving a space
 
         On each event, the bot will look for a related member function
         in the target instance and call it. For example for the event
@@ -436,7 +465,7 @@ class ShellBot(object):
             participants=self.context.get('spark.participants', []),
         )
 
-        self.store.bond(id=self.space.get_id())
+        self.store.bond(id=self.space.id)
 
         self.dispatch('bond')
 
@@ -447,6 +476,14 @@ class ShellBot(object):
         This function is a proxy for the underlying space.
         """
         self.space.add_moderators(*args, **kwargs)
+
+    def add_participant(self, *args, **kwargs):
+        """
+        Adds one participant to the room
+
+        This function is a proxy for the underlying space.
+        """
+        self.space.add_participant(*args, **kwargs)
 
     def add_participants(self, *args, **kwargs):
         """
@@ -524,7 +561,16 @@ class ShellBot(object):
             self.space.work()
 
         else:
-            server.run()
+            p = Process(target=server.run)
+            p.daemon = True
+            p.start()
+            self._server_process = p
+
+            try:
+                self._server_process.join()
+            except KeyboardInterrupt:
+                logging.error(u"Aborted by user")
+                self.stop()
 
     def start(self):
         """
@@ -592,12 +638,16 @@ class ShellBot(object):
 
         logging.warning(u'Stopping the bot')
 
+        logging.debug(u"- dispatching 'stop' event")
         self.dispatch('stop')
 
+        logging.debug(u"- running on_stop()")
         self.on_stop()
 
+        logging.debug(u"- saying on_stop message")
         self.say(self.context.get('bot.on_stop'))
 
+        logging.debug(u"- switching off")
         time.sleep(1)
         self.context.set('general.switch', 'off')
 
