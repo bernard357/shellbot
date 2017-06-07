@@ -84,7 +84,9 @@ bot.bond(reset=True)
 
 # create a mirror chat room
 #
-mirror = SparkSpace(bot=bot)
+mirror_bot = ShellBot()
+mirror_bot.configure()
+mirror = SparkSpace(bot=mirror_bot)
 mirror.connect()
 
 title = u"{} - {}".format(
