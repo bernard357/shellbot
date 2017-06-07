@@ -334,6 +334,17 @@ class Join(Event):
         return self.__getattr__('actor_id')
 
     @property
+    def actor_address(self):
+        """
+        Returns the address of the joining actor
+
+        :rtype: str or None
+
+        This attribute can be passed to ``add_participant()`` if needed.
+        """
+        return self.__getattr__('actor_address')
+
+    @property
     def actor_label(self):
         """
         Returns the name or title of the joining actor
@@ -372,6 +383,17 @@ class Leave(Event):
         This attribute allows listener to identify who leaves a space.
         """
         return self.__getattr__('actor_id')
+
+    @property
+    def actor_address(self):
+        """
+        Returns the address of the leaving actor
+
+        :rtype: str or None
+
+        This attribute can be passed to ``add_participant()`` if needed.
+        """
+        return self.__getattr__('actor_address')
 
     @property
     def actor_label(self):

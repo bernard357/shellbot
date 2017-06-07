@@ -181,11 +181,11 @@ class Listener(object):
                 self.on_leave(event)
 
             else:
-                logging.debug(u"- dispatching an event")
+                logging.debug(u"- dispatching an inbound event")
                 event = Event(item)
                 if self.filter:
                     event = self.filter(event)
-                self.on_event(event)
+                self.on_inbound(event)
 
         except AssertionError as feedback:
             logging.debug(u"- invalid format, thrown away")
@@ -195,22 +195,25 @@ class Listener(object):
             logging.debug(u"- invalid format, thrown away")
             raise
 
-    def on_message(self, item):
+    def on_message(self, received):
         """
         A message has been received
 
-        :param item: the message received
-        :type item: Message
+        :param received: the message received
+        :type received: Message
+
+        Received information is dispatched to subscribers of the event
+        ``message`` at the bot level.
 
         When a message is directed to the bot it is submitted directly to the
         shell. This is handled as a command, that can be executed immediately,
         or pushed to the inbox and processed by the worker  when possible.
 
-        All other messages are thrown away, except if there is some
-        downwards listeners. In that situation the message is pushed to a queue
+        All other input is thrown away, except if there is some
+        downwards listeners. In that situation the input is pushed to a queue
         so that some process can pick it up and process it.
 
-        The protocol for downwards listener works like this:
+        The protocol for downwards listeners works like this:
 
         * Check the ``bot.fan`` queue frequently
 
@@ -221,13 +224,15 @@ class Listener(object):
         for the bot itself. If this is fresh enough, then data is put to the
         ``bot.fan`` queue. Else message is just thrown away.
         """
-        assert item.type == 'message'  # sanity check
+        assert received.type == 'message'  # sanity check
 
-        if item.from_id == self.bot.context.get('bot.id'):
+        self.bot.dispatch('message', received=received)
+
+        if received.from_id == self.bot.context.get('bot.id'):
             logging.debug(u"- sent by me, thrown away")
             return
 
-        input = item.text
+        input = received.text
 
         if input is None:
             logging.debug(u"- no input in this item, thrown away")
@@ -240,7 +245,7 @@ class Listener(object):
         if input.lower().startswith(bot):
             input = input[len(bot):].strip()
 
-        elif self.bot.context.get('bot.id') in item.mentioned_ids:
+        elif self.bot.context.get('bot.id') in received.mentioned_ids:
             pass # send to the shell
 
         else: # not explicitly intended for the bot
@@ -254,39 +259,63 @@ class Listener(object):
 
         self.bot.shell.do(input)
 
-    def on_attachment(self, item):
+    def on_attachment(self, received):
         """
         An attachment has been received
 
-        :param item: the message received
-        :type item: Attachment
-        """
-        assert item.type == 'attachment'
+        :param received: the event received
+        :type received: Attachment
 
-    def on_join(self, item):
+        Received information is dispatched to subscribers of the event
+        ``attachment`` at the bot level.
+
+        """
+        assert received.type == 'attachment'
+
+        self.bot.dispatch('attachment', received=received)
+
+    def on_join(self, received):
         """
         A person has joined a space
 
-        :param item: the event received
-        :type item: Join
-        """
-        assert item.type == 'join'
+        :param received: the event received
+        :type received: Join
 
-    def on_leave(self, item):
+        Received information is dispatched to subscribers of the event
+        ``join`` at the bot level.
+
+        """
+        assert received.type == 'join'
+
+        self.bot.dispatch('join', received=received)
+
+    def on_leave(self, received):
         """
         A person has leaved a space
 
-        :param item: the event received
-        :type item: Leave
-        """
-        assert item.type == 'leave'
+        :param received: the event received
+        :type received: Leave
 
-    def on_event(self, item):
+        Received information is dispatched to subscribers of the event
+        ``leave`` at the bot level.
+
+        """
+        assert received.type == 'leave'
+
+        self.bot.dispatch('leave', received=received)
+
+    def on_inbound(self, received):
         """
         Another event has been received
 
-        :param item: the event received
-        :type item: Event or derivative
+        :param received: the event received
+        :type received: Event or derivative
+
+        Received information is dispatched to subscribers of the event
+        ``inbound`` at the bot level.
+
         """
-        assert item.type not in ('message', 'attachment', 'join', 'leave')
+        assert received.type not in ('message', 'attachment', 'join', 'leave')
+
+        self.bot.dispatch('inbound', received=received)
 

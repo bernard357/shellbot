@@ -203,7 +203,7 @@ class LocalSpaceTests(unittest.TestCase):
         space.pull()
         space.pull()
         self.assertEqual(json.loads(my_bot.ears.get()),
-                         {'text': 'hello world', 'from_id': '*user', 'type': 'message', 'mentioned_ids': ['*bot']})
+                         {'text': 'hello world', 'from_id': '*user', 'type': 'message', 'mentioned_ids': []})
 
         original_stdin = sys.stdin
         sys.stdin = io.StringIO(u'hello world')
@@ -212,7 +212,7 @@ class LocalSpaceTests(unittest.TestCase):
         my_bot.ears = my_queue
         space.pull()
         self.assertEqual(json.loads(my_bot.ears.get()),
-                         {'text': u'hello world', 'from_id': '*user', 'type': 'message', 'mentioned_ids': ['*bot']})
+                         {'text': u'hello world', 'from_id': '*user', 'type': 'message', 'mentioned_ids': []})
 
         sys.stdin = original_stdin
 
@@ -223,7 +223,7 @@ class LocalSpaceTests(unittest.TestCase):
 
         self.assertEqual(json.loads(my_queue.get()),
                          {'from_id': '*user',
-                          'mentioned_ids': ['*bot'],
+                          'mentioned_ids': [],
                           'text': 'hello world',
                           'type': 'message'})
 

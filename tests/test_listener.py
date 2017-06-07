@@ -184,10 +184,10 @@ class ListenerTests(unittest.TestCase):
         self.assertEqual(my_bot.context.get('listener.counter'), 27)
         self.assertTrue(listener.on_leave.called)
 
-        listener.on_event = mock.Mock()
+        listener.on_inbound = mock.Mock()
         listener.process(str(my_event))
         self.assertEqual(my_bot.context.get('listener.counter'), 28)
-        self.assertTrue(listener.on_event.called)
+        self.assertTrue(listener.on_inbound.called)
 
     def test_process_filter(self):
 
@@ -240,15 +240,21 @@ class ListenerTests(unittest.TestCase):
         logging.info('*** on_message ***')
 
         listener = Listener(bot=my_bot)
-        listener.on_message(item=my_message)
+        listener.on_message(my_message)
         with self.assertRaises(AssertionError):
-            listener.on_message(item=my_attachment)
+            listener.on_message(my_attachment)
         with self.assertRaises(AssertionError):
-            listener.on_message(item=my_join)
+            listener.on_message(my_join)
         with self.assertRaises(AssertionError):
-            listener.on_message(item=my_leave)
+            listener.on_message(my_leave)
         with self.assertRaises(AssertionError):
-            listener.on_message(item=my_event)
+            listener.on_message(my_event)
+
+        with mock.patch.object(my_bot,
+                               'dispatch',
+                               return_value=None) as mocked:
+            listener.on_message(my_message)
+            self.assertTrue(mocked.called)
 
     def test_on_message_fan(self):
 
@@ -265,11 +271,11 @@ class ListenerTests(unittest.TestCase):
 
         listener = Listener(bot=my_bot)
 
-        listener.on_message(item=my_message)
+        listener.on_message(my_message)
         self.assertFalse(my_bot.fan.called)
 
         my_bot.context.set('fan.stamp', time.time())
-        listener.on_message(item=my_message)
+        listener.on_message(my_message)
         self.assertTrue(my_bot.fan.called)
 
     def test_on_attachment(self):
@@ -278,14 +284,20 @@ class ListenerTests(unittest.TestCase):
 
         listener = Listener(bot=my_bot)
         with self.assertRaises(AssertionError):
-            listener.on_attachment(item=my_message)
-        listener.on_attachment(item=my_attachment)
+            listener.on_attachment(my_message)
+        listener.on_attachment(my_attachment)
         with self.assertRaises(AssertionError):
-            listener.on_attachment(item=my_join)
+            listener.on_attachment(my_join)
         with self.assertRaises(AssertionError):
-            listener.on_attachment(item=my_leave)
+            listener.on_attachment(my_leave)
         with self.assertRaises(AssertionError):
-            listener.on_attachment(item=my_event)
+            listener.on_attachment(my_event)
+
+        with mock.patch.object(my_bot,
+                               'dispatch',
+                               return_value=None) as mocked:
+            listener.on_attachment(my_attachment)
+            self.assertTrue(mocked.called)
 
     def test_on_join(self):
 
@@ -293,14 +305,20 @@ class ListenerTests(unittest.TestCase):
 
         listener = Listener(bot=my_bot)
         with self.assertRaises(AssertionError):
-            listener.on_join(item=my_message)
+            listener.on_join(my_message)
         with self.assertRaises(AssertionError):
-            listener.on_join(item=my_attachment)
-        listener.on_join(item=my_join)
+            listener.on_join(my_attachment)
+        listener.on_join(my_join)
         with self.assertRaises(AssertionError):
-            listener.on_join(item=my_leave)
+            listener.on_join(my_leave)
         with self.assertRaises(AssertionError):
-            listener.on_join(item=my_event)
+            listener.on_join(my_event)
+
+        with mock.patch.object(my_bot,
+                               'dispatch',
+                               return_value=None) as mocked:
+            listener.on_join(my_join)
+            self.assertTrue(mocked.called)
 
     def test_on_leave(self):
 
@@ -308,29 +326,41 @@ class ListenerTests(unittest.TestCase):
 
         listener = Listener(bot=my_bot)
         with self.assertRaises(AssertionError):
-            listener.on_leave(item=my_message)
+            listener.on_leave(my_message)
         with self.assertRaises(AssertionError):
-            listener.on_leave(item=my_attachment)
+            listener.on_leave(my_attachment)
         with self.assertRaises(AssertionError):
-            listener.on_leave(item=my_join)
-        listener.on_leave(item=my_leave)
+            listener.on_leave(my_join)
+        listener.on_leave(my_leave)
         with self.assertRaises(AssertionError):
-            listener.on_leave(item=my_event)
+            listener.on_leave(my_event)
 
-    def test_on_event(self):
+        with mock.patch.object(my_bot,
+                               'dispatch',
+                               return_value=None) as mocked:
+            listener.on_leave(my_leave)
+            self.assertTrue(mocked.called)
 
-        logging.info('*** on_event ***')
+    def test_on_inbound(self):
+
+        logging.info('*** on_inbound ***')
 
         listener = Listener(bot=my_bot)
         with self.assertRaises(AssertionError):
-            listener.on_event(item=my_message)
+            listener.on_inbound(my_message)
         with self.assertRaises(AssertionError):
-            listener.on_event(item=my_attachment)
+            listener.on_inbound(my_attachment)
         with self.assertRaises(AssertionError):
-            listener.on_event(item=my_join)
+            listener.on_inbound(my_join)
         with self.assertRaises(AssertionError):
-            listener.on_event(item=my_leave)
-        listener.on_event(item=my_event)
+            listener.on_inbound(my_leave)
+        listener.on_inbound(my_event)
+
+        with mock.patch.object(my_bot,
+                               'dispatch',
+                               return_value=None) as mocked:
+            listener.on_inbound(my_event)
+            self.assertTrue(mocked.called)
 
     def test_static(self):
 
@@ -476,11 +506,11 @@ class ListenerTests(unittest.TestCase):
         self.assertEqual(
             my_bot.mouth.get().text,
             u'Available commands:\n'
-            + u'echo - Echo input string\nhelp - Show commands and usage')
+            + u'help - Show commands and usage')
         self.assertEqual(
             my_bot.mouth.get().text,
             u'Available commands:\n'
-            + u'echo - Echo input string\nhelp - Show commands and usage')
+            + u'help - Show commands and usage')
         self.assertEqual(
             my_bot.mouth.get().text,
             u'help - Show commands and usage\nusage: help <command>')
