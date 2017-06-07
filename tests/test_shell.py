@@ -220,7 +220,7 @@ class ShellTests(unittest.TestCase):
         self.assertEqual(
             shell.bot.mouth.get().text,
             u'Available commands:\n'
-            + u'echo - Echo input string\nhelp - Show commands and usage')
+            + u'help - Show commands and usage')
         with self.assertRaises(Exception):
             print(shell.bot.mouth.get_nowait())
         with self.assertRaises(Exception):

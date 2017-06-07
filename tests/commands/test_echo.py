@@ -28,9 +28,8 @@ class EchoTests(unittest.TestCase):
 
         self.assertEqual(c.keyword, u'echo')
         self.assertEqual(c.information_message, u'Echo input string')
-        self.assertEqual(c.usage_message, u'echo "a string to be echoed"')
         self.assertTrue(c.is_interactive)
-        self.assertFalse(c.is_hidden)
+        self.assertTrue(c.is_hidden)
 
     def test_execute(self):
 

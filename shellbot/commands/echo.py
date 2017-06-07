@@ -25,7 +25,7 @@ class Echo(Command):
 
     keyword = u'echo'
     information_message = u'Echo input string'
-    usage_message = u'echo "a string to be echoed"'
+    is_hidden = True
 
     def execute(self, arguments):
         """
