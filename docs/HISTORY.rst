@@ -3,6 +3,17 @@
 History
 -------
 
+17.6.6
+~~~~~~
+* Add example Hotel California to demonstrate automated join and leave events
+* Add example Escalation to sum up all capabilities of shellbot
+* Expand the set of real-time events managed by shellbot: 'join', 'leave'
+* Protect contexts and stores from KeyboardInterrupt
+* Minor improvements on code and tests
+* Travis-CI passed on python 2.7 and 3.5
+* 94% test coverage
+* 2236 python statements
+
 17.5.28
 ~~~~~~~
 * Fix examples
