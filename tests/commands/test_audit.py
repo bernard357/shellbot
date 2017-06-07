@@ -8,6 +8,7 @@ from multiprocessing import Process, Queue
 import os
 import sys
 import time
+import yaml
 
 sys.path.insert(0, os.path.abspath('../..'))
 
@@ -194,7 +195,6 @@ class AuditTests(unittest.TestCase):
         c.updater = None
 
         item = Message({'text': 'hello world', 'person_label': 'a@me.com'})
-        print(str(item))
         self.assertEqual(c.filter(item), item)
 
         c.updater = MyUpdater()
@@ -223,6 +223,27 @@ class AuditTests(unittest.TestCase):
 
         c.updater = MyUpdater()
         self.assertEqual(c.filter(item), item)
+        with self.assertRaises(Exception):
+            c.updater.get_nowait()
+
+    def test_say(self):
+
+        logging.info('***** say')
+
+        c = Audit(my_bot)
+
+        class MyUpdater(object):
+            queue = Queue()
+            def put(self, event):
+                self.queue.put(str(event))
+
+        my_bot.context.set('audit.switch', 'on')
+
+        c.updater = MyUpdater()
+        c.say('hello world')
+        item = c.updater.queue.get()
+        self.assertEqual(yaml.safe_load(item),
+                         {"from_id": "Shelly", "from_label": "Shelly", "text": "hello world", "type": "message"})
         with self.assertRaises(Exception):
             c.updater.get_nowait()
 

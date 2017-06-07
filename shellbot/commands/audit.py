@@ -21,6 +21,7 @@ from threading import Timer
 
 from .base import Command
 from shellbot.updaters import Updater
+from shellbot.events import Message
 
 
 class Audit(Command):
@@ -91,6 +92,7 @@ class Audit(Command):
         if self.bot.context.get('audit.switch', 'off') == 'on':
             self.bot.say(self.already_on_message)
         else:
+            self.say(u"{0} AUDIT ON {0}".format("====================="))
             self.bot.context.set('audit.switch', 'on')
             self.bot.say(self.on_message)
 
@@ -99,6 +101,7 @@ class Audit(Command):
         Activates private mode
         """
         if self.bot.context.get('audit.switch', 'off') == 'on':
+            self.say(u"{0} AUDIT OFF {0}".format("====================="))
             self.bot.context.set('audit.switch', 'off')
             self.bot.say(self.off_message)
             self.on_off()
@@ -201,3 +204,18 @@ class Audit(Command):
                 logging.debug(u"- audit has not been switched on")
         finally:
             return event
+
+    def say(self, text):
+        """
+        Inserts a string in the auditing flow
+        """
+        logging.info(u"Audit says: {}".format(text))
+        if not self.updater:
+            logging.debug(u"- no updater")
+            return
+
+        message = Message({'text': text,
+                           'from_id': self.bot.name,
+                           'from_label': self.bot.name})
+        self.updater.put(message)
+
