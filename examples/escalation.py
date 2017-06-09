@@ -24,7 +24,7 @@ a collaborative place where multiple persons can participate.
 
 Then following commands are available from the bot:
 
-- command: next
+- command: escalate
 - response describes the name and characteristics of new state
 
 - command: state
