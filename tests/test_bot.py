@@ -39,7 +39,7 @@ class BotTests(unittest.TestCase):
 
     def test_init(self):
 
-        logging.info('*** init***')
+        logging.info('*** init ***')
 
         context = Context()
 
