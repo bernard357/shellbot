@@ -242,7 +242,7 @@ class Listener(object):
             input = input[1:]
 
         bot = self.bot.context.get('bot.name', 'shelly')
-        if input.lower().startswith(bot):
+        if input.startswith(bot):
             input = input[len(bot):].strip()
 
         elif self.bot.context.get('bot.id') in received.mentioned_ids:
