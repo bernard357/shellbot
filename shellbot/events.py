@@ -149,7 +149,7 @@ class Event(object):
         """
         Returns a string representing this object as valid Python expression.
         """
-        return "{}({})".format(
+        return u"{}({})".format(
             self.__class__.__name__,
             json.dumps(self.attributes, sort_keys=True))
 
