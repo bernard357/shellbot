@@ -16,9 +16,11 @@
 from .base import Machine, State, Transition
 from .input import Input
 from .sequence import Sequence
+from .steps import Steps
 
 __all__ = [
     'Input',
     'Machine',
     'Sequence',
+    'Steps',
 ]
