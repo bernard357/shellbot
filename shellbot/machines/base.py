@@ -18,6 +18,7 @@
 from collections import defaultdict
 import logging
 from multiprocessing import Manager, Lock, Process, Queue
+import signal
 import time
 
 
