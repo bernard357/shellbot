@@ -88,7 +88,7 @@ ngrok for exposing services to the Internet::
     export CHAT_ROOM_MODERATORS="alice@acme.com"
     export CHAT_TOKEN="<token id from Cisco Spark for Developers>"
     export SERVER_URL="http://1a107f21.ngrok.io"
-    python pushy.py
+    python escalation.py
 
 
 """
