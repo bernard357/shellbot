@@ -110,7 +110,15 @@ class Machine(object):
         self.bot = bot
 
         self.lock = Lock()
+
+        # prevent Manager() process to be interrupted
+        handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+
         self.mutables = Manager().dict()
+
+        # restore current handler for the rest of the program
+        signal.signal(signal.SIGINT, handler)
+
         self.mixer = Queue()
 
         self.on_init(**kwargs)
@@ -141,27 +149,23 @@ class Machine(object):
         Retrieves the value of one key
         """
 
-        self.lock.acquire()
-        value = None
-        try:
+        with self.lock:
+
             value = self.mutables.get(key, default)
 
-            if value is None:
-                value = default
-        finally:
-            self.lock.release()
-            return value
+            if value is not None:
+                return value
+
+            return default
 
     def set(self, key, value):
         """
         Remembers the value of one key
         """
 
-        self.lock.acquire()
-        try:
+        with self.lock:
+
             self.mutables[key] = value
-        finally:
-            self.lock.release()
 
     def build(self,
             states,
