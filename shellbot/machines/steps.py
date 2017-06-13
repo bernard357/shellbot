@@ -92,6 +92,7 @@ class Steps(Machine):
 
             {'source': 'begin',
              'target': 'running',
+             'condition': self.if_ready,
              'action': self.next_step,
             },
 
@@ -101,15 +102,15 @@ class Steps(Machine):
             },
 
             {'source': 'completed',
-             'target': 'end',
-             'condition': self.if_end,
-             'action': self.stop,
-            },
-
-            {'source': 'completed',
              'target': 'running',
              'condition': self.if_next,
              'action': self.next_step,
+            },
+
+            {'source': 'completed',
+             'target': 'end',
+             'condition': self.if_end,
+             'action': self.stop,
             },
 
         ]
@@ -175,6 +176,15 @@ class Steps(Machine):
             return True
 
         return not machine.is_running()
+
+    def if_ready(self, **kwargs):
+        """
+        Checks if state machine can engage on first step
+
+        To be implemented in sub-class where complex initialization activities
+        are required.
+        """
+        return True
 
     def if_next(self, **kwargs):
         """

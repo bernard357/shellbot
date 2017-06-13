@@ -283,6 +283,50 @@ class StepsTests(unittest.TestCase):
             step.machine.running = False
             self.assertTrue(machine.step_has_completed())
 
+    def test_if_ready(self):
+
+        logging.info("******** if_ready")
+
+        machine = Steps(bot=my_bot,
+                        steps=my_steps)
+
+        with mock.patch.object(my_bot,
+                               'space') as mocked:
+
+            self.assertTrue(machine.if_ready())
+            self.assertTrue(machine.if_ready(event='tick'))
+            self.assertTrue(machine.if_ready(event='next'))
+
+            machine.step()
+            self.assertEqual(machine.mutables['state'], 'running')
+            self.assertEqual(machine.current_step, my_steps[0])
+
+        class MySteps(Steps):
+            def if_ready(self, **kwargs):
+                return False
+
+        machine = MySteps(bot=my_bot,
+                          steps=my_steps)
+
+        self.assertFalse(machine.if_ready())
+        self.assertFalse(machine.if_ready(event='tick'))
+        self.assertFalse(machine.if_ready(event='next'))
+
+        self.assertEqual(machine.current_step, None)
+        self.assertEqual(machine.mutables['state'], 'begin')
+
+        machine.step()
+        self.assertEqual(machine.mutables['state'], 'begin')
+        self.assertEqual(machine.current_step, None)
+
+        machine.step(event='tick')
+        self.assertEqual(machine.mutables['state'], 'begin')
+        self.assertEqual(machine.current_step, None)
+
+        machine.step(event='next')
+        self.assertEqual(machine.mutables['state'], 'begin')
+        self.assertEqual(machine.current_step, None)
+
     def test_if_next(self):
 
         logging.info("******** if_next")

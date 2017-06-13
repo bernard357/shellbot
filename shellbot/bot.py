@@ -475,7 +475,8 @@ class ShellBot(object):
 
         This function is a proxy for the underlying space.
         """
-        self.space.add_moderators(*args, **kwargs)
+        if self.space:
+            self.space.add_moderators(*args, **kwargs)
 
     def add_participant(self, *args, **kwargs):
         """
@@ -483,7 +484,8 @@ class ShellBot(object):
 
         This function is a proxy for the underlying space.
         """
-        self.space.add_participant(*args, **kwargs)
+        if self.space:
+            self.space.add_participant(*args, **kwargs)
 
     def add_participants(self, *args, **kwargs):
         """
@@ -491,7 +493,8 @@ class ShellBot(object):
 
         This function is a proxy for the underlying space.
         """
-        self.space.add_participants(*args, **kwargs)
+        if self.space:
+            self.space.add_participants(*args, **kwargs)
 
     def dispose(self, *args, **kwargs):
         """
