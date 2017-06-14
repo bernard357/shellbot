@@ -90,24 +90,28 @@ class Steps(Machine):
 
         transitions = [
 
-            {'source': 'begin',
+            {  # engage on first step as soon as we are ready
+             'source': 'begin',
              'target': 'running',
              'condition': self.if_ready,
              'action': self.next_step,
             },
 
-            {'source': 'running',
+            {  # wait for the underlying machine of this step to complete
+             'source': 'running',
              'target': 'completed',
              'condition': self.step_has_completed,
             },
 
-            {'source': 'completed',
+            {  # start next step if there is one and if we are ready for it
+             'source': 'completed',
              'target': 'running',
              'condition': self.if_next,
              'action': self.next_step,
             },
 
-            {'source': 'completed',
+            {  # end this state machine
+             'source': 'completed',
              'target': 'end',
              'condition': self.if_end,
              'action': self.stop,
