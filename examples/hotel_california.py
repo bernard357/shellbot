@@ -96,7 +96,18 @@ class Close(Command):
             self.bot.say('Hotel California mode deactivated!')
 
 
-bot = ShellBot(commands=[Open(), Close()])
+class Hotel(Command):
+    keyword = 'hotel'
+    information_message = u"Get status of Hotel California"
+
+    def execute(self, arguments=None):
+        if self.bot.get('hotel_california.state', 'off') == 'off':
+            self.bot.say('Hotel California will let you escape')
+        else:
+            self.bot.say('Hotel California will keep you here forever!')
+
+
+bot = ShellBot(commands=[Open(), Close(), Hotel()])
 
 # load configuration
 #
