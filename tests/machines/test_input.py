@@ -155,6 +155,7 @@ class InputTests(unittest.TestCase):
         machine.CANCEL_DURATION = 0.0
         machine.receive()  # exit on cancellation
         self.assertEqual(machine.get('answer'), None)
+        machine.CANCEL_DURATION = 40.0
 
         my_bot.fan.put(None)
         machine.receive()  # exit on poison pill
