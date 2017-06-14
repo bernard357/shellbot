@@ -210,7 +210,7 @@ class BotTests(unittest.TestCase):
         os.environ["BOT_ON_STOP"] = 'Stop!'
         os.environ["CHAT_ROOM_TITLE"] = 'Support room'
         os.environ["CHAT_ROOM_MODERATORS"] = 'foo.bar@acme.com'
-        os.environ["CHAT_TOKEN"] = '*token'
+        os.environ["CISCO_SPARK_BOT_TOKEN"] = '*token'
         os.environ["SERVER_URL"] = 'http://to.nowhere/'
 
         bot = ShellBot(fan='f')
@@ -241,7 +241,7 @@ class BotTests(unittest.TestCase):
         os.environ["BOT_ON_STOP"] = 'Stop!'
         os.environ["CHAT_ROOM_TITLE"] = 'Support room'
         os.environ["CHAT_ROOM_MODERATORS"] = 'foo.bar@acme.com'
-        os.environ["CHAT_TOKEN"] = '*token'
+        os.environ["CISCO_SPARK_BOT_TOKEN"] = '*token'
         os.environ["SERVER_URL"] = 'http://to.nowhere/'
 
         bot = ShellBot(fan='f')

@@ -265,7 +265,7 @@ class SparkSpaceTests(unittest.TestCase):
         my_bot.space = space
         os.environ['CHAT_ROOM_TITLE'] = '*my room'
         os.environ['CHAT_ROOM_MODERATORS'] = 'joe.bar@acme.com'
-        os.environ['CHAT_TOKEN'] = '*another bot token'
+        os.environ['CISCO_SPARK_BOT_TOKEN'] = '*another bot token'
 
         my_bot.configure()
         self.assertEqual(space.token, '*another bot token')

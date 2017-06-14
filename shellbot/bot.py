@@ -101,7 +101,6 @@ class ShellBot(object):
         'spark': {
             'room': '$CHAT_ROOM_TITLE',
             'moderators': '$CHAT_ROOM_MODERATORS',
-            'token': '$CHAT_TOKEN',
         },
 
         'server': {

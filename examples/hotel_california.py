@@ -22,20 +22,21 @@ Hotel California
 In this example we show how to keep people in the same room. Following command
 is used:
 
-- command: hotel open
+- command: open
 - response: **Hotel California** mode activated!
 
-- command: hotel close
+- command: close
 - response: **Hotel California** mode deactivated!
 
-- command: hotem
+- command: hotel
 - provides current status of the hotel: open or close
 
 To run this script you have to provide a custom configuration, or set
 environment variables instead::
 
-- ``CHAT_ROOM_MODERATORS`` - You have at least your e-mail address
-- ``CHAT_TOKEN`` - Received from Cisco Spark when you register your bot
+- ``CHAT_ROOM_MODERATORS`` - Mention at least your e-mail address
+- ``CISCO_SPARK_BOT_TOKEN`` - Received from Cisco Spark on bot registration
+- ``CISCO_SPARK_TOKEN`` - Your personal Cisco Spark token
 - ``SERVER_URL`` - Public link used by Cisco Spark to reach your server
 
 The token is specific to your run-time, please visit Cisco Spark for
@@ -43,11 +44,16 @@ Developers to get more details:
 
     https://developer.ciscospark.com/
 
+The other token should be associated to a human being, and not to a bot.
+This is required so that the software can receive all events for a chat space.
+Without it, the bot may not see who is leaving or joining.
+
 For example, if you run this script under Linux or macOs with support from
 ngrok for exposing services to the Internet::
 
     export CHAT_ROOM_MODERATORS="alice@acme.com"
-    export CHAT_TOKEN="<token id from Cisco Spark for Developers>"
+    export CISCO_SPARK_BOT_TOKEN="<token id from Cisco Spark for Developers>"
+    export CISCO_SPARK_TOKEN="<personal token id from Cisco Spark>"
     export SERVER_URL="http://1a107f21.ngrok.io"
     python hotel_california.py
 
