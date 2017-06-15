@@ -728,8 +728,18 @@ class SparkSpace(Space):
                 if not message_id:
                     message_id = data['id']
 
-                item = self.personal_api.messages.get(messageId=message_id)
-                self.on_message(item._json, self.bot.ears)
+                retries = 2
+                while retries:
+                    try:
+                        item = self.personal_api.messages.get(messageId=message_id)
+                        self.on_message(item._json, self.bot.ears)
+                        break
+                    except Exception:
+                        if retries:
+                            retries -= 1
+                            time.sleep(0.1)
+                            continue
+                        raise
 
             elif resource == 'memberships' and event == 'created':
                 logging.debug(u"- handling {}:{}".format(resource, event))
@@ -751,7 +761,7 @@ class SparkSpace(Space):
             return "OK"
 
         except Exception as feedback:
-            logging.error(u"ABORTED: fatal error has been encountered")
+            logging.error(u"Unable to process webhook event")
             logging.error(feedback)
             raise
 
