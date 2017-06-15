@@ -121,7 +121,6 @@ settings = {
     'spark': {
         'room': 'On-demand collaboration',
         'moderators': '$CHAT_ROOM_MODERATORS',
-        'token': '$CHAT_TOKEN',
     },
 
     'server': {
@@ -137,12 +136,12 @@ settings = {
         {
             'label': u'Level 1',
             'message': u'Initial capture of information',
-            'markdown': u'If you are on the shop floor:\n'
+            'content': u'If you are on the shop floor:\n'
                 + u'* Take a picture of the faulty part\n'
                 + u'* Describe the issue in the chat box\n'
                 + u'\n'
                 + u'As a Stress engineer, engage with shop floor and ask questions.'
-                + u' To engage with the design team, type **escalate** in the chat box.',
+                + u' To engage with the design team, type **step** in the chat box.',
             'participants': 'bernard.paques@dimensiondata.com',
         },
 
@@ -185,9 +184,10 @@ audit.arm(updater=FileUpdater(path='./escalation.log'))
 
 bot.load_command('shellbot.commands.close') # allow space deletion from chat
 
-from steps import StepsFactory, Steps
-bot.steps = Steps(context=context, configure=True)
-bot.load_commands(StepsFactory.commands())
+from shellbot.machines import Steps
+bot.machine = Steps(bot=bot, steps=bot.get('process.steps', []))
+
+bot.load_command('shellbot.commands.step') # progress to next step of process
 
 #
 # ask information from end user
@@ -214,7 +214,7 @@ description = Input(bot=bot,
                 timeout=40,
                 key='description')
 
-bot.sequence = Sequence(machines=[order_id, description])
+#bot.sequence = Sequence(machines=[order_id, description])
 
 bot.load_command('shellbot.commands.input') # reflect information gathered
 
@@ -285,7 +285,8 @@ class Trigger(object):
             self.bot.hook()
 
             time.sleep(7)
-            bot.sequence.start()
+#            bot.sequence.start()
+            bot.machine.start()
 
         else:
             self.bot.say(u'{} {}'.format(item, counter))
