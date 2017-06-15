@@ -227,7 +227,8 @@ class Machine(object):
                                         on_exit.get(state, None))
 
         try:
-            self.mutables['state'] = self._states[initial].name
+            self.mutables['initial_state'] = self._states[initial].name
+            self.mutables['state'] = self.mutables['initial_state']
         except KeyError:
             raise ValueError(u'Invalid initial state {}'.format(initial))
 
@@ -284,6 +285,34 @@ class Machine(object):
             raise AttributeError('Machine has not been built')
 
         return self._states[name]
+
+    def reset(self):
+        """
+        Resets a state machine before it is restarted
+
+        This function move back to the initial state, if the machine is not
+        running.
+
+        Example::
+
+            if new_cycle():
+                machine.reset()
+                machine.start()
+
+        """
+        if self.is_running:
+            logging.warning(u"Cannot reset a running state machine")
+        else:
+            self.set('state', self.get('initial_state'))
+            logging.warning(u"Resetting machine to '{}'".format(self.current_state.name))
+
+            while not self.mixer.empty():
+                self.mixer.get()
+
+            self.on_reset()
+
+    def on_reset(self):
+        pass
 
     def step(self, **kwargs):
         """
@@ -350,6 +379,7 @@ class Machine(object):
 
         """
         logging.info(u"Starting machine")
+        logging.debug(u"- general.switch={}".format(self.bot.context.get('general.switch', 'on')))
         self.set('is_running', True)
 
         try:
@@ -364,6 +394,7 @@ class Machine(object):
 
                     item = self.mixer.get(True, self.TICK_DURATION)
                     if item is None:
+                        logging.debug('Stopping machine on poison pill')
                         break
 
                     logging.debug('Processing item')

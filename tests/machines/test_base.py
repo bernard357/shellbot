@@ -189,6 +189,63 @@ class MachineTests(unittest.TestCase):
 
         self.assertEqual(machine.current_state.name, 'three')
 
+    def test_reset_static(self):
+        """Test reset a static machine."""
+
+        logging.info("***** machine/reset a static machine")
+
+        states = ['one', 'two', 'three']
+        transitions = [
+            {'source': 'one', 'target': 'two'},
+            {'source': 'two', 'target': 'three'},
+            {'source': 'three', 'target': 'one'},
+        ]
+
+        machine = Machine(bot=my_bot,
+                          states=states,
+                          transitions=transitions,
+                          initial='one')
+        self.assertFalse(machine.is_running)
+        self.assertEqual(machine.current_state.name, 'one')
+        machine.step()
+        self.assertEqual(machine.current_state.name, 'two')
+        machine.reset()
+        self.assertEqual(machine.current_state.name, 'one')
+        machine.step()
+        self.assertEqual(machine.current_state.name, 'two')
+
+    def test_reset_dynamic(self):
+        """Test reset a dynamic machine."""
+
+        logging.info("***** machine/reset a dynamic machine")
+
+        machine = Machine(bot=my_bot)
+
+        states = ['one', 'two', 'three', 'four']
+        transitions = [
+            {'source': 'one', 'target': 'two'},
+            {'source': 'two', 'target': 'three', 'condition': lambda **z: machine.get('go_ahead', False) },
+        ]
+        on_enter = { 'three': machine.stop }
+        machine.build(states=states,
+                      transitions=transitions,
+                      initial='one',
+                      on_enter=on_enter)
+
+        my_bot.context.set('general.switch', 'on')
+        machine_process = machine.start(tick=0.001)
+        while machine.current_state.name != 'two':
+            time.sleep(0.01)
+        self.assertTrue(machine.is_running)
+        machine.reset()
+        self.assertEqual(machine.current_state.name, 'two')
+        machine.set('go_ahead', True)
+        machine_process.join()
+        self.assertEqual(machine.current_state.name, 'three')
+        self.assertFalse(machine.is_running)
+        machine.reset()
+        self.assertEqual(machine.current_state.name, 'one')
+
     def test_step(self):
 
         logging.info("***** machine/step")

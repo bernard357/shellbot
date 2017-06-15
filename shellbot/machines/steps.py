@@ -127,6 +127,10 @@ class Steps(Machine):
                    transitions=transitions,
                    initial='begin')
 
+    def on_reset(self):
+        logging.debug(u"- seeking back before first step")
+        self.set('_index', None)
+
     @property
     def current_step(self):
         """
