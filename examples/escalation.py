@@ -250,6 +250,7 @@ class Trigger(object):
         self.queue = queue if queue else Queue()
 
     def work(self):
+
         logging.info(u"Waiting for trigger")
 
         try:
@@ -284,12 +285,23 @@ class Trigger(object):
             self.bot.space.on_run()
             self.bot.hook()
 
-            time.sleep(7)
+            time.sleep(2)
 #            bot.sequence.start()
-            bot.machine.start()
+            self.bot.machine.reset()
+            self.bot.machine.start()
 
         else:
             self.bot.say(u'{} {}'.format(item, counter))
+
+    def on_dispose(self):
+        logging.debug(u"- stopping the machine")
+        self.bot.machine.stop()
+        logging.debug(u"- resetting the counter of button pushes")
+        self.bot.set('trigger.counter', 0)
+
+trigger = Trigger(bot, queue)
+
+bot.register('dispose', trigger)
 
 #
 # launch multiple processes to do the job
@@ -297,7 +309,6 @@ class Trigger(object):
 
 bot.start()
 
-trigger = Trigger(bot, queue)
 p = Process(target=trigger.work)
 #p.daemon = True
 p.start()
