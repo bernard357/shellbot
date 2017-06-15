@@ -50,8 +50,9 @@ todo list is added to a room, and any participant is entitled to act on it.
 To run this script you have to provide a custom configuration, or set
 environment variables instead::
 
-- ``CHAT_ROOM_MODERATORS`` - You have at least your e-mail address
-- ``CHAT_TOKEN`` - Received from Cisco Spark when you register your bot
+- ``CHAT_ROOM_MODERATORS`` - Mention at least your e-mail address
+- ``CISCO_SPARK_BOT_TOKEN`` - Received from Cisco Spark on bot registration
+- ``CISCO_SPARK_TOKEN`` - Your personal Cisco Spark token
 - ``SERVER_URL`` - Public link used by Cisco Spark to reach your server
 
 The token is specific to your run-time, please visit Cisco Spark for
