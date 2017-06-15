@@ -27,9 +27,9 @@ class Close(Command):
 
     """
     keyword = 'close'
-    information_message = u"Close this room"
+    information_message = u"Close this space"
 
     def execute(self, arguments=None):
-        self.bot.say(self.information_message)
-        self.bot.stop()
+        self.bot.say("Closing this space")
+#        self.bot.stop()
         self.bot.dispose()

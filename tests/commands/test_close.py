@@ -27,7 +27,7 @@ class CloseTests(unittest.TestCase):
         c = Close(my_bot)
 
         self.assertEqual(c.keyword, u'close')
-        self.assertEqual(c.information_message, u'Close this room')
+        self.assertEqual(c.information_message, u'Close this space')
         self.assertEqual(c.usage_message, None)
         self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
@@ -42,11 +42,10 @@ class CloseTests(unittest.TestCase):
         c = Close(my_bot)
 
         c.execute()
-        self.assertEqual(my_bot.mouth.get().text, u'Close this room')
+        self.assertEqual(my_bot.mouth.get().text, u'Closing this space')
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 
-        self.assertTrue(my_bot.stop.called)
         self.assertTrue(my_bot.dispose.called)
 
 if __name__ == '__main__':
