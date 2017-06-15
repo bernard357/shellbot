@@ -153,35 +153,35 @@ class Listener(object):
             assert isinstance(item, dict)  # low-level event representation
 
             if item['type'] == 'message':
-                logging.debug(u"- dispatching a 'message' event")
+                logging.debug(u"- processing a 'message' event")
                 event = Message(item)
                 if self.filter:
                     event = self.filter(event)
                 self.on_message(event)
 
             elif item['type'] == 'attachment':
-                logging.debug(u"- dispatching an 'attachment' event")
+                logging.debug(u"- processing an 'attachment' event")
                 event = Attachment(item)
                 if self.filter:
                     event = self.filter(event)
                 self.on_attachment(event)
 
             elif item['type'] == 'join':
-                logging.debug(u"- dispatching a 'join' event")
+                logging.debug(u"- processing a 'join' event")
                 event = Join(item)
                 if self.filter:
                     event = self.filter(event)
                 self.on_join(event)
 
             elif item['type'] == 'leave':
-                logging.debug(u"- dispatching a 'leave' event")
+                logging.debug(u"- processing a 'leave' event")
                 event = Leave(item)
                 if self.filter:
                     event = self.filter(event)
                 self.on_leave(event)
 
             else:
-                logging.debug(u"- dispatching an inbound event")
+                logging.debug(u"- processing an inbound event")
                 event = Event(item)
                 if self.filter:
                     event = self.filter(event)
