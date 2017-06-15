@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -13,30 +15,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .audit import Audit
 from .base import Command
-from .close import Close
-from .default import Default
-from .echo import Echo
-from .empty import Empty
-from .help import Help
-from .input import Input
-from .noop import Noop
-from .sleep import Sleep
-from .step import Step
-from .version import Version
 
-__all__ = [
-    'Audit',
-    'Command',
-    'Close',
-    'Default',
-    'Echo',
-    'Empty',
-    'Input',
-    'Help',
-    'Noop',
-    'Sleep',
-    'Step',
-    'Version'
-]
+class Step(Command):
+    """
+    Moves underlying state machine to the next step
+
+    Example::
+
+        step = Step()
+        shell.load_command(step)
+
+    This command only applies when the bot has a state machine.
+    You can check ``examples/escalation.py`` to get a concrete use case.
+
+    """
+
+    keyword = u'step'
+    information_message = u'Move process to next step'
+
+    def execute(self, arguments=None):
+        """
+        Moves underlying state machine to the next step
+        """
+        try:
+            self.bot.machine.step(event='next')
+
+        except AttributeError:
+            raise AttributeError(u'State machine has not been initialised')

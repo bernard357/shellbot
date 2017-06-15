@@ -83,6 +83,10 @@ class Steps(Machine):
                 else:
                     self.steps.append(item)
 
+            logging.debug(u"Adding steps:")
+            for step in self.steps:
+                logging.debug(u"- {}".format(step.label))
+
         states = ['begin',
                   'running',
                   'completed',
@@ -145,8 +149,11 @@ class Steps(Machine):
         This function loads and runs the next step in the process, if any.
         If all steps have been consumed it returns None.
         """
+        logging.debug(u"Moving to next step of the process")
+
         if not self.steps or len(self.steps) < 1:
-            return None  # no steps have been set
+            logging.debug(u"- no steps have ben set")
+            return None
 
         index = self.get('_index')
 
@@ -155,12 +162,14 @@ class Steps(Machine):
         elif index < len(self.steps)-1:
             index += 1
         else:
-            return None  # all steps have been used
+            logging.debug(u"- all steps have ben consumed")
+            return None
+
+        logging.debug(u"- triggering step #{}".format(index))
 
         self.set('_index', index)
 
         step = self.steps[index]
-
         step.trigger(bot=self.bot)
 
         return step
