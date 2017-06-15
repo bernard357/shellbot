@@ -369,6 +369,8 @@ class ShellBot(object):
         Registration uses weakref so that it affords the unattended deletion
         of registered objects.
         """
+        logging.debug(u"Registering to '{}' dispatch".format(event))
+
         assert event in self.registered.keys()  #  avoid unknown event type
 
         name = 'on_' + event
@@ -377,6 +379,13 @@ class ShellBot(object):
 
         handle = weakref.proxy(instance)
         self.registered[event].append(handle)
+
+        if len(self.registered[event]) > 1:
+            logging.debug(u"- {} objects registered to '{}'".format(
+                len(self.registered[event]), event))
+
+        else:
+            logging.debug(u"- 1 object registered to '{}'".format(event))
 
     def dispatch(self, event, **kwargs):
         """
@@ -399,13 +408,24 @@ class ShellBot(object):
         """
         assert event in self.registered.keys()  #  avoid unknown event type
 
+        if len(self.registered[event]) > 1:
+            logging.debug(u"Dispatching '{}' to {} objects".format(
+                event, len(self.registered[event])))
+
+        elif len(self.registered[event]) > 0:
+            logging.debug(u"Dispatching '{}' to 1 object".format(event))
+
+        else:
+            logging.debug(u"Dispatching '{}', nothing to do".format(event))
+            return
+
         name = 'on_' + event
         for handle in self.registered[event]:
             try:
                 callback = getattr(handle, name)
                 callback(**kwargs)
             except ReferenceError:
-                logging.debug(u"Dispatch: registered object no longer exists")
+                logging.debug(u"- registered object no longer exists")
 
     @property
     def name(self):
