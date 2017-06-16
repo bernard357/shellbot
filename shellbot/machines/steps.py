@@ -332,4 +332,5 @@ class Step(object):
         bot.add_participants(self.participants)
 
         if self.machine:
+            self.machine.reset()
             self._step_process = self.machine.start()

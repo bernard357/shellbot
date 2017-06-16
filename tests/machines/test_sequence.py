@@ -28,6 +28,28 @@ class SequenceTests(unittest.TestCase):
         sequence = Sequence([FakeMachine(), FakeMachine(), FakeMachine()])
         self.assertEqual(len(sequence.machines), 3)
 
+    def test_getter(self):
+
+        sequence = Sequence([FakeMachine(), FakeMachine(), FakeMachine()])
+
+        # undefined key
+        self.assertEqual(sequence.get('hello'), None)
+
+        # undefined key with default value
+        whatever = 'whatever'
+        self.assertEqual(sequence.get('hello', whatever), whatever)
+
+        # set the key
+        sequence.set('hello', 'world')
+        self.assertEqual(sequence.get('hello'), 'world')
+
+        # default value is meaningless when key has been set
+        self.assertEqual(sequence.get('hello', 'whatever'), 'world')
+
+        # except when set to None
+        sequence.set('special', None)
+        self.assertEqual(sequence.get('special', []), [])
+
     def test_start(self):
 
         sequence = Sequence([FakeMachine(), FakeMachine(), FakeMachine()])
@@ -37,6 +59,11 @@ class SequenceTests(unittest.TestCase):
 
         sequence = Sequence([FakeMachine(), FakeMachine(), FakeMachine()])
         sequence.tick()
+
+    def test_is_running(self):
+
+        sequence = Sequence([FakeMachine(), FakeMachine(), FakeMachine()])
+        self.assertFalse(sequence.is_running)
 
 
 if __name__ == '__main__':

@@ -23,7 +23,11 @@ class FakeMachine(object):
 
     def __init__(self, running=False):
         self.running = running
+        self._reset = False
         self.started = False
+
+    def reset(self):
+        self._reset = True
 
     def start(self):
         self.started = True
@@ -214,20 +218,50 @@ class StepsTests(unittest.TestCase):
             machine.next_step()
             self.assertEqual(machine.current_step, my_steps[0])
 
+            sub_machine = machine.current_step.machine
+            if sub_machine:
+                self.assertTrue(sub_machine.started)
+                self.assertTrue(sub_machine._reset)
+
             machine.next_step()
             self.assertEqual(machine.current_step, my_steps[1])
+
+            sub_machine = machine.current_step.machine
+            if sub_machine:
+                self.assertTrue(sub_machine.started)
+                self.assertTrue(sub_machine._reset)
 
             machine.next_step()
             self.assertEqual(machine.current_step, my_steps[2])
 
-            machine.next_step()
-            self.assertEqual(machine.current_step, my_steps[3])
+            sub_machine = machine.current_step.machine
+            if sub_machine:
+                self.assertTrue(sub_machine.started)
+                self.assertTrue(sub_machine._reset)
 
             machine.next_step()
             self.assertEqual(machine.current_step, my_steps[3])
 
+            sub_machine = machine.current_step.machine
+            if sub_machine:
+                self.assertTrue(sub_machine.started)
+                self.assertTrue(sub_machine._reset)
+
             machine.next_step()
             self.assertEqual(machine.current_step, my_steps[3])
+
+            sub_machine = machine.current_step.machine
+            if sub_machine:
+                self.assertTrue(sub_machine.started)
+                self.assertTrue(sub_machine._reset)
+
+            machine.next_step()
+            self.assertEqual(machine.current_step, my_steps[3])
+
+            sub_machine = machine.current_step.machine
+            if sub_machine:
+                self.assertTrue(sub_machine.started)
+                self.assertTrue(sub_machine._reset)
 
     def test_next_step(self):
 
@@ -246,14 +280,34 @@ class StepsTests(unittest.TestCase):
             step = machine.next_step()
             self.assertEqual(step, my_steps[0])
 
+            sub_machine = step.machine
+            if sub_machine:
+                self.assertTrue(sub_machine.started)
+                self.assertTrue(sub_machine._reset)
+
             step = machine.next_step()
             self.assertEqual(step, my_steps[1])
+
+            sub_machine = step.machine
+            if sub_machine:
+                self.assertTrue(sub_machine.started)
+                self.assertTrue(sub_machine._reset)
 
             step = machine.next_step()
             self.assertEqual(step, my_steps[2])
 
+            sub_machine = step.machine
+            if sub_machine:
+                self.assertTrue(sub_machine.started)
+                self.assertTrue(sub_machine._reset)
+
             step = machine.next_step()
             self.assertEqual(step, my_steps[3])
+
+            sub_machine = step.machine
+            if sub_machine:
+                self.assertTrue(sub_machine.started)
+                self.assertTrue(sub_machine._reset)
 
             step = machine.next_step()
             self.assertEqual(step, None)
