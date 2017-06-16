@@ -100,7 +100,7 @@ ngrok for exposing services to the Internet::
 """
 
 import logging
-#import os
+import os
 from multiprocessing import Process, Queue
 import time
 
@@ -110,7 +110,6 @@ Context.set_logger()
 #
 # load configuration
 #
-
 settings = {
 
     'bot': {
@@ -119,16 +118,16 @@ settings = {
     },
 
     'spark': {
-        'room': 'On-demand collaboration',
-        'moderators': '$CHAT_ROOM_MODERATORS',
+        'room': '[' + os.environ["POD_NAME"] + '] On-demand Collaboration',
+        'moderators': os.environ["CHAT_ROOM_MODERATORS"],
     },
 
     'server': {
-        'url': '$SERVER_URL',
-        'trigger': '/trigger',
-        'hook': '/hook',
-        'binding': '0.0.0.0',
-        'port': 8080,
+        'url':     os.environ["SERVER_URL"],
+        'trigger': os.environ["SERVER_TRIGGER"],
+        'hook':    os.environ["SERVER_HOOK"],
+        'binding': os.environ["SERVER_HOST"],
+        'port':    os.environ["SERVER_PORT"],
     },
 
     'process.steps': [
@@ -143,7 +142,7 @@ settings = {
                 + u'\n'
                 + u' Use the command **help** for a list of all available commands.'
                 + u' Use the command **step** when ready to progress in the process.',
-
+            'participants': os.environ["SHOP_FLOOR"],
         },
 
         {
@@ -159,10 +158,7 @@ settings = {
                 + u' Use the command **input** to check data captured earlier.'
                 + u' Use the command **step** when ready to progress in the process.',
 
-            'participants': [
-                'sandrine.granjean@dimensiondata.com',
-                'bernard.paques@gmail.com',
-            ],
+            'participants': os.environ["STRESS_ENGINEER"],
         },
 
         {
@@ -176,7 +172,7 @@ settings = {
                 + u'\n'
                 + u' Use the command **step** when ready to progress in the process.',
 
-            'participants': 'bernard.paques@dimensiondata.com',
+            'participants': os.environ["DESIGN_ENGINEER"],
         },
 
         {
@@ -192,8 +188,8 @@ settings = {
 }
 
 context = Context(settings)
-context.check('server.trigger', '/trigger')
-context.check('server.hook', '/hook')
+context.check('server.trigger', os.environ["SERVER_TRIGGER"])
+context.check('server.hook', os.environ["SERVER_HOOK"])
 
 #
 # create a bot and load commands
@@ -212,7 +208,7 @@ audit = Audit(bot=bot)
 bot.load_command(audit)  # manage auditing
 
 from shellbot.updaters import FileUpdater
-audit.arm(updater=FileUpdater(path='./escalation.log'))
+audit.arm(updater=FileUpdater(path=(os.environ["SERVER_LOG"])))
 
 #
 # ask information from end user
@@ -269,7 +265,6 @@ queue = Queue()
 server = Server(context=context, check=True)
 
 server.add_route(Notify(queue=queue,
-                        notification='click',
                         route=context.get('server.trigger')))
 
 server.add_route(Wrap(callable=bot.get_hook(),
