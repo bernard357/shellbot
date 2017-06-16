@@ -17,6 +17,12 @@ from shellbot.machines import Sequence
 
 
 class FakeMachine(object):
+    def __init__(self):
+        self._reset = False
+
+    def reset(self):
+        self._reset = True
+
     def tick(self):
         pass
 
@@ -49,6 +55,14 @@ class SequenceTests(unittest.TestCase):
         # except when set to None
         sequence.set('special', None)
         self.assertEqual(sequence.get('special', []), [])
+
+    def test_reset(self):
+
+        sequence = Sequence([FakeMachine(), FakeMachine(), FakeMachine()])
+        sequence.reset()
+        self.assertTrue(sequence.machines[0]._reset)
+        self.assertTrue(sequence.machines[1]._reset)
+        self.assertTrue(sequence.machines[2]._reset)
 
     def test_start(self):
 

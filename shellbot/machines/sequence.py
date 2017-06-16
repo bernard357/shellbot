@@ -82,6 +82,33 @@ class Sequence(object):
 
             self.mutables[key] = value
 
+    def reset(self):
+        """
+        Resets a state machine before it is restarted
+
+        This function move back to the initial state, if the machine is not
+        running.
+
+        Example::
+
+            if new_cycle():
+                machine.reset()
+                machine.start()
+
+        """
+        if self.is_running:
+            logging.warning(u"Cannot reset a running sequence")
+        else:
+            logging.warning(u"Resetting sequence")
+
+            for machine in self.machines:
+                machine.reset()
+
+            self.on_reset()
+
+    def on_reset(self):
+        pass
+
     def start(self):
         """
         Runs the sequence
