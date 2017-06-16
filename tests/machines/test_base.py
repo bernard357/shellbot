@@ -205,6 +205,7 @@ class MachineTests(unittest.TestCase):
                           states=states,
                           transitions=transitions,
                           initial='one')
+        machine.mixer.put(None)
         self.assertFalse(machine.is_running)
         self.assertEqual(machine.current_state.name, 'one')
         machine.step()

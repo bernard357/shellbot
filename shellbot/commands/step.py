@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+
 from .base import Command
 
 class Step(Command):
@@ -41,5 +43,6 @@ class Step(Command):
         try:
             self.bot.machine.step(event='next')
 
-        except AttributeError:
+        except AttributeError as feedback:
+            logging.error(feedback)
             raise AttributeError(u'State machine has not been initialised')

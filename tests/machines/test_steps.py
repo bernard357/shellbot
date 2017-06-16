@@ -28,6 +28,7 @@ class FakeMachine(object):
     def start(self):
         self.started = True
 
+    @property
     def is_running(self):
         return self.running
 
@@ -166,6 +167,34 @@ class StepsTests(unittest.TestCase):
         self.assertEqual(len(machine.steps), 4)
         for step in machine.steps:
             self.assertTrue(isinstance(step, Step))
+
+    def test_reset(self):
+
+        logging.info("******** reset")
+
+        machine = Steps(bot=my_bot,
+                        steps=my_raw_steps)
+        self.assertEqual(len(machine.steps), 4)
+
+        self.assertEqual(machine.get('_index'), None)
+
+        with mock.patch.object(my_bot,
+                               'space') as mocked:
+
+            machine.next_step()
+            self.assertEqual(machine.get('_index'), 0)
+
+            machine.next_step()
+            self.assertEqual(machine.get('_index'), 1)
+
+            machine.reset()
+            self.assertEqual(machine.get('_index'), None)
+
+            machine.next_step()
+            self.assertEqual(machine.get('_index'), 0)
+
+            machine.next_step()
+            self.assertEqual(machine.get('_index'), 1)
 
     def test_current_step(self):
 

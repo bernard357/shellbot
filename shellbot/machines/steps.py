@@ -192,7 +192,7 @@ class Steps(Machine):
         if machine is None:
             return True
 
-        return not machine.is_running()
+        return not machine.is_running
 
     def if_ready(self, **kwargs):
         """
@@ -321,9 +321,12 @@ class Step(object):
 
         """
         bot.say(u"New state: {} - {}".format(self.label,
-                                             self.message),
-                content=self.content,
-                file=self.file)
+                                             self.message))
+
+        if self.content or self.file:
+            bot.say(' ',
+                    content=self.content,
+                    file=self.file)
 
         bot.add_moderators(self.moderators)
         bot.add_participants(self.participants)

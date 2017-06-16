@@ -136,29 +136,55 @@ settings = {
         {
             'label': u'Level 1',
             'message': u'Initial capture of information',
+
             'content': u'If you are on the shop floor:\n'
                 + u'* Take a picture of the faulty part\n'
                 + u'* Describe the issue in the chat box\n'
                 + u'\n'
-                + u'As a Stress engineer, engage with shop floor and ask questions.'
-                + u' To engage with the design team, type **step** in the chat box.',
-            'participants': 'bernard.paques@dimensiondata.com',
+                + u' Use the command **help** for a list of all available commands.'
+                + u' Use the command **step** when ready to progress in the process.',
+
         },
 
         {
             'label': u'Level 2',
             'message': u'Escalation to technical experts',
-            'participants': 'sandrine.granjean@dimensiondata.com',
+
+            'content': u'This is a convenient place to interact in real-time across participants:\n'
+                + u'* Via the chat system\n'
+                + u'* Share a picture or attach a file\n'
+                + u'* Use the Call function for an ad hoc video session\n'
+                + u'\n'
+                + u'As a Stress engineer, engage with shop floor and ask questions.'
+                + u' Use the command **input** to check data captured earlier.'
+                + u' Use the command **step** when ready to progress in the process.',
+
+            'participants': [
+                'sandrine.granjean@dimensiondata.com',
+                'bernard.paques@gmail.com',
+            ],
         },
 
         {
             'label': u'Level 3',
             'message': u'Escalation to decision stakeholders',
+
+            'content': u'This is a convenient place to gather information required to make a decision:\n'
+                + u'* Via the chat system\n'
+                + u'* Share a picture or attach a file\n'
+                + u'* Use the Call function for an ad hoc video session\n'
+                + u'\n'
+                + u' Use the command **step** when ready to progress in the process.',
+
+            'participants': 'bernard.paques@dimensiondata.com',
         },
 
         {
             'label': u'Terminated',
             'message': u'Process is closed, yet conversation can continue',
+
+            'content': u' Use the command **close** when this space can be deleted.',
+
         },
 
     ],
@@ -175,6 +201,12 @@ context.check('server.hook', '/hook')
 
 bot = ShellBot(context=context, configure=True)
 
+bot.load_command('shellbot.commands.close') # allow space deletion from chat
+
+#
+# audit all interactions in a separate file
+#
+
 from shellbot.commands import Audit
 audit = Audit(bot=bot)
 bot.load_command(audit)  # manage auditing
@@ -182,16 +214,11 @@ bot.load_command(audit)  # manage auditing
 from shellbot.updaters import FileUpdater
 audit.arm(updater=FileUpdater(path='./escalation.log'))
 
-bot.load_command('shellbot.commands.close') # allow space deletion from chat
-
-from shellbot.machines import Steps
-bot.machine = Steps(bot=bot, steps=bot.get('process.steps', []))
-
-bot.load_command('shellbot.commands.step') # progress to next step of process
-
 #
 # ask information from end user
 #
+
+bot.load_command('shellbot.commands.input') # reflect information gathered
 
 from shellbot.machines import Input, Sequence
 
@@ -214,9 +241,20 @@ description = Input(bot=bot,
                 timeout=40,
                 key='description')
 
-#bot.sequence = Sequence(machines=[order_id, description])
+sequence = Sequence(machines=[order_id, description])
 
-bot.load_command('shellbot.commands.input') # reflect information gathered
+#
+# implement the escalation process
+#
+
+bot.load_command('shellbot.commands.step') # progress to next step of process
+
+steps = bot.get('process.steps', [])
+
+steps[0]['machine'] = sequence
+
+from shellbot.machines import Steps
+bot.machine = Steps(bot=bot, steps=steps)
 
 #
 # a queue of events between the web server and the bot
@@ -225,7 +263,7 @@ bot.load_command('shellbot.commands.input') # reflect information gathered
 queue = Queue()
 
 #
-# create a web server to receive trigger
+# create a web server to receive triggers and updates
 #
 
 server = Server(context=context, check=True)
@@ -280,13 +318,11 @@ class Trigger(object):
         logging.info(u'Trigger {} {}'.format(item, counter))
 
         if counter == 1:
-#            self.bot.bond(reset=True)
             self.bot.bond()
             self.bot.space.on_run()
             self.bot.hook()
 
             time.sleep(2)
-#            bot.sequence.start()
             self.bot.machine.reset()
             self.bot.machine.start()
 
@@ -310,7 +346,6 @@ bot.register('dispose', trigger)
 bot.start()
 
 p = Process(target=trigger.work)
-#p.daemon = True
 p.start()
 
 server.run()

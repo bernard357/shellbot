@@ -18,6 +18,7 @@
 from collections import defaultdict
 import logging
 from multiprocessing import Manager, Lock, Process, Queue
+import signal
 import time
 
 
@@ -47,6 +48,39 @@ class Sequence(object):
 
         """
         self.machines = machines
+
+        self.lock = Lock()
+
+        # prevent Manager() process to be interrupted
+        handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+        self.mutables = Manager().dict()
+
+        # restore current handler for the rest of the program
+        signal.signal(signal.SIGINT, handler)
+
+    def get(self, key, default=None):
+        """
+        Retrieves the value of one key
+        """
+
+        with self.lock:
+
+            value = self.mutables.get(key, default)
+
+            if value is not None:
+                return value
+
+            return default
+
+    def set(self, key, value):
+        """
+        Remembers the value of one key
+        """
+
+        with self.lock:
+
+            self.mutables[key] = value
 
     def start(self):
         """
@@ -78,8 +112,21 @@ class Sequence(object):
 
         """
         logging.info(u"Beginning of the sequence")
+        self.set('is_running', True)
 
         for machine in self.machines:
             machine.tick()
 
         logging.info(u"End of the sequence")
+        self.set('is_running', False)
+
+    @property
+    def is_running(self):
+        """
+        Determines if this machine is runnning
+
+        :return: True or False
+        """
+        return self.get('is_running', False)
+
+
