@@ -282,7 +282,12 @@ class Trigger(object):
         self.bot = bot
         self.queue = queue if queue else Queue()
 
-    def work(self):
+    def start(self):
+        p = Process(target=self.run)
+        p.start()
+        return p
+
+    def run(self):
 
         logging.info(u"Waiting for trigger")
 
@@ -330,6 +335,7 @@ class Trigger(object):
         logging.debug(u"- resetting the counter of button pushes")
         self.bot.set('trigger.counter', 0)
 
+
 trigger = Trigger(bot, queue)
 
 bot.register('dispose', trigger)
@@ -339,9 +345,7 @@ bot.register('dispose', trigger)
 #
 
 bot.start()
-
-p = Process(target=trigger.work)
-p.start()
+trigger.start()
 
 server.run()
 

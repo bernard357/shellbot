@@ -210,7 +210,13 @@ class Trigger(object):
         self.bot = bot
         self.queue = queue if queue else Queue()
 
-    def work(self):
+    def start(self):
+        p = Process(target=self.run)
+        p.start()
+        return p
+
+    def run(self):
+
         logging.info(u"Waiting for trigger")
 
         try:
@@ -255,8 +261,6 @@ class Trigger(object):
 bot.start()
 
 trigger = Trigger(bot, queue)
-p = Process(target=trigger.work)
-p.daemon = True
-p.start()
+trigger.start()
 
 server.run()
