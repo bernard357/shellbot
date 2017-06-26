@@ -29,9 +29,7 @@ class WorkerTests(unittest.TestCase):
         my_bot.context.clear()
         worker = Worker(bot=my_bot)
 
-        worker_process = Process(target=worker.work)
-        worker_process.daemon = True
-        worker_process.start()
+        worker_process = worker.start()
 
         worker_process.join(0.01)
         if worker_process.is_alive():
@@ -57,7 +55,7 @@ class WorkerTests(unittest.TestCase):
         my_bot.context.clear()
         my_bot.shell.load_default_commands()
         worker = Worker(bot=my_bot)
-        worker.work()
+        worker.run()
 
         self.assertEqual(my_bot.context.get('worker.counter'), 6)
 
@@ -78,23 +76,23 @@ class WorkerTests(unittest.TestCase):
         with self.assertRaises(Exception):
             my_bot.inbox.get_nowait()
 
-    def test_work(self):
+    def test_run(self):
 
-        logging.info("*** work")
+        logging.info("*** run")
 
         my_bot.context.clear()
         worker = Worker(bot=my_bot)
         worker.process = mock.Mock(side_effect=Exception('TEST'))
         my_bot.inbox.put(('do', 'this'))
         my_bot.inbox.put(Exception('EOQ'))
-        worker.work()
+        worker.run()
         self.assertEqual(my_bot.context.get('worker.counter'), 0)
 
         my_bot.context.clear()
         worker = Worker(bot=my_bot)
         worker.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
         my_bot.inbox.put(('do', 'that'))
-        worker.work()
+        worker.run()
         self.assertEqual(my_bot.context.get('worker.counter'), 0)
 
     def test_process(self):

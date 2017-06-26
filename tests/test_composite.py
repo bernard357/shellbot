@@ -38,17 +38,9 @@ class CompositeTests(unittest.TestCase):
 
         logging.info('*** Static test ***')
 
-        speaker_process = Process(target=my_bot.speaker.work)
-        speaker_process.daemon = True
-        speaker_process.start()
-
-        worker_process = Process(target=my_bot.worker.work)
-        worker_process.daemon = True
-        worker_process.start()
-
-        listener_process = Process(target=my_bot.listener.work)
-        listener_process.daemon = True
-        listener_process.start()
+        speaker_process = my_bot.speaker.start()
+        worker_process = my_bot.worker.start()
+        listener_process = my_bot.listener.start()
 
         listener_process.join(0.2)
         if listener_process.is_alive():
@@ -62,22 +54,13 @@ class CompositeTests(unittest.TestCase):
         self.assertEqual(my_bot.context.get('worker.counter', 0), 0)
         self.assertEqual(my_bot.context.get('speaker.counter', 0), 0)
 
-
     def test_dynamic(self):
 
         logging.info('*** Dynamic test ***')
 
-        speaker_process = Process(target=my_bot.speaker.work)
-        speaker_process.daemon = True
-        speaker_process.start()
-
-        worker_process = Process(target=my_bot.worker.work)
-        worker_process.daemon = True
-        worker_process.start()
-
-        listener_process = Process(target=my_bot.listener.work)
-        listener_process.daemon = True
-        listener_process.start()
+        speaker_process = my_bot.speaker.start()
+        worker_process = my_bot.worker.start()
+        listener_process = my_bot.listener.start()
 
         items = [
 

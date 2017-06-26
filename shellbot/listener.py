@@ -17,6 +17,7 @@
 
 import json
 import logging
+from multiprocessing import Process
 from six import string_types
 import time
 import yaml
@@ -64,7 +65,20 @@ class Listener(object):
         self.bot = bot
         self.filter = filter
 
-    def work(self):
+    def start(self):
+        """
+        Starts the listening process
+
+        :return: either the process that has been started, or None
+
+        This function starts a separate process to listen
+        in the background.
+        """
+        p = Process(target=self.run)
+        p.start()
+        return p
+
+    def run(self):
         """
         Continuously receives updates
 
@@ -75,10 +89,7 @@ class Listener(object):
         in the following example::
 
             listener = Listener(bot=bot)
-
-            process = Process(target=listener.work)
-            process.daemon = True
-            process.start()
+            process = listener.start()
 
         The recommended way for stopping the process is to change the
         parameter ``general.switch`` in the context. For example::

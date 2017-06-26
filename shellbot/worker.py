@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import logging
+from multiprocessing import Process
 import time
 
 
@@ -27,7 +28,21 @@ class Worker(object):
     def __init__(self, bot=None):
         self.bot = bot
 
-    def work(self):
+    def start(self):
+        """
+        Starts the working process
+
+        :return: either the process that has been started, or None
+
+        This function starts a separate daemonic process to work
+        in the background.
+        """
+        p = Process(target=self.run)
+        p.daemon = True
+        p.start()
+        return p
+
+    def run(self):
         """
         Continuously processes commands
 

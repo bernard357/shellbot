@@ -621,26 +621,15 @@ class ShellBot(object):
         """
         Starts bot processes
 
-        This function starts a separate daemonic process for each
+        This function starts a separate process for each
         main component of the architecture: listener, speaker, and worker.
         """
 
         self.context.set('general.switch', 'on')
 
-        p = Process(target=self.speaker.work)
-        p.daemon = True
-        p.start()
-        self._speaker_process = p
-
-        p = Process(target=self.worker.work)
-        p.daemon = True
-        p.start()
-        self._worker_process = p
-
-        p = Process(target=self.listener.work)
-        p.daemon = True
-        p.start()
-        self._listener_process = p
+        self._speaker_process = self.speaker.start()
+        self._worker_process = self.worker.start()
+        self._listener_process = self.listener.start()
 
     def on_start(self):
         """

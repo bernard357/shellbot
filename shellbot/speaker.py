@@ -39,7 +39,7 @@ class Speaker(object):
         """
         self.bot = bot
 
-    def run(self):
+    def start(self):
         """
         Starts the speaking process
 
@@ -48,12 +48,12 @@ class Speaker(object):
         This function starts a separate daemonic process to speak
         in the background.
         """
-        p = Process(target=self.work)
+        p = Process(target=self.run)
         p.daemon = True
         p.start()
         return p
 
-    def work(self):
+    def run(self):
         """
         Continuously send updates
 
@@ -64,10 +64,7 @@ class Speaker(object):
         in the following example::
 
             speaker = Speaker(bot=bot)
-
-            process = Process(target=speaker.work)
-            process.daemon = True
-            process.start()
+            process_handle = speaker.start()
 
         The recommended way for stopping the process is to change the
         parameter ``general.switch`` in the context. For example::

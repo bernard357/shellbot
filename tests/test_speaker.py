@@ -32,9 +32,7 @@ class SpeakerTests(unittest.TestCase):
         bot = my_bot
         speaker = Speaker(bot=bot)
 
-        speaker_process = Process(target=speaker.work)
-        speaker_process.daemon = True
-        speaker_process.start()
+        speaker_process = speaker.start()
 
         speaker_process.join(0.1)
         if speaker_process.is_alive():
@@ -64,20 +62,20 @@ class SpeakerTests(unittest.TestCase):
                                'post_message',
                                return_value=None) as mocked:
 
-            speaker.work()
+            speaker.run()
             mocked.assert_any_call('hello')
             mocked.assert_called_with('world')
 
             with self.assertRaises(Exception):
                 mouth.get_nowait()
 
-    def test_run(self):
+    def test_start(self):
 
-        logging.info("*** run")
+        logging.info("*** start")
 
         bot = my_bot
         bot.space = SpaceFactory.get('local', bot=bot)
-        bot.set('local.id', '123')
+        bot.space.set('id', '123')
         bot.mouth.put('ping')
 
         def my_post(item):
@@ -89,7 +87,7 @@ class SpeakerTests(unittest.TestCase):
         bot.context.set('speaker.counter', 0) # do not wait for run()
 
         speaker = Speaker(bot=bot)
-        speaker_process = speaker.run()
+        speaker_process = speaker.start()
         while True:
             counter = bot.context.get('speaker.counter', 0)
             if counter > 0:
@@ -98,42 +96,39 @@ class SpeakerTests(unittest.TestCase):
         bot.context.set('general.switch', 'off')
         speaker_process.join()
 
-        self.assertEqual(bot.context.get('speaker.counter'), 1)
+        self.assertTrue(bot.context.get('speaker.counter') > 0)
         self.assertEqual(bot.context.get('speaker.last'), 'ping')
 
-    def test_work(self):
+    def test_run(self):
 
-        logging.info("*** work")
+        logging.info("*** run")
 
         bot = my_bot
         bot.space = SpaceFactory.get('local', bot=bot)
-
-        bot.set('space.id', '123')
+        bot.space.set('id', '123')
 
         bot.speaker.process = mock.Mock(side_effect=Exception('TEST'))
         bot.mouth.put(('dummy'))
         bot.mouth.put(Exception('EOQ'))
-        bot.speaker.work()
+        bot.speaker.run()
         self.assertEqual(bot.context.get('speaker.counter'), 0)
 
         bot.speaker = Speaker(bot=bot)
         bot.speaker.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
         bot.mouth.put(('dummy'))
-        bot.speaker.work()
+        bot.speaker.run()
         self.assertEqual(bot.context.get('speaker.counter'), 0)
 
-    def test_work_wait(self):
+    def test_run_wait(self):
 
-        logging.info("*** work/wait while empty and not ready")
+        logging.info("*** run/wait while empty and not ready")
 
         bot = my_bot
         bot.space = SpaceFactory.get('local', bot=bot)
 
         bot.speaker.NOT_READY_DELAY = 0.01
         bot.context.set('general.switch', 'on')
-        speaker_process = Process(target=bot.speaker.work)
-        speaker_process.daemon = True
-        speaker_process.start()
+        speaker_process = bot.speaker.start()
 
         t = Timer(0.1, bot.mouth.put, ['ping'])
         t.start()

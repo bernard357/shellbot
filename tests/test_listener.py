@@ -120,7 +120,7 @@ class ListenerTests(unittest.TestCase):
 
     def test_work(self):
 
-        logging.info("*** work")
+        logging.info("*** run")
 
         my_bot.context.set('general.switch', 'on')
 
@@ -128,23 +128,21 @@ class ListenerTests(unittest.TestCase):
         listener.process = mock.Mock(side_effect=Exception('TEST'))
         my_bot.ears.put(('dummy'))
         my_bot.ears.put(Exception('EOQ'))
-        listener.work()
+        listener.run()
         self.assertEqual(my_bot.context.get('listener.counter'), 0)
 
         listener = Listener(bot=my_bot)
         listener.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
         my_bot.ears.put(('dummy'))
-        listener.work()
+        listener.run()
         self.assertEqual(my_bot.context.get('listener.counter'), 0)
 
-    def test_work_wait(self):
+    def test_run_wait(self):
 
-        logging.info("*** work/wait while empty and not ready")
+        logging.info("*** run/wait while empty and not ready")
 
         my_bot.context.set('general.switch', 'on')
-        listener_process = Process(target=my_bot.listener.work)
-        listener_process.daemon = True
-        listener_process.start()
+        listener_process = my_bot.listener.start()
 
         t = Timer(0.1, my_bot.ears.put, [str(my_message)])
         t.start()
@@ -368,9 +366,7 @@ class ListenerTests(unittest.TestCase):
 
         listener = Listener(bot=my_bot)
 
-        listener_process = Process(target=listener.work)
-        listener_process.daemon = True
-        listener_process.start()
+        listener_process = listener.start()
 
         listener_process.join(0.1)
         if listener_process.is_alive():
@@ -495,7 +491,7 @@ class ListenerTests(unittest.TestCase):
 
         listener = Listener(bot=my_bot, filter=filter)
 
-        listener.work()
+        listener.run()
 
         self.assertEqual(my_bot.context.get('listener.counter'), 6)
         with self.assertRaises(Exception):
