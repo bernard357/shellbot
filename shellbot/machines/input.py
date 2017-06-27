@@ -75,7 +75,7 @@ class Input(Machine):
         :param tip: Display the on_retry message after this delay in seconds
         :type tip: int
 
-        :param timeout: Display the on_cancel message after this delay
+        :param timeout: Display the on_cancel message after this delay (0 for mandatory)
             in seconds
         :type timeout: int
 
@@ -125,10 +125,10 @@ class Input(Machine):
             self.WAIT_DURATION = tip
 
         if timeout is not None:
-            assert int(timeout) > 0
+            assert int(timeout) >= 0
+            if int(timeout) != 0:
+                assert self.CANCEL_DURATION > self.WAIT_DURATION
             self.CANCEL_DURATION = timeout
-
-        assert self.CANCEL_DURATION > self.WAIT_DURATION
 
         self.key = key
 
@@ -222,8 +222,9 @@ class Input(Machine):
                 if not self.is_running:
                     break  # on machine stop
 
-                if time.time() - beginning > self.CANCEL_DURATION + 0.2:
-                    break  # on cancellation limit
+                if self.CANCEL_DURATION != 0: 
+                    if time.time() - beginning > self.CANCEL_DURATION + 0.2:
+                        break  # on cancellation limit
 
                 try:
                     if self.bot.fan.empty():
@@ -304,5 +305,6 @@ class Input(Machine):
         Cancels the question
         """
         self.bot.say(self.on_cancel)
-        self.stop()
+        if self.CANCEL_DURATION != 0:
+            self.stop()
 
