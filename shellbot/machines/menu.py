@@ -45,6 +45,7 @@ class Menu(Machine):
 
     def on_init(self,
                 question,
+                options=[],
                 on_retry=None,
                 on_answer=None,
                 on_cancel=None,
@@ -58,6 +59,9 @@ class Menu(Machine):
 
         :param question: The question to be asked in the chat room
         :type question: str
+
+        :param options: The options to be proposed in the chat room
+        :type options: list str
 
         :param on_retry: The message to ask for retry
         :type on_retry: str
@@ -86,6 +90,9 @@ class Menu(Machine):
 
         assert question not in (None, '')
         self.question = question
+
+        assert options not in (None, '')
+        self.options = options
 
         if on_retry in (None, ''):
             on_retry = self.RETRY_MESSAGE
@@ -166,7 +173,13 @@ class Menu(Machine):
         """
         Asks the question in the chat
         """
-        self.bot.say(self.question)
+        lines = [self.question]
+        i = 1
+        for key in self.options:
+           lines.append(u"{} - {}".format(i, key))
+           i += 1
+        self.bot.say('\n'.join(lines))
+
         self.listen()
         self.start_time = time.time()
 
@@ -247,7 +260,7 @@ class Menu(Machine):
 
         self.set('answer', arguments)
         if self.key:
-            self.bot.update('input', self.key, arguments)
+            self.bot.update('input', self.key, self.options[int(arguments)-1])
 
         self.bot.say(self.on_answer.format(arguments))
         self.step(event='tick')
@@ -257,10 +270,11 @@ class Menu(Machine):
         Filters data from user menu input
 
         Check if entry match with digit
-        ToDo: check with the range of the number of entry
         """
         try:
             assert int(text)
+            assert int(text) <= len(self.options)
+            assert int(text) > 0
         except Exception as feedback:
             return None
         return text
