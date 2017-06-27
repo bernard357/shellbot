@@ -164,6 +164,10 @@ class Input(Machine):
              'condition': lambda **z : self.elapsed > self.CANCEL_DURATION,
              'action': self.cancel},
 
+            {'source': 'end',
+             'target': 'waiting',
+             'action': self.ask},
+
         ]
 
         self.build(states=states,
@@ -307,4 +311,3 @@ class Input(Machine):
         self.bot.say(self.on_cancel)
         if self.CANCEL_DURATION != 0:
             self.stop()
-
