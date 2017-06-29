@@ -25,6 +25,7 @@ from .noop import Noop
 from .sleep import Sleep
 from .step import Step
 from .version import Version
+from .update import Update
 
 __all__ = [
     'Audit',
@@ -38,5 +39,6 @@ __all__ = [
     'Noop',
     'Sleep',
     'Step',
-    'Version'
+    'Version',
+    'Update',
 ]

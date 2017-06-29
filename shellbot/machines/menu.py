@@ -23,20 +23,20 @@ import time
 from .base import Machine
 
 
-class Input(Machine):
+class Menu(Machine):
     """
-    Asks for some input
+    Menu who asks for some input
 
     Example::
 
-        machine = Input(bot=bot, question="PO Number?", key="order.id")
+        machine = Menu(bot=bot, question="1. Ok\n2. Ko", key="result.id")
         machine.start()
         ...
 
 
     """
 
-    RETRY_MESSAGE = u"Invalid input, please retry"
+    RETRY_MESSAGE = u"Invalid input, please retry with the digit corresponding to your selection"
     ANSWER_MESSAGE = u"Ok, this has been noted"
     CANCEL_MESSAGE = u"Ok, forget about it"
 
@@ -45,7 +45,7 @@ class Input(Machine):
 
     def on_init(self,
                 question,
-                mask=None,
+                options=[],
                 on_retry=None,
                 on_answer=None,
                 on_cancel=None,
@@ -60,8 +60,8 @@ class Input(Machine):
         :param question: The question to be asked in the chat room
         :type question: str
 
-        :param mask: The expected mask for the input (optional)
-        :type mask: str
+        :param options: The options to be proposed in the chat room
+        :type options: list str
 
         :param on_retry: The message to ask for retry
         :type on_retry: str
@@ -85,28 +85,14 @@ class Input(Machine):
         :param prefix: the main keyword for configuration of this machine
         :type prefix: str
 
-        If a mask is provided, it is used to check provided input.
-        Use following conventions to build the mask:
-
-        * ``A`` - Any kind of unicode symbol such as ``g`` or ``ç``
-        * ``9`` - A digit such as ``0`` or ``2``
-        * ``+`` - When following ``#`` or ``9``, indicates optional extensions
-           of the same type
-        * Any other symbol, including punctuation or white space, has to match
-           exactly.
-
-        For example:
-
-        * ``9999A``  will match 4 digits and 1 additional character
-        * ``#9-A+`` will match ``#3-June 2017``
-
         """
-        super(Input, self).on_init(prefix, **kwargs)
+        super(Menu, self).on_init(prefix, **kwargs)
 
         assert question not in (None, '')
         self.question = question
 
-        self.mask = mask
+        assert options not in (None, '')
+        self.options = options
 
         if on_retry in (None, ''):
             on_retry = self.RETRY_MESSAGE
@@ -187,7 +173,13 @@ class Input(Machine):
         """
         Asks the question in the chat
         """
-        self.bot.say(self.question)
+        lines = [self.question]
+        i = 1
+        for key in self.options:
+           lines.append(u"{} - {}".format(i, key))
+           i += 1
+        self.bot.say('\n'.join(lines))
+
         self.listen()
         self.start_time = time.time()
 
@@ -268,41 +260,25 @@ class Input(Machine):
 
         self.set('answer', arguments)
         if self.key:
-            self.bot.update('input', self.key, arguments)
+            self.bot.update('input', self.key, self.options[int(arguments)-1])
 
         self.bot.say(self.on_answer.format(arguments))
         self.step(event='tick')
 
     def filter(self, text):
         """
-        Filters data from user input
+        Filters data from user menu input
 
-        If a mask is provided, this function uses it to extract data
-        and to validate the presence of useful content.
+        Check if entry match with digit
         """
-        if self.mask:
-            return self.search(self.mask, text)
+        try:
+            assert int(text)
+            assert int(text) <= len(self.options)
+            assert int(text) > 0
+        except Exception as feedback:
+            return None
         return text
 
-    def search(self, mask, text):
-        """
-        Searches for structured data in text
-        """
-        assert mask not in (None, '')
-        assert text not in (None, '')
-
-        mask = mask.replace('+', 'pLuS')
-        mask = re.escape(mask)
-        mask = mask.replace('pLuS', '+').replace('A', '\S').replace('9', '\d')
-
-        pattern = re.compile(mask, re.U)
-
-        searched = pattern.search(text)
-
-        if searched:
-            return searched.group()
-
-        return None
 
     def cancel(self):
         """
