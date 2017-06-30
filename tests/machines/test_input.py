@@ -38,6 +38,7 @@ class InputTests(unittest.TestCase):
         self.assertEqual(machine.on_retry, machine.RETRY_MESSAGE)
         self.assertEqual(machine.on_answer, machine.ANSWER_MESSAGE)
         self.assertEqual(machine.on_cancel, machine.CANCEL_MESSAGE)
+        self.assertEqual(machine.is_mandatory, machine.IS_MANDATORY)
         self.assertEqual(machine.key, None)
 
         self.assertEqual(sorted(machine._states.keys()),
@@ -52,6 +53,7 @@ class InputTests(unittest.TestCase):
                         on_retry="Come on, you can do better! Please retry",
                         on_answer="Thank you, you are doing great",
                         on_cancel="Ok, forget about it",
+                        s_mandatory=0,
                         tip=20,
                         timeout=40,
                         key='rabbit.input')
@@ -66,6 +68,7 @@ class InputTests(unittest.TestCase):
                          "Thank you, you are doing great")
         self.assertEqual(machine.on_cancel,
                          "Ok, forget about it")
+        self.assertEqual(machine.is_mandatory, 0)
         self.assertEqual(machine.WAIT_DURATION, 20)
         self.assertEqual(machine.CANCEL_DURATION, 40)
         self.assertEqual(machine.key,
