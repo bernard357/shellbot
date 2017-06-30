@@ -43,7 +43,7 @@ class InputTests(unittest.TestCase):
         self.assertEqual(sorted(machine._states.keys()),
                          ['begin', 'delayed', 'end', 'waiting'])
         self.assertEqual(sorted(machine._transitions.keys()),
-                         ['begin', 'delayed', 'waiting'])
+                         ['begin', 'delayed', 'end', 'waiting'])
 
         machine = Input(bot=my_bot,
                         prefix='who.cares',
@@ -136,41 +136,47 @@ class InputTests(unittest.TestCase):
         machine = MyInput(bot=my_bot,
                           question="What's up, Doc?")
 
+        logging.debug("- with general switch off")
         my_bot.context.set('general.switch', 'off')
-        machine.receive()  # general switch is off
+        machine.receive()
         self.assertEqual(machine.get('answer'), None)
-
         my_bot.context.set('general.switch', 'on')
 
-        machine.receive()  # is_running is False
+        logging.debug("- with is_running false")
+        machine.receive()
         self.assertEqual(machine.get('answer'), None)
-
         machine.set('is_running', True)
 
+        logging.debug("- feed the queue after delay")
         t = Timer(0.1, my_bot.fan.put, ['ping'])
         t.start()
-        machine.receive()  # exit after delay
+        machine.receive()
         self.assertEqual(machine.get('answer'), 'ping')
 
-        machine.CANCEL_DURATION = 0.0
-        machine.receive()  # exit on cancellation
+        logging.debug("- exit on cancellation time out")
+        machine.CANCEL_DURATION = 0.001
+        machine.receive()
         self.assertEqual(machine.get('answer'), None)
         machine.CANCEL_DURATION = 40.0
 
+        logging.debug("- exit on poison pill")
         my_bot.fan.put(None)
-        machine.receive()  # exit on poison pill
+        machine.receive()
         self.assertEqual(machine.get('answer'), None)
 
+        logging.debug("- exit on regular answer")
         my_bot.fan.put('pong')
-        machine.receive()  # exit on regular answer
+        machine.receive()
         self.assertEqual(machine.get('answer'), 'pong')
 
+        logging.debug("- exit on exception")
         my_bot.fan.put('exception')
-        machine.receive()  # break on Exception
+        machine.receive()
         self.assertEqual(machine.get('answer'), None)
 
+        logging.debug("- exit on keyboard interrupt")
         my_bot.fan.put('ctl-c')
-        machine.receive()  # break on KeyboardInterrupt
+        machine.receive()
         self.assertEqual(machine.get('answer'), None)
 
     def test_execute(self):

@@ -31,11 +31,11 @@ class MenuTests(unittest.TestCase):
         my_bot = ShellBot()
 
         machine = Menu(bot=my_bot,
-                        question="What's up, Doc?")
+                       question="What's up, Doc?")
         self.assertEqual(machine.bot, my_bot)
         self.assertEqual(machine.prefix, "machine")
         self.assertEqual(machine.question, "What's up, Doc?")
-        self.assertEqual(machine.options, ["option 1", "option 2"])
+        self.assertEqual(machine.options, [])
         self.assertEqual(machine.on_retry, machine.RETRY_MESSAGE)
         self.assertEqual(machine.on_answer, machine.ANSWER_MESSAGE)
         self.assertEqual(machine.on_cancel, machine.CANCEL_MESSAGE)
@@ -44,7 +44,7 @@ class MenuTests(unittest.TestCase):
         self.assertEqual(sorted(machine._states.keys()),
                          ['begin', 'delayed', 'end', 'waiting'])
         self.assertEqual(sorted(machine._transitions.keys()),
-                         ['begin', 'delayed', 'waiting'])
+                         ['begin', 'delayed', 'end', 'waiting'])
 
         machine = Menu(bot=my_bot,
                         prefix='who.cares',
@@ -153,7 +153,7 @@ class MenuTests(unittest.TestCase):
         machine.receive()  # exit after delay
         self.assertEqual(machine.get('answer'), 'ping')
 
-        machine.CANCEL_DURATION = 0.0
+        machine.CANCEL_DURATION = 0.001
         machine.receive()  # exit on cancellation
         self.assertEqual(machine.get('answer'), None)
         machine.CANCEL_DURATION = 40.0
@@ -218,13 +218,16 @@ class MenuTests(unittest.TestCase):
         my_bot = ShellBot()
 
         machine = Menu(bot=my_bot,
-                        question="What's up, Doc?")
-
-        self.assertEqual(machine.filter('hello world'), 'hello world')
+                        question="What's up, Doc?",
+                        options=["option 1", "option 2"])
 
         self.assertEqual(machine.filter('hello world'), None)
-
-        self.assertEqual(machine.filter('PO: 1324'), '1324')
+        self.assertEqual(machine.filter('-1'), None)
+        self.assertEqual(machine.filter('1.1'), None)
+        self.assertEqual(machine.filter('0'), None)
+        self.assertEqual(machine.filter('1'), '1')
+        self.assertEqual(machine.filter('2'), '2')
+        self.assertEqual(machine.filter('3'), None)
 
     def test_cancel(self):
 
