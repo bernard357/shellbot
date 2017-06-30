@@ -81,10 +81,12 @@ class MenuTests(unittest.TestCase):
         my_bot = ShellBot()
 
         machine = Menu(bot=my_bot,
-                        question="What's up, Doc?")
+                       question="What's up, Doc?",
+                       options=["option 1", "option 2"],
+                       key='my.menu')
 
         time.sleep(0.01)
-        self.assertTrue(machine.elapsed > 0.01)
+        self.assertTrue(machine.elapsed > 0.005)
 
     def test_ask(self):
 
@@ -98,11 +100,15 @@ class MenuTests(unittest.TestCase):
         my_bot = MyBot()
 
         machine = Menu(bot=my_bot,
-                        question="What's up, Doc?")
+                       question="What's up, Doc?",
+                       options=["option 1", "option 2"],
+                       key='my.menu')
+
         machine.listen = mock.Mock()
 
         machine.ask()
-        self.assertEqual(my_bot.context.get('said'), machine.question)
+        self.assertEqual(my_bot.context.get('said'),
+                         u"What's up, Doc?\n1 - option 1\n2 - option 2")
         machine.listen.assert_called_with()
 
     def test_listen(self):
@@ -112,7 +118,9 @@ class MenuTests(unittest.TestCase):
         my_bot = ShellBot()
 
         machine = Menu(bot=my_bot,
-                        question="What's up, Doc?")
+                       question="What's up, Doc?",
+                       options=["option 1", "option 2"],
+                       key='my.menu')
 
         my_bot.context.set('general.switch', 'off')
         p = machine.listen()
@@ -135,7 +143,9 @@ class MenuTests(unittest.TestCase):
                 self.set('answer', arguments)
 
         machine = MyMenu(bot=my_bot,
-                          question="What's up, Doc?")
+                         question="What's up, Doc?",
+                         options=["option 1", "option 2"],
+                         key='my.menu')
 
         my_bot.context.set('general.switch', 'off')
         machine.receive()  # general switch is off
@@ -162,9 +172,9 @@ class MenuTests(unittest.TestCase):
         machine.receive()  # exit on poison pill
         self.assertEqual(machine.get('answer'), None)
 
-        my_bot.fan.put('pong')
+        my_bot.fan.put('1')
         machine.receive()  # exit on regular answer
-        self.assertEqual(machine.get('answer'), 'pong')
+        self.assertEqual(machine.get('answer'), '1')
 
         my_bot.fan.put('exception')
         machine.receive()  # break on Exception
@@ -183,8 +193,10 @@ class MenuTests(unittest.TestCase):
         my_bot.say = mock.Mock()
 
         machine = Menu(bot=my_bot,
-                        question="What's up, Doc?",
-                        key='my.key')
+                       question="What's up, Doc?",
+                       options=["option 1", "option 2"],
+                       key='my.key')
+
         self.assertEqual(machine.get('answer'), None)
 
         machine.step()  # send the question
@@ -196,12 +208,12 @@ class MenuTests(unittest.TestCase):
         self.assertEqual(machine.get('answer'), None)
         self.assertFalse(machine.step.called)
 
-        machine.execute(arguments='')
+        machine.execute(arguments='not acceptable answer')
         my_bot.say.assert_called_with(machine.on_retry)
         self.assertEqual(machine.get('answer'), None)
         self.assertFalse(machine.step.called)
 
-        machine.execute(arguments='something at least')
+        machine.execute(arguments='1')
         my_bot.say.assert_called_with(machine.on_answer)
         self.assertTrue(machine.step.called)
 
@@ -218,8 +230,8 @@ class MenuTests(unittest.TestCase):
         my_bot = ShellBot()
 
         machine = Menu(bot=my_bot,
-                        question="What's up, Doc?",
-                        options=["option 1", "option 2"])
+                       question="What's up, Doc?",
+                       options=["option 1", "option 2"])
 
         self.assertEqual(machine.filter('hello world'), None)
         self.assertEqual(machine.filter('-1'), None)
@@ -237,7 +249,9 @@ class MenuTests(unittest.TestCase):
         my_bot.say = mock.Mock()
 
         machine = Menu(bot=my_bot,
-                        question="What's up, Doc?")
+                       question="What's up, Doc?",
+                       options=["option 1", "option 2"],
+                       key='my.menu')
 
         machine.stop = mock.Mock()
         machine.cancel()
@@ -259,16 +273,17 @@ class MenuTests(unittest.TestCase):
         my_bot.fan = Queue()
 
         machine = Menu(bot=my_bot,
-                        question="What's up, Doc?",
-                        key='my.menu')
+                       question="What's up, Doc?",
+                       options=["option 1", "option 2"],
+                       key='my.menu')
 
         p = machine.start(tick=0.001)
 
         time.sleep(0.01)
-        my_bot.fan.put('here we go')
+        my_bot.fan.put('1')
         p.join()
 
-        self.assertEqual(my_bot.recall('input'), {u'my.menu': u'here we go'})
+        self.assertEqual(my_bot.recall('input'), {u'my.menu': u'option 1'})
         self.assertEqual(my_bot.context.get('said'), machine.on_answer)
 
     def test_delayed(self):
@@ -286,17 +301,18 @@ class MenuTests(unittest.TestCase):
         my_bot.fan = Queue()
 
         machine = Menu(bot=my_bot,
-                        question="What's up, Doc?",
-                        key='my.menu')
+                       question="What's up, Doc?",
+                       options=["option 1", "option 2"],
+                       key='my.menu')
 
         machine.WAIT_DURATION = 0.01
         p = machine.start(tick=0.001)
 
         time.sleep(0.03)
-        my_bot.fan.put('here we go')
+        my_bot.fan.put('1')
         p.join()
 
-        self.assertEqual(my_bot.recall('input'), {u'my.menu': u'here we go'})
+        self.assertEqual(my_bot.recall('input'), {u'my.menu': u'option 1'})
         self.assertEqual(my_bot.context.get('said'), machine.on_answer)
 
     def test_cancelled(self):
@@ -313,8 +329,9 @@ class MenuTests(unittest.TestCase):
         my_bot.context.set('my.menu', '*void')
 
         machine = Menu(bot=my_bot,
-                        question="What's up, Doc?",
-                        key='my.menu')
+                       question="What's up, Doc?",
+                       options=["option 1", "option 2"],
+                       key='my.menu')
 
         machine.CANCEL_DURATION = 0.02
         machine.WAIT_DURATION = 0.01
