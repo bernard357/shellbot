@@ -146,7 +146,7 @@ class Menu(Machine):
             {'source': 'waiting',
              'target': 'delayed',
              'condition': lambda **z : self.elapsed > self.WAIT_DURATION,
-             'action': lambda: self.bot.say(self.on_retry),
+             'action': lambda: self.bot.say(self.on_retry, content=self.on_retry),
             },
 
             {'source': 'delayed',
@@ -162,7 +162,7 @@ class Menu(Machine):
             {'source': 'end',
              'target': 'waiting',
              'condition': lambda **z : self.is_mandatory > 0,
-             'action': lambda: self.bot.say(self.on_cancel)},
+             'action': lambda: self.bot.say(self.on_cancel, content=self.on_cancel)},
 
         ]
 
@@ -186,9 +186,9 @@ class Menu(Machine):
         lines = [self.question]
         i = 1
         for key in self.options:
-           lines.append(u"{} - {}".format(i, key))
+           lines.append(u"{}. {}".format(i, key))
            i += 1
-        self.bot.say('\n'.join(lines))
+        self.bot.say('\n'.join(lines), content='\n'.join(lines))
 
         self.listen()
         self.start_time = time.time()
@@ -259,20 +259,20 @@ class Menu(Machine):
         Receives data from the chat
         """
         if arguments in (None, ''):
-            self.bot.say(self.on_retry)
+            self.bot.say(self.on_retry, content=self.on_retry)
             return
 
         arguments = self.filter(text=arguments)
 
         if arguments in (None, ''):
-            self.bot.say(self.on_retry)
+            self.bot.say(self.on_retry, content=self.on_retry)
             return
 
         self.set('answer', arguments)
         if self.key:
             self.bot.update('input', self.key, self.options[int(arguments)-1])
 
-        self.bot.say(self.on_answer.format(arguments))
+        self.bot.say(self.on_answer.format(arguments), content=self.on_answer.format(arguments))
         self.step(event='tick')
 
     def filter(self, text):
@@ -298,6 +298,6 @@ class Menu(Machine):
         """
         Cancels the question
         """
-        self.bot.say(self.on_cancel)
+        self.bot.say(self.on_cancel, content=self.on_cancel)
         if self.is_mandatory == 0:
             self.stop()

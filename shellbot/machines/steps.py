@@ -297,8 +297,9 @@ class Step(object):
             step.say(bot)
 
         """
-        bot.say(u"Current state: {} - {}".format(self.label,
-                                                 self.message))
+        bot.say(
+            u"Current state: {} - {}".format(self.label, self.message),
+            content=u"Current state: {} - {}".format(self.label, self.message))
 
     def trigger(self, bot):
         """
@@ -320,8 +321,9 @@ class Step(object):
             step.trigger(bot)
 
         """
-        bot.say(u"New state: {} - {}".format(self.label,
-                                             self.message))
+        bot.say(
+            u"New state: {} - {}".format(self.label,self.message),
+            content=u"New state: {} - {}".format(self.label,self.message))
 
         if self.content or self.file:
             bot.say(' ',
