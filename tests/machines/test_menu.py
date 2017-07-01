@@ -44,7 +44,7 @@ class MenuTests(unittest.TestCase):
         self.assertEqual(sorted(machine._states.keys()),
                          ['begin', 'delayed', 'end', 'waiting'])
         self.assertEqual(sorted(machine._transitions.keys()),
-                         ['begin', 'delayed', 'end', 'waiting'])
+                         ['begin', 'delayed', 'waiting'])
 
         machine = Menu(bot=my_bot,
                         prefix='who.cares',
@@ -282,6 +282,7 @@ class MenuTests(unittest.TestCase):
         time.sleep(0.01)
         my_bot.fan.put('1')
         p.join()
+        time.sleep(0.01)
 
         self.assertEqual(my_bot.recall('input'), {u'my.menu': u'option 1'})
         self.assertEqual(my_bot.context.get('said'), machine.on_answer)

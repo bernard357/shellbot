@@ -150,10 +150,6 @@ class Menu(Machine):
              'condition': lambda **z : self.elapsed > self.CANCEL_DURATION,
              'action': self.cancel},
 
-            {'source': 'end',
-             'target': 'waiting',
-             'action': self.ask},
-
         ]
 
         self.build(states=states,
@@ -218,7 +214,7 @@ class Menu(Machine):
                 if not self.is_running:
                     break  # on machine stop
 
-                if self.CANCEL_DURATION != 0: 
+                if self.CANCEL_DURATION != 0:
                     if time.time() - beginning > self.CANCEL_DURATION + 0.2:
                         break  # on cancellation limit
 
