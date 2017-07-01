@@ -974,7 +974,7 @@ class SparkSpace(Space):
                 'id': 'Y2lzY29zcGFyazovL3VzDctMTFlNy05OTAwLTA1OTAyNmIwYjQ1Mw'
             }
 
-        This function prepares a Join and push it to the provided queue.
+        This function prepares a Leave and push it to the provided queue.
 
         * ``type`` is set to ``leave``
         * ``actor_id`` is a copy of ``personId``
