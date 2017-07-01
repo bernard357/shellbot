@@ -45,6 +45,7 @@ class Input(Machine):
 
     def on_init(self,
                 question,
+                regex=None,
                 mask=None,
                 on_retry=None,
                 on_answer=None,
@@ -60,6 +61,9 @@ class Input(Machine):
 
         :param question: The question to be asked in the chat room
         :type question: str
+
+        :param regex: The expected regex mask for the input (optional)
+        :type regex: str
 
         :param mask: The expected mask for the input (optional)
         :type mask: str
@@ -109,6 +113,8 @@ class Input(Machine):
 
         assert question not in (None, '')
         self.question = question
+
+        self.regex = regex
 
         self.mask = mask
 
@@ -171,11 +177,6 @@ class Input(Machine):
              'target': 'end',
              'condition': lambda **z : self.elapsed > self.CANCEL_DURATION and self.is_mandatory == 0,
              'action': self.cancel},
-
-            {'source': 'end',
-             'target': 'waiting',
-             'condition': lambda **z : self.is_mandatory > 0,
-             'action': lambda: self.bot.say(self.on_cancel, content=self.on_cancel)},
 
         ]
 
@@ -289,9 +290,29 @@ class Input(Machine):
         If a mask is provided, this function uses it to extract data
         and to validate the presence of useful content.
         """
+
+        if self.regex:
+            return self.searchRegex(self.regex, text)
+
+
         if self.mask:
             return self.search(self.mask, text)
         return text
+
+    def searchRegex(self, regex, text):
+        """
+        Searches with regex in text
+        """
+        assert regex not in (None, '')
+        assert text not in (None, '')
+
+        pattern = re.compile(regex, re.IGNORECASE)
+        searched = pattern.search(text)
+        if searched:
+            return searched.group()
+
+        return None
+
 
     def search(self, mask, text):
         """
@@ -302,7 +323,7 @@ class Input(Machine):
 
         mask = mask.replace('+', 'pLuS')
         mask = re.escape(mask)
-        mask = mask.replace('pLuS', '+').replace('A', '\S').replace('9', '\d')
+        mask = mask.replace('pLuS', '+').replace('A', '\S').replace('9', '\d').replace('Z','[^0-9]')
 
         pattern = re.compile(mask, re.U)
 
@@ -318,5 +339,4 @@ class Input(Machine):
         Cancels the question
         """
         self.bot.say(self.on_cancel, content=self.on_cancel)
-        if self.is_mandatory == 0:
-            self.stop()
+        self.stop()
