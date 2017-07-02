@@ -35,7 +35,7 @@ class Input(Machine):
 
 
     """
-
+    IS_MANDATORY = 0
     RETRY_MESSAGE = u"Invalid input, please retry"
     ANSWER_MESSAGE = u"Ok, this has been noted"
     CANCEL_MESSAGE = u"Ok, forget about it"
@@ -45,10 +45,12 @@ class Input(Machine):
 
     def on_init(self,
                 question,
+                regex=None,
                 mask=None,
                 on_retry=None,
                 on_answer=None,
                 on_cancel=None,
+                is_mandatory=None,
                 tip=None,
                 timeout=None,
                 key=None,
@@ -59,6 +61,9 @@ class Input(Machine):
 
         :param question: The question to be asked in the chat room
         :type question: str
+
+        :param regex: The expected regex mask for the input (optional)
+        :type regex: str
 
         :param mask: The expected mask for the input (optional)
         :type mask: str
@@ -71,6 +76,9 @@ class Input(Machine):
 
         :param on_cancel: The message on overall cancellation
         :type on_cancel: str
+
+        :param is_mandatory: The reply will be mandatory
+        :type is_mandatory: boolean
 
         :param tip: Display the on_retry message after this delay in seconds
         :type tip: int
@@ -106,6 +114,8 @@ class Input(Machine):
         assert question not in (None, '')
         self.question = question
 
+        self.regex = regex
+
         self.mask = mask
 
         if on_retry in (None, ''):
@@ -120,14 +130,18 @@ class Input(Machine):
             on_cancel = self.CANCEL_MESSAGE
         self.on_cancel = on_cancel
 
+        if is_mandatory in (None,''):
+            is_mandatory = self.IS_MANDATORY
+        assert int(is_mandatory) >= 0
+        self.is_mandatory = is_mandatory
+
         if tip is not None:
             assert int(tip) > 0
             self.WAIT_DURATION = tip
 
         if timeout is not None:
             assert int(timeout) >= 0
-            if int(timeout) != 0:
-                assert self.CANCEL_DURATION > self.WAIT_DURATION
+            assert self.CANCEL_DURATION > self.WAIT_DURATION
             self.CANCEL_DURATION = timeout
 
         self.key = key
@@ -151,7 +165,7 @@ class Input(Machine):
             {'source': 'waiting',
              'target': 'delayed',
              'condition': lambda **z : self.elapsed > self.WAIT_DURATION,
-             'action': lambda: self.bot.say(self.on_retry),
+             'action': lambda: self.bot.say(self.on_retry, content=self.on_retry),
             },
 
             {'source': 'delayed',
@@ -161,7 +175,7 @@ class Input(Machine):
 
             {'source': 'delayed',
              'target': 'end',
-             'condition': lambda **z : self.elapsed > self.CANCEL_DURATION,
+             'condition': lambda **z : self.elapsed > self.CANCEL_DURATION and self.is_mandatory == 0,
              'action': self.cancel},
 
         ]
@@ -183,7 +197,7 @@ class Input(Machine):
         """
         Asks the question in the chat
         """
-        self.bot.say(self.question)
+        self.bot.say(self.question, content=self.question)
         self.listen()
         self.start_time = time.time()
 
@@ -222,7 +236,7 @@ class Input(Machine):
                 if not self.is_running:
                     break  # on machine stop
 
-                if self.CANCEL_DURATION != 0:
+                if self.is_mandatory == 0: 
                     if time.time() - beginning > self.CANCEL_DURATION + 0.2:
                         break  # on cancellation limit
 
@@ -253,20 +267,20 @@ class Input(Machine):
         Receives data from the chat
         """
         if arguments in (None, ''):
-            self.bot.say(self.on_retry)
+            self.bot.say(self.on_retry, content=self.on_retry)
             return
 
         arguments = self.filter(text=arguments)
 
         if arguments in (None, ''):
-            self.bot.say(self.on_retry)
+            self.bot.say(self.on_retry, content=self.on_retry)
             return
 
         self.set('answer', arguments)
         if self.key:
             self.bot.update('input', self.key, arguments)
 
-        self.bot.say(self.on_answer.format(arguments))
+        self.bot.say(self.on_answer.format(arguments), content=self.on_answer.format(arguments))
         self.step(event='tick')
 
     def filter(self, text):
@@ -276,9 +290,29 @@ class Input(Machine):
         If a mask is provided, this function uses it to extract data
         and to validate the presence of useful content.
         """
+
+        if self.regex:
+            return self.searchRegex(self.regex, text)
+
+
         if self.mask:
             return self.search(self.mask, text)
         return text
+
+    def searchRegex(self, regex, text):
+        """
+        Searches with regex in text
+        """
+        assert regex not in (None, '')
+        assert text not in (None, '')
+
+        pattern = re.compile(regex, re.IGNORECASE)
+        searched = pattern.search(text)
+        if searched:
+            return searched.group()
+
+        return None
+
 
     def search(self, mask, text):
         """
@@ -289,7 +323,7 @@ class Input(Machine):
 
         mask = mask.replace('+', 'pLuS')
         mask = re.escape(mask)
-        mask = mask.replace('pLuS', '+').replace('A', '\S').replace('9', '\d')
+        mask = mask.replace('pLuS', '+').replace('A', '\S').replace('9', '\d').replace('Z','[^0-9]')
 
         pattern = re.compile(mask, re.U)
 
@@ -304,6 +338,5 @@ class Input(Machine):
         """
         Cancels the question
         """
-        self.bot.say(self.on_cancel)
-        if self.CANCEL_DURATION != 0:
-            self.stop()
+        self.bot.say(self.on_cancel, content=self.on_cancel)
+        self.stop()

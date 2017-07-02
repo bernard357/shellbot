@@ -35,10 +35,11 @@ class MenuTests(unittest.TestCase):
         self.assertEqual(machine.bot, my_bot)
         self.assertEqual(machine.prefix, "machine")
         self.assertEqual(machine.question, "What's up, Doc?")
-        self.assertEqual(machine.options, [])
+        self.assertEqual(machine.options, [u"option 1", u"option 2"])
         self.assertEqual(machine.on_retry, machine.RETRY_MESSAGE)
         self.assertEqual(machine.on_answer, machine.ANSWER_MESSAGE)
         self.assertEqual(machine.on_cancel, machine.CANCEL_MESSAGE)
+        self.assertEqual(machine.is_mandatory, machine.IS_MANDATORY)
         self.assertEqual(machine.key, None)
 
         self.assertEqual(sorted(machine._states.keys()),
@@ -49,7 +50,7 @@ class MenuTests(unittest.TestCase):
         machine = Menu(bot=my_bot,
                         prefix='who.cares',
                         question="What's up, Doc?",
-                        options=["option 1", "option 2"],
+                        options=[u"option 1", u"option 2"],
                         on_retry="Come on, you can do better! Please retry",
                         on_answer="Thank you, you are doing great",
                         on_cancel="Ok, forget about it",
@@ -60,13 +61,14 @@ class MenuTests(unittest.TestCase):
         self.assertEqual(machine.question,
                          "What's up, Doc?")
         self.assertEqual(machine.options,
-                         ["option 1", "option 2"])
+                         [u"option 1", u"option 2"])
         self.assertEqual(machine.on_retry,
                          'Come on, you can do better! Please retry')
         self.assertEqual(machine.on_answer,
                          "Thank you, you are doing great")
         self.assertEqual(machine.on_cancel,
                          "Ok, forget about it")
+        self.assertEqual(machine.is_mandatory, 0)
         self.assertEqual(machine.WAIT_DURATION, 20)
         self.assertEqual(machine.CANCEL_DURATION, 40)
         self.assertEqual(machine.key,
