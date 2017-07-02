@@ -26,8 +26,8 @@ from .spaces import SpaceFactory
 from .commands.base import Command
 
 from .routes.base import Route
-from .routes.notify import Notify
-from .routes.wrap import Wrap
+from .routes.notifier import Notifier
+from .routes.wrapper import Wrapper
 
 __version__ = '17.6.6'
 
@@ -43,6 +43,6 @@ __all__ = [
     'SpaceFactory',
     'Command',
     'Route',
-    'Notify',
-    'Wrap',
+    'Notifier',
+    'Wrapper',
 ]

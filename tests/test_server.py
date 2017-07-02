@@ -13,7 +13,7 @@ from webtest import TestApp
 sys.path.insert(0, os.path.abspath('..'))
 
 from shellbot import Context, Server
-from shellbot.routes import Route, Notify, Text, Wrap
+from shellbot.routes import Route, Notifier, Text, Wrapper
 
 
 class ServerTests(unittest.TestCase):
@@ -134,12 +134,12 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(r.status, '200 OK')
         r.mustcontain('Hello, world!')
 
-    def test_notify(self):
+    def test_notifier(self):
 
         logging.info('*** Notify test***')
 
         queue = Queue()
-        route = Notify(route='/notify', queue=queue, notification='hello!')
+        route = Notifier(route='/notify', queue=queue, notification='hello!')
 
         server = Server(route=route)
 
@@ -150,7 +150,7 @@ class ServerTests(unittest.TestCase):
         time.sleep(0.1)
         self.assertEqual(queue.get_nowait(), 'hello!')
 
-    def test_wrap(self):
+    def test_wrapper(self):
 
         logging.info('*** Wrap test***')
 
@@ -166,9 +166,9 @@ class ServerTests(unittest.TestCase):
 
         callable = Callable(context)
 
-        route = Wrap(context=context,
-                     route='/wrapper',
-                     callable=callable.hook)
+        route = Wrapper(context=context,
+                        route='/wrapper',
+                        callable=callable.hook)
 
         server = Server(context=context, route=route)
 

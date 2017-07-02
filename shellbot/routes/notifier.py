@@ -20,47 +20,50 @@ import logging
 from .base import Route
 
 
-class Wrap(Route):
+class NoQueue(object):
+    def put(self, item=None):
+        raise Exception(u"No queue for this notification")
+
+
+class Notifier(Route):
     """
-    Calls a function on web request
+    Notifies a queue on web request
 
-    When the route is requested over the web, the target function is
-    called.
+    >>>queue = Queue()
+    >>>route = Notifier(route='/notify', queue=queue, notification='hello')
 
-    Example::
+    When the route is requested over the web, the notification is pushed
+    to the queue.
 
-        def my_callable(**kwargs):
-            ...
+    >>>queue.get()
+    'hello'
 
-        route = Wrap(callable=my_callable, route='/hook')
-
-    Wrapping is triggered on GET, POST, PUT and DELETE verbs.
+    Notification is triggered on GET, POST, PUT and DELETE verbs.
     """
 
-    route = None
+    route = '/notify'
 
-    callable = None
+    queue = NoQueue()
+
+    notification = None
 
     def get(self, **kwargs):
-        if self.callable is None:
-            raise NotImplementedError()
         logging.debug(u"GET {}".format(self.route))
-        return self.callable(**kwargs)
+        return self.notify()
 
     def post(self):
-        if self.callable is None:
-            raise NotImplementedError()
         logging.debug(u"POST {}".format(self.route))
-        return self.callable()
+        return self.notify()
 
     def put(self):
-        if self.callable is None:
-            raise NotImplementedError()
         logging.debug(u"PUT {}".format(self.route))
-        return self.callable()
+        return self.notify()
 
     def delete(self):
-        if self.callable is None:
-            raise NotImplementedError()
         logging.debug(u"DELETE {}".format(self.route))
-        return self.callable()
+        return self.notify()
+
+    def notify(self):
+        item = self.notification if self.notification else self.route
+        self.queue.put(item)
+        return 'OK'

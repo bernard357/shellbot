@@ -31,7 +31,7 @@ from .spaces import SpaceFactory
 from .speaker import Speaker
 from .stores import StoreFactory
 from .worker import Worker
-from .routes.wrap import Wrap
+from .routes.wrapper import Wrapper
 
 
 class ShellBot(object):
@@ -562,8 +562,8 @@ class ShellBot(object):
         if server is not None:
             logging.debug('Adding hook route to web server')
             server.add_route(
-                Wrap(callable=self.get_hook(),
-                     route=self.context.get('server.hook', '/hook')))
+                Wrapper(callable=self.get_hook(),
+                        route=self.context.get('server.hook', '/hook')))
 
         if (self.context.get('server.binding') is not None
             and self.context.get('server.url') is not None):

@@ -44,7 +44,7 @@ class InputTests(unittest.TestCase):
         self.assertEqual(sorted(machine._states.keys()),
                          ['begin', 'delayed', 'end', 'waiting'])
         self.assertEqual(sorted(machine._transitions.keys()),
-                         ['begin', 'delayed', 'end', 'waiting'])
+                         ['begin', 'delayed', 'waiting'])
 
         machine = Input(bot=my_bot,
                         prefix='who.cares',
