@@ -14,13 +14,13 @@
 # limitations under the License.
 
 from .base import Route
-from .notify import Notify
+from .notifier import Notifier
 from .text import Text
-from .wrap import Wrap
+from .wrapper import Wrapper
 
 __all__ = [
     'Route',
-    'Notify',
+    'Notifier',
     'Text',
-    'Wrap',
+    'Wrapper',
 ]

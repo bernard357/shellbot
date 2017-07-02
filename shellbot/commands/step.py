@@ -39,10 +39,8 @@ class Step(Command):
     def execute(self, arguments=None):
         """
         Moves underlying state machine to the next step
-        """
-        try:
-            self.bot.machine.step(event='next')
 
-        except AttributeError as feedback:
-            logging.error(feedback)
-            raise AttributeError(u'State machine has not been initialised')
+        This function raises AttributeError when the bot has
+        not been initialised with a suitable Machine.
+        """
+        self.bot.machine.step(event='next')

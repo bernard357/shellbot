@@ -159,11 +159,6 @@ class Menu(Machine):
              'condition': lambda **z : self.elapsed > self.CANCEL_DURATION and self.is_mandatory == 0,
              'action': self.cancel},
 
-            {'source': 'end',
-             'target': 'waiting',
-             'condition': lambda **z : self.is_mandatory > 0,
-             'action': lambda: self.bot.say(self.on_cancel, content=self.on_cancel)},
-
         ]
 
         self.build(states=states,

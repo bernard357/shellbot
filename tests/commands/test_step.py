@@ -40,12 +40,14 @@ class StepTests(unittest.TestCase):
 
         c = Step(my_bot)
 
+        logging.debug("- without machine")
         with self.assertRaises(AttributeError):
             c.execute()
 
+        logging.debug("- with machine")
         my_bot.machine = mock.Mock()
-
         c.execute()
+
         with self.assertRaises(Exception):
             my_bot.mouth.get_nowait()
 

@@ -20,50 +20,47 @@ import logging
 from .base import Route
 
 
-class NoQueue(object):
-    def put(self, item=None):
-        raise Exception(u"No queue for this notification")
-
-
-class Notify(Route):
+class Wrapper(Route):
     """
-    Notifies a queue on web request
+    Calls a function on web request
 
-    >>>queue = Queue()
-    >>>route = Notify(route='/notify', queue=queue, notification='hello')
+    When the route is requested over the web, the wrapped function is
+    called.
 
-    When the route is requested over the web, the notification is pushed
-    to the queue.
+    Example::
 
-    >>>queue.get()
-    'hello'
+        def my_callable(**kwargs):
+            ...
 
-    Notification is triggered on GET, POST, PUT and DELETE verbs.
+        route = Wrapper(callable=my_callable, route='/hook')
+
+    Wrapping is triggered on GET, POST, PUT and DELETE verbs.
     """
 
-    route = '/notify'
+    route = None
 
-    queue = NoQueue()
-
-    notification = None
+    callable = None
 
     def get(self, **kwargs):
+        if self.callable is None:
+            raise AttributeError(u"No callable function has been set")
         logging.debug(u"GET {}".format(self.route))
-        return self.notify()
+        return self.callable(**kwargs)
 
     def post(self):
+        if self.callable is None:
+            raise AttributeError(u"No callable function has been set")
         logging.debug(u"POST {}".format(self.route))
-        return self.notify()
+        return self.callable()
 
     def put(self):
+        if self.callable is None:
+            raise AttributeError(u"No callable function has been set")
         logging.debug(u"PUT {}".format(self.route))
-        return self.notify()
+        return self.callable()
 
     def delete(self):
+        if self.callable is None:
+            raise AttributeError(u"No callable function has been set")
         logging.debug(u"DELETE {}".format(self.route))
-        return self.notify()
-
-    def notify(self):
-        item = self.notification if self.notification else self.route
-        self.queue.put(item)
-        return 'OK'
+        return self.callable()
