@@ -515,6 +515,24 @@ class ShellBot(object):
         if self.space:
             self.space.add_participants(*args, **kwargs)
 
+    def del_participant(self, *args, **kwargs):
+        """
+        Deletes one participant from the room
+
+        This function is a proxy for the underlying space.
+        """
+        if self.space:
+            self.space.del_participant(*args, **kwargs)
+
+    def del_participants(self, *args, **kwargs):
+        """
+        Deletes participants to the room
+
+        This function is a proxy for the underlying space.
+        """
+        if self.space:
+            self.space.del_participants(*args, **kwargs)
+
     def dispose(self, *args, **kwargs):
         """
         Disposes all resources
@@ -523,6 +541,12 @@ class ShellBot(object):
         self.dispatch('dispose')
 
         self.space.dispose(*args, **kwargs)
+
+    def archive(self, *args, **kwargs):
+        """
+        Remove users from space
+        """
+        self.del_participant(self)
 
     def hook(self, server=None):
         """

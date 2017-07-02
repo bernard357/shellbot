@@ -477,6 +477,25 @@ class SparkSpace(Space):
             logging.warning(u"Unable to add participant '{}'".format(person))
             logging.exception(feedback)
 
+    def del_participant(self, person):
+        """
+        Deletes a participant
+
+        :param person: e-mail address of the person to delete
+        :type person: str
+
+        """
+        try:
+            assert self.api is not None  # connect() is prerequisite
+            assert self.id is not None  # bond() is prerequisite
+
+            self.api.memberships.delete(roomId=self.id,
+                                        personEmail=person)
+
+        except Exception as feedback:
+            logging.warning(u"Unable to deleete participant '{}'".format(person))
+            logging.exception(feedback)
+
     def delete_space(self, title=None, **kwargs):
         """
         Deletes a Cisco Spark room
@@ -989,5 +1008,17 @@ class SparkSpace(Space):
         leave.space_id = leave.get('roomId')
 
         queue.put(str(leave))
+
+    def update_title(self, title):
+        """
+        Update the title of the space as requested
+
+        :return: the configured title, or ``Collaboration space``
+        :rtype: str
+
+        This function should be rewritten in sub-classes if
+        space title does not come from ``space.room`` parameter.
+        """
+        return self.api.update(self.id,title)
 
 
