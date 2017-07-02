@@ -1019,6 +1019,6 @@ class SparkSpace(Space):
         This function should be rewritten in sub-classes if
         space title does not come from ``space.room`` parameter.
         """
-        return self.api.update(self.id,title)
+        return self.api.room.update(self.id, title)
 
 
