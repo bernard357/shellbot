@@ -40,6 +40,6 @@ class Input(Command):
 
         lines = [self.input_header]
         for key in sorted(input.keys()):
-            lines.append(u"{} - {}\n".format(key, input.get(key, '')))
+            lines.append(u"{} - {}".format(key, input.get(key, '')))
 
         self.bot.say('\n'.join(lines))
