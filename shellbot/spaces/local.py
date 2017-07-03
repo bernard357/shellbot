@@ -129,9 +129,9 @@ class LocalSpace(Space):
         """
         Checks that valid settings are available
         """
-        self.bot.context.check(self.prefix+'.title', 'Local space')
-        self.bot.context.check(self.prefix+'.moderators', [])
-        self.bot.context.check(self.prefix+'.participants', [])
+        self.bot.context.check(self.prefix+'.title', 'Local space', filter=True)
+        self.bot.context.check(self.prefix+'.moderators', [], filter=True)
+        self.bot.context.check(self.prefix+'.participants', [], filter=True)
 
         self.bot.context.set('server.binding', None)  # no web server at all
 
