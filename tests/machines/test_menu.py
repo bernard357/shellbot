@@ -31,7 +31,8 @@ class MenuTests(unittest.TestCase):
         my_bot = ShellBot()
 
         machine = Menu(bot=my_bot,
-                       question="What's up, Doc?")
+                       question="What's up, Doc?",
+                       options=["option 1", "option 2"])
         self.assertEqual(machine.bot, my_bot)
         self.assertEqual(machine.prefix, "machine")
         self.assertEqual(machine.question, "What's up, Doc?")
@@ -110,7 +111,7 @@ class MenuTests(unittest.TestCase):
 
         machine.ask()
         self.assertEqual(my_bot.context.get('said'),
-                         u"What's up, Doc?\n1 - option 1\n2 - option 2")
+                         u"What's up, Doc?\n1. option 1\n2. option 2")
         machine.listen.assert_called_with()
 
     def test_listen(self):
