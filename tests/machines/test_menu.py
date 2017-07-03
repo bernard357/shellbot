@@ -35,7 +35,7 @@ class MenuTests(unittest.TestCase):
         self.assertEqual(machine.bot, my_bot)
         self.assertEqual(machine.prefix, "machine")
         self.assertEqual(machine.question, "What's up, Doc?")
-        self.assertEqual(machine.options, [u"option 1", u"option 2"])
+        self.assertEqual(machine.options, [])#u"option 1", u"option 2"])
         self.assertEqual(machine.on_retry, machine.RETRY_MESSAGE)
         self.assertEqual(machine.on_answer, machine.ANSWER_MESSAGE)
         self.assertEqual(machine.on_cancel, machine.CANCEL_MESSAGE)
@@ -102,15 +102,13 @@ class MenuTests(unittest.TestCase):
         my_bot = MyBot()
 
         machine = Menu(bot=my_bot,
-                       question="What's up, Doc?",
-                       options=["option 1", "option 2"],
+                       question=u"What's up, Doc?\n1. option 1\n2. option 2",
                        key='my.menu')
 
         machine.listen = mock.Mock()
 
         machine.ask()
-        self.assertEqual(my_bot.context.get('said'),
-                         u"What's up, Doc?\n1 - option 1\n2 - option 2")
+        self.assertEqual(my_bot.context.get('said'),machine.question)
         machine.listen.assert_called_with()
 
     def test_listen(self):
@@ -121,7 +119,7 @@ class MenuTests(unittest.TestCase):
 
         machine = Menu(bot=my_bot,
                        question="What's up, Doc?",
-                       options=["option 1", "option 2"],
+                       options=[u"option 1", u"option 2"],
                        key='my.menu')
 
         my_bot.context.set('general.switch', 'off')
@@ -146,7 +144,7 @@ class MenuTests(unittest.TestCase):
 
         machine = MyMenu(bot=my_bot,
                          question="What's up, Doc?",
-                         options=["option 1", "option 2"],
+                         options=[u"option 1", u"option 2"],
                          key='my.menu')
 
         my_bot.context.set('general.switch', 'off')
@@ -196,7 +194,7 @@ class MenuTests(unittest.TestCase):
 
         machine = Menu(bot=my_bot,
                        question="What's up, Doc?",
-                       options=["option 1", "option 2"],
+                       options=[u"option 1", u"option 2"],
                        key='my.key')
 
         self.assertEqual(machine.get('answer'), None)
@@ -233,7 +231,7 @@ class MenuTests(unittest.TestCase):
 
         machine = Menu(bot=my_bot,
                        question="What's up, Doc?",
-                       options=["option 1", "option 2"])
+                       options=[u"option 1", u"option 2"])
 
         self.assertEqual(machine.filter('hello world'), None)
         self.assertEqual(machine.filter('-1'), None)
@@ -252,7 +250,7 @@ class MenuTests(unittest.TestCase):
 
         machine = Menu(bot=my_bot,
                        question="What's up, Doc?",
-                       options=["option 1", "option 2"],
+                       options=[u"option 1", u"option 2"],
                        key='my.menu')
 
         machine.stop = mock.Mock()
@@ -276,7 +274,7 @@ class MenuTests(unittest.TestCase):
 
         machine = Menu(bot=my_bot,
                        question="What's up, Doc?",
-                       options=["option 1", "option 2"],
+                       options=[u"option 1", u"option 2"],
                        key='my.menu')
 
         p = machine.start(tick=0.001)
@@ -305,7 +303,7 @@ class MenuTests(unittest.TestCase):
 
         machine = Menu(bot=my_bot,
                        question="What's up, Doc?",
-                       options=["option 1", "option 2"],
+                       options=[u"option 1", u"option 2"],
                        key='my.menu')
 
         machine.WAIT_DURATION = 0.01
@@ -333,7 +331,7 @@ class MenuTests(unittest.TestCase):
 
         machine = Menu(bot=my_bot,
                        question="What's up, Doc?",
-                       options=["option 1", "option 2"],
+                       options=[u"option 1", u"option 2"],
                        key='my.menu')
 
         machine.CANCEL_DURATION = 0.02
