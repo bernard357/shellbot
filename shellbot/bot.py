@@ -539,7 +539,6 @@ class ShellBot(object):
 
         """
         self.dispatch('dispose')
-
         self.space.dispose(*args, **kwargs)
 
     def archive(self, *args, **kwargs):
