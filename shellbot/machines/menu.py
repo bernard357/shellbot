@@ -36,6 +36,7 @@ class Menu(Machine):
 
     """
 
+    IS_MARKDOWN = 0
     IS_MANDATORY = 0
     RETRY_MESSAGE = u"Invalid input, please retry with the digit corresponding to your selection"
     ANSWER_MESSAGE = u"Ok, this has been noted"
@@ -51,6 +52,7 @@ class Menu(Machine):
                 on_answer=None,
                 on_cancel=None,
                 is_mandatory=None,
+                is_markdown=None,
                 tip=None,
                 timeout=None,
                 key=None,
@@ -76,6 +78,9 @@ class Menu(Machine):
 
         :param is_mandatory: The reply will be mandatory
         :type is_mandatory: boolean
+
+        :param is_markdown: Indicate if it's markdown text
+        :type is_markdown: boolean
 
         :param tip: Display the on_retry message after this delay in seconds
         :type tip: int
@@ -116,6 +121,11 @@ class Menu(Machine):
         assert int(is_mandatory) >= 0
         self.is_mandatory = is_mandatory
 
+        if is_markdown in (None,''):
+            is_mardown = self.IS_MARKDOWN
+        assert int(is_markdown) >= 0
+        self.is_markdown = is_markdown
+
         if tip is not None:
             assert int(tip) > 0
             self.WAIT_DURATION = tip
@@ -146,7 +156,7 @@ class Menu(Machine):
             {'source': 'waiting',
              'target': 'delayed',
              'condition': lambda **z : self.elapsed > self.WAIT_DURATION,
-             'action': lambda: self.bot.say(self.on_retry),
+             'action': lambda: self.say(self.on_retry),
             },
 
             {'source': 'delayed',
@@ -157,7 +167,6 @@ class Menu(Machine):
             {'source': 'delayed',
              'target': 'end',
              'condition': lambda **z : self.elapsed > self.CANCEL_DURATION,
-             # and self.is_mandatory == 0,
              'action': self.cancel},
 
         ]
@@ -175,6 +184,15 @@ class Menu(Machine):
         """
         return time.time() - self.start_time
 
+    def say(self,arguments):
+        """
+        say what has been requested
+        """
+        if self.is_markdown == 0:
+            self.bot.say(arguments)
+        else:
+            self.bot.say(arguments,content=arguments)
+
     def ask(self):
         """
         Asks the question in the chat
@@ -184,7 +202,7 @@ class Menu(Machine):
         for key in self.options:
            lines.append(u"{}. {}".format(i, key))
            i += 1
-        self.bot.say('\n'.join(lines))
+        self.say('\n'.join(lines))
 
         self.listen()
         self.start_time = time.time()
@@ -255,20 +273,20 @@ class Menu(Machine):
         Receives data from the chat
         """
         if arguments in (None, ''):
-            self.bot.say(self.on_retry)
+            self.say(self.on_retry)
             return
 
         arguments = self.filter(text=arguments)
 
         if arguments in (None, ''):
-            self.bot.say(self.on_retry)
+            self.say(self.on_retry)
             return
 
         self.set('answer', arguments)
         if self.key:
             self.bot.update('input', self.key, self.options[int(arguments)-1])
 
-        self.bot.say(self.on_answer.format(arguments))
+        self.say(self.on_answer.format(arguments))
         self.step(event='tick')
 
     def filter(self, text):
@@ -294,5 +312,5 @@ class Menu(Machine):
         """
         Cancels the question
         """
-        self.bot.say(self.on_cancel)
+        self.say(self.on_cancel)
         self.stop()

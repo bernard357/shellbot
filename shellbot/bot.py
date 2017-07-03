@@ -714,6 +714,8 @@ class ShellBot(object):
             return
 
         logging.info(u"Bot says: {}".format(text))
+        if content in (None, ''):
+            content = text
 
         if self.mouth:
             logging.debug(u"- pushing message to mouth queue")
