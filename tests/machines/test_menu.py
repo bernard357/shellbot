@@ -49,15 +49,15 @@ class MenuTests(unittest.TestCase):
                          ['begin', 'delayed', 'waiting'])
 
         machine = Menu(bot=my_bot,
-                        prefix='who.cares',
-                        question="What's up, Doc?",
-                        options=[u"option 1", u"option 2"],
-                        on_retry="Come on, you can do better! Please retry",
-                        on_answer="Thank you, you are doing great",
-                        on_cancel="Ok, forget about it",
-                        tip=20,
-                        timeout=40,
-                        key='rabbit.menu')
+                       prefix='who.cares',
+                       question="What's up, Doc?",
+                       options=[u"option 1", u"option 2"],
+                       on_retry="Come on, you can do better! Please retry",
+                       on_answer="Thank you, you are doing great",
+                       on_cancel="Ok, forget about it",
+                       tip=20,
+                       timeout=40,
+                       key='rabbit.menu')
         self.assertEqual(machine.bot, my_bot)
         self.assertEqual(machine.question,
                          "What's up, Doc?")
@@ -97,7 +97,7 @@ class MenuTests(unittest.TestCase):
 
         class MyBot(ShellBot):
 
-            def say(self, message):
+            def say(self, message, **kwargs):
                 self.context.set('said', message)
 
         my_bot = MyBot()
