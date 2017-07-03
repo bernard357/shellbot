@@ -438,6 +438,37 @@ class Space(object):
         """
         raise NotImplementedError()
 
+    def del_participants(self, persons=[]):
+        """
+        Deletes multiple participants
+
+        :param persons: e-mail addresses of persons to delete
+        :type persons: list of str
+
+        """
+        logging.info(u"Deleting participants")
+        for person in persons:
+            logging.info(u"- {}".format(person))
+            self.del_participant(person)
+
+    def del_participant(self, person):
+        """
+        Deletes one participant
+
+        :param person: e-mail address of the person to delete
+        :type person: str
+
+        This function should be implemented in sub-class.
+
+        Example::
+
+            def del_participant(self, person):
+                self.api.memberships.delete(id=self.id, person=person)
+
+        """
+        raise NotImplementedError()
+
+
     def dispose(self, **kwargs):
         """
         Disposes all resources

@@ -306,6 +306,7 @@ class SparkSpaceTests(unittest.TestCase):
         space.api = FakeApi()
         space.add_moderator = mock.Mock()
         space.add_participant = mock.Mock()
+        space.del_participant = mock.Mock()
 
         space.bond(title='*title',
                    moderators=['who', 'knows'],
@@ -313,6 +314,7 @@ class SparkSpaceTests(unittest.TestCase):
 
         self.assertTrue(space.add_moderator.called)
         self.assertTrue(space.add_participant.called)
+        self.assertTrue(space.del_participant('joe.bar@acme.com'))
 
     def test_connect(self):
 

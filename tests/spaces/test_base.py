@@ -176,6 +176,7 @@ class SpaceTests(unittest.TestCase):
         space.create_space = mock.Mock()
         space.add_moderator = mock.Mock()
         space.add_participant = mock.Mock()
+        space.del_participant = mock.Mock()
 
         space.bond(title='*title',
                    moderators=['who', 'knows'],
@@ -185,6 +186,7 @@ class SpaceTests(unittest.TestCase):
         space.create_space.assert_called_with(title='*title')
         space.add_moderator.assert_called_with('knows')
         space.add_participant.assert_called_with('me')
+        space.del_participant('foo.bar@acme.com')
         self.assertTrue(space.bonded)
 
 
@@ -202,6 +204,7 @@ class SpaceTests(unittest.TestCase):
         space.create_space = mock.Mock()
         space.add_moderator = mock.Mock()
         space.add_participant = mock.Mock()
+        space.del_participant = mock.Mock()
 
         space.bond()
 
@@ -209,6 +212,7 @@ class SpaceTests(unittest.TestCase):
         space.create_space.assert_called_with(title='Another title')
         space.add_moderator.assert_called_with('joe.bar@corporation.com')
         space.add_participant.assert_called_with('bob.nard@support.tv')
+        space.del_participant('bob.nard@support.tv')
         self.assertTrue(space.bonded)
 
     def test_is_ready(self):
