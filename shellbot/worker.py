@@ -52,14 +52,15 @@ class Worker(object):
         This function is looping on items received from the queue, and
         is handling them one by one in the background.
 
-        Processing should be handled in a separate background process, like
+        Processing should be handled in the background, like
         in the following example::
 
             worker = Worker(bot=my_bot)
+            handle = worker.start()
 
-            process = Process(target=worker.work)
-            process.daemon = True
-            process.start()
+            ...
+
+            handle.join()
 
         The recommended way for stopping the process is to change the
         parameter ``general.switch`` in the context. For example::
