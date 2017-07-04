@@ -89,6 +89,10 @@ class ShellBot(object):
             bot.use_space(id=space_id)
             bot.run()
             return bot
+
+    A bot is an extensible set of components that share the same context,
+    that is, configuration settings.
+
     """
 
     DEFAULT_SETTINGS = {
@@ -210,9 +214,9 @@ class ShellBot(object):
             settings = yaml.load(stream)
         except Exception as feedback:
             logging.error(feedback)
-            sys.exit(1)
+            raise Exception(u"Unable to load valid YAML settings")
 
-        self.configure(settings)
+        self.configure(settings=settings)
 
     def configure(self, settings=None):
         """
@@ -236,7 +240,7 @@ class ShellBot(object):
         self.shell.configure()
 
         if self.space is None:
-            logging.debug(u"- building new space")
+            logging.debug(u"Building new space")
             self.space = SpaceFactory.build(self)
         else:
             self.space.configure()
@@ -246,7 +250,7 @@ class ShellBot(object):
         if self.store is None:
             self.store = StoreFactory.build(self)
         else:
-            self.store.configure()
+            self.store.check()
 
         if (self.server is None
             and self.context.get('server.binding') is not None):
@@ -584,11 +588,12 @@ class ShellBot(object):
         :param server: a web server
         :type server: Server
 
-        If a server is provided, it is run in the background. A server could
+        If a server is provided, it is ran in the background. A server could
         also have been provided during initialisation, or loaded
         during configuration check.
 
-        Alternatively, a loop is started to fetch messages.
+        If no server instance is available, a loop is started
+        to fetch messages in the background.
 
         In both cases, this function does not return, except on interrupt.
         """
@@ -682,8 +687,8 @@ class ShellBot(object):
         self.say(self.context.get('bot.on_stop'))
 
         logging.debug(u"- switching off")
-        time.sleep(1)
         self.context.set('general.switch', 'off')
+        time.sleep(1)
 
     def on_stop(self):
         """

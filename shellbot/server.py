@@ -73,7 +73,7 @@ class Server(Bottle):
         This function reads key ``server`` and below, and update
         the context accordingly::
 
-            >>>shell.configure({'server': {
+            >>>server.configure({'server': {
                    'binding': '10.4.2.5',
                    'port': 5000,
                    'debug': True,
@@ -81,7 +81,7 @@ class Server(Bottle):
 
         This can also be written in a more compact form::
 
-            >>>shell.configure({'server.port': 5000})
+            >>>server.configure({'server.port': 5000})
 
         """
 

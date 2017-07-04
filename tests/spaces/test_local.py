@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import gc
 import json
 import io
 import logging
@@ -39,6 +40,10 @@ my_queue = Queue()
 
 
 class LocalSpaceTests(unittest.TestCase):
+
+    def tearDown(self):
+        collected = gc.collect()
+        logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 

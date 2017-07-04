@@ -26,7 +26,7 @@ class Context(object):
     """
     Stores settings across multiple independent processing units
 
-    This is a basic key-value store, that supports concurrency
+    This is a key-value store, that supports concurrency
     across multiple processes.
 
     """

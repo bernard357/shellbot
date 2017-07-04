@@ -203,7 +203,7 @@ class Menu(Machine):
            lines.append(u"{}. {}".format(i, key))
            i += 1
         self.say('\n'.join(lines))
-
+        
         self.listen()
         self.start_time = time.time()
 
@@ -242,7 +242,7 @@ class Menu(Machine):
                 if not self.is_running:
                     break  # on machine stop
 
-                if self.is_mandatory == 0: 
+                if self.is_mandatory == 0:
                     if time.time() - beginning > self.CANCEL_DURATION + 0.2:
                         break  # on cancellation limit
 
@@ -307,10 +307,11 @@ class Menu(Machine):
         """
         Wait input
         """
-        
+
     def cancel(self):
         """
         Cancels the question
         """
         self.say(self.on_cancel)
+        
         self.stop()

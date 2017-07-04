@@ -246,7 +246,7 @@ class Input(Machine):
                 if not self.is_running:
                     break  # on machine stop
 
-                if self.is_mandatory == 0: 
+                if self.is_mandatory == 0:
                     if time.time() - beginning > self.CANCEL_DURATION + 0.2:
                         break  # on cancellation limit
 
@@ -300,6 +300,7 @@ class Input(Machine):
             self.bot.update('input', self.key, arguments)
 
         self.say(self.on_answer.format(arguments))
+        
         self.step(event='tick')
 
     def filter(self, text):
@@ -358,4 +359,5 @@ class Input(Machine):
         Cancels the question
         """
         self.say(self.on_cancel)
+        
         self.stop()
