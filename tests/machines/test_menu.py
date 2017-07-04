@@ -109,12 +109,7 @@ class MenuTests(unittest.TestCase):
         machine.listen = mock.Mock()
 
         machine.ask()
-<<<<<<< HEAD
         self.assertEqual(my_bot.context.get('said'),machine.question)
-=======
-        self.assertEqual(my_bot.context.get('said'),
-                         u"What's up, Doc?\n1. option 1\n2. option 2")
->>>>>>> upstream/master
         machine.listen.assert_called_with()
 
     def test_listen(self):

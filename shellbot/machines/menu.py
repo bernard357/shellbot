@@ -156,11 +156,7 @@ class Menu(Machine):
             {'source': 'waiting',
              'target': 'delayed',
              'condition': lambda **z : self.elapsed > self.WAIT_DURATION,
-<<<<<<< HEAD
              'action': lambda: self.say(self.on_retry),
-=======
-             'action': lambda: self.bot.say(self.on_retry),
->>>>>>> upstream/master
             },
 
             {'source': 'delayed',
@@ -206,12 +202,7 @@ class Menu(Machine):
         for key in self.options:
            lines.append(u"{}. {}".format(i, key))
            i += 1
-<<<<<<< HEAD
         self.say('\n'.join(lines))
-=======
-        self.bot.say('\n'.join(lines))
->>>>>>> upstream/master
-
         self.listen()
         self.start_time = time.time()
 
@@ -281,32 +272,20 @@ class Menu(Machine):
         Receives data from the chat
         """
         if arguments in (None, ''):
-<<<<<<< HEAD
             self.say(self.on_retry)
-=======
-            self.bot.say(self.on_retry)
->>>>>>> upstream/master
             return
 
         arguments = self.filter(text=arguments)
 
         if arguments in (None, ''):
-<<<<<<< HEAD
             self.say(self.on_retry)
-=======
-            self.bot.say(self.on_retry)
->>>>>>> upstream/master
             return
 
         self.set('answer', arguments)
         if self.key:
             self.bot.update('input', self.key, self.options[int(arguments)-1])
 
-<<<<<<< HEAD
         self.say(self.on_answer.format(arguments))
-=======
-        self.bot.say(self.on_answer.format(arguments))
->>>>>>> upstream/master
         self.step(event='tick')
 
     def filter(self, text):
@@ -332,11 +311,5 @@ class Menu(Machine):
         """
         Cancels the question
         """
-<<<<<<< HEAD
         self.say(self.on_cancel)
         self.stop()
-=======
-        self.bot.say(self.on_cancel)
-        if self.is_mandatory == 0:
-            self.stop()
->>>>>>> upstream/master

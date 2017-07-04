@@ -176,10 +176,14 @@ class Input(Machine):
              'target': 'delayed',
              'condition': lambda **z : self.elapsed > self.WAIT_DURATION,
 <<<<<<< HEAD
+<<<<<<< HEAD
              'action': lambda: self.say(self.on_retry),
 =======
              'action': lambda: self.bot.say(self.on_retry),
 >>>>>>> upstream/master
+=======
+             'action': lambda: self.say(self.on_retry),
+>>>>>>> 221f8f9bc13ed8ad0347d9a9c5e0eb0b92318901
             },
 
             {'source': 'delayed',
@@ -212,10 +216,14 @@ class Input(Machine):
         Asks the question in the chat
         """
 <<<<<<< HEAD
+<<<<<<< HEAD
         self.say(self.question)
 =======
         self.bot.say(self.question)
 >>>>>>> upstream/master
+=======
+        self.say(self.question)
+>>>>>>> 221f8f9bc13ed8ad0347d9a9c5e0eb0b92318901
         self.listen()
         self.start_time = time.time()
 
@@ -295,20 +303,28 @@ class Input(Machine):
         """
         if arguments in (None, ''):
 <<<<<<< HEAD
+<<<<<<< HEAD
             self.say(self_on_retry)
 =======
             self.bot.say(self.on_retry)
 >>>>>>> upstream/master
+=======
+            self.say(self_on_retry)
+>>>>>>> 221f8f9bc13ed8ad0347d9a9c5e0eb0b92318901
             return
 
         arguments = self.filter(text=arguments)
 
         if arguments in (None, ''):
 <<<<<<< HEAD
+<<<<<<< HEAD
             self.say(self.on_retry)
 =======
             self.bot.say(self.on_retry)
 >>>>>>> upstream/master
+=======
+            self.say(self.on_retry)
+>>>>>>> 221f8f9bc13ed8ad0347d9a9c5e0eb0b92318901
             return
 
         self.set('answer', arguments)
@@ -316,10 +332,15 @@ class Input(Machine):
             self.bot.update('input', self.key, arguments)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         self.say(self.on_answer.format(arguments))
 =======
         self.bot.say(self.on_answer.format(arguments))
 >>>>>>> upstream/master
+=======
+        self.say(self.on_answer.format(arguments))
+        
+>>>>>>> 221f8f9bc13ed8ad0347d9a9c5e0eb0b92318901
         self.step(event='tick')
 
     def filter(self, text):
@@ -378,8 +399,13 @@ class Input(Machine):
         Cancels the question
         """
 <<<<<<< HEAD
+<<<<<<< HEAD
         self.say(self.on_cancel)
 =======
         self.bot.say(self.on_cancel)
 >>>>>>> upstream/master
+=======
+        self.say(self.on_cancel)
+        
+>>>>>>> 221f8f9bc13ed8ad0347d9a9c5e0eb0b92318901
         self.stop()
