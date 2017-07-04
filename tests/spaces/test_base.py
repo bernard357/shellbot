@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import gc
 import logging
 import mock
 import os
@@ -35,6 +36,10 @@ class FakeMessage(Fake):
 my_bot = ShellBot()
 
 class SpaceTests(unittest.TestCase):
+
+    def tearDown(self):
+        collected = gc.collect()
+        logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 

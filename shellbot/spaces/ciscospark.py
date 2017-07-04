@@ -532,6 +532,10 @@ class SparkSpace(Space):
             logging.warning(u"Unable to delete room")
             logging.exception(feedback)
 
+    def archive_space(self, title=None, **kwargs):
+        # ToDo: make sure that the room is attached to a team
+        delete_space(self, title=title, **kwargs)
+
     def post_message(self,
                      text=None,
                      content=None,

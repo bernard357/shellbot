@@ -15,6 +15,8 @@ sys.path.insert(0, os.path.abspath('..'))
 from shellbot import Context, Server
 from shellbot.routes import Route, Notifier, Text, Wrapper
 
+my_context = Context()
+
 
 class ServerTests(unittest.TestCase):
 
@@ -30,33 +32,13 @@ class ServerTests(unittest.TestCase):
         self.assertTrue(server.context is not None)
         self.assertTrue(server.httpd is not None)
 
-        context = Context()
-        server = Server(context=context, httpd='h')
-        self.assertEqual(server.context, context)
+        server = Server(context=my_context, httpd='h')
+        self.assertEqual(server.context, my_context)
         self.assertEqual(server.httpd, 'h')
 
     def test_configuration(self):
 
         logging.info('*** Configuration test ***')
-
-        settings = {
-            'server': {
-                'port': 8888,
-                'debug': True,
-            },
-        }
-
-        context = Context(settings)
-        server = Server(context=context)
-        self.assertEqual(server.context.get('server.binding'), None)
-        self.assertEqual(server.context.get('server.port'), 8888)
-        self.assertEqual(server.context.get('server.debug'), True)
-
-        context = Context(settings)
-        server = Server(context=context, check=True)
-        self.assertEqual(server.context.get('server.binding'), '0.0.0.0')
-        self.assertEqual(server.context.get('server.port'), 8888)
-        self.assertEqual(server.context.get('server.debug'), True)
 
         settings = {
             'server': {
@@ -66,13 +48,17 @@ class ServerTests(unittest.TestCase):
             },
         }
 
-        server = Server()
+        server = Server(context=my_context)
+        self.assertEqual(server.context.get('server.binding'), None)
+        self.assertEqual(server.context.get('server.port'), None)
+        self.assertEqual(server.context.get('server.debug'), None)
         server.configure(settings)
         self.assertEqual(server.context.get('server.binding'), '1.2.3.4')
         self.assertEqual(server.context.get('server.port'), 8888)
         self.assertEqual(server.context.get('server.debug'), True)
 
-        server = Server(Context(settings))
+        context = Context(settings)
+        server = Server(context=context)
         self.assertEqual(server.context.get('server.binding'), '1.2.3.4')
         self.assertEqual(server.context.get('server.port'), 8888)
         self.assertEqual(server.context.get('server.debug'), True)
@@ -84,13 +70,13 @@ class ServerTests(unittest.TestCase):
         hello = Route(route='/hello')
         world = Route(route='/world')
 
-        server = Server()
+        server = Server(context=my_context)
         server.add_routes([hello, world])
         self.assertEqual(server.routes, ['/hello', '/world'])
         self.assertEqual(server.route('/hello'), hello)
         self.assertEqual(server.route('/world'), world)
 
-        server = Server(routes=[hello, world])
+        server = Server(context=my_context, routes=[hello, world])
         self.assertEqual(server.routes, ['/hello', '/world'])
         self.assertEqual(server.route('/hello'), hello)
         self.assertEqual(server.route('/world'), world)
@@ -101,12 +87,12 @@ class ServerTests(unittest.TestCase):
 
         route = Route(route='/hello')
 
-        server = Server()
+        server = Server(context=my_context)
         server.add_route(route)
         self.assertEqual(server.routes, ['/hello'])
         self.assertEqual(server.route('/hello'), route)
 
-        server = Server(route=route)
+        server = Server(context=my_context, route=route)
         self.assertEqual(server.routes, ['/hello'])
         self.assertEqual(server.route('/hello'), route)
 
@@ -118,7 +104,7 @@ class ServerTests(unittest.TestCase):
             def run(self, **kwargs):
                 pass
 
-        server = Server(httpd=FakeHttpd())
+        server = Server(context=my_context, httpd=FakeHttpd())
         server.run()
 
     def test_text(self):
@@ -127,7 +113,7 @@ class ServerTests(unittest.TestCase):
 
         route = Text(route='/hello', page='Hello, world!')
 
-        server = Server(route=route)
+        server = Server(context=my_context, route=route)
 
         test = TestApp(server.httpd)
         r = test.get('/hello')
@@ -141,7 +127,7 @@ class ServerTests(unittest.TestCase):
         queue = Queue()
         route = Notifier(route='/notify', queue=queue, notification='hello!')
 
-        server = Server(route=route)
+        server = Server(context=my_context, route=route)
 
         test = TestApp(server.httpd)
         r = test.get('/notify')
@@ -154,8 +140,6 @@ class ServerTests(unittest.TestCase):
 
         logging.info('*** Wrap test***')
 
-        context = Context()
-
         class Callable(object):
             def __init__(self, context):
                 self.context = context
@@ -164,22 +148,22 @@ class ServerTests(unittest.TestCase):
                 self.context.set('signal', 'wrapped!')
                 return 'OK'
 
-        callable = Callable(context)
+        callable = Callable(my_context)
 
-        route = Wrapper(context=context,
+        route = Wrapper(context=my_context,
                         route='/wrapper',
                         callable=callable.hook)
 
-        server = Server(context=context, route=route)
+        server = Server(context=my_context, route=route)
 
-        self.assertEqual(context.get('signal'), None)
+        self.assertEqual(my_context.get('signal'), None)
 
         test = TestApp(server.httpd)
         r = test.get('/wrapper')
         self.assertEqual(r.status, '200 OK')
         r.mustcontain('OK')
 
-        self.assertEqual(context.get('signal'), 'wrapped!')
+        self.assertEqual(my_context.get('signal'), 'wrapped!')
 
 
 if __name__ == '__main__':

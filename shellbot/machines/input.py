@@ -175,7 +175,11 @@ class Input(Machine):
             {'source': 'waiting',
              'target': 'delayed',
              'condition': lambda **z : self.elapsed > self.WAIT_DURATION,
+<<<<<<< HEAD
              'action': lambda: self.say(self.on_retry),
+=======
+             'action': lambda: self.bot.say(self.on_retry),
+>>>>>>> upstream/master
             },
 
             {'source': 'delayed',
@@ -207,7 +211,11 @@ class Input(Machine):
         """
         Asks the question in the chat
         """
+<<<<<<< HEAD
         self.say(self.question)
+=======
+        self.bot.say(self.question)
+>>>>>>> upstream/master
         self.listen()
         self.start_time = time.time()
 
@@ -246,7 +254,7 @@ class Input(Machine):
                 if not self.is_running:
                     break  # on machine stop
 
-                if self.is_mandatory == 0: 
+                if self.is_mandatory == 0:
                     if time.time() - beginning > self.CANCEL_DURATION + 0.2:
                         break  # on cancellation limit
 
@@ -286,20 +294,32 @@ class Input(Machine):
         Receives data from the chat
         """
         if arguments in (None, ''):
+<<<<<<< HEAD
             self.say(self_on_retry)
+=======
+            self.bot.say(self.on_retry)
+>>>>>>> upstream/master
             return
 
         arguments = self.filter(text=arguments)
 
         if arguments in (None, ''):
+<<<<<<< HEAD
             self.say(self.on_retry)
+=======
+            self.bot.say(self.on_retry)
+>>>>>>> upstream/master
             return
 
         self.set('answer', arguments)
         if self.key:
             self.bot.update('input', self.key, arguments)
 
+<<<<<<< HEAD
         self.say(self.on_answer.format(arguments))
+=======
+        self.bot.say(self.on_answer.format(arguments))
+>>>>>>> upstream/master
         self.step(event='tick')
 
     def filter(self, text):
@@ -357,5 +377,9 @@ class Input(Machine):
         """
         Cancels the question
         """
+<<<<<<< HEAD
         self.say(self.on_cancel)
+=======
+        self.bot.say(self.on_cancel)
+>>>>>>> upstream/master
         self.stop()

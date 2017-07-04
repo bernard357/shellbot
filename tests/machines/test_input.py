@@ -94,7 +94,7 @@ class InputTests(unittest.TestCase):
 
         class MyBot(ShellBot):
 
-            def say(self, message):
+            def say(self, message, **kwargs):
                 self.context.set('said', message)
 
         my_bot = MyBot()

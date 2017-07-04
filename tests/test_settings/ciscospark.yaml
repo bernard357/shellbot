@@ -24,13 +24,13 @@ process:
 
     initial: T100
 
-# local space settings
+# Cisco Spark settings
 #
-local:
+spark:
 
-    # the title of the local space handled by this bot
+    # the title of the Cisco Spark room handled by this bot
     #
-    title: Support room
+    room: Support room
 
     # the title of the team associated with the room
     #
@@ -38,7 +38,7 @@ local:
 
     # pre-defined moderators
     #
-    moderators: [foo.bar@acme.com]
+    moderators: foo.bar@acme.com
 
     # pre-defined participants
     #
@@ -57,3 +57,25 @@ local:
     # but you can override the configuration below
     #
     personal_token: "<token here hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY>"
+
+# server settings
+#
+server:
+
+    # the url that is used to access this server remotely, e.g. with ngrok
+    #
+    url: "http://73a1e282.ngrok.io"
+
+    # the web path for hooking Cisco Spark
+    #
+    hook: /hook
+
+    # the network address to listen from
+    #
+    binding: 0.0.0.0
+
+    # the port from which this bot is getting requests from the internet
+    #
+    port: 8080
+
+
