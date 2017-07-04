@@ -286,7 +286,7 @@ class Input(Machine):
         Receives data from the chat
         """
         if arguments in (None, ''):
-            self.say(self_on_retry)
+            self.say(self.on_retry)
             return
 
         arguments = self.filter(text=arguments)
