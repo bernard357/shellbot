@@ -516,6 +516,19 @@ class BotTests(unittest.TestCase):
             bot.add_participants(['a', 'b', 'c', 'd'])
             mocked.assert_called_with(['a', 'b', 'c', 'd'])
 
+    def test_del_participants(self):
+
+        logging.info('*** del_participants ***')
+
+        context = Context()
+        bot = ShellBot(context=context, fan='f')
+        bot.space=LocalSpace(bot=bot)
+        with mock.patch.object(bot.space,
+                               'del_participants',
+                               return_value=None) as mocked:
+            bot.del_participants(['a', 'b', 'c', 'd'])
+            mocked.assert_called_with(['a', 'b', 'c', 'd'])
+
     def test_dispose(self):
 
         logging.info('*** dispose ***')
