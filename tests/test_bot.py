@@ -16,6 +16,9 @@ from shellbot import Context, ShellBot
 from shellbot.spaces import Space, LocalSpace, SparkSpace
 from shellbot.stores import MemoryStore
 
+my_bot = ShellBot()
+my_store = MemoryStore()
+
 
 class MyCounter(object):
     def __init__(self, name='counter'):
@@ -77,7 +80,7 @@ class BotTests(unittest.TestCase):
         self.assertTrue(bot.worker is not None)
         self.assertTrue(bot.listener is not None)
 
-        space = SparkSpace(bot=bot)
+        space = Space()
         bot = ShellBot(context=context,
                        space=space,
                        mouth='m',
@@ -105,7 +108,7 @@ class BotTests(unittest.TestCase):
         self.assertEqual(bot.name, 'testy')
         self.assertEqual(bot.version, '17.4.1')
 
-    def test_configuration(self):
+    def test_configure(self):
 
         logging.info('*** configure ***')
 
@@ -114,7 +117,7 @@ class BotTests(unittest.TestCase):
         bot.space=LocalSpace(bot=bot)
         bot.configure({})
 
-        bot = ShellBot()
+        my_bot.context.clear()
         settings = {
 
             'bot': {
@@ -122,9 +125,9 @@ class BotTests(unittest.TestCase):
                 'on_stop': 'Stop!',
             },
 
-            'spark': {
-                'room': 'space name',
-                'moderators': 'foo.bar@acme.com',
+            'local': {
+                'title': 'space name',
+                'moderators': ['foo.bar@acme.com'],
                 'participants': ['joe.bar@acme.com'],
             },
 
@@ -136,31 +139,32 @@ class BotTests(unittest.TestCase):
             },
 
         }
-        bot.configure(settings)
-        self.assertEqual(bot.context.get('bot.on_start'), 'Start!')
-        self.assertEqual(bot.context.get('bot.on_stop'), 'Stop!')
-        self.assertEqual(bot.context.get('spark.room'), 'space name')
-        self.assertEqual(bot.context.get('spark.moderators'),
+        my_bot.configure(settings)
+        self.assertEqual(my_bot.context.get('bot.on_start'), 'Start!')
+        self.assertEqual(my_bot.context.get('bot.on_stop'), 'Stop!')
+        self.assertEqual(my_bot.context.get('local.title'), 'space name')
+        self.assertEqual(my_bot.context.get('local.moderators'),
                          ['foo.bar@acme.com'])
-        self.assertEqual(bot.context.get('spark.participants'),
+        self.assertEqual(my_bot.context.get('local.participants'),
                          ['joe.bar@acme.com'])
-        self.assertEqual(bot.context.get('server.url'), 'http://to.no.where')
-        self.assertEqual(bot.context.get('server.hook'), '/hook')
+        self.assertEqual(my_bot.context.get('server.url'), 'http://to.no.where')
+        self.assertEqual(my_bot.context.get('server.hook'), '/hook')
 
-        bot = ShellBot(fan='f')
-        bot.configure_from_path(os.path.dirname(os.path.abspath(__file__))
+        my_bot.context.clear()
+        my_bot.configure_from_path(os.path.dirname(os.path.abspath(__file__))
                                 + '/test_settings/regular.yaml')
-        self.assertEqual(bot.context.get('bot.on_start'),
+        self.assertEqual(my_bot.context.get('bot.on_start'),
                          'How can I help you?')
-        self.assertEqual(bot.context.get('bot.on_stop'), 'Bye for now')
-        self.assertEqual(bot.context.get('spark.room'), 'Support room')
-        self.assertEqual(bot.context.get('spark.moderators'),
+        self.assertEqual(my_bot.context.get('bot.on_stop'), 'Bye for now')
+        self.assertEqual(my_bot.context.get('local.title'), 'Support room')
+        self.assertEqual(my_bot.context.get('local.moderators'),
                          ['foo.bar@acme.com'])
-        self.assertEqual(bot.context.get('spark.participants'),
+        self.assertEqual(my_bot.context.get('local.participants'),
                          ['joe.bar@acme.com', 'super.support@help.org'])
-        self.assertEqual(bot.context.get('server.url'),
-                         'http://73a1e282.ngrok.io')
-        self.assertEqual(bot.context.get('server.hook'), '/hook')
+        self.assertEqual(my_bot.context.get('server.url'), None)
+        self.assertEqual(my_bot.context.get('server.hook'), None)
+        self.assertEqual(my_bot.context.get('server.binding'), None)
+        self.assertEqual(my_bot.context.get('server.port'), None)
 
     def test_configuration_2(self):
 
@@ -173,9 +177,9 @@ class BotTests(unittest.TestCase):
                 'on_stop': 'Stop!',
             },
 
-            'spark': {
-                'room': 'Support room',
-                'moderators': 'foo.bar@acme.com',  # to be turned to list
+            'local': {
+                'title': 'Support room',
+                'moderators': ['foo.bar@acme.com'],
             },
 
             'server': {
@@ -192,19 +196,24 @@ class BotTests(unittest.TestCase):
         bot = ShellBot(context=context, configure=True, fan='f')
         self.assertEqual(bot.context.get('bot.on_start'), 'Start!')
         self.assertEqual(bot.context.get('bot.on_stop'), 'Stop!')
-        self.assertEqual(bot.context.get('spark.room'), 'Support room')
-        self.assertEqual(bot.context.get('spark.moderators'),
+        self.assertEqual(bot.context.get('local.title'), 'Support room')
+        self.assertEqual(bot.context.get('local.moderators'),
                          ['foo.bar@acme.com'])
-        self.assertEqual(bot.context.get('spark.participants'), [])
+        self.assertEqual(bot.context.get('local.participants'), [])
         self.assertEqual(bot.context.get('server.url'), 'http://to.nowhere/')
         self.assertEqual(bot.context.get('server.hook'), '/hook')
         self.assertEqual(bot.context.get('server.trigger'), '/trigger')
-        self.assertEqual(bot.context.get('server.binding'), '0.0.0.0')
+        self.assertEqual(bot.context.get('server.binding'), None)
         self.assertEqual(bot.context.get('server.port'), 8080)
 
     def test_configure_default(self):
 
         logging.info('*** configure/default configuration ***')
+
+        logging.debug("- default configuration is not interpreted")
+
+        bot = ShellBot(fan='f')
+        bot.space=LocalSpace(bot=bot)
 
         os.environ["BOT_ON_START"] = 'Start!'
         os.environ["BOT_ON_STOP"] = 'Stop!'
@@ -212,26 +221,24 @@ class BotTests(unittest.TestCase):
         os.environ["CHAT_ROOM_MODERATORS"] = 'foo.bar@acme.com'
         os.environ["CISCO_SPARK_BOT_TOKEN"] = '*token'
         os.environ["SERVER_URL"] = 'http://to.nowhere/'
-
-        bot = ShellBot(fan='f')
         bot.configure()
 
         self.assertEqual(bot.context.get('bot.on_start'), 'Start!')
         self.assertEqual(bot.context.get('bot.on_stop'), 'Stop!')
-        self.assertEqual(bot.context.get('spark.room'), 'Support room')
-        self.assertEqual(bot.context.get('spark.moderators'),
-                         ['foo.bar@acme.com'])
-        self.assertEqual(bot.context.get('spark.participants'), [])
 
-        self.assertEqual(bot.context.get('spark.token'), '*token')
+        self.assertEqual(bot.context.get('spark.room'), '$CHAT_ROOM_TITLE')
+        self.assertEqual(bot.context.get('spark.moderators'), '$CHAT_ROOM_MODERATORS')
+        self.assertEqual(bot.context.get('spark.participants'), None)
+        self.assertEqual(bot.context.get('spark.token'), None)
 
-        self.assertEqual(bot.context.get('server.url'), 'http://to.nowhere/')
+        self.assertEqual(bot.context.get('server.url'), '$SERVER_URL')
         self.assertEqual(bot.context.get('server.hook'), '/hook')
-        self.assertEqual(bot.context.get('server.binding'), '0.0.0.0')
+        self.assertEqual(bot.context.get('server.binding'), None)
         self.assertEqual(bot.context.get('server.port'), 8080)
 
         os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
         bot = ShellBot(settings=None, configure=True, fan='f')
+        self.assertEqual(bot.get('spark.room'), 'Notifications')
 
     def test_get(self):
 
@@ -245,25 +252,43 @@ class BotTests(unittest.TestCase):
         os.environ["SERVER_URL"] = 'http://to.nowhere/'
 
         bot = ShellBot(fan='f')
-        bot.configure()
+
+        settings = {
+
+            'bot': {
+                'on_start': '$BOT_ON_START',
+                'on_stop': '$BOT_ON_STOP',
+            },
+
+            'local': {
+                'title': '$CHAT_ROOM_TITLE',
+                'moderators': '$CHAT_ROOM_MODERATORS',
+            },
+
+            'server': {
+                'url': '$SERVER_URL',
+                'hook': '/hook',
+                'binding': '0.0.0.0',
+                'port': 8080,
+            },
+
+        }
+
+        bot.configure(settings=settings)
 
         self.assertEqual(bot.get('bot.on_start'), 'Start!')
         self.assertEqual(bot.get('bot.on_stop'), 'Stop!')
-        self.assertEqual(bot.get('spark.room'), 'Support room')
-        self.assertEqual(bot.get('spark.moderators'),
-                         ['foo.bar@acme.com'])
-        self.assertEqual(bot.get('spark.participants'), [])
+        self.assertEqual(bot.get('local.title'), 'Support room')
+        self.assertEqual(bot.get('local.moderators'),
+                         'foo.bar@acme.com')
+        self.assertEqual(bot.get('local.participants'), [])
 
-        self.assertEqual(bot.get('spark.token'), '*token')
+        self.assertEqual(bot.get('local.token'), None)
 
-        self.assertEqual(bot.get('server.url'), 'http://to.nowhere/')
+        self.assertEqual(bot.get('server.url'), '$SERVER_URL')
         self.assertEqual(bot.get('server.hook'), '/hook')
-        self.assertEqual(bot.get('server.binding'), '0.0.0.0')
+        self.assertEqual(bot.get('server.binding'), None)
         self.assertEqual(bot.get('server.port'), 8080)
-
-        os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
-        bot = ShellBot(settings=None, configure=True, fan='f')
-        self.assertEqual(bot.get('spark.room'), 'Notifications')
 
     def test_set(self):
 
@@ -531,39 +556,16 @@ class BotTests(unittest.TestCase):
             bot.dispose(['a', 'b', 'c', 'd'])
             mocked.assert_called_with(['a', 'b', 'c', 'd'])
 
-        spark_settings = {
-
-            'bot': {
-                'on_start': 'Welcome to this on-demand collaborative room',
-                'on_stop': 'Bot is now quitting the room, bye',
-            },
-
-            'spark': {
-                'room': 'On-demand collaboration',
-                'moderators': 'bernard.paques@dimensiondata.com',
-                'token': '<bot token here>',
-            },
-
-            'server': {
-                'url': 'http://why.are.here:890',
-                'trigger': '/trigger',
-                'hook': '/hook',
-                'binding': '0.0.0.0',
-                'port': 8080,
-            },
-
-        }
-
         bot.space = None
         bot.context.clear()
-        bot.configure(spark_settings)
+        bot.space=LocalSpace(bot=bot)
 
         with mock.patch.object(bot.space,
                                'delete_space',
                                return_value=None) as mocked:
 
             bot.dispose()
-            mocked.assert_called_with(title='On-demand collaboration')
+            mocked.assert_called_with(title='Collaboration space')
 
     def test_hook(self):
 
@@ -609,8 +611,19 @@ class BotTests(unittest.TestCase):
         self.assertTrue(bot.start.called)
         self.assertTrue(bot.space.work.called)
 
-        server = mock.Mock()
+        class MyServer(object):
+            def __init__(self, bot):
+                self.bot = bot
+
+            def add_route(self, route, **kwargs):
+                pass
+
+            def run(self):
+                self.bot.set("has_been_ran", True)
+
+        server = MyServer(bot=bot)
         bot.run(server=server)
+        self.assertTrue(bot.get("has_been_ran"))
 
     def test_start(self):
 
@@ -639,16 +652,7 @@ class BotTests(unittest.TestCase):
                        inbox=Queue(),
                        mouth=Queue(),
                        fan='f')
-
-        settings = {
-            'bot': {'name': 'shelly'},
-            'spark': {
-                'room': '*Test Space',
-                'moderators': 'foo.bar@acme.com',
-            },
-        }
-
-        bot.configure(settings)
+        bot.space=LocalSpace(bot=bot)
 
         bot.start()
         time.sleep(0.1)
@@ -657,127 +661,6 @@ class BotTests(unittest.TestCase):
         self.assertEqual(bot.context.get('listener.counter', 0), 0)
         self.assertEqual(bot.context.get('worker.counter', 0), 0)
         self.assertEqual(bot.context.get('speaker.counter', 0), 0)
-
-    def test_dynamic(self):
-
-        logging.info('*** dynamic test ***')
-
-        bot = ShellBot(ears=Queue(), fan='f')
-
-        settings = {
-            'bot': {'name': 'shelly'},
-            'spark': {
-                'room': '*Test Space',
-                'moderators': 'foo.bar@acme.com',
-            },
-        }
-
-        bot.configure(settings)
-
-        with mock.patch.object(bot.space,
-                               'post_message',
-                               return_value=None) as mocked:
-
-#            bot.start()
-
-            bot.ears.put('hello world')
-
-            bot.ears.put({
-                  "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-                  "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
-                  "roomType" : "group",
-                  "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
-                  "toPersonEmail" : "julie@example.com",
-                  "text" : "PROJECT UPDATE - A new project plan has been published on Box: http://box.com/s/lf5vj. The PM for this project is Mike C. and the Engineering Manager is Jane W.",
-                  "markdown" : "**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>.",
-                  "files" : [ "http://www.example.com/images/media.png" ],
-                  "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
-                  "personEmail" : "matt@example.com",
-                  "created" : "2015-10-18T14:26:16+00:00",
-                  "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
-                })
-
-            bot.ears.put({
-                  "id" : "2_2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-                  "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
-                  "roomType" : "group",
-                  "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
-                  "toPersonEmail" : "julie@example.com",
-                  "text" : "/shelly version",
-                  "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
-                  "personEmail" : "matt@example.com",
-                  "created" : "2015-10-18T14:26:16+00:00",
-                  "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
-                })
-
-            bot.ears.put({
-                  "id" : "3_2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-                  "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
-                  "roomType" : "group",
-                  "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
-                  "toPersonEmail" : "julie@example.com",
-                  "text" : "/shelly help",
-                  "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
-                  "personEmail" : "matt@example.com",
-                  "created" : "2015-10-18T14:26:16+00:00",
-                  "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
-                })
-
-            bot.ears.put({
-                  "id" : "3_2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-                  "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
-                  "roomType" : "group",
-                  "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
-                  "toPersonEmail" : "julie@example.com",
-                  "text" : "/shelly sleep 1",
-                  "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
-                  "personEmail" : "matt@example.com",
-                  "created" : "2015-10-18T14:26:16+00:00",
-                  "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
-                })
-
-            bot.ears.put({
-                  "id" : "4_2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-                  "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
-                  "roomType" : "group",
-                  "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
-                  "toPersonEmail" : "julie@example.com",
-                  "text" : "PROJECT UPDATE - A new project plan has been published on Box: http://box.com/s/lf5vj. The PM for this project is Mike C. and the Engineering Manager is Jane W.",
-                  "markdown" : "**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>.",
-                  "files" : [ "http://www.example.com/images/media.png" ],
-                  "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
-                  "personEmail" : "matt@example.com",
-                  "created" : "2015-10-18T14:26:16+00:00",
-                  "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
-                })
-
-#            time.sleep(5.0)
-#            bot.stop()
-#
-#            self.assertEqual(bot.context.get('listener.counter', 0), 6)
-#            self.assertEqual(bot.context.get('worker.counter', 0), 1)
-#            self.assertTrue(bot.context.get('speaker.counter', 0) == 5)
-
-#    def test_connect(self):
-#
-#        logging.info('*** Connect test ***')
-#
-#        settings = {
-#            'bot': {'name': 'shelly'},
-#            'spark': {
-#                'room': '*Test Space',
-#                'moderators': 'foo.bar@acme.com',
-#            },
-#        }
-#
-#        bot = ShellBot()
-#        bot.configure(settings)
-#
-#        bot.start()
-#        bot.shell.say('hello world')
-#
-#        time.sleep(5.0)
-#        bot.stop()
 
     def test_say(self):
 
@@ -858,90 +741,85 @@ class BotTests(unittest.TestCase):
 
         logging.info('***** remember')
 
-        store = MemoryStore()
-        bot = ShellBot(store=store)
+        my_bot.store = my_store
 
-        self.assertEqual(bot.recall('sca.lar'), None)
-        bot.remember('sca.lar', 'test')
-        self.assertEqual(bot.recall('sca.lar'), 'test')
+        self.assertEqual(my_bot.recall('sca.lar'), None)
+        my_bot.remember('sca.lar', 'test')
+        self.assertEqual(my_bot.recall('sca.lar'), 'test')
 
-        self.assertEqual(bot.recall('list'), None)
-        bot.remember('list', ['hello', 'world'])
-        self.assertEqual(bot.recall('list'), ['hello', 'world'])
+        self.assertEqual(my_bot.recall('list'), None)
+        my_bot.remember('list', ['hello', 'world'])
+        self.assertEqual(my_bot.recall('list'), ['hello', 'world'])
 
-        self.assertEqual(bot.recall('dict'), None)
-        bot.remember('dict', {'hello': 'world'})
-        self.assertEqual(bot.recall('dict'), {'hello': 'world'})
+        self.assertEqual(my_bot.recall('dict'), None)
+        my_bot.remember('dict', {'hello': 'world'})
+        self.assertEqual(my_bot.recall('dict'), {'hello': 'world'})
 
     def test_recall(self):
 
         logging.info('***** recall')
 
-        store = MemoryStore()
-        bot = ShellBot(store=store)
+        my_bot.store = my_store
 
         # undefined key
-        self.assertEqual(bot.recall('hello'), None)
+        self.assertEqual(my_bot.recall('hello'), None)
 
         # undefined key with default value
         whatever = 'whatever'
-        self.assertEqual(bot.recall('hello', whatever), whatever)
+        self.assertEqual(my_bot.recall('hello', whatever), whatever)
 
         # set the key
-        bot.remember('hello', 'world')
-        self.assertEqual(bot.recall('hello'), 'world')
+        my_bot.remember('hello', 'world')
+        self.assertEqual(my_bot.recall('hello'), 'world')
 
         # default value is meaningless when key has been set
-        self.assertEqual(bot.recall('hello', 'whatever'), 'world')
+        self.assertEqual(my_bot.recall('hello', 'whatever'), 'world')
 
         # except when set to None
-        bot.remember('special', None)
-        self.assertEqual(bot.recall('special', []), [])
+        my_bot.remember('special', None)
+        self.assertEqual(my_bot.recall('special', []), [])
 
     def test_forget(self):
 
         logging.info('***** forget')
 
-        store = MemoryStore()
-        bot = ShellBot(store=store)
+        my_bot.store = my_store
 
         # set the key and then forget it
-        bot.remember('hello', 'world')
-        self.assertEqual(bot.recall('hello'), 'world')
-        bot.forget('hello')
-        self.assertEqual(bot.recall('hello'), None)
+        my_bot.remember('hello', 'world')
+        self.assertEqual(my_bot.recall('hello'), 'world')
+        my_bot.forget('hello')
+        self.assertEqual(my_bot.recall('hello'), None)
 
         # set multiple keys and then forget all of them
-        bot.remember('hello', 'world')
-        bot.remember('bunny', "What'up, Doc?")
-        self.assertEqual(bot.recall('hello'), 'world')
-        self.assertEqual(bot.recall('bunny'), "What'up, Doc?")
-        bot.forget()
-        self.assertEqual(bot.recall('hello'), None)
-        self.assertEqual(bot.recall('bunny'), None)
+        my_bot.remember('hello', 'world')
+        my_bot.remember('bunny', "What'up, Doc?")
+        self.assertEqual(my_bot.recall('hello'), 'world')
+        self.assertEqual(my_bot.recall('bunny'), "What'up, Doc?")
+        my_bot.forget()
+        self.assertEqual(my_bot.recall('hello'), None)
+        self.assertEqual(my_bot.recall('bunny'), None)
 
     def test_append(self):
 
         logging.info('***** append')
 
-        store = MemoryStore()
-        bot = ShellBot(store=store)
+        my_bot.store = my_store
 
-        bot.append('famous', 'hello, world')
-        bot.append('famous', "What'up, Doc?")
-        self.assertEqual(bot.recall('famous'),
+        my_bot.append('famous', 'hello, world')
+        my_bot.append('famous', "What'up, Doc?")
+        self.assertEqual(my_bot.recall('famous'),
                          ['hello, world', "What'up, Doc?"])
 
     def test_update(self):
 
         logging.info('***** update')
 
-        store = MemoryStore()
-        bot = ShellBot(store=store)
+        my_bot.store = my_store
 
-        bot.update('input', 'PO#', '1234A')
-        bot.update('input', 'description', 'part does not fit')
-        self.assertEqual(bot.recall('input'),
+        my_bot.update('input', 'PO#', '1234A')
+        my_bot.update('input', 'description', 'part does not fit')
+        self.assertEqual(my_bot.recall('input'),
                          {u'PO#': u'1234A', u'description': u'part does not fit'})
 
 
