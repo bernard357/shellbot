@@ -639,19 +639,19 @@ class StepsTests(unittest.TestCase):
 
             step = my_running_steps[0]
             step.say(bot=my_bot)
-            mocked.assert_called_with(u'Current state: Level 1 - Initial capture of information', content=u'Current state: Level 1 - Initial capture of information')
+            mocked.assert_called_with(u'Current state: Level 1 - Initial capture of information')
 
             step = my_running_steps[1]
             step.say(bot=my_bot)
-            mocked.assert_called_with(u'Current state: Level 2 - Escalation to technical experts', content=u'Current state: Level 2 - Escalation to technical experts')
+            mocked.assert_called_with(u'Current state: Level 2 - Escalation to technical experts')
 
             step = my_running_steps[2]
             step.say(bot=my_bot)
-            mocked.assert_called_with(u'Current state: Level 3 - Escalation to decision stakeholders', content=u'Current state: Level 3 - Escalation to decision stakeholders')
+            mocked.assert_called_with(u'Current state: Level 3 - Escalation to decision stakeholders')
 
             step = my_running_steps[3]
             step.say(bot=my_bot)
-            mocked.assert_called_with(u'Current state: Terminated - Process is closed, yet conversation can continue', content=u'Current state: Terminated - Process is closed, yet conversation can continue')
+            mocked.assert_called_with(u'Current state: Terminated - Process is closed, yet conversation can continue')
 
     def test_step_trigger(self):
 

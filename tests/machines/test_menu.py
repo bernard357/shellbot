@@ -36,7 +36,7 @@ class MenuTests(unittest.TestCase):
         self.assertEqual(machine.bot, my_bot)
         self.assertEqual(machine.prefix, "machine")
         self.assertEqual(machine.question, "What's up, Doc?")
-        self.assertEqual(machine.options, [])#u"option 1", u"option 2"])
+        self.assertEqual(machine.options, [u"option 1", u"option 2"])
         self.assertEqual(machine.on_retry, machine.RETRY_MESSAGE)
         self.assertEqual(machine.on_answer, machine.ANSWER_MESSAGE)
         self.assertEqual(machine.on_cancel, machine.CANCEL_MESSAGE)
