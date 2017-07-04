@@ -3,6 +3,7 @@
 
 from bottle import request
 import unittest
+import gc
 import json
 import logging
 import mock
@@ -138,6 +139,10 @@ my_leave = {
 
 
 class SparkSpaceTests(unittest.TestCase):
+
+    def tearDown(self):
+        collected = gc.collect()
+        logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 
