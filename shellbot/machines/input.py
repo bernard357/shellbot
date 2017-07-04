@@ -35,6 +35,8 @@ class Input(Machine):
 
 
     """
+    IS_MARKDOWN = 0
+    IS_MANDATORY = 0
     RETRY_MESSAGE = u"Invalid input, please retry"
     ANSWER_MESSAGE = u"Ok, this has been noted"
     CANCEL_MESSAGE = u"Ok, forget about it"
@@ -133,13 +135,15 @@ class Input(Machine):
             on_cancel = self.CANCEL_MESSAGE
         self.on_cancel = on_cancel
 
-        if is_mandatory is not None:
-            assert int(is_mandatory) >= 0
-            self.is_mandatory = is_mandatory
-
-        if is_markdown is not None:
-            assert int(is_markdown) >= 0
-            self.is_markdown = is_markdown
+        if is_mandatory in (None, ''):
+            is_mandatory = self.IS_MANDATORY
+        assert int(is_mandatory) >= 0
+        self.is_mandatory = is_mandatory
+        
+        if is_markdown in (None, ''):
+            is_markdown = self.IS_MARKDOWN
+        assert int(is_markdown) >= 0
+        self.is_markdown = is_markdown
 
         if tip is not None:
             assert int(tip) > 0
