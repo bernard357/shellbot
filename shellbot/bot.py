@@ -501,15 +501,6 @@ class ShellBot(object):
         if self.space:
             self.space.add_moderators(*args, **kwargs)
 
-    def add_participant(self, *args, **kwargs):
-        """
-        Adds one participant to the room
-
-        This function is a proxy for the underlying space.
-        """
-        if self.space:
-            self.space.add_participant(*args, **kwargs)
-
     def add_participants(self, *args, **kwargs):
         """
         Adds participants to the room
@@ -519,23 +510,32 @@ class ShellBot(object):
         if self.space:
             self.space.add_participants(*args, **kwargs)
 
-    def del_participant(self, *args, **kwargs):
+    def add_participant(self, *args, **kwargs):
         """
-        Deletes one participant from the room
+        Adds one participant to the room
 
         This function is a proxy for the underlying space.
         """
         if self.space:
-            self.space.del_participant(*args, **kwargs)
+            self.space.add_participant(*args, **kwargs)
 
-    def del_participants(self, *args, **kwargs):
+    def remove_participants(self, *args, **kwargs):
         """
-        Deletes participants to the room
+        Removes participants to the room
 
         This function is a proxy for the underlying space.
         """
         if self.space:
-            self.space.del_participants(*args, **kwargs)
+            self.space.remove_participants(*args, **kwargs)
+
+    def remove_participant(self, *args, **kwargs):
+        """
+        Removes one participant from the room
+
+        This function is a proxy for the underlying space.
+        """
+        if self.space:
+            self.space.remove_participant(*args, **kwargs)
 
     def dispose(self, *args, **kwargs):
         """
@@ -605,10 +605,10 @@ class ShellBot(object):
 
         self.hook(server=server)
 
-        self.space.on_run()
+        self.space.on_start()
 
         if server is None:
-            self.space.work()
+            self.space.run()
 
         else:
             p = Process(target=server.run)

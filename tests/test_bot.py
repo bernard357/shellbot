@@ -16,9 +16,14 @@ from shellbot import Context, ShellBot
 from shellbot.spaces import Space, LocalSpace, SparkSpace
 from shellbot.stores import MemoryStore
 
-my_bot = ShellBot()
-my_store = MemoryStore()
-
+my_context = Context()
+my_bot = ShellBot(context=my_context,
+                  mouth=Queue(),
+                  fan='f')
+my_space = LocalSpace(bot=my_bot)
+my_bot.space = my_space
+my_store = MemoryStore(bot=my_bot)
+my_bot.store = my_store
 
 class MyCounter(object):
     def __init__(self, name='counter'):
@@ -37,6 +42,19 @@ class MyCounter(object):
 class BotTests(unittest.TestCase):
 
     def tearDown(self):
+        my_context.clear()
+        my_store.forget()
+        my_bot.registered = {
+            'bond': [],       # connected to a space
+            'dispose': [],    # space will be destroyed
+            'start': [],      # starting bot services
+            'stop': [],       # stopping bot services
+            'message': [],    # message received (with message)
+            'attachment': [], # attachment received (with attachment)
+            'join': [],       # joining a space (with person)
+            'leave': [],      # leaving a space (with person)
+            'inbound': [],    # other event received from space (with event)
+        }
         collected = gc.collect()
         logging.info("Garbage collector: collected %d objects." % (collected))
 
@@ -44,11 +62,9 @@ class BotTests(unittest.TestCase):
 
         logging.info('*** init ***')
 
-        context = Context()
+        bot = ShellBot(context=my_context)
 
-        bot = ShellBot(context=context)
-
-        self.assertEqual(bot.context, context)
+        self.assertEqual(bot.context, my_context)
         self.assertTrue(bot.space is None)
         self.assertTrue(bot.store is None)
         self.assertTrue(bot.mouth is None)
@@ -60,7 +76,7 @@ class BotTests(unittest.TestCase):
         self.assertTrue(bot.worker is not None)
         self.assertTrue(bot.listener is not None)
 
-        bot = ShellBot(context=context,
+        bot = ShellBot(context=my_context,
                        type='local',
                        mouth='m',
                        inbox='i',
@@ -68,7 +84,7 @@ class BotTests(unittest.TestCase):
                        fan='f',
                        store='s')
 
-        self.assertEqual(bot.context, context)
+        self.assertEqual(bot.context, my_context)
         self.assertTrue(bot.space is not None)
         self.assertEqual(bot.store, 's')
         self.assertEqual(bot.mouth, 'm')
@@ -80,17 +96,16 @@ class BotTests(unittest.TestCase):
         self.assertTrue(bot.worker is not None)
         self.assertTrue(bot.listener is not None)
 
-        space = Space()
-        bot = ShellBot(context=context,
-                       space=space,
+        bot = ShellBot(context=my_context,
+                       space=my_space,
                        mouth='m',
                        inbox='i',
                        ears='e',
                        fan='f',
                        store='s')
 
-        self.assertEqual(bot.context, context)
-        self.assertEqual(bot.space, space)
+        self.assertEqual(bot.context, my_context)
+        self.assertEqual(bot.space, my_space)
         self.assertEqual(bot.store, 's')
         self.assertEqual(bot.mouth, 'm')
         self.assertEqual(bot.inbox, 'i')
@@ -112,12 +127,9 @@ class BotTests(unittest.TestCase):
 
         logging.info('*** configure ***')
 
-        context = Context()
-        bot = ShellBot(context=context, fan='f')
-        bot.space=LocalSpace(bot=bot)
-        bot.configure({})
+        my_bot.configure({})
 
-        my_bot.context.clear()
+        my_context.clear()
         settings = {
 
             'bot': {
@@ -150,7 +162,7 @@ class BotTests(unittest.TestCase):
         self.assertEqual(my_bot.context.get('server.url'), 'http://to.no.where')
         self.assertEqual(my_bot.context.get('server.hook'), '/hook')
 
-        my_bot.context.clear()
+        my_context.clear()
         my_bot.configure_from_path(os.path.dirname(os.path.abspath(__file__))
                                 + '/test_settings/regular.yaml')
         self.assertEqual(my_bot.context.get('bot.on_start'),
@@ -212,32 +224,30 @@ class BotTests(unittest.TestCase):
 
         logging.debug("- default configuration is not interpreted")
 
-        bot = ShellBot(fan='f')
-        bot.space=LocalSpace(bot=bot)
-
         os.environ["BOT_ON_START"] = 'Start!'
         os.environ["BOT_ON_STOP"] = 'Stop!'
         os.environ["CHAT_ROOM_TITLE"] = 'Support room'
         os.environ["CHAT_ROOM_MODERATORS"] = 'foo.bar@acme.com'
         os.environ["CISCO_SPARK_BOT_TOKEN"] = '*token'
         os.environ["SERVER_URL"] = 'http://to.nowhere/'
-        bot.configure()
+        my_bot.configure()
 
-        self.assertEqual(bot.context.get('bot.on_start'), 'Start!')
-        self.assertEqual(bot.context.get('bot.on_stop'), 'Stop!')
+        self.assertEqual(my_bot.context.get('bot.on_start'), 'Start!')
+        self.assertEqual(my_bot.context.get('bot.on_stop'), 'Stop!')
 
-        self.assertEqual(bot.context.get('spark.room'), '$CHAT_ROOM_TITLE')
-        self.assertEqual(bot.context.get('spark.moderators'), '$CHAT_ROOM_MODERATORS')
-        self.assertEqual(bot.context.get('spark.participants'), None)
-        self.assertEqual(bot.context.get('spark.token'), None)
+        self.assertEqual(my_bot.context.get('spark.room'), '$CHAT_ROOM_TITLE')
+        self.assertEqual(my_bot.context.get('spark.moderators'), '$CHAT_ROOM_MODERATORS')
+        self.assertEqual(my_bot.context.get('spark.participants'), None)
+        self.assertEqual(my_bot.context.get('spark.token'), None)
 
-        self.assertEqual(bot.context.get('server.url'), '$SERVER_URL')
-        self.assertEqual(bot.context.get('server.hook'), '/hook')
-        self.assertEqual(bot.context.get('server.binding'), None)
-        self.assertEqual(bot.context.get('server.port'), 8080)
+        self.assertEqual(my_bot.context.get('server.url'), '$SERVER_URL')
+        self.assertEqual(my_bot.context.get('server.hook'), '/hook')
+        self.assertEqual(my_bot.context.get('server.binding'), None)
+        self.assertEqual(my_bot.context.get('server.port'), 8080)
 
+        my_context.clear()
         os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
-        bot = ShellBot(settings=None, configure=True, fan='f')
+        bot = ShellBot(context=my_context, settings=None, configure=True, fan='f')
         self.assertEqual(bot.get('spark.room'), 'Notifications')
 
     def test_get(self):
@@ -250,8 +260,6 @@ class BotTests(unittest.TestCase):
         os.environ["CHAT_ROOM_MODERATORS"] = 'foo.bar@acme.com'
         os.environ["CISCO_SPARK_BOT_TOKEN"] = '*token'
         os.environ["SERVER_URL"] = 'http://to.nowhere/'
-
-        bot = ShellBot(fan='f')
 
         settings = {
 
@@ -274,62 +282,58 @@ class BotTests(unittest.TestCase):
 
         }
 
-        bot.configure(settings=settings)
+        my_bot.configure(settings=settings)
 
-        self.assertEqual(bot.get('bot.on_start'), 'Start!')
-        self.assertEqual(bot.get('bot.on_stop'), 'Stop!')
-        self.assertEqual(bot.get('local.title'), 'Support room')
-        self.assertEqual(bot.get('local.moderators'),
+        self.assertEqual(my_bot.get('bot.on_start'), 'Start!')
+        self.assertEqual(my_bot.get('bot.on_stop'), 'Stop!')
+        self.assertEqual(my_bot.get('local.title'), 'Support room')
+        self.assertEqual(my_bot.get('local.moderators'),
                          'foo.bar@acme.com')
-        self.assertEqual(bot.get('local.participants'), [])
+        self.assertEqual(my_bot.get('local.participants'), [])
 
-        self.assertEqual(bot.get('local.token'), None)
+        self.assertEqual(my_bot.get('local.token'), None)
 
-        self.assertEqual(bot.get('server.url'), '$SERVER_URL')
-        self.assertEqual(bot.get('server.hook'), '/hook')
-        self.assertEqual(bot.get('server.binding'), None)
-        self.assertEqual(bot.get('server.port'), 8080)
+        self.assertEqual(my_bot.get('server.url'), '$SERVER_URL')
+        self.assertEqual(my_bot.get('server.hook'), '/hook')
+        self.assertEqual(my_bot.get('server.binding'), None)
+        self.assertEqual(my_bot.get('server.port'), 8080)
 
     def test_set(self):
 
         logging.info('*** set ***')
 
-        bot = ShellBot(fan='f')
+        my_bot.set('hello', 'world')
+        self.assertEqual(my_bot.get('hello'), 'world')
+        self.assertEqual(my_bot.get(u'hello'), 'world')
 
-        bot.set('hello', 'world')
-        self.assertEqual(bot.get('hello'), 'world')
-        self.assertEqual(bot.get(u'hello'), 'world')
+        my_bot.set('hello', u'wôrld')
+        self.assertEqual(my_bot.get('hello'), u'wôrld')
 
-        bot.set('hello', u'wôrld')
-        self.assertEqual(bot.get('hello'), u'wôrld')
-
-        bot.set(u'hello', u'wôrld')
-        self.assertEqual(bot.get(u'hello'), u'wôrld')
+        my_bot.set(u'hello', u'wôrld')
+        self.assertEqual(my_bot.get(u'hello'), u'wôrld')
 
     def test_register(self):
 
         logging.info('*** register ***')
 
-        bot = ShellBot(fan='f')
-
         with self.assertRaises(AssertionError):
-            bot.register('*unknown*event', lambda : 'ok')
+            my_bot.register('*unknown*event', lambda : 'ok')
         with self.assertRaises(AttributeError):
-            bot.register('bond', lambda : 'ok')
+            my_bot.register('bond', lambda : 'ok')
         with self.assertRaises(AttributeError):
-            bot.register('dispose', lambda : 'ok')
+            my_bot.register('dispose', lambda : 'ok')
 
         counter = MyCounter('counter #1')
-        bot.register('bond', counter)
-        bot.register('dispose', counter)
+        my_bot.register('bond', counter)
+        my_bot.register('dispose', counter)
         with self.assertRaises(AttributeError):
-            bot.register('start', counter)
+            my_bot.register('start', counter)
         with self.assertRaises(AttributeError):
-            bot.register('stop', counter)
+            my_bot.register('stop', counter)
         with self.assertRaises(AssertionError):
-            bot.register('*unknown*event', counter)
+            my_bot.register('*unknown*event', counter)
 
-        bot.register('bond', MyCounter('counter #2'))
+        my_bot.register('bond', MyCounter('counter #2'))
 
         class AllEvents(object):
             def on_bond(self):
@@ -352,38 +356,36 @@ class BotTests(unittest.TestCase):
                 pass
 
         all_events = AllEvents()
-        bot.register('bond', all_events)
-        bot.register('dispose', all_events)
-        bot.register('start', all_events)
-        bot.register('stop', all_events)
-        bot.register('message', all_events)
-        bot.register('attachment', all_events)
-        bot.register('join', all_events)
-        bot.register('leave', all_events)
-        bot.register('inbound', all_events)
+        my_bot.register('bond', all_events)
+        my_bot.register('dispose', all_events)
+        my_bot.register('start', all_events)
+        my_bot.register('stop', all_events)
+        my_bot.register('message', all_events)
+        my_bot.register('attachment', all_events)
+        my_bot.register('join', all_events)
+        my_bot.register('leave', all_events)
+        my_bot.register('inbound', all_events)
 
-        self.assertEqual(len(bot.registered['bond']), 3)
-        self.assertEqual(len(bot.registered['dispose']), 2)
-        self.assertEqual(len(bot.registered['start']), 1)
-        self.assertEqual(len(bot.registered['stop']), 1)
-        self.assertEqual(len(bot.registered['message']), 1)
-        self.assertEqual(len(bot.registered['attachment']), 1)
-        self.assertEqual(len(bot.registered['join']), 1)
-        self.assertEqual(len(bot.registered['leave']), 1)
-        self.assertEqual(len(bot.registered['inbound']), 1)
+        self.assertEqual(len(my_bot.registered['bond']), 3)
+        self.assertEqual(len(my_bot.registered['dispose']), 2)
+        self.assertEqual(len(my_bot.registered['start']), 1)
+        self.assertEqual(len(my_bot.registered['stop']), 1)
+        self.assertEqual(len(my_bot.registered['message']), 1)
+        self.assertEqual(len(my_bot.registered['attachment']), 1)
+        self.assertEqual(len(my_bot.registered['join']), 1)
+        self.assertEqual(len(my_bot.registered['leave']), 1)
+        self.assertEqual(len(my_bot.registered['inbound']), 1)
 
     def test_dispatch(self):
 
         logging.info('*** dispatch ***')
 
-        bot = ShellBot(fan='f')
-
         counter = MyCounter('counter #1')
-        bot.register('bond', counter)
-        bot.register('dispose', counter)
+        my_bot.register('bond', counter)
+        my_bot.register('dispose', counter)
 
-        bot.register('bond', MyCounter('counter #2'))
-        bot.register('dispose', MyCounter('counter #3'))
+        my_bot.register('bond', MyCounter('counter #2'))
+        my_bot.register('dispose', MyCounter('counter #3'))
 
         class AllEvents(object):
             def __init__(self):
@@ -413,28 +415,28 @@ class BotTests(unittest.TestCase):
                 self.events.append('inbound')
 
         all_events = AllEvents()
-        bot.register('bond', all_events)
-        bot.register('dispose', all_events)
-        bot.register('start', all_events)
-        bot.register('stop', all_events)
-        bot.register('message', all_events)
-        bot.register('attachment', all_events)
-        bot.register('join', all_events)
-        bot.register('leave', all_events)
-        bot.register('inbound', all_events)
+        my_bot.register('bond', all_events)
+        my_bot.register('dispose', all_events)
+        my_bot.register('start', all_events)
+        my_bot.register('stop', all_events)
+        my_bot.register('message', all_events)
+        my_bot.register('attachment', all_events)
+        my_bot.register('join', all_events)
+        my_bot.register('leave', all_events)
+        my_bot.register('inbound', all_events)
 
-        bot.dispatch('bond')
-        bot.dispatch('dispose')
-        bot.dispatch('start')
-        bot.dispatch('stop')
-        bot.dispatch('message', received='*void')
-        bot.dispatch('attachment', received='*void')
-        bot.dispatch('join', received='*void')
-        bot.dispatch('leave', received='*void')
-        bot.dispatch('inbound', received='*void')
+        my_bot.dispatch('bond')
+        my_bot.dispatch('dispose')
+        my_bot.dispatch('start')
+        my_bot.dispatch('stop')
+        my_bot.dispatch('message', received='*void')
+        my_bot.dispatch('attachment', received='*void')
+        my_bot.dispatch('join', received='*void')
+        my_bot.dispatch('leave', received='*void')
+        my_bot.dispatch('inbound', received='*void')
 
         with self.assertRaises(AssertionError):
-            bot.dispatch('*unknown*event')
+            my_bot.dispatch('*unknown*event')
 
         self.assertEqual(counter.count, 2)
         self.assertEqual(all_events.events,
@@ -444,49 +446,46 @@ class BotTests(unittest.TestCase):
 
         logging.info('*** load_commands ***')
 
-        bot = ShellBot(fan='f')
-        with mock.patch.object(bot.shell,
+        with mock.patch.object(my_bot.shell,
                                'load_commands',
                                return_value=None) as mocked:
-            bot.load_commands(['a', 'b', 'c', 'd'])
+            my_bot.load_commands(['a', 'b', 'c', 'd'])
             mocked.called
 
     def test_say(self):
 
         logging.info('*** say ***')
 
-        bot = ShellBot(mouth=Queue(), fan='f')
-
         message_0 = None
-        bot.say(message_0)
+        my_bot.say(message_0)
         with self.assertRaises(Exception):
-            bot.mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
         message_0 = ''
-        bot.say(message_0)
+        my_bot.say(message_0)
         with self.assertRaises(Exception):
-            bot.mouth.get_nowait()
+            my_bot.mouth.get_nowait()
 
         message_1 = 'hello'
-        bot.say(message_1)
-        self.assertEqual(bot.mouth.get(), message_1)
+        my_bot.say(message_1)
+        self.assertEqual(my_bot.mouth.get(), message_1)
 
         message_2 = 'world'
-        bot.say(message_2)
-        self.assertEqual(bot.mouth.get(), message_2)
+        my_bot.say(message_2)
+        self.assertEqual(my_bot.mouth.get(), message_2)
 
         message_3 = 'hello'
         content_3 = 'world'
-        bot.say(message_3, content=content_3)
-        item = bot.mouth.get()
+        my_bot.say(message_3, content=content_3)
+        item = my_bot.mouth.get()
         self.assertEqual(item.message, message_3)
         self.assertEqual(item.content, content_3)
         self.assertEqual(item.file, None)
 
         message_4 = "What'sup Doc?"
         file_4 = 'http://some.server/some/file'
-        bot.say(message_4, file=file_4)
-        item = bot.mouth.get()
+        my_bot.say(message_4, file=file_4)
+        item = my_bot.mouth.get()
         self.assertEqual(item.message, message_4)
         self.assertEqual(item.content, None)
         self.assertEqual(item.file, file_4)
@@ -494,8 +493,8 @@ class BotTests(unittest.TestCase):
         message_5 = 'hello'
         content_5 = 'world'
         file_5 = 'http://some.server/some/file'
-        bot.say(message_5, content=content_5, file=file_5)
-        item = bot.mouth.get()
+        my_bot.say(message_5, content=content_5, file=file_5)
+        item = my_bot.mouth.get()
         self.assertEqual(item.message, message_5)
         self.assertEqual(item.content, content_5)
         self.assertEqual(item.file, file_5)
@@ -519,110 +518,88 @@ class BotTests(unittest.TestCase):
 
         logging.info('*** add_moderators ***')
 
-        context = Context()
-        bot = ShellBot(context=context, fan='f')
-        bot.space=LocalSpace(bot=bot)
-        with mock.patch.object(bot.space,
+        with mock.patch.object(my_bot.space,
                                'add_moderators',
                                return_value=None) as mocked:
-            bot.add_moderators(['a', 'b', 'c', 'd'])
+            my_bot.add_moderators(['a', 'b', 'c', 'd'])
             mocked.assert_called_with(['a', 'b', 'c', 'd'])
 
     def test_add_participants(self):
 
         logging.info('*** add_participants ***')
 
-        context = Context()
-        bot = ShellBot(context=context, fan='f')
-        bot.space=LocalSpace(bot=bot)
-        with mock.patch.object(bot.space,
+        with mock.patch.object(my_bot.space,
                                'add_participants',
                                return_value=None) as mocked:
-            bot.add_participants(['a', 'b', 'c', 'd'])
+            my_bot.add_participants(['a', 'b', 'c', 'd'])
             mocked.assert_called_with(['a', 'b', 'c', 'd'])
 
-    def test_del_participants(self):
+    def test_remove_participants(self):
 
-        logging.info('*** del_participants ***')
+        logging.info('*** remove_participants ***')
 
-        context = Context()
-        bot = ShellBot(context=context, fan='f')
-        bot.space=LocalSpace(bot=bot)
-        with mock.patch.object(bot.space,
-                               'del_participants',
+        with mock.patch.object(my_bot.space,
+                               'remove_participants',
                                return_value=None) as mocked:
-            bot.del_participants(['a', 'b', 'c', 'd'])
+            my_bot.remove_participants(['a', 'b', 'c', 'd'])
             mocked.assert_called_with(['a', 'b', 'c', 'd'])
 
     def test_dispose(self):
 
         logging.info('*** dispose ***')
 
-        context = Context()
-        bot = ShellBot(context=context, fan='f')
-        bot.space=LocalSpace(bot=bot)
-
-        with mock.patch.object(bot.space,
+        with mock.patch.object(my_bot.space,
                                'dispose',
                                return_value=None) as mocked:
 
-            bot.dispose(['a', 'b', 'c', 'd'])
+            my_bot.dispose(['a', 'b', 'c', 'd'])
             mocked.assert_called_with(['a', 'b', 'c', 'd'])
 
-        bot.space = None
-        bot.context.clear()
-        bot.space=LocalSpace(bot=bot)
-
-        with mock.patch.object(bot.space,
+        my_context.clear()
+        with mock.patch.object(my_bot.space,
                                'delete_space',
                                return_value=None) as mocked:
 
-            bot.dispose()
+            my_bot.dispose()
             mocked.assert_called_with(title='Collaboration space')
 
     def test_hook(self):
 
         logging.info('*** hook ***')
 
-        context = Context()
-        context.set('server.url', 'http://here.you.go:123')
-        bot = ShellBot(context=context, fan='f')
-        bot.space=LocalSpace(bot=bot)
+        my_context.set('server.url', 'http://here.you.go:123')
         server = mock.Mock()
-        with mock.patch.object(bot.space,
+        with mock.patch.object(my_bot.space,
                                'register',
                                return_value=None) as mocked:
 
-            bot.hook(server=server)
+            my_bot.hook(server=server)
             self.assertFalse(mocked.called)
 
-            context.set('server.binding', '0.0.0.0')
-            bot.hook(server=server)
+            my_context.set('server.binding', '0.0.0.0')
+            my_bot.hook(server=server)
             mocked.assert_called_with(hook_url='http://here.you.go:123/hook')
 
     def test_get_hook(self):
 
         logging.info('*** get_hook ***')
 
-        context = Context()
-        context.set('server.url', 'http://here.you.go:123')
-        bot = ShellBot(context=context, fan='f')
-        bot.space=LocalSpace(bot=bot)
-        self.assertEqual(bot.get_hook(), bot.space.webhook)
+        my_context.set('server.url', 'http://here.you.go:123')
+        self.assertEqual(my_bot.get_hook(), my_bot.space.webhook)
 
     def test_run(self):
 
         logging.info('*** run ***')
 
-        bot = ShellBot(fan='f')
+        bot = ShellBot(context=my_context, fan='f')
         bot.space=LocalSpace(bot=bot)
 
         bot.start = mock.Mock()
-        bot.space.work = mock.Mock()
+        bot.space.run = mock.Mock()
 
         bot.run()
         self.assertTrue(bot.start.called)
-        self.assertTrue(bot.space.work.called)
+        self.assertTrue(bot.space.run.called)
 
         class MyServer(object):
             def __init__(self, bot):
@@ -642,7 +619,7 @@ class BotTests(unittest.TestCase):
 
         logging.info('*** start ***')
 
-        bot = ShellBot(fan='f')
+        bot = ShellBot(context=my_context, fan='f')
         bot.space=LocalSpace(bot=bot)
 
         bot.start_processes = mock.Mock()
@@ -661,27 +638,19 @@ class BotTests(unittest.TestCase):
 
         logging.info('*** static test ***')
 
-        bot = ShellBot(ears=Queue(),
-                       inbox=Queue(),
-                       mouth=Queue(),
-                       fan='f')
-        bot.space=LocalSpace(bot=bot)
-
-        bot.start()
+        my_bot.start()
         time.sleep(0.1)
-        bot.stop()
+        my_bot.stop()
 
-        self.assertEqual(bot.context.get('listener.counter', 0), 0)
-        self.assertEqual(bot.context.get('worker.counter', 0), 0)
-        self.assertEqual(bot.context.get('speaker.counter', 0), 0)
+        self.assertEqual(my_bot.context.get('listener.counter', 0), 0)
+        self.assertEqual(my_bot.context.get('worker.counter', 0), 0)
+        self.assertEqual(my_bot.context.get('speaker.counter', 0), 0)
 
     def test_say(self):
 
         logging.info('*** say ***')
 
-        context = Context()
-
-        bot = ShellBot(context=context, fan='f')
+        bot = ShellBot(context=my_context, fan='f')
 
         bot.say('')
         bot.say(None)
@@ -754,8 +723,6 @@ class BotTests(unittest.TestCase):
 
         logging.info('***** remember')
 
-        my_bot.store = my_store
-
         self.assertEqual(my_bot.recall('sca.lar'), None)
         my_bot.remember('sca.lar', 'test')
         self.assertEqual(my_bot.recall('sca.lar'), 'test')
@@ -771,8 +738,6 @@ class BotTests(unittest.TestCase):
     def test_recall(self):
 
         logging.info('***** recall')
-
-        my_bot.store = my_store
 
         # undefined key
         self.assertEqual(my_bot.recall('hello'), None)
@@ -796,8 +761,6 @@ class BotTests(unittest.TestCase):
 
         logging.info('***** forget')
 
-        my_bot.store = my_store
-
         # set the key and then forget it
         my_bot.remember('hello', 'world')
         self.assertEqual(my_bot.recall('hello'), 'world')
@@ -817,8 +780,6 @@ class BotTests(unittest.TestCase):
 
         logging.info('***** append')
 
-        my_bot.store = my_store
-
         my_bot.append('famous', 'hello, world')
         my_bot.append('famous', "What'up, Doc?")
         self.assertEqual(my_bot.recall('famous'),
@@ -827,8 +788,6 @@ class BotTests(unittest.TestCase):
     def test_update(self):
 
         logging.info('***** update')
-
-        my_bot.store = my_store
 
         my_bot.update('input', 'PO#', '1234A')
         my_bot.update('input', 'description', 'part does not fit')
