@@ -649,14 +649,12 @@ class SparkSpace(Space):
             logging.warning(u"Unable to add webhook")
             logging.exception(feedback)
 
-    def on_run(self):
+    def on_start(self):
         """
         Retrieves attributes of this bot
 
         This function queries the Cisco Spark API to remember the id of this
         bot. This is used afterwards to filter inbound messages to the shell.
-
-
 
         """
         assert self.api is not None  # connect() is prerequisite

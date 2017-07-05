@@ -208,6 +208,11 @@ class LocalSpaceTests(unittest.TestCase):
                            content="*unsupported",
                            file="*unsupported")
 
+    def test_on_start(self):
+
+        space = LocalSpace(bot=my_bot)
+        space.on_start()
+
     def test_pull(self):
 
         space = LocalSpace(bot=my_bot, input="hello world")

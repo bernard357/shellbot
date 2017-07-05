@@ -77,7 +77,7 @@ class Space(object):
             server.add_route('/hook', space.webhook)
 
             # link cloud service to this local server
-            space.run('http://my.server/hook')
+            space.register('http://my.server/hook')
 
     - Background loop - this object pulls the API in a loop, and new messages
       are pushed to the listening queue.
@@ -130,12 +130,58 @@ class Space(object):
         self.prefix = prefix
 
     def get(self, key, default=None):
+        """
+        Retrieves the value of one configuration key
+
+        :param key: name of the value
+        :type key: str
+
+        :param default: default value
+        :type default: any serializable type is accepted
+
+        :return: the actual value, or the default value, or None
+
+        This function is a proxy for underlying context. It combines
+        the configuration prefix for this instance with the provided key
+        before lookup. Typically, if the prefix is ``special_space`` and the
+        function is called with key ``id``, then the function actually looks
+        for the attribute ``special_space.id``.
+
+        Example::
+
+            id = space.get('id')
+
+        This function is safe on multiprocessing and multithreading.
+
+        """
         try:
             return self.bot.get(self.prefix+'.'+key, default)
         except AttributeError:
             return default
 
     def set(self, key, value):
+        """
+        Changes the value of one configuration key
+
+        :param key: name of the value
+        :type key: str
+
+        :param value: new value
+        :type value: any serializable type is accepted
+
+        This function is a proxy for underlying context. It combines
+        the configuration prefix for this instance with the provided key
+        before change. Typically, if the prefix is ``special_space`` and the
+        function is called with key ``title``, then the function actually sets
+        the attribute ``special_space.title``.
+
+        Example::
+
+            space.set('title', 'brand new title')
+
+        This function is safe on multiprocessing and multithreading.
+
+        """
         self.bot.set(self.prefix+'.'+key, value)
 
     def reset(self):
@@ -266,11 +312,11 @@ class Space(object):
             self.create_space(title=title, **kwargs)
 
             if moderators is None:
-                moderators = self.bot.get(self.prefix+'.moderators', [])
+                moderators = self.get('moderators', [])
             self.add_moderators(moderators)
 
             if participants is None:
-                participants = self.bot.get(self.prefix+'.participants', [])
+                participants = self.get('participants', [])
             self.add_participants(participants)
 
         self.on_bond()
@@ -625,7 +671,7 @@ class Space(object):
         """
         raise NotImplementedError()
 
-    def run(self, hook_url=None):
+    def start(self, hook_url=None):
         """
         Starts the update process
 
@@ -641,49 +687,56 @@ class Space(object):
         updates in the background.
         """
 
-        self.on_run()
+        self.on_start()
 
         if hook_url:
             self.register(hook_url=hook_url)
 
         else:
-            p = Process(target=self.work)
+            p = Process(target=self.run)
             p.daemon = True
             p.start()
             return p
 
-    def on_run(self):
+    def on_start(self):
         """
-        Adds processing to space beginning of run
+        Adds processing just before first update reception
 
         This function should be expanded in sub-class, where necessary.
 
         Example::
 
-            def on_run(self):
+            def on_start(self):
                 self.find_my_bot_id()
 
         """
         pass
 
-    def work(self):
+    def run(self):
         """
         Continuously fetches updates
 
         This function senses new items at regular intervals, and pushes them
         to the listening queue.
 
-        Processing should be handled in a separate background process, like
+        Processing is handled in a separate background process, like
         in the following example::
 
-            process = Process(target=space.work)
-            process.daemon = True
-            process.start()
+            # gets updates in the background
+            process = space.start()
+
+            ...
+
+            # wait for the end of the process
+            process.join()
 
         The recommended way for stopping the process is to change the
         parameter ``general.switch`` in the context. For example::
 
             bot.context.set('general.switch', 'off')
+
+        Note: this function should not be invoked if a webhok has been
+        configured.
 
         """
 

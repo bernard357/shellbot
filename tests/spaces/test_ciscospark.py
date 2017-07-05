@@ -626,41 +626,39 @@ class SparkSpaceTests(unittest.TestCase):
         space.register('*hook')
         self.assertTrue(space.personal_api.webhooks.create.called)
 
-    def test_on_run(self):
+    def test_on_start(self):
 
         logging.info("*** on_run")
         space = SparkSpace(bot=my_bot)
         space.api = FakeApi()
         space.personal_api = FakeApi()
-        space.on_run()
+        space.on_start()
         self.assertTrue(space.api.people.me.called)
         self.assertTrue(space.personal_api.people.me.called)
 
         if cisco_spark_bearer is not None:
 
-            logging.info("*** on_run API")
+            logging.info("*** on_start API")
 
             space = SparkSpace(bot=my_bot, bearer=cisco_spark_bearer)
             space.connect()
-            item = space.on_run()
+            item = space.on_start()
             self.assertTrue(my_bot.context.get('bot.id') > 20)
 
-    def test_work(self):
+    def test_run(self):
 
-        logging.info("*** work")
+        logging.info("*** run")
         my_bot.context = Context()
         space = SparkSpace(bot=my_bot)
         space.api = FakeApi(rooms=[FakeRoom()])
+        space.personal_api = FakeApi(rooms=[FakeRoom()])
         space.bond(title='*title')
 
         space.PULL_INTERVAL = 0.001
         mocked = mock.Mock(return_value=[])
         space.pull = mocked
 
-        p = Process(target=space.work)
-        p.daemon = True
-        p.start()
-
+        p = space.start()
         p.join(0.01)
         if p.is_alive():
             logging.info('Stopping puller')

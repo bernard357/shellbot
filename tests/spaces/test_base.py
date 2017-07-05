@@ -38,6 +38,7 @@ my_bot = ShellBot()
 class SpaceTests(unittest.TestCase):
 
     def tearDown(self):
+        my_bot.context.clear()
         collected = gc.collect()
         logging.info("Garbage collector: collected %d objects." % (collected))
 
@@ -45,11 +46,13 @@ class SpaceTests(unittest.TestCase):
 
         logging.info("*** init")
 
+        logging.debug("- default init")
         space = Space(bot=my_bot)
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
 
+        logging.debug("- unknown parameter")
         space = Space(bot=my_bot, weird='w')
         with self.assertRaises(AttributeError):
             self.assertEqual(space.weird, 'w')
@@ -57,12 +60,21 @@ class SpaceTests(unittest.TestCase):
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
 
+        logging.debug("- extended parameters")
         class ExSpace(Space):
-            def on_init(self, ex_token=None, ex_ears=None, **kwargs):
+            def on_init(self,
+                        prefix='space',
+                        ex_token=None,
+                        ex_ears=None,
+                        **kwargs):
+                self.prefix = prefix
                 self.token = ex_token
                 self.ears = ex_ears
 
-        space = ExSpace(ex_token='*token', ex_ears='e', ex_unknown='*weird')
+        space = ExSpace(bot=my_bot,
+                        ex_token='*token',
+                        ex_ears='e',
+                        ex_unknown='*weird')
         self.assertEqual(space.token, '*token')
         self.assertEqual(space.ears, 'e')
         with self.assertRaises(AttributeError):
@@ -70,17 +82,7 @@ class SpaceTests(unittest.TestCase):
         with self.assertRaises(AttributeError):
             self.assertTrue(space.ex_unknown is not None)
 
-        space = LocalSpace(bot=my_bot, prefix='my.space')
-        space.configure({
-            'not.my.space': {
-                'title': 'Another title',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
-                'participants':
-                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
-            }
-        })
-
+        logging.debug("- initialised via configuration")
         space = LocalSpace(bot=my_bot, prefix='my.space')
         space.configure({
             'my.space': {
@@ -94,6 +96,38 @@ class SpaceTests(unittest.TestCase):
         self.assertEqual(space.prefix, 'my.space')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
+
+    def test_get(self):
+
+        logging.info("*** get")
+
+        space = Space(bot=my_bot)
+        self.assertEqual(space.prefix, 'space')
+        self.assertEqual(space.get('id'), None)
+        self.assertEqual(space.get('id', '*default'), '*default')
+        self.assertEqual(space.get('title'), None)
+        self.assertEqual(space.get('title', '*default'), '*default')
+        self.assertEqual(space.get('_other'), None)
+        self.assertEqual(space.get('_other', '*default'), '*default')
+
+    def test_set(self):
+
+        logging.info("*** set")
+
+        space = Space(bot=my_bot)
+        space.prefix = 'a_special_space'
+
+        space.set('id', '*id')
+        self.assertEqual(my_bot.get('a_special_space.id'), '*id')
+        self.assertEqual(space.get('id'), '*id')
+
+        space.set('title', '*title')
+        self.assertEqual(my_bot.get('a_special_space.title'), '*title')
+        self.assertEqual(space.get('title'), '*title')
+
+        space.set('_other', ['a', 'b', 'c'])
+        self.assertEqual(my_bot.get('a_special_space._other'), ['a', 'b', 'c'])
+        self.assertEqual(space.get('_other'), ['a', 'b', 'c'])
 
     def test_reset(self):
 
@@ -109,9 +143,13 @@ class SpaceTests(unittest.TestCase):
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
         self.assertEqual(space._my_counter, 123)
 
-        my_bot.set('space.id', '*id')
+        space.set('id', '*id')
         space.title = '*title'
         space._my_counter = 456
+
+        self.assertEqual(space.id, '*id')
+        self.assertEqual(space.title, '*title')
+        self.assertEqual(space._my_counter, 456)
 
         space.reset()
 
@@ -151,12 +189,12 @@ class SpaceTests(unittest.TestCase):
             def configured_title(self):
                 return self.bot.context.get('spark.room', self.DEFAULT_SPACE_TITLE)
 
-        space = ExSpace(bot=my_bot)
+        space = Space(bot=my_bot, prefix='alien')
 
         self.assertEqual(space.configured_title(),
                          space.DEFAULT_SPACE_TITLE)
 
-        settings = {'spark.room': 'my room'}
+        settings = {'alien.title': 'my room'}
 
         space.configure(settings=settings, do_check=False)
         self.assertEqual(space.configured_title(), 'my room')
@@ -181,7 +219,6 @@ class SpaceTests(unittest.TestCase):
         space.create_space = mock.Mock()
         space.add_moderator = mock.Mock()
         space.add_participant = mock.Mock()
-        space.del_participant = mock.Mock()
 
         space.bond(title='*title',
                    moderators=['who', 'knows'],
@@ -191,12 +228,10 @@ class SpaceTests(unittest.TestCase):
         space.create_space.assert_called_with(title='*title')
         space.add_moderator.assert_called_with('knows')
         space.add_participant.assert_called_with('me')
-        space.del_participant('foo.bar@acme.com')
         self.assertTrue(space.bonded)
 
-
         space = ExSpace(bot=my_bot)
-        space.configure({
+        space.configure(settings={
             'space': {
                 'title': 'Another title',
                 'moderators':
@@ -210,21 +245,19 @@ class SpaceTests(unittest.TestCase):
         space.add_moderator = mock.Mock()
         space.add_participant = mock.Mock()
         space.del_participant = mock.Mock()
-
         space.bond()
 
         space.lookup_space.assert_called_with(title='Another title')
         space.create_space.assert_called_with(title='Another title')
         space.add_moderator.assert_called_with('joe.bar@corporation.com')
         space.add_participant.assert_called_with('bob.nard@support.tv')
-        space.del_participant('bob.nard@support.tv')
         self.assertTrue(space.bonded)
 
     def test_is_ready(self):
 
         logging.info("*** is_ready")
 
-        space = Space(bot=my_bot)
+        space = Space(bot=my_bot, prefix='a_prefix')
         self.assertFalse(space.is_ready)
 
         space.set('id', '*id')
@@ -396,26 +429,26 @@ class SpaceTests(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             space.register(hook_url='http://no.where/')
 
-    def test_run(self):
+    def test_start(self):
 
-        logging.info("*** run")
+        logging.info("*** start")
 
         space = Space(bot=my_bot)
         space.register = mock.Mock()
         space.pull = mock.Mock()
-        space.run(hook_url='http:/who.knows/')
+        space.start(hook_url='http:/who.knows/')
         space.register.assert_called_with(hook_url='http:/who.knows/')
         self.assertFalse(space.pull.called)
 
         class ExSpace(Space):
-            def on_run(self):
+            def on_start(self):
                 self._bot_id = 123
 
         space = ExSpace(bot=my_bot)
         space.register = mock.Mock()
         space.pull = mock.Mock()
         space.PULL_INTERVAL = 0.01
-        space.run()
+        space.start()
         time.sleep(0.4)
         space.bot.context.set('general.switch', 'off')
         time.sleep(0.1)
@@ -423,18 +456,18 @@ class SpaceTests(unittest.TestCase):
         self.assertTrue(space.bot.context.get('puller.counter') > 2)
         self.assertEqual(space._bot_id, 123)
 
-    def test_work(self):
+    def test_run(self):
 
-        logging.info("*** work")
+        logging.info("*** run")
 
         space = Space(bot=my_bot)
         space.pull = mock.Mock(side_effect=Exception('TEST'))
-        space.work()
+        space.run()
         self.assertEqual(space.bot.context.get('puller.counter'), 0)
 
         space = Space(bot=my_bot)
         space.pull = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
-        space.work()
+        space.run()
         self.assertEqual(space.bot.context.get('puller.counter'), 0)
 
     def test_pull(self):
