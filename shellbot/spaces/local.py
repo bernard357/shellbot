@@ -311,6 +311,6 @@ class LocalSpace(Space):
         """
         message = Message(item)
         message.from_id = '*user'
-        message.mentioned_ids = []
+        message.mentioned_ids = [self.bot.context.get('bot.id')]
 
         queue.put(str(message))
