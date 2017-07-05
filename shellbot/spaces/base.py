@@ -438,6 +438,37 @@ class Space(object):
         """
         raise NotImplementedError()
 
+    def del_participants(self, persons=[]):
+        """
+        Deletes multiple participants
+
+        :param persons: e-mail addresses of persons to delete
+        :type persons: list of str
+
+        """
+        logging.info(u"Deleting participants")
+        for person in persons:
+            logging.info(u"- {}".format(person))
+            self.del_participant(person)
+
+    def del_participant(self, person):
+        """
+        Deletes one participant
+
+        :param person: e-mail address of the person to delete
+        :type person: str
+
+        This function should be implemented in sub-class.
+
+        Example::
+
+            def del_participant(self, person):
+                self.api.memberships.delete(id=self.id, person=person)
+
+        """
+        raise NotImplementedError()
+
+
     def dispose(self, **kwargs):
         """
         Disposes all resources
@@ -459,6 +490,46 @@ class Space(object):
 
         self.delete_space(title=title, **kwargs)
         self.reset()
+
+    def archive(self, **kwargs):
+        """
+        Archives all resources
+
+        This function is useful to clean environment.
+
+        >>>space.bond(title="Working Space")
+        ...
+        >>>space.archive()
+
+        After a call to this function, ``bond()`` has to be invoked to
+        return to normal mode of operation.
+        """
+
+        if self.title in (None, '', self.DEFAULT_SPACE_TITLE):
+            title = self.configured_title()
+        else:
+            title = self.title
+
+        self.archive_space(title=title, **kwargs)
+
+    def archive_space(self, title=None, **kwargs):
+        """
+        Archives a space
+
+        :param title: title of the space to be archived (optional)
+        :type title: str
+
+        >>>space.archive_space("Obsolete Space")
+
+        This function should be implemented in sub-class.
+
+        Example::
+
+            def archive_space(self, title=None, **kwargs):
+                self.api.rooms.delete(title=title)
+
+        """
+        raise NotImplementedError()
 
     def delete_space(self, title=None, **kwargs):
         """
