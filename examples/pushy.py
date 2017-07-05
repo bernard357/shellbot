@@ -100,7 +100,7 @@ import logging
 from multiprocessing import Process, Queue
 import time
 
-from shellbot import ShellBot, Context, Server, Notify, Wrap
+from shellbot import ShellBot, Context, Server, Notifier, Wrapper
 Context.set_logger()
 
 #
@@ -191,12 +191,12 @@ queue = Queue()
 
 server = Server(context=context, check=True)
 
-server.add_route(Notify(queue=queue,
-                        notification='click',
-                        route=context.get('server.trigger')))
+server.add_route(Notifier(queue=queue,
+                          notification='click',
+                          route=context.get('server.trigger')))
 
-server.add_route(Wrap(callable=bot.get_hook(),
-                      route=context.get('server.hook')))
+server.add_route(Wrapper(callable=bot.get_hook(),
+                         route=context.get('server.hook')))
 
 #
 # delay the creation of a room until we receive some trigger
@@ -248,7 +248,7 @@ class Trigger(object):
         if counter == 1:
             self.bot.bond()
 #            self.bot.bond(reset=True)
-            self.bot.space.on_run()
+            self.bot.space.on_start()
             self.bot.hook()
 
         else:
