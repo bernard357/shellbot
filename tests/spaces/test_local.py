@@ -188,6 +188,14 @@ class LocalSpaceTests(unittest.TestCase):
         space.add_participant(person='bob@acme.com')
         self.assertEqual(space.participants, ['bob@acme.com'])
 
+    def test_remove_participant(self):
+
+        space = LocalSpace(bot=my_bot)
+        space.add_participant(person='bob@acme.com')
+        self.assertEqual(space.participants, ['bob@acme.com'])
+        space.remove_participant(person='bob@acme.com')
+        self.assertEqual(space.participants, [])
+
     def test_delete_space(self):
 
         space = LocalSpace(bot=my_bot)

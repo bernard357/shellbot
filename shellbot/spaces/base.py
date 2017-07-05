@@ -438,22 +438,22 @@ class Space(object):
         """
         raise NotImplementedError()
 
-    def del_participants(self, persons=[]):
+    def remove_participants(self, persons=[]):
         """
-        Deletes multiple participants
+        Removes multiple participants
 
         :param persons: e-mail addresses of persons to delete
         :type persons: list of str
 
         """
-        logging.info(u"Deleting participants")
+        logging.info(u"Removing participants")
         for person in persons:
             logging.info(u"- {}".format(person))
-            self.del_participant(person)
+            self.remove_participant(person)
 
-    def del_participant(self, person):
+    def remove_participant(self, person):
         """
-        Deletes one participant
+        Removes one participant
 
         :param person: e-mail address of the person to delete
         :type person: str
@@ -462,18 +462,18 @@ class Space(object):
 
         Example::
 
-            def del_participant(self, person):
+            def remove_participant(self, person):
                 self.api.memberships.delete(id=self.id, person=person)
 
         """
         raise NotImplementedError()
 
-
     def dispose(self, **kwargs):
         """
         Disposes all resources
 
-        This function is useful to restart a clean environment.
+        This function deletes the underlying space in the cloud and reset
+        this instance. It is useful to restart a clean environment.
 
         >>>space.bond(title="Working Space")
         ...
@@ -538,6 +538,12 @@ class Space(object):
         :param title: title of the space to be deleted (optional)
         :type title: str
 
+        After a call to this function the underlying space does not appear
+        anymore in the list of available resources. This can be implemented in
+        the back-end either by actual deletion of resources, or by archiving
+        the space. In the second scenario, the space could be restored at a
+        later stage if needed.
+
         >>>space.delete_space("Obsolete Space")
 
         This function should be implemented in sub-class.
@@ -561,7 +567,7 @@ class Space(object):
         :param text: message in plain text
         :type text: str
 
-        :param content: rich format, such as MArkdown or HTML
+        :param content: rich format, such as Markdown or HTML
         :type content: str
 
         :param file: URL or local path for an attachment

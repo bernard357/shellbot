@@ -69,6 +69,7 @@ class FakeApi(object):
 
         self.memberships = Fake()
         self.memberships.create = mock.Mock()
+        self.memberships.delete = mock.Mock()
 
         self.messages = Fake()
         self.messages.list = mock.Mock(return_value=messages)
@@ -451,7 +452,7 @@ class SparkSpaceTests(unittest.TestCase):
 
             self.assertFalse(flag)
 
-    def test_create_space_mock(self):
+    def test_create_space(self):
 
         logging.info("*** create_space")
 
@@ -466,7 +467,7 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertEqual(space.title, '*title')
         self.assertEqual(space.id, '*id')
 
-    def test_get_team_mock(self):
+    def test_get_team(self):
 
         logging.info("*** get_team")
 
@@ -534,7 +535,18 @@ class SparkSpaceTests(unittest.TestCase):
 
         self.assertTrue(space.api.memberships.create.called)
 
-    def test_delete_space_mock(self):
+    def test_remove_participant(self):
+
+        logging.info("*** remove_participant")
+        space = SparkSpace(bot=my_bot)
+        space.api = FakeApi()
+        space.set('id', '*id')
+
+        space.remove_participant(person='foo.bar@acme.com')
+
+        self.assertTrue(space.api.memberships.delete.called)
+
+    def test_delete_space(self):
 
         logging.info("*** delete_space")
         space = SparkSpace(bot=my_bot)
@@ -570,7 +582,7 @@ class SparkSpaceTests(unittest.TestCase):
         space.delete_space()
         self.assertFalse(space.api.rooms.delete.called)
 
-    def test_dispose_mock(self):
+    def test_dispose(self):
 
         logging.info("*** dispose")
         space = SparkSpace(bot=my_bot)
@@ -581,7 +593,7 @@ class SparkSpaceTests(unittest.TestCase):
 
         self.assertTrue(space.api.rooms.delete.called)
 
-    def test_post_message_mock(self):
+    def test_post_message(self):
 
         logging.info("*** post_message")
         space = SparkSpace(bot=my_bot)
@@ -603,7 +615,7 @@ class SparkSpaceTests(unittest.TestCase):
         except IOError:
             pass
 
-    def test_register_mock(self):
+    def test_register(self):
 
         logging.info("*** register")
         space = SparkSpace(bot=my_bot)

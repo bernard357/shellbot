@@ -477,11 +477,11 @@ class SparkSpace(Space):
             logging.warning(u"Unable to add participant '{}'".format(person))
             logging.exception(feedback)
 
-    def del_participant(self, person):
+    def remove_participant(self, person):
         """
-        Deletes a participant
+        Removes a participant
 
-        :param person: e-mail address of the person to delete
+        :param person: e-mail address of the person to remove
         :type person: str
 
         """
@@ -493,7 +493,7 @@ class SparkSpace(Space):
                                         personEmail=person)
 
         except Exception as feedback:
-            logging.warning(u"Unable to deleete participant '{}'".format(person))
+            logging.warning(u"Unable to remove participant '{}'".format(person))
             logging.exception(feedback)
 
     def delete_space(self, title=None, **kwargs):

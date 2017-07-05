@@ -168,7 +168,7 @@ class SpaceTests(unittest.TestCase):
         space = Space(bot=my_bot)
         space.connect()
 
-    def test_bond_mock(self):
+    def test_bond(self):
 
         logging.info("*** bond")
 
@@ -304,6 +304,33 @@ class SpaceTests(unittest.TestCase):
         space = Space(bot=my_bot)
         with self.assertRaises(NotImplementedError):
             space.add_participant(person='alice@acme.com')
+
+    def test_remove_participants(self):
+
+        logging.info("*** remove_participants")
+
+        space = Space(bot=my_bot)
+        with mock.patch.object(space,
+                               'remove_participant') as mocked:
+
+            space.remove_participants(persons=[])
+            self.assertFalse(mocked.called)
+
+        space = Space(bot=my_bot)
+        with mock.patch.object(space,
+                               'remove_participant') as mocked:
+
+            space.remove_participants(persons=['foo.bar@acme.com'])
+
+            mocked.assert_called_with('foo.bar@acme.com')
+
+    def test_remove_participant(self):
+
+        logging.info("*** remove_participant")
+
+        space = Space(bot=my_bot)
+        with self.assertRaises(NotImplementedError):
+            space.remove_participant(person='alice@acme.com')
 
     def test_dispose(self):
 

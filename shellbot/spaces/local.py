@@ -217,15 +217,15 @@ class LocalSpace(Space):
         """
         self.participants.append(person)
 
-    def del_participant(self, person):
+    def remove_participant(self, person):
         """
-        Adds one participant
+        Removes one participant
 
-        :param person: e-mail address of the person to add
+        :param person: e-mail address of the person to remove
         :type person: str
 
         """
-        self.participants.forget(person)
+        self.participants.remove(person)
 
     def delete_space(self, title, **kwargs):
         """
