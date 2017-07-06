@@ -41,10 +41,13 @@ class BaseTests(unittest.TestCase):
             def on_init(self, more=None, **kwargs):
                 self.more = more
 
-        u = MyUpdater(more='more', weird='weird')
+        u = MyUpdater(bot=mock.Mock(),
+                      more='more',
+                      weird='weird')
         self.assertEqual(u.more, 'more')
         with self.assertRaises(AttributeError):
             self.assertEqual(u.weird, 'weird')
+        self.assertTrue(u.bot.subscribe.called)
 
     def test_on_bond(self):
 

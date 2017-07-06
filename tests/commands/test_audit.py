@@ -139,7 +139,7 @@ class AuditTests(unittest.TestCase):
         c = Audit(my_bot)
         c.bot = mock.Mock()
         c.on_init()
-        self.assertTrue(c.bot.register.called)
+        self.assertTrue(c.bot.subscribe.called)
 
     def test_on_start(self):
 

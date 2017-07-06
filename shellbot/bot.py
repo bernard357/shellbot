@@ -18,6 +18,7 @@
 
 import logging
 from multiprocessing import Process, Queue
+from six import string_types
 import sys
 import time
 import yaml
@@ -87,7 +88,6 @@ class ShellBot(object):
             bot = ShellBot()
             bot.configure()
             bot.use_space(id=space_id)
-            bot.run()
             return bot
 
     A bot is an extensible set of components that share the same context,
@@ -167,7 +167,7 @@ class ShellBot(object):
         if command:
             self.load_command(command)
 
-        self.registered = {
+        self.subscribed = {
             'bond': [],       # connected to a space
             'dispose': [],    # space will be destroyed
             'start': [],      # starting bot services
@@ -333,7 +333,7 @@ class ShellBot(object):
         """
         self.context.set(key, value)
 
-    def register(self, event, instance):
+    def subscribe(self, event, instance):
         """
         Registers an object to process an event
 
@@ -346,13 +346,11 @@ class ShellBot(object):
         This function is used to propagate bot events to any module
         that may need it.
 
-        Example::
+        On each event, the bot will look for a related member function
+        in the target instance and call it. For example for the event
+        'start' it will look for the member function 'on_start', etc.
 
-            def on_init(self):
-                self.bot.register('bond', self)  # call self.on_bond()
-                self.bot.register('dispose', self) # call self.on_dispose()
-
-        Following events can be registered:
+        Following standard events can be subscribed:
 
         - 'bond' - when the bot has connected to a chat space
 
@@ -366,34 +364,51 @@ class ShellBot(object):
 
         - 'leave' - when a person is leaving a space
 
-        On each event, the bot will look for a related member function
-        in the target instance and call it. For example for the event
-        'start' it will look for the member function 'on_start', etc.
+        Example::
+
+            def on_init(self):
+                self.bot.subscribe('bond', self)  # call self.on_bond()
+                self.bot.subscribe('dispose', self) # call self.on_dispose()
+
+        If the function is called with an unknown label, then a new list
+        of subscribers will be created for this event. Therefore the bot
+        can be used for the dispatching of any custom event.
+
+        Example::
+
+            self.bot.subscribe('input', processor)  # for processor.on_input()
+            ...
+            received = 'a line of text'
+            self.bot.dispatch('input', received)
 
         Registration uses weakref so that it affords the unattended deletion
-        of registered objects.
+        of subscribed objects.
+
         """
         logging.debug(u"Registering to '{}' dispatch".format(event))
 
-        assert event in self.registered.keys()  #  avoid unknown event type
+        assert event not in (None, '')
+        assert isinstance(event, string_types)
+        if event not in self.subscribed.keys():
+            self.subscribed[event] = []
 
         name = 'on_' + event
         callback = getattr(instance, name)
-        assert callable(callback) # ensure the event is supported
+        assert callable(callback)  # ensure the event is supported
 
         handle = weakref.proxy(instance)
-        self.registered[event].append(handle)
+        self.subscribed[event].append(handle)
 
-        if len(self.registered[event]) > 1:
-            logging.debug(u"- {} objects registered to '{}'".format(
-                len(self.registered[event]), event))
+        if len(self.subscribed[event]) > 1:
+            logging.debug(u"- {} objects subscribed to '{}'".format(
+                len(self.subscribed[event]), event))
 
         else:
-            logging.debug(u"- 1 object registered to '{}'".format(event))
+            logging.debug(u"- 1 object subscribed to '{}'".format(event))
 
     def dispatch(self, event, **kwargs):
         """
-        Triggers objects that have registered to some event
+        Triggers objects that have subscribed to some event
 
         :param event: label of the event
         :type event: str
@@ -403,20 +418,20 @@ class ShellBot(object):
             def on_bond(self):
                 self.dispatch('bond')
 
-        For each registered object, the bot will look for a related member
+        For each subscribed object, the bot will look for a related member
         function and call it. For example for the event
         'bond' it will look for the member function 'on_bond', etc.
 
         Dispatch uses weakref so that it affords the unattended deletion
-        of registered objects.
+        of subscribed objects.
         """
-        assert event in self.registered.keys()  #  avoid unknown event type
+        assert event in self.subscribed.keys()  # avoid unknown event type
 
-        if len(self.registered[event]) > 1:
+        if len(self.subscribed[event]) > 1:
             logging.debug(u"Dispatching '{}' to {} objects".format(
-                event, len(self.registered[event])))
+                event, len(self.subscribed[event])))
 
-        elif len(self.registered[event]) > 0:
+        elif len(self.subscribed[event]) > 0:
             logging.debug(u"Dispatching '{}' to 1 object".format(event))
 
         else:
@@ -424,12 +439,12 @@ class ShellBot(object):
             return
 
         name = 'on_' + event
-        for handle in self.registered[event]:
+        for handle in self.subscribed[event]:
             try:
                 callback = getattr(handle, name)
                 callback(**kwargs)
             except ReferenceError:
-                logging.debug(u"- registered object no longer exists")
+                logging.debug(u"- subscribed object no longer exists")
 
     @property
     def name(self):

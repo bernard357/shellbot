@@ -151,7 +151,7 @@ class Audit(Command):
         """
         Registers callback from bot
         """
-        self.bot.register('start', self)
+        self.bot.subscribe('start', self)
 
     def on_start(self):
         """

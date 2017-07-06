@@ -44,7 +44,7 @@ class BotTests(unittest.TestCase):
     def tearDown(self):
         my_context.clear()
         my_store.forget()
-        my_bot.registered = {
+        my_bot.subscribed = {
             'bond': [],       # connected to a space
             'dispose': [],    # space will be destroyed
             'start': [],      # starting bot services
@@ -312,28 +312,34 @@ class BotTests(unittest.TestCase):
         my_bot.set(u'hello', u'wôrld')
         self.assertEqual(my_bot.get(u'hello'), u'wôrld')
 
-    def test_register(self):
+    def test_subscribe(self):
 
-        logging.info('*** register ***')
+        logging.info('*** subscribe ***')
 
-        with self.assertRaises(AssertionError):
-            my_bot.register('*unknown*event', lambda : 'ok')
         with self.assertRaises(AttributeError):
-            my_bot.register('bond', lambda : 'ok')
+            my_bot.subscribe('*unknown*event', lambda : 'ok')
         with self.assertRaises(AttributeError):
-            my_bot.register('dispose', lambda : 'ok')
+            my_bot.subscribe('bond', lambda : 'ok')
+        with self.assertRaises(AttributeError):
+            my_bot.subscribe('dispose', lambda : 'ok')
 
         counter = MyCounter('counter #1')
-        my_bot.register('bond', counter)
-        my_bot.register('dispose', counter)
-        with self.assertRaises(AttributeError):
-            my_bot.register('start', counter)
-        with self.assertRaises(AttributeError):
-            my_bot.register('stop', counter)
         with self.assertRaises(AssertionError):
-            my_bot.register('*unknown*event', counter)
+            my_bot.subscribe(None, counter)
+        with self.assertRaises(AssertionError):
+            my_bot.subscribe('', counter)
+        with self.assertRaises(AssertionError):
+            my_bot.subscribe(1.2, counter)
+        my_bot.subscribe('bond', counter)
+        my_bot.subscribe('dispose', counter)
+        with self.assertRaises(AttributeError):
+            my_bot.subscribe('start', counter)
+        with self.assertRaises(AttributeError):
+            my_bot.subscribe('stop', counter)
+        with self.assertRaises(AttributeError):
+            my_bot.subscribe('*unknown*event', counter)
 
-        my_bot.register('bond', MyCounter('counter #2'))
+        my_bot.subscribe('bond', MyCounter('counter #2'))
 
         class AllEvents(object):
             def on_bond(self):
@@ -354,38 +360,42 @@ class BotTests(unittest.TestCase):
                 pass
             def on_inbound(self):
                 pass
+            def on_some_custom_event(self):
+                pass
 
         all_events = AllEvents()
-        my_bot.register('bond', all_events)
-        my_bot.register('dispose', all_events)
-        my_bot.register('start', all_events)
-        my_bot.register('stop', all_events)
-        my_bot.register('message', all_events)
-        my_bot.register('attachment', all_events)
-        my_bot.register('join', all_events)
-        my_bot.register('leave', all_events)
-        my_bot.register('inbound', all_events)
+        my_bot.subscribe('bond', all_events)
+        my_bot.subscribe('dispose', all_events)
+        my_bot.subscribe('start', all_events)
+        my_bot.subscribe('stop', all_events)
+        my_bot.subscribe('message', all_events)
+        my_bot.subscribe('attachment', all_events)
+        my_bot.subscribe('join', all_events)
+        my_bot.subscribe('leave', all_events)
+        my_bot.subscribe('inbound', all_events)
+        my_bot.subscribe('some_custom_event', all_events)
 
-        self.assertEqual(len(my_bot.registered['bond']), 3)
-        self.assertEqual(len(my_bot.registered['dispose']), 2)
-        self.assertEqual(len(my_bot.registered['start']), 1)
-        self.assertEqual(len(my_bot.registered['stop']), 1)
-        self.assertEqual(len(my_bot.registered['message']), 1)
-        self.assertEqual(len(my_bot.registered['attachment']), 1)
-        self.assertEqual(len(my_bot.registered['join']), 1)
-        self.assertEqual(len(my_bot.registered['leave']), 1)
-        self.assertEqual(len(my_bot.registered['inbound']), 1)
+        self.assertEqual(len(my_bot.subscribed['bond']), 3)
+        self.assertEqual(len(my_bot.subscribed['dispose']), 2)
+        self.assertEqual(len(my_bot.subscribed['start']), 1)
+        self.assertEqual(len(my_bot.subscribed['stop']), 1)
+        self.assertEqual(len(my_bot.subscribed['message']), 1)
+        self.assertEqual(len(my_bot.subscribed['attachment']), 1)
+        self.assertEqual(len(my_bot.subscribed['join']), 1)
+        self.assertEqual(len(my_bot.subscribed['leave']), 1)
+        self.assertEqual(len(my_bot.subscribed['inbound']), 1)
+        self.assertEqual(len(my_bot.subscribed['some_custom_event']), 1)
 
     def test_dispatch(self):
 
         logging.info('*** dispatch ***')
 
         counter = MyCounter('counter #1')
-        my_bot.register('bond', counter)
-        my_bot.register('dispose', counter)
+        my_bot.subscribe('bond', counter)
+        my_bot.subscribe('dispose', counter)
 
-        my_bot.register('bond', MyCounter('counter #2'))
-        my_bot.register('dispose', MyCounter('counter #3'))
+        my_bot.subscribe('bond', MyCounter('counter #2'))
+        my_bot.subscribe('dispose', MyCounter('counter #3'))
 
         class AllEvents(object):
             def __init__(self):
@@ -413,17 +423,21 @@ class BotTests(unittest.TestCase):
             def on_inbound(self, received):
                 assert received == '*void'
                 self.events.append('inbound')
+            def on_some_custom_event(self, data):
+                assert data == '*data'
+                self.events.append('some_custom_event')
 
         all_events = AllEvents()
-        my_bot.register('bond', all_events)
-        my_bot.register('dispose', all_events)
-        my_bot.register('start', all_events)
-        my_bot.register('stop', all_events)
-        my_bot.register('message', all_events)
-        my_bot.register('attachment', all_events)
-        my_bot.register('join', all_events)
-        my_bot.register('leave', all_events)
-        my_bot.register('inbound', all_events)
+        my_bot.subscribe('bond', all_events)
+        my_bot.subscribe('dispose', all_events)
+        my_bot.subscribe('start', all_events)
+        my_bot.subscribe('stop', all_events)
+        my_bot.subscribe('message', all_events)
+        my_bot.subscribe('attachment', all_events)
+        my_bot.subscribe('join', all_events)
+        my_bot.subscribe('leave', all_events)
+        my_bot.subscribe('inbound', all_events)
+        my_bot.subscribe('some_custom_event', all_events)
 
         my_bot.dispatch('bond')
         my_bot.dispatch('dispose')
@@ -434,13 +448,23 @@ class BotTests(unittest.TestCase):
         my_bot.dispatch('join', received='*void')
         my_bot.dispatch('leave', received='*void')
         my_bot.dispatch('inbound', received='*void')
+        my_bot.dispatch('some_custom_event', data='*data')
 
         with self.assertRaises(AssertionError):
             my_bot.dispatch('*unknown*event')
 
         self.assertEqual(counter.count, 2)
         self.assertEqual(all_events.events,
-                         ['bond', 'dispose', 'start', 'stop', 'message', 'attachment', 'join', 'leave', 'inbound'])
+                         ['bond',
+                          'dispose',
+                          'start',
+                          'stop',
+                          'message',
+                          'attachment',
+                          'join',
+                          'leave',
+                          'inbound',
+                          'some_custom_event'])
 
     def test_load_commands(self):
 

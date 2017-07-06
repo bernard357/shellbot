@@ -76,8 +76,8 @@ class Updater(object):
         self.bot = bot
 
         if self.bot:
-            self.bot.register('bond', self)
-            self.bot.register('dispose', self)
+            self.bot.subscribe('bond', self)
+            self.bot.subscribe('dispose', self)
 
         self.on_init(**kwargs)
 
