@@ -60,7 +60,7 @@ class SpaceUpdater(Updater):
         self.mouth = Queue()
 
         self.speaker = speaker if speaker else Speaker(bot=self)
-        self.speaker.run()
+        self.speaker.start()
 
     def put(self, event):
         """
