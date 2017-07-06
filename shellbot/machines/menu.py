@@ -133,9 +133,9 @@ class Menu(Machine):
         self.is_markdown = is_markdown
 
         if callback not in (None, ''):
-            self.callback = callback
             self.observe = observe
-            self.observe.subscribe(self.bot, self.callback)
+            self.observe.subscribe(self.bot, callback)
+        self.callback = callback
 
         if tip is not None:
             assert int(tip) > 0

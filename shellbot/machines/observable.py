@@ -47,10 +47,8 @@ class Observable(object):
         self.callbacks.append(callback)
 
     def fire(self, **attrs):
-        e = Event()
-        e.source = self
         for k, v in attrs.iteritems():
             setattr(e, k, v)
         for fn in self.callbacks:
             logging.debug('Callback fire: ' + str(fn))
-            fn(e)
+            fn(self)
