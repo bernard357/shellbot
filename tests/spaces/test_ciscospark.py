@@ -54,15 +54,42 @@ class FakeMessage(Fake):
     _json = {'text': '*message'}
 
 
+class FakeBot(Fake):
+    displayName = "shelly"
+    created = "2017-04-21T12:16:20.292Z"
+    emails = ["shelly@sparkbot.io"]
+    orgId = "Y2lzY29zcGFyazoMTk4ZjA4YS0zODgwLTQ4NzEtYjU1ZS00ODYzY2NmNzIzZDU"
+    avatar = "https://2b571e19c5.rackcdn.com/V1~5957fdf80TZekRY3-49nfcA==~80"
+    type = "bot"
+    id = "Y2lzY29zcGFyazovL3VztOGFiOS01ZGI5M2Y5MjI5MWM"
+
+
 class FakePerson(Fake):
+    status = "active"
+    nickName = "Foo"
+    displayName = "Foo Bar"
+    firstName = "Foo"
+    lastName = "Bar"
+    created = "2017-04-21T12:16:20.292Z"
+    lastActivity = "2017-04-21T12:16:20.292Z"
+    emails = ["foo.bar@acme.com"]
+    orgId = "Y2lzY29zcGFyazoMTk4ZjA4YS0zODgwLTQ4NzEtYjU1ZS00ODYzY2NmNzIzZDU"
+    avatar = "https://2b571e19c5.rackcdn.com/V1~5957fdf80TZekRY3-49nfcA==~80"
+    type = "person"
     id = 'Y2lzY29zcGFyazovL3VzL1RFQU0Yy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5'
-    personEmail = 'a@me.com'
-    displayName = 'dusty (bot)'
 
 
 class FakeApi(object):
 
-    def __init__(self, rooms=[], teams=[], messages=[], new_room=None):
+    def __init__(self,
+                 access_token=None,
+                 rooms=[],
+                 new_room=None,
+                 teams=[],
+                 messages=[],
+                 me=FakePerson()):
+
+        self.token = access_token
 
         new_room = new_room if new_room else FakeRoom()
 
@@ -90,7 +117,7 @@ class FakeApi(object):
         self.webhooks.create = mock.Mock()
 
         self.people = Fake()
-        self.people.me = mock.Mock(return_value=FakePerson())
+        self.people.me = mock.Mock(return_value=me)
 
 
 my_bot = ShellBot()
@@ -341,12 +368,8 @@ class SparkSpaceTests(unittest.TestCase):
 
         logging.info("*** connect")
 
-        class MyAPI(object):
-            def __init__(self, access_token):
-                self.token = access_token
-
         def my_factory(access_token):
-            return MyAPI(access_token)
+            return FakeApi(access_token=access_token)
 
         space = SparkSpace(bot=my_bot)
         space.token = None
@@ -663,30 +686,21 @@ class SparkSpaceTests(unittest.TestCase):
         space.register('*hook')
         self.assertTrue(space.personal_api.webhooks.create.called)
 
-    def test_on_start(self):
+    def test_on_connect(self):
 
-        logging.info("*** on_run")
+        logging.info("*** on_connect")
         space = SparkSpace(bot=my_bot)
-        space.api = FakeApi()
-        space.personal_api = FakeApi()
-        space.on_start()
+        space.api = FakeApi(me=FakeBot())
+        space.personal_api = FakeApi(me=FakePerson())
+        space.on_connect()
         self.assertTrue(space.api.people.me.called)
         self.assertTrue(space.personal_api.people.me.called)
-        self.assertEqual(my_bot.get('bot.email'), 'a@me.com')
-        self.assertEqual(my_bot.get('bot.name'), 'dusty')
+        self.assertEqual(my_bot.get('bot.email'), 'shelly@sparkbot.io')
+        self.assertEqual(my_bot.get('bot.name'), 'shelly')
         self.assertTrue(my_bot.get('bot.id') > 20)
-        self.assertEqual(my_bot.get('administrator.email'), 'a@me.com')
-        self.assertEqual(my_bot.get('administrator.name'), 'dusty (bot)')
+        self.assertEqual(my_bot.get('administrator.email'), 'foo.bar@acme.com')
+        self.assertEqual(my_bot.get('administrator.name'), 'Foo Bar')
         self.assertTrue(my_bot.get('administrator.id') > 20)
-
-        if cisco_spark_bearer is not None:
-
-            logging.info("*** on_start API")
-
-            space = SparkSpace(bot=my_bot, bearer=cisco_spark_bearer)
-            space.connect()
-            item = space.on_start()
-            self.assertTrue(my_bot.get('bot.id') > 20)
 
     def test_run(self):
 

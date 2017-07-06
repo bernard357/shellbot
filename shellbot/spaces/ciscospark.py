@@ -261,6 +261,82 @@ class SparkSpace(Space):
             logging.error(u"Unable to load Cisco Spark API")
             logging.exception(feedback)
 
+        self.on_connect()
+
+    def on_connect(self):
+        """
+        Retrieves attributes of this bot
+
+        This function queries the Cisco Spark API to remember the id of this
+        bot. This is used afterwards to filter inbound messages to the shell.
+
+        """
+        assert self.api is not None  # connect() is prerequisite
+
+        count = 2
+        while count:
+            try:
+
+                logging.debug(u"Retrieving bot information")
+                me = self.api.people.me()
+#                logging.debug(u"- {}".format(str(me)))
+
+                self.bot.set('bot.email', str(me.emails[0]))
+                logging.debug(u"- bot email: {}".format(
+                    self.bot.get('bot.email')))
+
+                self.bot.set('bot.name',
+                             str(me.displayName))
+                logging.debug(u"- bot name: {}".format(
+                    self.bot.get('bot.name')))
+
+                self.bot.set('bot.id', me.id)
+                logging.debug(u"- bot id: {}".format(
+                    self.bot.get('bot.id')))
+
+                break
+
+            except Exception as feedback:
+                count -= 1
+                if count == 0:
+                    logging.warning(u"Unable to retrieve bot id")
+                    logging.exception(feedback)
+                else:
+                    logging.warning(u"Retrying to retrieve bot id")
+                time.sleep(0.1)
+
+        assert self.personal_api is not None  # connect() is prerequisite
+
+        count = 2
+        while count:
+            try:
+                logging.debug(u"Retrieving admin information")
+                me = self.personal_api.people.me()
+#                logging.debug(u"- {}".format(str(me)))
+
+                self.bot.set('administrator.email', str(me.emails[0]))
+                logging.debug(u"- administrator email: {}".format(
+                    self.bot.context.get('administrator.email')))
+
+                self.bot.set('administrator.name', str(me.displayName))
+                logging.debug(u"- administrator name: {}".format(
+                    self.bot.get('administrator.name')))
+
+                self.bot.set('administrator.id', me.id)
+                logging.debug(u"- administrator id: {}".format(
+                    self.bot.get('administrator.id')))
+
+                break
+
+            except Exception as feedback:
+                time.sleep(0.1)
+                count -= 1
+                if count == 0:
+                    logging.warning(u"Unable to retrieve moderator id")
+                    logging.exception(feedback)
+                else:
+                    logging.warning(u"Retrying to retrieve moderator id")
+
     def use_space(self, id, **kwargs):
         """
         Uses an existing space
@@ -383,7 +459,7 @@ class SparkSpace(Space):
         logging.info(u"Bonding to room '{}'".format(room.title))
 
         self.set('id', room.id)
-        logging.debug(u"- {}.id: {}".format(self.prefix, self.id))
+        logging.debug(u"- id: {}".format(self.id))
 
         self.title = room.title
         self.set('title', self.title)
@@ -431,7 +507,7 @@ class SparkSpace(Space):
             return
 
         logging.info(u"Deleting Cisco Spark room '{}'".format(self.title))
-        logging.debug(u"- roomID: {}".format(self.id))
+        logging.debug(u"- id: {}".format(self.id))
 
         assert self.personal_api is not None  # connect() is prerequisite
         try:
@@ -485,8 +561,6 @@ class SparkSpace(Space):
         try:
             assert self.personal_api is not None  # connect() is prerequisite
             assert self.id is not None  # bond() is prerequisite
-
-            logging.debug(u"- roomID: {}".format(self.id))
 
             self.personal_api.memberships.create(roomId=self.id,
                                                  personEmail=person,
@@ -545,7 +619,7 @@ class SparkSpace(Space):
         :param text: message in plain text
         :type text: str
 
-        :param content: rich format, such as MArkdown or HTML
+        :param content: rich format, such as Markdown or HTML
         :type content: str
 
         :param file: URL or local path for an attachment
@@ -572,8 +646,15 @@ class SparkSpace(Space):
         """
 
         logging.info(u"Posting message")
-        logging.debug(u"- text: {}".format(text))
-        logging.debug(u"- roomId: {}".format(self.id))
+        if text not in (None, ''):
+            logging.debug(u"- text: {}".format(
+                text[:50] + (text[50:] and '..')))
+        if content not in (None, ''):
+            logging.debug(u"- content: {}".format(
+                content[:50] + (content[50:] and '..')))
+        if file not in (None, ''):
+            logging.debug(u"- file: {}".format(
+                file[:50] + (file[50:] and '..')))
 
         assert self.api is not None  # connect() is prerequisite
 
@@ -647,80 +728,6 @@ class SparkSpace(Space):
             logging.warning(u"Unable to add webhook")
             logging.exception(feedback)
 
-    def on_start(self):
-        """
-        Retrieves attributes of this bot
-
-        This function queries the Cisco Spark API to remember the id of this
-        bot. This is used afterwards to filter inbound messages to the shell.
-
-        """
-        assert self.api is not None  # connect() is prerequisite
-
-        count = 2
-        while count:
-            try:
-
-                logging.debug(u"Retrieving bot information")
-                me = self.api.people.me()
-                logging.debug(u"- {}".format(str(me)))
-
-                self.bot.set('bot.email', str(me.personEmail))
-                logging.debug(u"- bot name: {}".format(
-                    self.bot.get('bot.email')))
-
-                self.bot.set('bot.name',
-                             str(me.displayName.split(' ')[0]))
-                logging.debug(u"- bot name: {}".format(
-                    self.bot.get('bot.name')))
-
-                self.bot.set('bot.id', me.id)
-                logging.debug(u"- bot id: {}".format(
-                    self.bot.get('bot.id')))
-
-                break
-
-            except Exception as feedback:
-                count -= 1
-                if count == 0:
-                    logging.warning(u"Unable to retrieve bot id")
-                    logging.exception(feedback)
-                else:
-                    logging.warning(u"Retrying to retrieve bot id")
-                time.sleep(0.1)
-
-        assert self.personal_api is not None  # connect() is prerequisite
-
-        count = 2
-        while count:
-            try:
-                logging.debug(u"Retrieving admin information")
-                me = self.personal_api.people.me()
-                logging.debug(u"- {}".format(str(me)))
-
-                self.bot.set('administrator.email', str(me.personEmail))
-                logging.debug(u"- administrator email: {}".format(
-                    self.bot.context.get('administrator.email')))
-
-                self.bot.set('administrator.name', str(me.displayName))
-                logging.debug(u"- administrator name: {}".format(
-                    self.bot.get('administrator.name')))
-
-                self.bot.set('administrator.id', me.id)
-                logging.debug(u"- administrator id: {}".format(
-                    self.bot.get('administrator.id')))
-
-                break
-
-            except Exception as feedback:
-                time.sleep(0.1)
-                count -= 1
-                if count == 0:
-                    logging.warning(u"Unable to retrieve moderator id")
-                    logging.exception(feedback)
-                else:
-                    logging.warning(u"Retrying to retrieve moderator id")
-
     def webhook(self, message_id=None):
         """
         Processes the flow of events from Cisco Spark
@@ -763,7 +770,7 @@ class SparkSpace(Space):
                 data = request.json['data']
 
             if resource == 'messages' and event == 'created':
-                logging.debug(u"- handling {}:{}".format(resource, event))
+                logging.debug(u"- handling '{}:{}'".format(resource, event))
 
                 if not message_id:
                     message_id = data['id']
@@ -782,14 +789,14 @@ class SparkSpace(Space):
                         raise
 
             elif resource == 'memberships' and event == 'created':
-                logging.debug(u"- handling {}:{}".format(resource, event))
+                logging.debug(u"- handling '{}:{}'".format(resource, event))
                 logging.debug(u"- {}".format(data))
 
                 item = self.personal_api.memberships.get(membershipId=data['id'])
                 self.on_join(item._json, self.bot.ears)
 
             elif resource == 'memberships' and event == 'deleted':
-                logging.debug(u"- handling {}:{}".format(resource, event))
+                logging.debug(u"- handling '{}:{}'".format(resource, event))
                 logging.debug(u"- {}".format(data))
 
                 self.on_leave(data, self.bot.ears)
