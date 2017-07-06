@@ -310,6 +310,13 @@ class SparkSpaceTests(unittest.TestCase):
             space.bond()
 
         space.api = FakeApi()
+
+        space.personal_api = None
+        with self.assertRaises(AssertionError):
+            space.bond()
+
+        space.personal_api = FakeApi()
+
         space.add_moderator = mock.Mock()
         space.add_participant = mock.Mock()
         space.del_participant = mock.Mock()
@@ -461,9 +468,9 @@ class SparkSpaceTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             space.create_space(title='*title')
 
-        space.api = FakeApi()
+        space.personal_api = FakeApi()
         space.create_space(title='*title')
-        self.assertTrue(space.api.rooms.create.called)
+        self.assertTrue(space.personal_api.rooms.create.called)
         self.assertEqual(space.title, '*title')
         self.assertEqual(space.id, '*id')
 
@@ -505,12 +512,12 @@ class SparkSpaceTests(unittest.TestCase):
         logging.info("*** add_moderator")
 
         space = SparkSpace(bot=my_bot)
-        space.api = FakeApi()
+        space.personal_api = FakeApi()
         space.set('id', '*id')
 
         space.add_moderator(person='foo.bar@acme.com')
 
-        self.assertTrue(space.api.memberships.create.called)
+        self.assertTrue(space.personal_api.memberships.create.called)
 
     def test_add_participants(self):
 
@@ -553,45 +560,51 @@ class SparkSpaceTests(unittest.TestCase):
 
         # explicit title, room exists
         space.api = FakeApi(rooms=[FakeRoom()])
+        space.personal_api = FakeApi(rooms=[FakeRoom()])
         space.delete_space(title='*title')
-        self.assertTrue(space.api.rooms.delete.called)
+        self.assertTrue(space.personal_api.rooms.delete.called)
 
         # explicit title, room does not exists
         space.api = FakeApi(rooms=[FakeRoom()])
+        space.personal_api = FakeApi(rooms=[FakeRoom()])
         space.delete_space(title='*ghost*room')
-        self.assertFalse(space.api.rooms.delete.called)
+        self.assertFalse(space.personal_api.rooms.delete.called)
 
         # bonded room
         space.api = FakeApi(rooms=[FakeRoom()])
+        space.personal_api = FakeApi(rooms=[FakeRoom()])
         space.set('id', '*id')
         space.title = '*title'
         space.delete_space()
-        self.assertTrue(space.api.rooms.delete.called)
+        self.assertTrue(space.personal_api.rooms.delete.called)
 
         # configured room, room exists
         space.api = FakeApi(rooms=[FakeRoom()])
+        space.personal_api = FakeApi(rooms=[FakeRoom()])
         space.set('id', None)
         space.bot.context.set('spark.room', '*title')
         space.delete_space()
-        self.assertTrue(space.api.rooms.delete.called)
+        self.assertTrue(space.personal_api.rooms.delete.called)
 
         # no information
         space.api = FakeApi(rooms=[FakeRoom()])
+        space.personal_api = FakeApi(rooms=[FakeRoom()])
         space.set('id', None)
         space.bot.context.set('spark.room', None)
         space.delete_space()
-        self.assertFalse(space.api.rooms.delete.called)
+        self.assertFalse(space.personal_api.rooms.delete.called)
 
     def test_dispose(self):
 
         logging.info("*** dispose")
         space = SparkSpace(bot=my_bot)
         space.api = FakeApi(rooms=[FakeRoom()])
+        space.personal_api = FakeApi(rooms=[FakeRoom()])
         space.bond(title='*title')
 
         space.dispose()
 
-        self.assertTrue(space.api.rooms.delete.called)
+        self.assertTrue(space.personal_api.rooms.delete.called)
 
     def test_post_message(self):
 
@@ -694,6 +707,7 @@ class SparkSpaceTests(unittest.TestCase):
         my_bot.ears = Queue()
         space = SparkSpace(bot=my_bot)
         space.api = FakeApi(messages=[FakeMessage()])
+        space.personal_api = FakeApi(messages=[FakeMessage()])
         space.bond(title='*title')
 
         self.assertEqual(space._last_message_id, 0)

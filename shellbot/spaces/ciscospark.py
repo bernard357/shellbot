@@ -48,7 +48,7 @@ class SparkSpace(Space):
     If no Cisco Spark bot token is provided, but only a personal token,
     then shellbot will act entirely on behalf of this account. This is
     equivalent to a full Cisco Spark integration, through direct
-    configuration od shellbot.
+    configuration of shellbot.
 
     The space maintains two separate API instances internally. One
     is bound to the bot token, and another one is bound to the personal token.
@@ -57,10 +57,10 @@ class SparkSpace(Space):
     played by shellbot:
 
     - list rooms - bot token - list rooms visible by the bot itself
-    - create room - bot token - make obvious which rooms bot has created
-    - add moderator - bot token - because bot cannot do it
+    - create room - personal token - similar to what a regular user would do
+    - add moderator - personal token - because bot cannot do it
     - add participant - bot token - explicit bot action
-    - delete room - bot token - limit action to scope given to bot
+    - delete room - personal token - rather handled by a human being
     - post message - bot token - explicit bot action
     - create webhook - personal token - required to receive all messages
     - people me - bot token - retrieve bot name and id
@@ -352,11 +352,11 @@ class SparkSpace(Space):
 
         logging.info(u"Creating Cisco Spark room '{}'".format(title))
 
-        assert self.api is not None  # connect() is prerequisite
+        assert self.personal_api is not None  # connect() is prerequisite
         while True:
             try:
-                room = self.api.rooms.create(title=title,
-                                             teamId=teamId)
+                room = self.personal_api.rooms.create(title=title,
+                                                      teamId=teamId)
                 logging.info(u"- done")
 
                 self.use_room(room)
@@ -380,8 +380,6 @@ class SparkSpace(Space):
 
         """
         logging.info(u"Bonding to room '{}'".format(room.title))
-
-        logging.debug(u"- {}".format(str(room)))
 
         self.set('id', room.id)
         logging.debug(u"- {}.id: {}".format(self.prefix, self.id))
@@ -444,14 +442,14 @@ class SparkSpace(Space):
 
         """
         try:
-            assert self.api is not None  # connect() is prerequisite
+            assert self.personal_api is not None  # connect() is prerequisite
             assert self.id is not None  # bond() is prerequisite
 
             logging.debug(u"- roomID: {}".format(self.id))
 
-            self.api.memberships.create(roomId=self.id,
-                                        personEmail=person,
-                                        isModerator=True)
+            self.personal_api.memberships.create(roomId=self.id,
+                                                 personEmail=person,
+                                                 isModerator=True)
 
         except Exception as feedback:
             logging.warning(u"Unable to add moderator '{}'".format(person))
@@ -524,9 +522,9 @@ class SparkSpace(Space):
         logging.info(u"Deleting Cisco Spark room '{}'".format(self.title))
         logging.debug(u"- roomID: {}".format(self.id))
 
-        assert self.api is not None  # connect() is prerequisite
+        assert self.personal_api is not None  # connect() is prerequisite
         try:
-            self.api.rooms.delete(roomId=self.id)
+            self.personal_api.rooms.delete(roomId=self.id)
 
         except Exception as feedback:
             logging.warning(u"Unable to delete room")
