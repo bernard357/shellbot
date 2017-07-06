@@ -21,6 +21,8 @@ import re
 import time
 
 from .base import Machine
+from observable import Observable
+observe = Observable()
 
 
 class Menu(Machine):
@@ -130,7 +132,10 @@ class Menu(Machine):
         assert int(is_markdown) >= 0
         self.is_markdown = is_markdown
 
-        self.callback = callback
+        if callback not in (None, ''):
+            self.callback = callback
+            self.observe = observe
+            self.observe.subscribe(self.bot, self.callback)
 
         if tip is not None:
             assert int(tip) > 0
@@ -294,7 +299,7 @@ class Menu(Machine):
         self.say(self.on_answer.format(arguments))
 
         if self.callback not in (None, ''):
-            self.function()
+            self.observe.fire()
 
         self.step(event='tick')
 
@@ -311,21 +316,6 @@ class Menu(Machine):
         except Exception as feedback:
             return None
         return text
-
-    def function(self):
-        """
-        Function to manage the callback request
-
-        Used to execute the method request following the function
-        name provided
-        """
-        try:
-            # res = staticmethod(self.callback)
-            res = classmethod(self.callback)
-        except Exception as error:
-            return None
-
-        return res
 
     def cancel(self):
         """

@@ -43,7 +43,7 @@ class Observable(object):
 
     def subscribe(self, bot, callback):
         self.bot = bot
-        print('Callback subscription: ' + str(callback))
+        logging.debug('Callback subscription: ' + str(callback))
         self.callbacks.append(callback)
 
     def fire(self, **attrs):
@@ -52,8 +52,5 @@ class Observable(object):
         for k, v in attrs.iteritems():
             setattr(e, k, v)
         for fn in self.callbacks:
-            self.bot.say('Callback fire: ' + str(fn))
+            logging.debug('Callback fire: ' + str(fn))
             fn(e)
-
-    def hello(self):
-        self.bot.say('hello')
