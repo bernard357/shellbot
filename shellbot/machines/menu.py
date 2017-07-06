@@ -53,6 +53,7 @@ class Menu(Machine):
                 on_cancel=None,
                 is_mandatory=None,
                 is_markdown=None,
+                callback=None,
                 tip=None,
                 timeout=None,
                 key=None,
@@ -81,6 +82,9 @@ class Menu(Machine):
 
         :param is_markdown: Indicate if it's markdown text
         :type is_markdown: boolean
+
+        :param callback: Used to plug callback function
+        :type callback: function
 
         :param tip: Display the on_retry message after this delay in seconds
         :type tip: int
@@ -125,6 +129,8 @@ class Menu(Machine):
             is_markdown = self.IS_MARKDOWN
         assert int(is_markdown) >= 0
         self.is_markdown = is_markdown
+
+        self.callback = callback
 
         if tip is not None:
             assert int(tip) > 0
@@ -286,6 +292,10 @@ class Menu(Machine):
             self.bot.update('input', self.key, self.options[int(arguments)-1])
 
         self.say(self.on_answer.format(arguments))
+
+        if self.callback not in (None, ''):
+            self.function()
+
         self.step(event='tick')
 
     def filter(self, text):
@@ -302,10 +312,20 @@ class Menu(Machine):
             return None
         return text
 
-    def wait(self):
+    def function(self):
         """
-        Wait input
+        Function to manage the callback request
+
+        Used to execute the method request following the function
+        name provided
         """
+        try:
+            # res = staticmethod(self.callback)
+            res = classmethod(self.callback)
+        except Exception as error:
+            return None
+
+        return res
 
     def cancel(self):
         """
