@@ -18,6 +18,7 @@ from .input import Input
 from .sequence import Sequence
 from .steps import Steps
 from .menu import Menu
+from .observable import Observable
 
 __all__ = [
     'Input',
@@ -25,4 +26,5 @@ __all__ = [
     'Sequence',
     'Steps',
     'Menu',
+    'Observable',
 ]

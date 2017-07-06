@@ -21,6 +21,8 @@ import re
 import time
 
 from .base import Machine
+from observable import Observable
+observe = Observable()
 
 
 class Menu(Machine):
@@ -53,6 +55,7 @@ class Menu(Machine):
                 on_cancel=None,
                 is_mandatory=None,
                 is_markdown=None,
+                callback=None,
                 tip=None,
                 timeout=None,
                 key=None,
@@ -81,6 +84,9 @@ class Menu(Machine):
 
         :param is_markdown: Indicate if it's markdown text
         :type is_markdown: boolean
+
+        :param callback: Used to plug callback function
+        :type callback: function
 
         :param tip: Display the on_retry message after this delay in seconds
         :type tip: int
@@ -125,6 +131,11 @@ class Menu(Machine):
             is_markdown = self.IS_MARKDOWN
         assert int(is_markdown) >= 0
         self.is_markdown = is_markdown
+
+        if callback not in (None, ''):
+            self.observe = observe
+            self.observe.subscribe(self.bot, callback)
+        self.callback = callback
 
         if tip is not None:
             assert int(tip) > 0
@@ -286,6 +297,10 @@ class Menu(Machine):
             self.bot.update('input', self.key, self.options[int(arguments)-1])
 
         self.say(self.on_answer.format(arguments))
+
+        if self.callback not in (None, ''):
+            self.observe.fire()
+
         self.step(event='tick')
 
     def filter(self, text):
@@ -301,11 +316,6 @@ class Menu(Machine):
         except Exception as feedback:
             return None
         return text
-
-    def wait(self):
-        """
-        Wait input
-        """
 
     def cancel(self):
         """
