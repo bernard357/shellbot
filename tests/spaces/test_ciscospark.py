@@ -739,6 +739,7 @@ class SparkSpaceTests(unittest.TestCase):
                           'content': '*message',
                           'from_id': None,
                           'from_label': None,
+                          'hook': 'injection',
                           'space_id': None,
                           'type': 'message',
                           'mentioned_ids': []})
@@ -774,6 +775,7 @@ class SparkSpaceTests(unittest.TestCase):
                           'content': '*message',
                           'from_id': None,
                           'from_label': None,
+                          'hook': 'pull',
                           'space_id': None,
                           'type': 'message',
                           'mentioned_ids': []})
