@@ -34,9 +34,17 @@ class Fake(object):
 
 class FakeRoom(Fake):
     id = '*id'
-    isLocked = False
+    isLocked = True
     title = '*title'
     type = 'group'
+    teamId = '*team'
+
+
+class FakeTeamRoom(Fake):
+    id = '*team_id'
+    isLocked = True
+    title = '*team_title'
+    type = 'team'
     teamId = None
 
 
@@ -374,12 +382,6 @@ class SparkSpaceTests(unittest.TestCase):
         space = SparkSpace(bot=my_bot)
         self.assertFalse(space.is_ready)
 
-#        context = Context(settings={'space.id': '123'})
-#        bot = ShellBot(context=context)
-#        space = Space(bot=bot)
-#        self.assertTrue(space.is_ready)
-
-        space = SparkSpace(bot=my_bot)
         space.set('id', '*id')
         self.assertTrue(space.is_ready)
 
@@ -390,15 +392,6 @@ class SparkSpaceTests(unittest.TestCase):
         space = SparkSpace(bot=my_bot)
         self.assertTrue(space.id is None)
 
-#        context = Context(settings={'space.id': '123'})
-#        print(context.get('space.id'))
-#        bot = ShellBot(context=context)
-#        print(bot.get('space.id'))
-#        space = Space(bot=bot)
-#        print(space.bot.get('space.id'))
-#        self.assertEqual(space.id, '123')
-
-        space = SparkSpace(bot=my_bot)
         space.set('id', '*id')
         self.assertEqual(space.id, '*id')
 
@@ -411,9 +404,9 @@ class SparkSpaceTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             flag = space.use_space(id='*no*api*anyway')
 
-        space.api = FakeApi(rooms=[FakeRoom()])
+        space.personal_api = FakeApi(rooms=[FakeRoom()])
         self.assertFalse(space.use_space(id='*does*not*exist'))
-        self.assertTrue(space.api.rooms.list.called)
+        self.assertTrue(space.personal_api.rooms.list.called)
 
         self.assertTrue(space.use_space(id='*id'))
 
@@ -421,7 +414,7 @@ class SparkSpaceTests(unittest.TestCase):
             def list(self):
                 raise Exception('TEST')
 
-        space.api.rooms = Intruder()
+        space.personal_api.rooms = Intruder()
         self.assertFalse(space.use_space(id='any'))
 
     def test_lookup_space(self):
@@ -433,9 +426,9 @@ class SparkSpaceTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             flag = space.use_space(id='*no*api*anyway')
 
-        space.api = FakeApi(rooms=[FakeRoom()])
+        space.personal_api = FakeApi(rooms=[FakeRoom()])
         self.assertFalse(space.lookup_space(title='*does*not*exist'))
-        self.assertTrue(space.api.rooms.list.called)
+        self.assertTrue(space.personal_api.rooms.list.called)
 
         self.assertTrue(space.lookup_space(title='*title'))
 
@@ -443,7 +436,7 @@ class SparkSpaceTests(unittest.TestCase):
             def list(self):
                 raise Exception('TEST')
 
-        space.api.rooms = Intruder()
+        space.personal_api.rooms = Intruder()
         self.assertFalse(space.lookup_space(title='any'))
 
     def test_lookup_space_api(self):
@@ -474,6 +467,37 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertEqual(space.title, '*title')
         self.assertEqual(space.id, '*id')
 
+    def test_use_room(self):
+
+        logging.info("*** use_room")
+
+        my_bot.set('bot.email', 'a@acme.com')
+        my_bot.set('administrator.email', 'b@acme.com')
+        space = SparkSpace(bot=my_bot)
+        space.add_moderator = mock.Mock()
+
+        space.use_room(room=FakeRoom())
+        self.assertEqual(space.get('id'), '*id')
+        self.assertEqual(space.get('title'), '*title')
+        self.assertEqual(space.title, '*title')
+        self.assertFalse(space.is_direct)
+        self.assertTrue(space.is_group)
+        self.assertFalse(space.is_team)
+        self.assertTrue(space.is_locked)
+        self.assertEqual(space.team_id, '*team')
+        space.add_moderator.assert_called_with('a@acme.com')
+
+        space.use_room(room=FakeTeamRoom())
+        self.assertEqual(space.get('id'), '*team_id')
+        self.assertEqual(space.get('title'), '*team_title')
+        self.assertEqual(space.title, '*team_title')
+        self.assertFalse(space.is_direct)
+        self.assertTrue(space.is_group)
+        self.assertTrue(space.is_team)
+        self.assertTrue(space.is_locked)
+        self.assertEqual(space.team_id, None)
+        space.add_moderator.assert_called_with('a@acme.com')
+
     def test_get_team(self):
 
         logging.info("*** get_team")
@@ -484,15 +508,15 @@ class SparkSpaceTests(unittest.TestCase):
             name = '*name'
             id = '456'
 
-        space.api = FakeApi(teams=[Team()])
+        space.personal_api = FakeApi(teams=[Team()])
         team = space.get_team(name='*name')
-        self.assertTrue(space.api.teams.list.called)
+        self.assertTrue(space.personal_api.teams.list.called)
         self.assertEqual(team.name, '*name')
         self.assertEqual(team.id, '456')
 
-        space.api = FakeApi(teams=[Team()])
+        space.personal_api = FakeApi(teams=[Team()])
         team = space.get_team(name='*unknown')
-        self.assertTrue(space.api.teams.list.called)
+        self.assertTrue(space.personal_api.teams.list.called)
         self.assertEqual(team, None)
 
     def test_add_moderators(self):
@@ -546,12 +570,12 @@ class SparkSpaceTests(unittest.TestCase):
 
         logging.info("*** remove_participant")
         space = SparkSpace(bot=my_bot)
-        space.api = FakeApi()
+        space.personal_api = FakeApi()
         space.set('id', '*id')
 
         space.remove_participant(person='foo.bar@acme.com')
 
-        self.assertTrue(space.api.memberships.delete.called)
+        self.assertTrue(space.personal_api.memberships.delete.called)
 
     def test_delete_space(self):
 
@@ -648,6 +672,12 @@ class SparkSpaceTests(unittest.TestCase):
         space.on_start()
         self.assertTrue(space.api.people.me.called)
         self.assertTrue(space.personal_api.people.me.called)
+        self.assertEqual(my_bot.get('bot.email'), 'a@me.com')
+        self.assertEqual(my_bot.get('bot.name'), 'dusty')
+        self.assertTrue(my_bot.get('bot.id') > 20)
+        self.assertEqual(my_bot.get('administrator.email'), 'a@me.com')
+        self.assertEqual(my_bot.get('administrator.name'), 'dusty (bot)')
+        self.assertTrue(my_bot.get('administrator.id') > 20)
 
         if cisco_spark_bearer is not None:
 
@@ -656,7 +686,7 @@ class SparkSpaceTests(unittest.TestCase):
             space = SparkSpace(bot=my_bot, bearer=cisco_spark_bearer)
             space.connect()
             item = space.on_start()
-            self.assertTrue(my_bot.context.get('bot.id') > 20)
+            self.assertTrue(my_bot.get('bot.id') > 20)
 
     def test_run(self):
 
