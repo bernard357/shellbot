@@ -697,10 +697,10 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertTrue(space.personal_api.people.me.called)
         self.assertEqual(my_bot.get('bot.email'), 'shelly@sparkbot.io')
         self.assertEqual(my_bot.get('bot.name'), 'shelly')
-        self.assertTrue(my_bot.get('bot.id') > 20)
+        self.assertTrue(len(my_bot.get('bot.id')) > 20)
         self.assertEqual(my_bot.get('administrator.email'), 'foo.bar@acme.com')
         self.assertEqual(my_bot.get('administrator.name'), 'Foo Bar')
-        self.assertTrue(my_bot.get('administrator.id') > 20)
+        self.assertTrue(len(my_bot.get('administrator.id')) > 20)
 
     def test_run(self):
 
