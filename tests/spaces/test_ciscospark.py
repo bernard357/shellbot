@@ -682,6 +682,7 @@ class SparkSpaceTests(unittest.TestCase):
 
         space.api = FakeApi(rooms=[FakeRoom()])
         space.personal_api = FakeApi(rooms=[FakeRoom()])
+        my_bot.set('bot.id', '*id')
         space.bond(title='*title')
         space.register('*hook')
         self.assertTrue(space.personal_api.webhooks.create.called)

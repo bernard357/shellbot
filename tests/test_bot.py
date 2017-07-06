@@ -53,6 +53,8 @@ class BotTests(unittest.TestCase):
             'attachment': [], # attachment received (with attachment)
             'join': [],       # joining a space (with person)
             'leave': [],      # leaving a space (with person)
+            'enter': [],      # invited to a space (for the bot)
+            'exit': [],       # kicked off from a space (for the bot)
             'inbound': [],    # other event received from space (with event)
         }
         collected = gc.collect()
@@ -358,6 +360,10 @@ class BotTests(unittest.TestCase):
                 pass
             def on_leave(self):
                 pass
+            def on_enter(self):
+                pass
+            def on_exit(self):
+                pass
             def on_inbound(self):
                 pass
             def on_some_custom_event(self):
@@ -372,6 +378,8 @@ class BotTests(unittest.TestCase):
         my_bot.subscribe('attachment', all_events)
         my_bot.subscribe('join', all_events)
         my_bot.subscribe('leave', all_events)
+        my_bot.subscribe('enter', all_events)
+        my_bot.subscribe('exit', all_events)
         my_bot.subscribe('inbound', all_events)
         my_bot.subscribe('some_custom_event', all_events)
 
@@ -383,6 +391,8 @@ class BotTests(unittest.TestCase):
         self.assertEqual(len(my_bot.subscribed['attachment']), 1)
         self.assertEqual(len(my_bot.subscribed['join']), 1)
         self.assertEqual(len(my_bot.subscribed['leave']), 1)
+        self.assertEqual(len(my_bot.subscribed['enter']), 1)
+        self.assertEqual(len(my_bot.subscribed['exit']), 1)
         self.assertEqual(len(my_bot.subscribed['inbound']), 1)
         self.assertEqual(len(my_bot.subscribed['some_custom_event']), 1)
 
@@ -420,6 +430,12 @@ class BotTests(unittest.TestCase):
             def on_leave(self, received):
                 assert received == '*void'
                 self.events.append('leave')
+            def on_enter(self, received):
+                assert received == '*void'
+                self.events.append('enter')
+            def on_exit(self, received):
+                assert received == '*void'
+                self.events.append('exit')
             def on_inbound(self, received):
                 assert received == '*void'
                 self.events.append('inbound')
@@ -436,6 +452,8 @@ class BotTests(unittest.TestCase):
         my_bot.subscribe('attachment', all_events)
         my_bot.subscribe('join', all_events)
         my_bot.subscribe('leave', all_events)
+        my_bot.subscribe('enter', all_events)
+        my_bot.subscribe('exit', all_events)
         my_bot.subscribe('inbound', all_events)
         my_bot.subscribe('some_custom_event', all_events)
 
@@ -447,6 +465,8 @@ class BotTests(unittest.TestCase):
         my_bot.dispatch('attachment', received='*void')
         my_bot.dispatch('join', received='*void')
         my_bot.dispatch('leave', received='*void')
+        my_bot.dispatch('enter', received='*void')
+        my_bot.dispatch('exit', received='*void')
         my_bot.dispatch('inbound', received='*void')
         my_bot.dispatch('some_custom_event', data='*data')
 
@@ -463,6 +483,8 @@ class BotTests(unittest.TestCase):
                           'attachment',
                           'join',
                           'leave',
+                          'enter',
+                          'exit',
                           'inbound',
                           'some_custom_event'])
 

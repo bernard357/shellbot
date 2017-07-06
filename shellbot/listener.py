@@ -145,13 +145,15 @@ class Listener(object):
         * ``attachment`` -- A file has been attached to the chat space. The
           ``on_attachment()`` function is invoked.
 
-        * ``join`` -- This is when a person join a space. The function
-          ``on_join()`` is called, providing details on the person who joined
+        * ``join`` -- This is when a person or the bot joins a space.
+          The function ``on_join()`` is called, providing details on the
+          person or the bot who joined
 
-        * ``leave`` -- This is when a person leaves a space. The function
-          ``on_leave()`` is called with details on the leaving person.
+        * ``leave`` -- This is when a person or the bot leaves a space.
+          The function ``on_leave()`` is called with details on the
+          leaving person or bot.
 
-        * on any other case, the function ``on_event()`` is
+        * on any other case, the function ``on_inbound()`` is
           called.
         """
         counter = self.bot.context.increment('listener.counter')
@@ -287,7 +289,7 @@ class Listener(object):
 
     def on_join(self, received):
         """
-        A person has joined a space
+        A person, or the bot, has joined a space
 
         :param received: the event received
         :type received: Join
@@ -295,14 +297,22 @@ class Listener(object):
         Received information is dispatched to subscribers of the event
         ``join`` at the bot level.
 
+        In the special case where the bot itself is joining a room by
+        invitation, then the event ``enter`` is dispatched instead.
+
         """
         assert received.type == 'join'
 
-        self.bot.dispatch('join', received=received)
+        if received.actor_id == self.bot.get('bot.id'):
+            if received.get('hook') != 'shellbot-participants':
+                self.bot.dispatch('enter', received=received)
+        else:
+            if received.get('hook') != 'shellbot-rooms':
+                self.bot.dispatch('join', received=received)
 
     def on_leave(self, received):
         """
-        A person has leaved a space
+        A person, or the bot, has left a space
 
         :param received: the event received
         :type received: Leave
@@ -310,10 +320,18 @@ class Listener(object):
         Received information is dispatched to subscribers of the event
         ``leave`` at the bot level.
 
+        In the special case where the bot itself has been kicked off
+        from a room, then the event ``exit`` is dispatched instead.
+
         """
         assert received.type == 'leave'
 
-        self.bot.dispatch('leave', received=received)
+        if received.actor_id == self.bot.get('bot.id'):
+            if received.get('hook') != 'shellbot-participants':
+                self.bot.dispatch('exit', received=received)
+        else:
+            if received.get('hook') != 'shellbot-rooms':
+                self.bot.dispatch('leave', received=received)
 
     def on_inbound(self, received):
         """

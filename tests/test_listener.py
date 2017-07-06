@@ -69,7 +69,7 @@ my_join = Join({
     "personEmail" : "matt@example.com",
     "created" : "2015-10-18T14:26:16+00:00",
     "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
-    "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+    "actor_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
     "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
 })
 
@@ -86,7 +86,41 @@ my_leave = Leave({
     "personEmail" : "matt@example.com",
     "created" : "2015-10-18T14:26:16+00:00",
     "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
-    "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+    "actor_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+    "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
+})
+
+my_enter = Join({
+    "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
+    "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+    "roomType" : "group",
+    "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
+    "toPersonEmail" : "julie@example.com",
+    "text" : "The PM for this project is Mike C. and the Engineering Manager is Jane W.",
+    "markdown" : "**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>.",
+    "files" : [ "http://www.example.com/images/media.png" ],
+    "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+    "personEmail" : "matt@example.com",
+    "created" : "2015-10-18T14:26:16+00:00",
+    "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
+    "actor_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg",
+    "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
+})
+
+my_exit = Leave({
+    "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
+    "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+    "roomType" : "group",
+    "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
+    "toPersonEmail" : "julie@example.com",
+    "text" : "The PM for this project is Mike C. and the Engineering Manager is Jane W.",
+    "markdown" : "**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>.",
+    "files" : [ "http://www.example.com/images/media.png" ],
+    "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+    "personEmail" : "matt@example.com",
+    "created" : "2015-10-18T14:26:16+00:00",
+    "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
+    "actor_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg",
     "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
 })
 
@@ -112,7 +146,7 @@ my_event = Event({
 class ListenerTests(unittest.TestCase):
 
     def setUp(self):
-        my_bot.context.set('bot.id', "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg")
+        my_bot.set('bot.id', "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg")
 
     def tearDown(self):
         collected = gc.collect()
@@ -301,12 +335,41 @@ class ListenerTests(unittest.TestCase):
 
         logging.info('*** on_join ***')
 
+        class Handler(object):
+
+            def __init__(self):
+                self.entered = False
+                self.joined = False
+
+            def on_enter(self, received):
+                self.entered = True
+
+            def on_join(self, received):
+                self.joined = True
+
+        handler = Handler()
+        my_bot.subscribe('enter', handler)
+        my_bot.subscribe('join', handler)
+
         listener = Listener(bot=my_bot)
         with self.assertRaises(AssertionError):
             listener.on_join(my_message)
         with self.assertRaises(AssertionError):
             listener.on_join(my_attachment)
+
+        self.assertFalse(handler.entered)
+        self.assertFalse(handler.joined)
+
+        listener.on_join(my_enter)
+
+        self.assertTrue(handler.entered)
+        self.assertFalse(handler.joined)
+
         listener.on_join(my_join)
+
+        self.assertTrue(handler.entered)
+        self.assertTrue(handler.joined)
+
         with self.assertRaises(AssertionError):
             listener.on_join(my_leave)
         with self.assertRaises(AssertionError):
@@ -322,6 +385,22 @@ class ListenerTests(unittest.TestCase):
 
         logging.info('*** on_leave ***')
 
+        class Handler(object):
+
+            def __init__(self):
+                self.out = False
+                self.left = False
+
+            def on_exit(self, received):
+                self.out = True
+
+            def on_leave(self, received):
+                self.left = True
+
+        handler = Handler()
+        my_bot.subscribe('exit', handler)
+        my_bot.subscribe('leave', handler)
+
         listener = Listener(bot=my_bot)
         with self.assertRaises(AssertionError):
             listener.on_leave(my_message)
@@ -329,7 +408,20 @@ class ListenerTests(unittest.TestCase):
             listener.on_leave(my_attachment)
         with self.assertRaises(AssertionError):
             listener.on_leave(my_join)
+
+        self.assertFalse(handler.out)
+        self.assertFalse(handler.left)
+
+        listener.on_leave(my_exit)
+
+        self.assertTrue(handler.out)
+        self.assertFalse(handler.left)
+
         listener.on_leave(my_leave)
+
+        self.assertTrue(handler.out)
+        self.assertTrue(handler.left)
+
         with self.assertRaises(AssertionError):
             listener.on_leave(my_event)
 

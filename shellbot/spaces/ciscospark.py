@@ -316,7 +316,7 @@ class SparkSpace(Space):
 
                 self.bot.set('administrator.email', str(me.emails[0]))
                 logging.debug(u"- administrator email: {}".format(
-                    self.bot.context.get('administrator.email')))
+                    self.bot.get('administrator.email')))
 
                 self.bot.set('administrator.name', str(me.displayName))
                 logging.debug(u"- administrator name: {}".format(
@@ -683,17 +683,52 @@ class SparkSpace(Space):
         :param webhook: web address to be used by Cisco Spark service
         :type webhook: str
 
-        This function registers the provided hook to Cisco Spark.
+        This function registers the provided hook multiple times, so as to
+        receive mutiple kind of updates:
+
+        - The bot is invited to a room, or kicked out of it:
+          webhook name = shellbot-rooms
+          resource = memberships,
+          event = all,
+          personId = bot id,
+          registered with bot token
+
+        - Messages are sent, maybe with some files:
+          webhook name = shellbot-messages
+          resource = messages,
+          event = created,
+          registered with personal token (for chat auditing)
+
+        - People are joining or leaving:
+          webhook name = shellbot-participants
+          resource = memberships,
+          event = all,
+          registered with personal token (for chat auditing)
+
+        Previous webhooks registered with the bot token are all removed before
+        registration. This means that only the most recent instance of the bot
+        will be notified of new invitations.
+
         """
-        assert self.is_ready  # bond() is prerequisite
         assert hook_url not in (None, '')
 
         try:
-            logging.debug(u"Listing webhooks")
+            logging.debug(u"Purging bot webhooks")
+            for webhook in self.api.webhooks.list():
+#                logging.debug(u"- {}".format(str(webhook)))
+                logging.debug(u"- deleting '{}'".format(webhook.name))
+                self.api.webhooks.delete(webhookId=webhook.id)
+
+
+            purged = ('shellbot-webhook',
+                      'shellbot-messages',
+                      'shellbot-participants')
+
+            logging.debug(u"Purging personal webhooks")
             for webhook in self.personal_api.webhooks.list():
-                logging.debug(u"- {}".format(str(webhook)))
-                if webhook.name == 'shellbot-webhook':
-                    logging.debug(u"- deleting webhook")
+#                logging.debug(u"- {}".format(str(webhook)))
+                if webhook.name in purged:
+                    logging.debug(u"- deleting '{}'".format(webhook.name))
                     self.personal_api.webhooks.delete(webhookId=webhook.id)
 
         except Exception as feedback:
@@ -701,28 +736,30 @@ class SparkSpace(Space):
             logging.exception(feedback)
 
         logging.info(u"Registering webhook to Cisco Spark")
-        logging.debug(u"- {}".format(hook_url))
+        logging.debug(u"- url: {}".format(hook_url))
 
         assert self.personal_api is not None  # connect() is prerequisite
 
-        logging.debug(u"- roomId: {}".format(self.id))
-
         try:
-            logging.debug(u"- for messages")
-            self.personal_api.webhooks.create(name='shellbot-webhook',
+
+            logging.debug(u"- registering 'shellbot-rooms'")
+            self.api.webhooks.create(name='shellbot-rooms',
+                                     targetUrl=hook_url,
+                                     resource='memberships',
+                                     event='all',
+                                     filter='personId='+self.bot.get('bot.id'))
+
+            logging.debug(u"- registering 'shellbot-messages'")
+            self.personal_api.webhooks.create(name='shellbot-messages',
                                               targetUrl=hook_url,
                                               resource='messages',
-                                              event='created',
-                                              filter='roomId='+self.id)
+                                              event='created')
 
-            logging.debug(u"- for memberships")
-            self.personal_api.webhooks.create(name='shellbot-webhook',
+            logging.debug(u"- registering 'shellbot-participants'")
+            self.personal_api.webhooks.create(name='shellbot-participants',
                                               targetUrl=hook_url,
                                               resource='memberships',
-                                              event='all',
-                                              filter='roomId='+self.id)
-
-            logging.debug(u"- done")
+                                              event='all')
 
         except Exception as feedback:
             logging.warning(u"Unable to add webhook")
@@ -752,8 +789,8 @@ class SparkSpace(Space):
             }
 
         This function is called from far far away, over the Internet,
-        when message_id is None, or called locally, from test environment, when
-        message_id has a value.
+        when message_id` is None. Or it is called locally, from test environment,
+        when `message_id` has a value.
         """
 
         try:
@@ -763,11 +800,14 @@ class SparkSpace(Space):
             if message_id:
                 resource = 'messages'
                 event = 'created'
+                hook = 'injection'
 
             else:
+#                logging.debug(u"- {}".format(request.json))
                 resource = request.json['resource']
                 event = request.json['event']
                 data = request.json['data']
+                hook = request.json['name']
 
             if resource == 'messages' and event == 'created':
                 logging.debug(u"- handling '{}:{}'".format(resource, event))
@@ -779,6 +819,7 @@ class SparkSpace(Space):
                 while retries:
                     try:
                         item = self.personal_api.messages.get(messageId=message_id)
+                        item._json['hook'] = hook
                         self.on_message(item._json, self.bot.ears)
                         break
                     except Exception:
@@ -790,14 +831,27 @@ class SparkSpace(Space):
 
             elif resource == 'memberships' and event == 'created':
                 logging.debug(u"- handling '{}:{}'".format(resource, event))
-                logging.debug(u"- {}".format(data))
 
-                item = self.personal_api.memberships.get(membershipId=data['id'])
-                self.on_join(item._json, self.bot.ears)
+                item = self.personal_api.rooms.get(roomId=data['roomId'])
+#                logging.debug(u"- {}".format(item._json))
+
+                data['space_title'] = item._json['title']
+                data['space_type'] = item._json['type']
+                data['hook'] = hook
+#                logging.debug(u"- {}".format(data))
+
+                self.on_join(data, self.bot.ears)
 
             elif resource == 'memberships' and event == 'deleted':
                 logging.debug(u"- handling '{}:{}'".format(resource, event))
-                logging.debug(u"- {}".format(data))
+
+                item = self.personal_api.rooms.get(roomId=data['roomId'])
+#                logging.debug(u"- {}".format(item._json))
+
+                data['space_title'] = item._json['title']
+                data['space_type'] = item._json['type']
+                data['hook'] = hook
+#                logging.debug(u"- {}".format(data))
 
                 self.on_leave(data, self.bot.ears)
 
@@ -850,6 +904,7 @@ class SparkSpace(Space):
         while len(new_items):
             item = new_items.pop()
             self._last_message_id = item.id
+            item._json['hook'] = 'pull'
             self.on_message(item._json, self.bot.ears)
 
     def on_message(self, item, queue):

@@ -176,6 +176,8 @@ class ShellBot(object):
             'attachment': [], # attachment received (with attachment)
             'join': [],       # joining a space (with person)
             'leave': [],      # leaving a space (with person)
+            'enter': [],      # invited to a space (for the bot)
+            'exit': [],       # kicked off from a space (for the bot)
             'inbound': [],    # other event received from space (with event)
         }
 
