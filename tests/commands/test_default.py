@@ -10,19 +10,29 @@ import sys
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot, Shell
+from shellbot import Context, Engine, Shell, Vibes
 from shellbot.commands import Default
 
+my_engine = Engine(mouth=Queue())
+my_engine.shell = Shell(engine=my_engine)
 
-my_bot = ShellBot(mouth=Queue())
-my_bot.shell = Shell(bot=my_bot)
+
+class Bot(object):
+    def __init__(self, engine):
+        self.engine = engine
+
+    def say(self, text, content=None, file=None):
+        self.engine.mouth.put(Vibes(text, content, file))
+
+
+my_bot = Bot(engine=my_engine)
 
 
 class DefaultTests(unittest.TestCase):
 
     def test_init(self):
 
-        c = Default(my_bot)
+        c = Default(my_engine)
 
         self.assertEqual(c.keyword, u'*default')
         self.assertEqual(c.information_message, u'Handle unmatched command')
@@ -32,13 +42,13 @@ class DefaultTests(unittest.TestCase):
 
     def test_execute(self):
 
-        c = Default(my_bot)
+        c = Default(my_engine)
 
-        c.execute('*unknown*')
-        self.assertEqual(my_bot.mouth.get().text,
+        c.execute(my_bot, '*unknown*')
+        self.assertEqual(my_engine.mouth.get().text,
                          u"Sorry, I do not know how to handle '*unknown*'")
         with self.assertRaises(Exception):
-            my_bot.mouth.get_nowait()
+            my_engine.mouth.get_nowait()
 
 
 if __name__ == '__main__':

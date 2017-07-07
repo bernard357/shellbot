@@ -30,24 +30,32 @@ class Update(Command):
     no_input = u'There is nothing to update, input is empty'
     ok_msg = u'Update successfuly done'
 
-    def execute(self, arguments):
+    def execute(self, bot, arguments):
         """
         Update input data
+
+        :param bot: The bot for this execution
+        :type bot: Shellbot
+
+        :param arguments: The arguments for this command
+        :type arguments: str or ``None``
+
         """
         if arguments in (None, ''):
-            self.bot.say(self.no_arg, content=self.no_arg)
+            bot.say(self.no_arg, content=self.no_arg)
             return
 
-        input = self.bot.recall('input')
+        input = bot.recall('input')
         if input in (None, {}):
-            self.bot.say(self.no_input)
+            bot.say(self.no_input)
             return
 
-        arg = arguments.split(' ', 1)[1] # to keep the full line
-        arg = arg.replace(" ", "")        
-        key = arguments.replace(arg,'')
-        key = key.replace(" ", "")
-        self.bot.update('input', key, arg)
-        self.bot.say(self.ok_msg)
+        tokens = arguments.split(' ')
+        if len(tokens) < 2:
+            bot.say(self.no_arg)
+            return
+
+        bot.update('input', tokens[0], tokens[1])
+        bot.say(self.ok_msg)
 
 

@@ -27,15 +27,22 @@ class Empty(Command):
     information_message = u'Handle empty command'
     is_hidden = True
 
-    def execute(self, *args):
+    def execute(self, bot, *args):
         """
         Handles empty command
+
+        :param bot: The bot for this execution
+        :type bot: Shellbot
+
+        :param arguments: The arguments for this command
+        :type arguments: str or ``None``
+
         """
         if not hasattr(self, 'help_command'):
-            self.help_command = self.bot.shell.command('help')
+            self.help_command = self.engine.shell.command('help')
 
         if self.help_command is None:
-            self.bot.say(u"No help command has been found.")
+            bot.say(u"No help command has been found.")
 
         else:
-            self.help_command.execute()
+            self.help_command.execute(bot)

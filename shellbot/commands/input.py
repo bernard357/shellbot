@@ -29,17 +29,24 @@ class Input(Command):
     no_input_message = u'There is nothing to display'
     input_header =u'Input:'
 
-    def execute(self, arguments=None):
+    def execute(self, bot, arguments=None):
         """
         Displays input data
+
+        :param bot: The bot for this execution
+        :type bot: Shellbot
+
+        :param arguments: The arguments for this command
+        :type arguments: str or ``None``
+
         """
-        input = self.bot.recall('input')
+        input = bot.recall('input')
         if input in (None, {}):
-            self.bot.say(self.no_input_message)
+            bot.say(self.no_input_message)
             return
 
         lines = [self.input_header]
         for key in sorted(input.keys()):
             lines.append(u"{} - {}".format(key, input.get(key, '')))
 
-        self.bot.say('\n'.join(lines))
+        bot.say('\n'.join(lines))

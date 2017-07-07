@@ -27,8 +27,15 @@ class Noop(Command):
     information_message = u'Do absolutely nothing'
     is_hidden = True
 
-    def execute(self, arguments=None):
+    def execute(self, bot, arguments=None):
         """
         Does absolutely nothing
+
+        :param bot: The bot for this execution
+        :type bot: Shellbot
+
+        :param arguments: The arguments for this command
+        :type arguments: str or ``None``
+
         """
         pass

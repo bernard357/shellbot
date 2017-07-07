@@ -33,9 +33,16 @@ class Sleep(Command):
 
     DEFAULT_DELAY = 1.0
 
-    def execute(self, arguments):
+    def execute(self, bot, arguments):
         """
         Sleeps for a while
+
+        :param bot: The bot for this execution
+        :type bot: Shellbot
+
+        :param arguments: The arguments for this command
+        :type arguments: str or ``None``
+
         """
         try:
             delay = float(arguments) if float(arguments) > 0.0 else 1.0

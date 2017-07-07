@@ -10,12 +10,25 @@ import sys
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot, Shell
+from shellbot import Context, Engine, Shell, Vibes
 from shellbot.commands import Close
 
+my_engine = Engine(mouth=Queue())
+my_engine.shell = Shell(engine=my_engine)
 
-my_bot = ShellBot(mouth=Queue())
-my_bot.shell = Shell(bot=my_bot)
+
+class Bot(object):
+    def __init__(self, engine):
+        self.engine = engine
+
+    def say(self, text, content=None, file=None):
+        self.engine.mouth.put(Vibes(text, content, file))
+
+    def dispose(self):
+        pass
+
+
+my_bot = Bot(engine=my_engine)
 
 
 class CloseTests(unittest.TestCase):
@@ -24,7 +37,7 @@ class CloseTests(unittest.TestCase):
 
         logging.info('***** init')
 
-        c = Close(my_bot)
+        c = Close(my_engine)
 
         self.assertEqual(c.keyword, u'close')
         self.assertEqual(c.information_message, u'Close this space')
@@ -36,17 +49,22 @@ class CloseTests(unittest.TestCase):
 
         logging.info('***** execute')
 
-        my_bot.stop = mock.Mock()
-        my_bot.dispose = mock.Mock()
+        my_engine.stop = mock.Mock()
+        my_engine.dispose = mock.Mock()
 
-        c = Close(my_bot)
+        c = Close(my_engine)
 
-        c.execute()
-        self.assertEqual(my_bot.mouth.get().text, u'Closing this space')
+        with mock.patch.object(my_bot,
+                               'dispose',
+                               return_value=None) as mocked:
+            c.execute(my_bot)
+            self.assertTrue(my_bot.dispose.called)
+
+        self.assertEqual(my_engine.mouth.get().text, u'Closing this space')
         with self.assertRaises(Exception):
-            my_bot.mouth.get_nowait()
+            my_engine.mouth.get_nowait()
 
-        self.assertTrue(my_bot.dispose.called)
+
 
 if __name__ == '__main__':
 

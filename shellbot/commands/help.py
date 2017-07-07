@@ -28,30 +28,37 @@ class Help(Command):
     usage_message = u'help <command>'
     usage_template = u"usage: {}"
 
-    def execute(self, arguments=None):
+    def execute(self, bot, arguments=None):
         """
         Lists available commands and related usage information
+
+        :param bot: The bot for this execution
+        :type bot: Shellbot
+
+        :param arguments: The arguments for this command
+        :type arguments: str or ``None``
+
         """
 
-        if self.bot.shell.commands == []:
-            self.bot.say(u"No command has been found.")
+        if self.engine.shell.commands == []:
+            bot.say(u"No command has been found.")
 
         elif arguments in (None, ''):
             lines = []
-            for key in self.bot.shell.commands:
-                command = self.bot.shell.command(key)
+            for key in self.engine.shell.commands:
+                command = self.engine.shell.command(key)
                 if not command.is_hidden:
                     lines.append(u"{} - {}".format(
                         command.keyword,
                         command.information_message))
 
             if lines:
-                self.bot.say(
+                bot.say(
                     'Available commands:\n'
                     + '\n'.join(lines))
 
         else:
-            command = self.bot.shell.command(arguments)
+            command = self.engine.shell.command(arguments)
 
             if command:
                 lines = []
@@ -66,7 +73,7 @@ class Help(Command):
                         self.usage_template.format(command.keyword))
 
                 if lines:
-                    self.bot.say('\n'.join(lines))
+                    bot.say('\n'.join(lines))
 
             else:
-                self.bot.say(u"This command is unknown.")
+                bot.say(u"This command is unknown.")

@@ -10,12 +10,22 @@ import sys
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot, Shell
+from shellbot import Context, Engine, Shell, Vibes
 from shellbot.commands import Version
 
+my_engine = Engine(mouth=Queue())
+my_engine.shell = Shell(engine=my_engine)
 
-my_bot = ShellBot(mouth=Queue())
-my_bot.shell = Shell(bot=my_bot)
+
+class Bot(object):
+    def __init__(self, engine):
+        self.engine = engine
+
+    def say(self, text, content=None, file=None):
+        self.engine.mouth.put(Vibes(text, content, file))
+
+
+my_bot = Bot(engine=my_engine)
 
 
 class VersionTests(unittest.TestCase):
@@ -24,7 +34,7 @@ class VersionTests(unittest.TestCase):
 
         logging.info('***** init')
 
-        c = Version(my_bot)
+        c = Version(my_engine)
 
         self.assertEqual(c.keyword, u'version')
         self.assertEqual(c.information_message, u'Display software version')
@@ -36,16 +46,17 @@ class VersionTests(unittest.TestCase):
 
         logging.info('***** execute')
 
-        my_bot.shell.configure(settings={
+        my_engine.shell.configure(settings={
             'bot': {'name': 'testy', 'version': '17.4.1'},
         })
 
-        c = Version(my_bot)
+        c = Version(my_engine)
 
-        c.execute()
-        self.assertEqual(my_bot.mouth.get().text, 'testy version 17.4.1')
+        c.execute(my_bot)
+        self.assertEqual(my_engine.mouth.get().text, 'testy version 17.4.1')
         with self.assertRaises(Exception):
-            my_bot.mouth.get_nowait()
+            my_engine.mouth.get_nowait()
+
 
 if __name__ == '__main__':
 

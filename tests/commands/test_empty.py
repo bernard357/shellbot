@@ -10,12 +10,22 @@ import sys
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot, Shell
+from shellbot import Context, Engine, Shell, Vibes
 from shellbot.commands import Empty
 
+my_engine = Engine(mouth=Queue())
+my_engine.shell = Shell(engine=my_engine)
 
-my_bot = ShellBot(mouth=Queue())
-my_bot.shell = Shell(bot=my_bot)
+
+class Bot(object):
+    def __init__(self, engine):
+        self.engine = engine
+
+    def say(self, text, content=None, file=None):
+        self.engine.mouth.put(Vibes(text, content, file))
+
+
+my_bot = Bot(engine=my_engine)
 
 
 class EmptyTests(unittest.TestCase):
@@ -25,7 +35,7 @@ class EmptyTests(unittest.TestCase):
 
         logging.info('***** init')
 
-        c = Empty(my_bot)
+        c = Empty(my_engine)
 
         self.assertEqual(c.keyword, u'*empty')
         self.assertEqual(c.information_message, u'Handle empty command')
@@ -37,24 +47,24 @@ class EmptyTests(unittest.TestCase):
 
         logging.info('***** execute')
 
-        my_bot.shell.load_command('shellbot.commands.help')
+        my_engine.shell.load_command('shellbot.commands.help')
 
-        c = Empty(my_bot)
+        c = Empty(my_engine)
 
-        c.execute()
+        c.execute(my_bot)
         self.assertEqual(
-            my_bot.mouth.get().text,
+            my_engine.mouth.get().text,
             u'Available commands:\nhelp - Show commands and usage')
         with self.assertRaises(Exception):
-            print(my_bot.mouth.get_nowait())
+            print(my_engine.mouth.get_nowait())
 
-        c = Empty(my_bot)
-        my_bot.shell._commands = {}
-        c.execute()
-        self.assertEqual(my_bot.mouth.get().text,
+        c = Empty(my_engine)
+        my_engine.shell._commands = {}
+        c.execute(my_bot)
+        self.assertEqual(my_engine.mouth.get().text,
                          u'No help command has been found.')
         with self.assertRaises(Exception):
-            print(my_bot.mouth.get_nowait())
+            print(my_engine.mouth.get_nowait())
 
 
 if __name__ == '__main__':

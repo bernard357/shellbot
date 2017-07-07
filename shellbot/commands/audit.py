@@ -62,60 +62,75 @@ class Audit(Command):
 
     _armed = False  # for tests only
 
-    def execute(self, arguments=None):
+    def execute(self, bot, arguments=None):
         """
         Checks and changes audit status
+
+        :param bot: The bot for this execution
+        :type bot: Shellbot
 
         :param arguments: either 'on' or 'off'
         :type arguments: str
 
         """
         if self.armed == False:
-            self.bot.say(self.disabled_message)
+            bot.say(self.disabled_message)
 
         elif arguments == 'on':
-            self.audit_on()
+            self.audit_on(bot)
 
         elif arguments =='off':
-            self.audit_off()
+            self.audit_off(bot)
 
         elif arguments in (None, ''):
-            self.audit_status()
+            self.audit_status(bot)
 
         else:
-            self.bot.say(u"usage: {}".format(self.usage_message))
+            bot.say(u"usage: {}".format(self.usage_message))
 
-    def audit_on(self):
+    def audit_on(self, bot):
         """
         Activates audit mode
+
+        :param bot: The bot for this execution
+        :type bot: Shellbot
+
         """
-        if self.bot.context.get('audit.switch', 'off') == 'on':
-            self.bot.say(self.already_on_message)
+        if self.engine.get('audit.switch', 'off') == 'on':
+            bot.say(self.already_on_message)
         else:
             self.say(u"{0} AUDIT ON {0}".format("====================="))
-            self.bot.context.set('audit.switch', 'on')
-            self.bot.say(self.on_message)
+            self.engine.set('audit.switch', 'on')
+            bot.say(self.on_message)
 
-    def audit_off(self):
+    def audit_off(self, bot):
         """
         Activates private mode
-        """
-        if self.bot.context.get('audit.switch', 'off') == 'on':
-            self.say(u"{0} AUDIT OFF {0}".format("====================="))
-            self.bot.context.set('audit.switch', 'off')
-            self.bot.say(self.off_message)
-            self.on_off()
-        else:
-            self.bot.say(self.already_off_message)
 
-    def audit_status(self):
+        :param bot: The bot for this execution
+        :type bot: Shellbot
+
+        """
+        if self.engine.get('audit.switch', 'off') == 'on':
+            self.say(u"{0} AUDIT OFF {0}".format("====================="))
+            self.engine.set('audit.switch', 'off')
+            bot.say(self.off_message)
+            self.on_off(bot)
+        else:
+            bot.say(self.already_off_message)
+
+    def audit_status(self, bot):
         """
         Reports on audit status
+
+        :param bot: The bot for this execution
+        :type bot: Shellbot
+
         """
-        if self.bot.context.get('audit.switch', 'off') == 'on':
-            self.bot.say(self.on_message)
+        if self.engine.get('audit.switch', 'off') == 'on':
+            bot.say(self.on_message)
         else:
-            self.bot.say(self.off_message)
+            bot.say(self.off_message)
 
     def arm(self, updater):
         """
@@ -127,7 +142,7 @@ class Audit(Command):
         """
         assert updater is not None
         self.updater = updater
-        self.bot.listener.filter = self.filter
+        self.engine.listener.filter = self.filter
 
     @property
     def armed(self):
@@ -142,7 +157,7 @@ class Audit(Command):
         if self.updater is None:
             return False
 
-        if self.bot.listener.filter != self.filter:
+        if self.engine.listener.filter != self.filter:
             return False
 
         return True
@@ -151,22 +166,22 @@ class Audit(Command):
         """
         Registers callback from bot
         """
-        self.bot.subscribe('start', self)
+        self.engine.subscribe('start', self)
 
     def on_start(self):
         """
         Reacts on bot start
         """
-        self.bot.say('Tuning audit')
-        self.execute('on')
+        logging.info(u"Activating real-time audit")
+        self.engine.set('audit.switch', 'on')
 
-    def on_off(self):
+    def on_off(self, bot):
         """
         Triggers watchdog when audit is disabled
         """
         if self.off_duration and self.off_duration > 0:
 
-            self.bot.say(
+            bot.say(
                 self.temporary_off_message.format(
                     str(self.off_duration)+' seconds'))
 
@@ -179,9 +194,9 @@ class Audit(Command):
         Ensures that audit is restarted
         """
         logging.debug(u"Watchdog is checking audit status")
-        if self.bot.context.get('audit.switch', 'off') == 'off':
+        if self.engine.get('audit.switch', 'off') == 'off':
             logging.debug(u"- restarting audit")
-            self.audit_on()
+            self.engine.set('audit.switch', 'on')
 
     def filter(self, event):
         """
@@ -196,7 +211,7 @@ class Audit(Command):
         """
         logging.debug(u"- filtering a {} event".format(event.type))
         try:
-            if self.bot.context.get('audit.switch', 'off') == 'on':
+            if self.engine.get('audit.switch', 'off') == 'on':
                 logging.debug(u"- {}".format(str(event)))
                 self.updater.put(event)
             else:
@@ -214,7 +229,7 @@ class Audit(Command):
             return
 
         message = Message({'text': text,
-                           'from_id': self.bot.name,
-                           'from_label': self.bot.name})
+                           'from_id': self.engine.name,
+                           'from_label': self.engine.name})
         self.updater.put(message)
 

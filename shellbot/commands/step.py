@@ -36,11 +36,17 @@ class Step(Command):
     keyword = u'step'
     information_message = u'Move process to next step'
 
-    def execute(self, arguments=None):
+    def execute(self, bot, arguments=None):
         """
         Moves underlying state machine to the next step
+
+        :param bot: The bot for this execution
+        :type bot: Shellbot
+
+        :param arguments: The arguments for this command
+        :type arguments: str or ``None``
 
         This function raises AttributeError when the bot has
         not been initialised with a suitable Machine.
         """
-        self.bot.machine.step(event='next')
+        bot.machine.step(event='next')

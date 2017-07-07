@@ -10,13 +10,30 @@ import sys
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot, Shell
+from shellbot import Context, Engine, Shell, Vibes
 from shellbot.stores import MemoryStore
 from shellbot.commands import Input
 
+my_engine = Engine(mouth=Queue())
+my_engine.shell = Shell(engine=my_engine)
 
-my_store = MemoryStore()
-my_bot = ShellBot(mouth=Queue(), store=my_store)
+
+class Bot(object):
+    def __init__(self, engine):
+        self.engine = engine
+        self.data = {}
+
+    def say(self, text, content=None, file=None):
+        self.engine.mouth.put(Vibes(text, content, file))
+
+    def update(self, label, key, value):
+        self.data[key] = value
+
+    def recall(self, label):
+        return self.data
+
+
+my_bot = Bot(engine=my_engine)
 
 
 class InputTests(unittest.TestCase):
@@ -25,7 +42,7 @@ class InputTests(unittest.TestCase):
 
         logging.info('***** init')
 
-        c = Input(my_bot)
+        c = Input(my_engine)
 
         self.assertEqual(c.keyword, u'input')
         self.assertEqual(
@@ -38,23 +55,24 @@ class InputTests(unittest.TestCase):
 
         logging.info('***** execute')
 
-        c = Input(my_bot)
+        c = Input(my_engine)
 
-        c.execute()
+        c.execute(my_bot)
         self.assertEqual(
-            my_bot.mouth.get().text,
+            my_engine.mouth.get().text,
             u'There is nothing to display')
         with self.assertRaises(Exception):
-            my_bot.mouth.get_nowait()
+            my_engine.mouth.get_nowait()
 
         my_bot.update('input', 'PO#', '1234A')
         my_bot.update('input', 'description', 'part does not fit')
-        c.execute()
+        c.execute(my_bot)
         self.assertEqual(
-            my_bot.mouth.get().text,
+            my_engine.mouth.get().text,
             u'Input:\nPO# - 1234A\ndescription - part does not fit')
         with self.assertRaises(Exception):
-            my_bot.mouth.get_nowait()
+            my_engine.mouth.get_nowait()
+
 
 if __name__ == '__main__':
 

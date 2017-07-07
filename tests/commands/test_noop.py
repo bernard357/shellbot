@@ -10,12 +10,22 @@ import sys
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot, Shell
+from shellbot import Context, Engine, Shell, Vibes
 from shellbot.commands import Noop
 
+my_engine = Engine(mouth=Queue())
+my_engine.shell = Shell(engine=my_engine)
 
-my_bot = ShellBot(mouth=Queue())
-my_bot.shell = Shell(bot=my_bot)
+
+class Bot(object):
+    def __init__(self, engine):
+        self.engine = engine
+
+    def say(self, text, content=None, file=None):
+        self.engine.mouth.put(Vibes(text, content, file))
+
+
+my_bot = Bot(engine=my_engine)
 
 
 class NoopTests(unittest.TestCase):
@@ -24,7 +34,7 @@ class NoopTests(unittest.TestCase):
 
         logging.info('***** init')
 
-        c = Noop(my_bot)
+        c = Noop(my_engine)
 
         self.assertEqual(c.keyword, u'pass')
         self.assertEqual(c.information_message, u'Do absolutely nothing')
@@ -36,11 +46,11 @@ class NoopTests(unittest.TestCase):
 
         logging.info('***** execute')
 
-        c = Noop(my_bot)
+        c = Noop(my_engine)
 
-        c.execute()
+        c.execute(my_bot)
         with self.assertRaises(Exception):
-            my_bot.mouth.get_nowait()
+            my_engine.mouth.get_nowait()
 
 
 if __name__ == '__main__':
