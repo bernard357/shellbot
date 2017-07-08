@@ -29,12 +29,19 @@ class Shell(object):
     Parses input and reacts accordingly
     """
 
-    def __init__(self, bot):
-        self.bot = bot
-        self.bot.shell = self
+    def __init__(self, engine):
+        """
+        Parses input and reacts accordingly
+
+        :param engine: the overarching engine
+        :type engine: Engine
+
+        """
+        self.engine = engine
+        self.engine.shell = self
 
         self._commands = {}
-        self.load_commands(self.bot.context.get('shell.commands', []))
+        self.load_commands(self.engine.get('shell.commands', []))
 
         self.line = None
         self.count = 0
@@ -65,11 +72,11 @@ class Shell(object):
         loaded previously.
         """
 
-        self.bot.context.apply(settings)
-        self.bot.context.check('shell.commands', default=[])
+        self.engine.context.apply(settings)
+        self.engine.context.check('shell.commands', default=[])
 
         self.load_default_commands()
-        self.load_commands(self.bot.context.get('shell.commands'))
+        self.load_commands(self.engine.get('shell.commands'))
 
     @property
     def commands(self):
@@ -192,21 +199,25 @@ class Shell(object):
 
             name = command.rsplit('.', 1)[1].capitalize()
             cls = getattr(module, name)
-            command = cls(self.bot)
+            command = cls(self.engine)
 
         if command.keyword in self._commands.keys():
             logging.debug(u"Command '{}' has been replaced".format(
                 command.keyword))
 
-        command.context = self.bot.context
-        command.shell = self
-        command.bot = self.bot
+        command.engine = self.engine
 
         self._commands[command.keyword] = command
 
-    def do(self, line):
+    def do(self, line, space_id=None):
         """
         Handles one line of text
+
+        :param line: a line of text to parse and to handle
+        :type line: str
+
+        :param space_id: the unique id of the target chat context
+        :type space_id: str
 
         This function uses the first token as a verb, and looks for a command
         of the same name in the shell.
@@ -219,6 +230,8 @@ class Shell(object):
         If an empty line is provided, the command ``*empty`` is triggered.
         Default implementation is provided in ``shellbot.commands.empty``.
 
+        A bot instance is retrieved from the id provided, and given to the
+        command that is executed.
         """
         line = str(line) if line else ''  # sanity check
 
@@ -236,29 +249,29 @@ class Shell(object):
         else:
             arguments = ''
 
+        bot = self.engine.get_bot(space_id)
+
         try:
             if verb in self._commands.keys():
                 command = self._commands[verb]
                 if command.is_interactive:
                     self.verb = verb
-                    command.execute(arguments)
+                    command.execute(bot, arguments)
                 else:
-                    if not self.bot.context.get('worker.busy', False):
-                        self.bot.say(u"Ok, working on it")
+                    if not self.engine.get('worker.busy', False):
+                        bot.say(u"Ok, working on it")
                     else:
-                        self.bot.say(
-                            u"Ok, will work on it as soon as possible")
-                    self.bot.inbox.put((command.keyword, arguments))
+                        bot.say(u"Ok, will work on it as soon as possible")
+                    self.engine.inbox.put(
+                        (command.keyword, arguments, space_id))
 
             elif '*default' in self._commands.keys():
                 command = self._commands['*default']
-                command.execute(line)  # assume this is always interactive
+                command.execute(bot, line)  # assume this is always interactive
 
             else:
-                self.bot.say(
-                    u"Sorry, I do not know how to handle '{}'".format(verb))
+                bot.say(u"Sorry, I do not know how to handle '{}'".format(verb))
 
         except Exception:
-            self.bot.say(
-                u"Sorry, I do not know how to handle '{}'".format(verb))
+            bot.say(u"Sorry, I do not know how to handle '{}'".format(verb))
             raise
