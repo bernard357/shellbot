@@ -22,7 +22,7 @@ from shellbot.events import Event, Message, Attachment, Join, Leave
 class MyEngine(Engine):
     def get_bot(self, id):
         logging.debug("injecting test bot")
-        return Bot(self)
+        return my_bot
 
 
 my_engine = MyEngine(ears=Queue(), mouth=Queue())

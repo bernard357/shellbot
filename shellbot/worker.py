@@ -25,8 +25,15 @@ class Worker(object):
     Executes non-interactive commands
     """
 
-    def __init__(self, bot=None):
-        self.bot = bot
+    def __init__(self, engine=None):
+        """
+        Executes non-interactive commands
+
+        :param engine: the overarching engine
+        :type engine: Engine
+
+        """
+        self.engine = engine
 
     def start(self):
         """
@@ -55,7 +62,7 @@ class Worker(object):
         Processing should be handled in the background, like
         in the following example::
 
-            worker = Worker(bot=my_bot)
+            worker = Worker(engine=my_engine)
             handle = worker.start()
 
             ...
@@ -75,24 +82,24 @@ class Worker(object):
         """
         logging.info(u"Starting worker")
 
-        self.bot.context.set('worker.counter', 0)
-        self.bot.context.set('worker.busy', False)
+        self.engine.set('worker.counter', 0)
+        self.engine.set('worker.busy', False)
 
         try:
-            while self.bot.context.get('general.switch', 'on') == 'on':
+            while self.engine.get('general.switch', 'on') == 'on':
 
-                if self.bot.inbox.empty():
+                if self.engine.inbox.empty():
                     time.sleep(0.005)
                     continue
 
                 try:
-                    item = self.bot.inbox.get(True, 0.1)
-                    if isinstance(item, Exception):
+                    item = self.engine.inbox.get(True, 0.1)
+                    if item is None:
                         break
 
-                    self.bot.context.set('worker.busy', True)
+                    self.engine.set('worker.busy', True)
                     self.process(item)
-                    self.bot.context.set('worker.busy', False)
+                    self.engine.set('worker.busy', False)
 
                 except Exception as feedback:
                     logging.exception(feedback)
@@ -112,30 +119,32 @@ class Worker(object):
 
         Example actions::
 
-            worker.process(item=('help', 'some_command'))
+            worker.process(item=('help', 'some_command', space_id))
 
-            worker.process(item=('version', ''))
+            worker.process(item=('version', '', space_id))
 
         """
-        (verb, arguments) = item
+        (verb, arguments, space_id) = item
 
-        counter = self.bot.context.increment('worker.counter')
+        counter = self.engine.context.increment('worker.counter')
         logging.debug(u'Worker is working on {} ({})'.format(verb, counter))
 
-        try:
-            if verb in self.bot.shell.commands:
-                command = self.bot.shell.command(verb)
-                command.execute(arguments)
+        bot = self.engine.get_bot(space_id)
 
-            elif '*default' in self.bot.shell.commands:
-                command = self.bot.shell.command('*default')
-                command.execute(' '.join([verb, arguments]).rstrip())
+        try:
+            if verb in self.engine.shell.commands:
+                command = self.engine.shell.command(verb)
+                command.execute(bot, arguments)
+
+            elif '*default' in self.engine.shell.commands:
+                command = self.engine.shell.command('*default')
+                command.execute(bot, ' '.join([verb, arguments]).rstrip())
 
             else:
-                self.bot.say(
+                bot.say(
                     u"Sorry, I do not know how to handle '{}'".format(verb))
 
         except Exception:
-            self.bot.say(
+            bot.say(
                 u"Sorry, I do not know how to handle '{}'".format(verb))
             raise
