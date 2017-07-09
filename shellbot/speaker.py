@@ -21,6 +21,13 @@ from six import string_types
 import time
 
 
+class Vibes(object):
+    def __init__(self, text, content=None, file=None):
+        self.text = text
+        self.content = content
+        self.file = file
+
+
 class Speaker(object):
     """
     Sends updates to a business messaging space
@@ -29,15 +36,15 @@ class Speaker(object):
     EMPTY_DELAY = 0.005   # time to wait if queue is empty
     NOT_READY_DELAY = 5   # time to wait if space is not ready
 
-    def __init__(self, bot=None):
+    def __init__(self, engine=None):
         """
         Sends updates to a business messaging space
 
-        :param bot: the overarching bot
-        :type bot: ShellBot
+        :param engine: the overarching engine
+        :type engine: Engine
 
         """
-        self.bot = bot
+        self.engine = engine
 
     def start(self):
         """
@@ -48,10 +55,10 @@ class Speaker(object):
         This function starts a separate daemonic process to speak
         in the background.
         """
-        p = Process(target=self.run)
-        p.daemon = True
-        p.start()
-        return p
+        process = Process(target=self.run)
+        process.daemon = True
+        process.start()
+        return process
 
     def run(self):
         """
@@ -63,18 +70,18 @@ class Speaker(object):
         Processing should be handled in a separate background process, like
         in the following example::
 
-            speaker = Speaker(bot=bot)
+            speaker = Speaker(engine=my_engine)
             process_handle = speaker.start()
 
         The recommended way for stopping the process is to change the
         parameter ``general.switch`` in the context. For example::
 
-            bot.context.set('general.switch', 'off')
+            engine.set('general.switch', 'off')
 
         Alternatively, the loop is also broken when an exception is pushed
         to the queue. For example::
 
-            bot.mouth.put(Exception('EOQ'))
+            engine.mouth.put(Exception('EOQ'))
 
         Note that items are not picked up from the queue until the underlying
         space is ready for handling messages.
@@ -82,15 +89,15 @@ class Speaker(object):
         logging.info(u"Starting speaker")
 
         try:
-            self.bot.context.set('speaker.counter', 0)
+            self.engine.set('speaker.counter', 0)
             not_ready_flag = True
-            while self.bot.context.get('general.switch', 'on') == 'on':
+            while self.engine.get('general.switch', 'on') == 'on':
 
-                if self.bot.mouth.empty():
+                if self.engine.mouth.empty():
                     time.sleep(self.EMPTY_DELAY)
                     continue
 
-                if not self.bot.space.is_ready:
+                if not self.engine.space.is_ready:
                     if not_ready_flag:
                         logging.debug(
                             u"Speaker is waiting for space to be ready...")
@@ -99,7 +106,7 @@ class Speaker(object):
                     continue
 
                 try:
-                    item = self.bot.mouth.get(True, 0.1)
+                    item = self.engine.mouth.get(True, 0.1)
                     if isinstance(item, Exception):
                         break
 
@@ -122,15 +129,15 @@ class Speaker(object):
 
         """
 
-        counter = self.bot.context.increment('speaker.counter')
+        counter = self.engine.context.increment('speaker.counter')
         logging.debug(u'Speaker is working on {}'.format(counter))
 
-        if self.bot.space is not None:
+        if self.engine.space is not None:
             if isinstance(item, string_types):
-                self.bot.space.post_message(item)
+                self.engine.space.post_message(item)
             else:
-                self.bot.space.post_message(item.text,
-                                            content=item.content,
-                                            file=item.file)
+                self.engine.space.post_message(item.text,
+                                               content=item.content,
+                                               file=item.file)
         else:
             logging.info(item)

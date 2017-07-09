@@ -129,17 +129,17 @@ class LocalSpace(Space):
         """
         Checks that valid settings are available
         """
-        self.bot.context.check(self.prefix+'.title', 'Local space', filter=True)
-        self.bot.context.check(self.prefix+'.moderators', [], filter=True)
-        self.bot.context.check(self.prefix+'.participants', [], filter=True)
+        self.engine.context.check(self.prefix+'.title', 'Local space', filter=True)
+        self.engine.context.check(self.prefix+'.moderators', [], filter=True)
+        self.engine.context.check(self.prefix+'.participants', [], filter=True)
 
-        self.bot.context.set('server.binding', None)  # no web server at all
+        self.engine.context.set('server.binding', None)  # no web server at all
 
     def on_bond(self):
         """
         Adds processing to space bond
         """
-        self.bot.set('bot.id', '*bot')
+        self.engine.set('bot.id', '*bot')
 
     def use_space(self, id, **kwargs):
         """
@@ -290,11 +290,11 @@ class LocalSpace(Space):
 
         try:
             line = next(self._lines)
-            self.on_message({'text': line}, self.bot.ears)
+            self.on_message({'text': line}, self.engine.ears)
         except StopIteration:
             sys.stdout.write(u'^C\n')
             sys.stdout.flush()
-            self.bot.context.set('general.switch', 'off')
+            self.engine.context.set('general.switch', 'off')
 
     def on_message(self, item, queue):
         """
@@ -311,6 +311,6 @@ class LocalSpace(Space):
         """
         message = Message(item)
         message.from_id = '*user'
-        message.mentioned_ids = [self.bot.context.get('bot.id')]
+        message.mentioned_ids = [self.engine.context.get('bot.id')  ]
 
         queue.put(str(message))

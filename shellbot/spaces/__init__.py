@@ -60,7 +60,7 @@ class SpaceFactory(object):
     }
 
     @classmethod
-    def build(self, bot, **kwargs):
+    def build(self, engine, **kwargs):
         """
         Builds an instance based on provided configuration
 
@@ -72,11 +72,10 @@ class SpaceFactory(object):
 
         A ``ValueError`` is raised if no type could be identified.
         """
-        assert bot is not None
+        assert engine is not None
 
-        type = self.sense(bot.context)
-        space = self.get(type, bot=bot, **kwargs)
-        space.configure()
+        type = self.sense(engine.context)
+        space = self.get(type, engine=engine, **kwargs)
 
         return space
 

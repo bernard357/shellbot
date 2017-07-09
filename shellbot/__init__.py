@@ -15,10 +15,11 @@
 
 from .bot import ShellBot
 from .context import Context
+from .engine import Engine
 from .listener import Listener
 from .server import Server
 from .shell import Shell
-from .speaker import Speaker
+from .speaker import Speaker, Vibes
 from .worker import Worker
 
 from .spaces import SpaceFactory
@@ -35,6 +36,7 @@ __all__ = [
     __version__,
     'ShellBot',
     'Context',
+    'Engine',
     'Listener',
     'Server',
     'Shell',

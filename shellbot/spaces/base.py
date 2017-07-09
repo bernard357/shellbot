@@ -92,20 +92,20 @@ class Space(object):
     PULL_INTERVAL = 0.05  # time between pulls, when not hooked
 
     def __init__(self,
-                 bot=None,
+                 engine=None,
                  **kwargs):
         """
         Handles a collaborative space
 
-        :param bot: the overarching bot
-        :type bot: ShellBot
+        :param engine: the overarching engine
+        :type engine: Engine
 
         Example::
 
-            space = Space(bot=bot)
+            space = Space(engine=my_engine)
 
         """
-        self.bot = bot
+        self.engine = engine
 
         self.on_init(**kwargs)
 
@@ -155,7 +155,7 @@ class Space(object):
 
         """
         try:
-            return self.bot.get(self.prefix+'.'+key, default)
+            return self.engine.get(self.prefix+'.'+key, default)
         except AttributeError:
             return default
 
@@ -182,7 +182,7 @@ class Space(object):
         This function is safe on multiprocessing and multithreading.
 
         """
-        self.bot.set(self.prefix+'.'+key, value)
+        self.engine.set(self.prefix+'.'+key, value)
 
     def reset(self):
         """
@@ -227,7 +227,7 @@ class Space(object):
         After a call to this function, ``bond()`` has to be invoked to
         return to normal mode of operation.
         """
-        self.bot.context.apply(settings)
+        self.engine.context.apply(settings)
 
         if do_check:
             self.check()
@@ -243,7 +243,7 @@ class Space(object):
         Example::
 
             def check(self):
-                self.bot.context.check(self.prefix+'.title', is_mandatory=True)
+                self.engine.context.check(self.prefix+'.title', is_mandatory=True)
 
         """
         pass
@@ -293,7 +293,7 @@ class Space(object):
 
         Example::
 
-            space = Space(context=context)
+            space = Space(engine=my_engine)
             space.connect()
             space.bond()
 
@@ -733,7 +733,7 @@ class Space(object):
         The recommended way for stopping the process is to change the
         parameter ``general.switch`` in the context. For example::
 
-            bot.context.set('general.switch', 'off')
+            engine.set('general.switch', 'off')
 
         Note: this function should not be invoked if a webhok has been
         configured.
@@ -744,12 +744,12 @@ class Space(object):
         time.sleep(0.2)
 
         try:
-            self.bot.context.set('puller.counter', 0)
-            while self.bot.context.get('general.switch', 'on') == 'on':
+            self.engine.set('puller.counter', 0)
+            while self.engine.get('general.switch', 'on') == 'on':
 
                 try:
                     self.pull()
-                    self.bot.context.increment('puller.counter')
+                    self.engine.context.increment('puller.counter')
                     time.sleep(self.PULL_INTERVAL)
 
                 except Exception as feedback:

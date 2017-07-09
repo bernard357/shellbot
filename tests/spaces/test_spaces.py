@@ -12,7 +12,7 @@ import time
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot
+from shellbot import Context, Engine
 from shellbot.spaces import SpaceFactory
 
 
@@ -26,7 +26,7 @@ class SpaceFactoryTests(unittest.TestCase):
 
         logging.info("***** build generic space from settings")
 
-        bot = ShellBot(settings={  # from settings to member attributes
+        engine = Engine(settings={  # from settings to member attributes
             'space': {
                 'room': 'My preferred room',
                 'moderators':
@@ -40,7 +40,7 @@ class SpaceFactoryTests(unittest.TestCase):
             }
         })
 
-        space = SpaceFactory.build(bot=bot)
+        space = SpaceFactory.build(engine=engine)
         self.assertEqual(space.id, None)   #  set after bond()
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
 
@@ -48,7 +48,7 @@ class SpaceFactoryTests(unittest.TestCase):
 
         logging.info("***** build local space from settings")
 
-        bot = ShellBot(settings={  # from settings to member attributes
+        engine = Engine(settings={  # from settings to member attributes
             'local': {
                 'room': 'My preferred room',
                 'moderators':
@@ -59,7 +59,7 @@ class SpaceFactoryTests(unittest.TestCase):
             }
         })
 
-        space = SpaceFactory.build(bot=bot)
+        space = SpaceFactory.build(engine=engine)
         self.assertEqual(space.id, None)   #  set after bond()
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
 
@@ -279,8 +279,8 @@ class SpaceFactoryTests(unittest.TestCase):
 
         logging.info("***** get Cisco Spark space")
 
-        bot = ShellBot()
-        space = SpaceFactory.get(type='spark', bot=bot, token='b')
+        engine = Engine()
+        space = SpaceFactory.get(type='spark', engine=engine, token='b')
         self.assertEqual(space.token, 'b')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
