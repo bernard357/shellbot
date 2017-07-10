@@ -48,8 +48,7 @@ class SpaceFactory(object):
             }
         })
 
-        bot = ShellBot(context=context)
-        space = SpaceFactory.build(bot)
+        space = SpaceFactory.build(context)
 
     """
 
@@ -60,22 +59,22 @@ class SpaceFactory(object):
     }
 
     @classmethod
-    def build(self, engine, **kwargs):
+    def build(self, context, **kwargs):
         """
         Builds an instance based on provided configuration
 
-        :param bot: configuration to be used
-        :type bot: ShellBot
+        :param context: configuration to be used
+        :type context: Context
 
         :return: a ready-to-use space
         :rtype: Space
 
         A ``ValueError`` is raised if no type could be identified.
         """
-        assert engine is not None
+        assert context is not None
 
-        type = self.sense(engine.context)
-        space = self.get(type, engine=engine, **kwargs)
+        type = self.sense(context)
+        space = self.get(type, context=context, **kwargs)
 
         return space
 

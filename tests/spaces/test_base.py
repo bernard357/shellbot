@@ -12,34 +12,17 @@ import time
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, Engine, ShellBot
+from shellbot import Context
 from shellbot.spaces import Space, LocalSpace
 
 
-class Fake(object):
-    def __init__(self, **kwargs):
-        for key, value in kwargs.items():
-            setattr(self, key, value)
+my_context = Context()
 
-
-class FakeRoom(Fake):
-    id = '*id'
-    title = '*title'
-    teamId = None
-
-
-class FakeMessage(Fake):
-    id = '*id'
-    message = '*message'
-
-
-my_engine = Engine()
-my_bot = ShellBot(engine=my_engine)
 
 class SpaceTests(unittest.TestCase):
 
     def tearDown(self):
-        my_engine.context.clear()
+        my_context.clear()
         collected = gc.collect()
         logging.info("Garbage collector: collected %d objects." % (collected))
 
@@ -48,18 +31,18 @@ class SpaceTests(unittest.TestCase):
         logging.info("*** init")
 
         logging.debug("- default init")
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
-        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
+        self.assertEqual(space.title, None)
 
         logging.debug("- unknown parameter")
-        space = Space(engine=my_engine, weird='w')
+        space = Space(context=my_context, weird='w')
         with self.assertRaises(AttributeError):
             self.assertEqual(space.weird, 'w')
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
-        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
+        self.assertEqual(space.title, None)
 
         logging.debug("- extended parameters")
         class ExSpace(Space):
@@ -72,7 +55,7 @@ class SpaceTests(unittest.TestCase):
                 self.token = ex_token
                 self.ears = ex_ears
 
-        space = ExSpace(engine=my_engine,
+        space = ExSpace(context=my_context,
                         ex_token='*token',
                         ex_ears='e',
                         ex_unknown='*weird')
@@ -84,7 +67,7 @@ class SpaceTests(unittest.TestCase):
             self.assertTrue(space.ex_unknown is not None)
 
         logging.debug("- initialised via configuration")
-        space = LocalSpace(engine=my_engine, prefix='my.space')
+        space = LocalSpace(context=my_context, prefix='my.space')
         space.configure({
             'my.space': {
                 'title': 'Another title',
@@ -96,13 +79,14 @@ class SpaceTests(unittest.TestCase):
         })
         self.assertEqual(space.prefix, 'my.space')
         self.assertEqual(space.id, None)
-        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
+        self.assertEqual(space.title, None)
+        self.assertEqual(space.configured_title(), 'Another title')
 
     def test_get(self):
 
         logging.info("*** get")
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.get('id'), None)
         self.assertEqual(space.get('id', '*default'), '*default')
@@ -115,19 +99,19 @@ class SpaceTests(unittest.TestCase):
 
         logging.info("*** set")
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         space.prefix = 'a_special_space'
 
         space.set('id', '*id')
-        self.assertEqual(my_engine.get('a_special_space.id'), '*id')
+        self.assertEqual(my_context.get('a_special_space.id'), '*id')
         self.assertEqual(space.get('id'), '*id')
 
         space.set('title', '*title')
-        self.assertEqual(my_engine.get('a_special_space.title'), '*title')
+        self.assertEqual(my_context.get('a_special_space.title'), '*title')
         self.assertEqual(space.get('title'), '*title')
 
         space.set('_other', ['a', 'b', 'c'])
-        self.assertEqual(my_engine.get('a_special_space._other'), ['a', 'b', 'c'])
+        self.assertEqual(my_context.get('a_special_space._other'), ['a', 'b', 'c'])
         self.assertEqual(space.get('_other'), ['a', 'b', 'c'])
 
     def test_reset(self):
@@ -138,14 +122,14 @@ class SpaceTests(unittest.TestCase):
             def on_reset(self):
                 self._my_counter = 123
 
-        space = ExSpace(engine=my_engine)
+        space = ExSpace(context=my_context)
         self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.id, None)
-        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
+        self.assertEqual(space.title, None)
         self.assertEqual(space._my_counter, 123)
 
-        space.set('id', '*id')
-        space.title = '*title'
+        space.values['id'] = '*id'
+        space.values['title'] = '*title'
         space._my_counter = 456
 
         self.assertEqual(space.id, '*id')
@@ -155,7 +139,7 @@ class SpaceTests(unittest.TestCase):
         space.reset()
 
         self.assertEqual(space.id, None)
-        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
+        self.assertEqual(space.title, None)
         self.assertEqual(space._my_counter, 123)
 
     def test_configure(self):
@@ -164,22 +148,22 @@ class SpaceTests(unittest.TestCase):
 
         class ExSpace(Space):
             def check(self):
-                self.engine.context.check(self.prefix+'.title', is_mandatory=True)
+                self.context.check(self.prefix+'.title', is_mandatory=True)
 
         settings = {'space.key': 'my value'}
 
-        space = ExSpace(engine=my_engine)
+        space = ExSpace(context=my_context)
         with self.assertRaises(KeyError):
             space.configure(settings=settings)
 
-        self.assertEqual(space.engine.get('space.title'), None)
-        self.assertEqual(space.engine.get('space.key'), 'my value')
+        self.assertEqual(space.context.get('space.title'), None)
+        self.assertEqual(space.context.get('space.key'), 'my value')
 
-        space = ExSpace(engine=my_engine)
+        space = ExSpace(context=my_context)
         space.configure(settings=settings, do_check=False)
 
-        self.assertEqual(space.engine.get('space.title'), None)
-        self.assertEqual(space.engine.get('space.key'), 'my value')
+        self.assertEqual(space.context.get('space.title'), None)
+        self.assertEqual(space.context.get('space.key'), 'my value')
 
     def test_configured_title(self):
 
@@ -189,7 +173,7 @@ class SpaceTests(unittest.TestCase):
             def configured_title(self):
                 return self.engine.get('spark.room', self.DEFAULT_SPACE_TITLE)
 
-        space = Space(engine=my_engine, prefix='alien')
+        space = Space(context=my_context, prefix='alien')
 
         self.assertEqual(space.configured_title(),
                          space.DEFAULT_SPACE_TITLE)
@@ -203,7 +187,7 @@ class SpaceTests(unittest.TestCase):
 
         logging.info("*** connect")
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         space.connect()
 
     def test_bond(self):
@@ -214,7 +198,7 @@ class SpaceTests(unittest.TestCase):
             def on_bond(self):
                 self.bonded = True
 
-        space = ExSpace(engine=my_engine)
+        space = ExSpace(context=my_context)
         space.lookup_space = mock.Mock(return_value=False)
         space.create_space = mock.Mock()
         space.add_moderator = mock.Mock()
@@ -230,7 +214,7 @@ class SpaceTests(unittest.TestCase):
         space.add_participant.assert_called_with('me')
         self.assertTrue(space.bonded)
 
-        space = ExSpace(engine=my_engine)
+        space = ExSpace(context=my_context)
         space.configure(settings={
             'space': {
                 'title': 'Another title',
@@ -257,31 +241,31 @@ class SpaceTests(unittest.TestCase):
 
         logging.info("*** is_ready")
 
-        space = Space(engine=my_engine, prefix='a_prefix')
+        space = Space(context=my_context, prefix='a_prefix')
         self.assertFalse(space.is_ready)
 
-        space.set('id', '*id')
+        space.values['id'] = '*id'
         self.assertTrue(space.is_ready)
 
     def test_use_space(self):
 
         logging.info("*** use_space")
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         self.assertFalse(space.use_space(id='*id'))
 
     def test_lookup_space(self):
 
         logging.info("*** lookup_space")
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         self.assertFalse(space.lookup_space(title='*title'))
 
     def test_create_space(self):
 
         logging.info("*** create_space")
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         with self.assertRaises(NotImplementedError):
             space.create_space(title='*title')
 
@@ -289,14 +273,14 @@ class SpaceTests(unittest.TestCase):
 
         logging.info("*** add_moderators")
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         with mock.patch.object(space,
                                'add_moderator') as mocked:
 
             space.add_moderators(persons=[])
             self.assertFalse(mocked.called)
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         with mock.patch.object(space,
                                'add_moderator') as mocked:
 
@@ -307,7 +291,7 @@ class SpaceTests(unittest.TestCase):
 
         logging.info("*** add_moderator")
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         with self.assertRaises(NotImplementedError):
             space.add_moderator(person='alice@acme.com')
 
@@ -315,14 +299,14 @@ class SpaceTests(unittest.TestCase):
 
         logging.info("*** add_participants")
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         with mock.patch.object(space,
                                'add_participant') as mocked:
 
             space.add_participants(persons=[])
             self.assertFalse(mocked.called)
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         with mock.patch.object(space,
                                'add_participant') as mocked:
 
@@ -334,7 +318,7 @@ class SpaceTests(unittest.TestCase):
 
         logging.info("*** add_participant")
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         with self.assertRaises(NotImplementedError):
             space.add_participant(person='alice@acme.com')
 
@@ -342,14 +326,14 @@ class SpaceTests(unittest.TestCase):
 
         logging.info("*** remove_participants")
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         with mock.patch.object(space,
                                'remove_participant') as mocked:
 
             space.remove_participants(persons=[])
             self.assertFalse(mocked.called)
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         with mock.patch.object(space,
                                'remove_participant') as mocked:
 
@@ -360,7 +344,7 @@ class SpaceTests(unittest.TestCase):
 
         logging.info("*** remove_participant")
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         with self.assertRaises(NotImplementedError):
             space.remove_participant(person='alice@acme.com')
 
@@ -368,26 +352,26 @@ class SpaceTests(unittest.TestCase):
 
         logging.info("*** dispose")
 
-        space = Space(engine=my_engine)
-        space.title = '*title'
+        space = Space(context=my_context)
+        space.values['title'] = '*title'
         space.delete_space = mock.Mock()
         space.reset = mock.Mock()
         space.dispose()
         space.delete_space.assert_called_with(title='*title')
         self.assertTrue(space.reset.called)
 
-        my_engine.context.apply(settings={'space.title': 'a room'})
-        space = Space(engine=my_engine)
-        space.title = None
+        my_context.apply(settings={'space.title': 'a room'})
+        space = Space(context=my_context)
+        space.values['title'] = None
         space.delete_space = mock.Mock()
         space.reset = mock.Mock()
         space.dispose()
         space.delete_space.assert_called_with(title='a room')
         self.assertTrue(space.reset.called)
 
-        my_engine.context.apply(settings={'space.title': 'another room'})
-        space = Space(engine=my_engine)
-        space.title = ''
+        my_context.apply(settings={'space.title': 'another room'})
+        space = Space(context=my_context)
+        space.values['title'] = ''
         space.delete_space = mock.Mock()
         space.reset = mock.Mock()
         space.dispose()
@@ -398,7 +382,7 @@ class SpaceTests(unittest.TestCase):
 
         logging.info("*** delete_space")
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         with self.assertRaises(NotImplementedError):
             space.delete_space(title='*does*not*exist')
 
@@ -406,7 +390,7 @@ class SpaceTests(unittest.TestCase):
 
         logging.info("*** post_message")
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         with self.assertRaises(NotImplementedError):
             space.post_message(text="What's up, Doc?")
 
@@ -414,7 +398,7 @@ class SpaceTests(unittest.TestCase):
 
         logging.info("*** webhook")
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         with self.assertRaises(NotImplementedError):
             space.webhook()
 
@@ -422,7 +406,7 @@ class SpaceTests(unittest.TestCase):
 
         logging.info("*** register")
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         with self.assertRaises(NotImplementedError):
             space.register(hook_url='http://no.where/')
 
@@ -430,7 +414,7 @@ class SpaceTests(unittest.TestCase):
 
         logging.info("*** start")
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         space.register = mock.Mock()
         space.pull = mock.Mock()
         space.start(hook_url='http:/who.knows/')
@@ -441,37 +425,37 @@ class SpaceTests(unittest.TestCase):
             def on_start(self):
                 self._bot_id = 123
 
-        space = ExSpace(engine=my_engine)
+        space = ExSpace(context=my_context)
         space.register = mock.Mock()
         space.pull = mock.Mock()
         space.PULL_INTERVAL = 0.01
         space.start()
         time.sleep(0.4)
-        my_engine.set('general.switch', 'off')
+        my_context.set('general.switch', 'off')
         time.sleep(0.1)
         self.assertFalse(space.register.called)
-        self.assertTrue(my_engine.get('puller.counter') > 1)
+        self.assertTrue(my_context.get('puller.counter') > 1)
         self.assertEqual(space._bot_id, 123)
 
     def test_run(self):
 
         logging.info("*** run")
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         space.pull = mock.Mock(side_effect=Exception('TEST'))
         space.run()
-        self.assertEqual(my_engine.get('puller.counter'), 0)
+        self.assertEqual(my_context.get('puller.counter'), 0)
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         space.pull = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
         space.run()
-        self.assertEqual(my_engine.get('puller.counter'), 0)
+        self.assertEqual(my_context.get('puller.counter'), 0)
 
     def test_pull(self):
 
         logging.info("*** pull")
 
-        space = Space(engine=my_engine)
+        space = Space(context=my_context)
         with self.assertRaises(NotImplementedError):
             space.pull()
 

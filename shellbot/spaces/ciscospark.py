@@ -184,22 +184,22 @@ class SparkSpace(Space):
             ['bobby@jah.com']
 
         """
-        self.engine.context.check(self.prefix+'.room', filter=True)
-        self.engine.context.check(self.prefix+'.moderators', [], filter=True)
-        self.engine.context.check(self.prefix+'.participants', [])
-        self.engine.context.check(self.prefix+'.team')
-        self.engine.context.check(self.prefix+'.token',
-                               '$CISCO_SPARK_BOT_TOKEN', filter=True)
-        self.engine.context.check(self.prefix+'.personal_token',
-                               '$CISCO_SPARK_TOKEN', filter=True)
+        self.context.check(self.prefix+'.room', filter=True)
+        self.context.check(self.prefix+'.moderators', [], filter=True)
+        self.context.check(self.prefix+'.participants', [])
+        self.context.check(self.prefix+'.team')
+        self.context.check(self.prefix+'.token',
+                           '$CISCO_SPARK_BOT_TOKEN', filter=True)
+        self.context.check(self.prefix+'.personal_token',
+                           '$CISCO_SPARK_TOKEN', filter=True)
 
-        values = self.engine.context.get(self.prefix+'.moderators')
+        values = self.context.get(self.prefix+'.moderators')
         if isinstance(values, string_types):
-            self.engine.context.set(self.prefix+'.moderators', [values])
+            self.context.set(self.prefix+'.moderators', [values])
 
-        values = self.engine.context.get(self.prefix+'.participants')
+        values = self.context.get(self.prefix+'.participants')
         if isinstance(values, string_types):
-            self.engine.context.set(self.prefix+'.participants', [values])
+            self.context.set(self.prefix+'.participants', [values])
 
     def configured_title(self):
         """
@@ -281,18 +281,18 @@ class SparkSpace(Space):
                 me = self.api.people.me()
 #                logging.debug(u"- {}".format(str(me)))
 
-                self.engine.set('bot.email', str(me.emails[0]))
+                self.context.set('bot.email', str(me.emails[0]))
                 logging.debug(u"- bot email: {}".format(
-                    self.engine.get('bot.email')))
+                    self.context.get('bot.email')))
 
-                self.engine.set('bot.name',
+                self.context.set('bot.name',
                              str(me.displayName))
                 logging.debug(u"- bot name: {}".format(
-                    self.engine.get('bot.name')))
+                    self.context.get('bot.name')))
 
-                self.engine.set('bot.id', me.id)
+                self.context.set('bot.id', me.id)
                 logging.debug(u"- bot id: {}".format(
-                    self.engine.get('bot.id')))
+                    self.context.get('bot.id')))
 
                 break
 
@@ -314,17 +314,17 @@ class SparkSpace(Space):
                 me = self.personal_api.people.me()
 #                logging.debug(u"- {}".format(str(me)))
 
-                self.engine.set('administrator.email', str(me.emails[0]))
+                self.context.set('administrator.email', str(me.emails[0]))
                 logging.debug(u"- administrator email: {}".format(
-                    self.engine.get('administrator.email')))
+                    self.context.get('administrator.email')))
 
-                self.engine.set('administrator.name', str(me.displayName))
+                self.context.set('administrator.name', str(me.displayName))
                 logging.debug(u"- administrator name: {}".format(
-                    self.engine.get('administrator.name')))
+                    self.context.get('administrator.name')))
 
-                self.engine.set('administrator.id', me.id)
+                self.context.set('administrator.id', me.id)
                 logging.debug(u"- administrator id: {}".format(
-                    self.engine.get('administrator.id')))
+                    self.context.get('administrator.id')))
 
                 break
 
@@ -458,11 +458,10 @@ class SparkSpace(Space):
         """
         logging.info(u"Bonding to room '{}'".format(room.title))
 
-        self.set('id', room.id)
+        self.values['id'] = room.id
         logging.debug(u"- id: {}".format(self.id))
 
-        self.title = room.title
-        self.set('title', self.title)
+        self.values['title'] = room.title
         logging.debug(u"- title: {}".format(self.title))
 
         logging.debug(u"- type: {}".format(room.type))
@@ -475,8 +474,8 @@ class SparkSpace(Space):
 
         self.team_id = room.teamId
 
-        bot_email = self.engine.get('bot.email')
-        administrator_email = self.engine.get('administrator.email')
+        bot_email = self.context.get('bot.email')
+        administrator_email = self.context.get('administrator.email')
         if bot_email != administrator_email:
             logging.debug(u"- adding bot: {}".format(bot_email))
             self.add_moderator(bot_email)
@@ -516,10 +515,6 @@ class SparkSpace(Space):
         except Exception as feedback:
             logging.warning(u"Unable to delete room")
             logging.exception(feedback)
-
-    def archive_space(self, title=None, **kwargs):
-        # ToDo: make sure that the room is attached to a team
-        delete_space(self, title=title, **kwargs)
 
     def get_team(self, name):
         """
@@ -602,7 +597,7 @@ class SparkSpace(Space):
             assert self.id is not None  # bond() is prerequisite
 
             self.personal_api.memberships.delete(roomId=self.id,
-                                        personEmail=person)
+                                                 personEmail=person)
 
         except Exception as feedback:
             logging.warning(u"Unable to remove participant '{}'".format(person))
@@ -728,7 +723,6 @@ class SparkSpace(Space):
                 logging.debug(u"- deleting '{}'".format(webhook.name))
                 self.api.webhooks.delete(webhookId=webhook.id)
 
-
             purged = ('shellbot-webhook',
                       'shellbot-messages',
                       'shellbot-participants')
@@ -756,7 +750,7 @@ class SparkSpace(Space):
                                      targetUrl=hook_url,
                                      resource='memberships',
                                      event='all',
-                                     filter='personId='+self.engine.get('bot.id'))
+                                     filter='personId='+self.context.get('bot.id'))
 
             logging.debug(u"- registering 'shellbot-messages'")
             self.personal_api.webhooks.create(name='shellbot-messages',
@@ -829,7 +823,7 @@ class SparkSpace(Space):
                     try:
                         item = self.personal_api.messages.get(messageId=message_id)
                         item._json['hook'] = hook
-                        self.on_message(item._json, self.engine.ears)
+                        self.on_message(item._json, self.ears)
                         break
                     except Exception:
                         if retries:
@@ -849,7 +843,7 @@ class SparkSpace(Space):
                 data['hook'] = hook
 #                logging.debug(u"- {}".format(data))
 
-                self.on_join(data, self.engine.ears)
+                self.on_join(data, self.ears)
 
             elif resource == 'memberships' and event == 'deleted':
                 logging.debug(u"- handling '{}:{}'".format(resource, event))
@@ -862,7 +856,7 @@ class SparkSpace(Space):
                 data['hook'] = hook
 #                logging.debug(u"- {}".format(data))
 
-                self.on_leave(data, self.engine.ears)
+                self.on_leave(data, self.ears)
 
             else:
                 logging.debug(u"- throwing away {}:{}".format(resource, event))
@@ -886,7 +880,7 @@ class SparkSpace(Space):
         assert self.is_ready
 
         logging.info(u'Pulling messages')
-        self.engine.context.increment(u'puller.counter')
+        self.context.increment(u'puller.counter')
 
         assert self.api is not None  # connect() is prerequisite
         new_items = []
@@ -914,7 +908,7 @@ class SparkSpace(Space):
             item = new_items.pop()
             self._last_message_id = item.id
             item._json['hook'] = 'pull'
-            self.on_message(item._json, self.engine.ears)
+            self.on_message(item._json, self.ears)
 
     def on_message(self, item, queue):
         """

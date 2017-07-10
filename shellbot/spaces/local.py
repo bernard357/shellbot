@@ -129,17 +129,17 @@ class LocalSpace(Space):
         """
         Checks that valid settings are available
         """
-        self.engine.context.check(self.prefix+'.title', 'Local space', filter=True)
-        self.engine.context.check(self.prefix+'.moderators', [], filter=True)
-        self.engine.context.check(self.prefix+'.participants', [], filter=True)
+        self.context.check(self.prefix+'.title', 'Local space', filter=True)
+        self.context.check(self.prefix+'.moderators', [], filter=True)
+        self.context.check(self.prefix+'.participants', [], filter=True)
 
-        self.engine.set('server.binding', None)  # no web server at all
+        self.context.set('server.binding', None)  # no web server at all
 
     def on_bond(self):
         """
         Adds processing to space bond
         """
-        self.engine.set('bot.id', '*bot')
+        self.context.set('bot.id', '*bot')
 
     def use_space(self, id, **kwargs):
         """
@@ -159,8 +159,8 @@ class LocalSpace(Space):
         """
         assert id not in (None, '')
 
-        self.set('id', id)
-        self.title = self.configured_title()
+        self.values['id'] = id
+        self.values['title'] = self.configured_title()
 
         return True
 
@@ -176,8 +176,8 @@ class LocalSpace(Space):
         """
         assert title not in (None, '')
 
-        self.set('id', '*id')
-        self.title = title
+        self.values['id'] = '*id'
+        self.values['title'] = title
 
         return True
 
@@ -194,8 +194,8 @@ class LocalSpace(Space):
         """
         assert title not in (None, '')
 
-        self.set('id', '*id')
-        self.title = title
+        self.values['id'] = '*id'
+        self.values['title'] = title
 
     def add_moderator(self, person):
         """
@@ -298,11 +298,11 @@ class LocalSpace(Space):
 
         try:
             line = next(self._lines)
-            self.on_message({'text': line}, self.engine.ears)
+            self.on_message({'text': line}, self.ears)
         except StopIteration:
             sys.stdout.write(u'^C\n')
             sys.stdout.flush()
-            self.engine.context.set('general.switch', 'off')
+            self.context.set('general.switch', 'off')
 
     def on_message(self, item, queue):
         """
@@ -319,6 +319,6 @@ class LocalSpace(Space):
         """
         message = Message(item)
         message.from_id = '*user'
-        message.mentioned_ids = [self.engine.context.get('bot.id')  ]
+        message.mentioned_ids = [self.context.get('bot.id')]
 
         queue.put(str(message))

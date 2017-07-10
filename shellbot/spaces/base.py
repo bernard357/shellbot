@@ -17,8 +17,9 @@
 
 from bottle import request
 import logging
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Manager
 import os
+import signal
 from six import string_types
 import time
 
@@ -31,8 +32,8 @@ class Space(object):
 
     1. A space instance is created and configured::
 
-           >>>bot = ShellBot(...)
-           >>>space = Space(bot=bot)
+           >>>my_context = Context(...)
+           >>>space = Space(context=my_context)
 
     2. The space is connected to some back-end API::
 
@@ -92,20 +93,34 @@ class Space(object):
     PULL_INTERVAL = 0.05  # time between pulls, when not hooked
 
     def __init__(self,
-                 engine=None,
+                 context=None,
+                 ears=None,
                  **kwargs):
         """
         Handles a collaborative space
 
-        :param engine: the overarching engine
-        :type engine: Engine
+        :param context: the overarching context
+        :type context: Context
+
+        :param ears: the listening queue
+        :type ears: Queue
 
         Example::
 
-            space = Space(engine=my_engine)
+            space = Space(context=my_engine.context,
+                          ears=my_engine.ears)
 
         """
-        self.engine = engine
+        # prevent Manager() process to be interrupted
+        handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+        self.values = Manager().dict()
+
+        # restore current handler for the rest of the program
+        signal.signal(signal.SIGINT, handler)
+
+        self.context = context
+        self.ears = ears
 
         self.on_init(**kwargs)
 
@@ -149,13 +164,13 @@ class Space(object):
 
         Example::
 
-            id = space.get('id')
+            configured_title = space.get('title')
 
         This function is safe on multiprocessing and multithreading.
 
         """
         try:
-            return self.engine.get(self.prefix+'.'+key, default)
+            return self.context.get(self.prefix+'.'+key, default)
         except AttributeError:
             return default
 
@@ -177,12 +192,14 @@ class Space(object):
 
         Example::
 
-            space.set('title', 'brand new title')
+            space.set('some_key', 'some_value')
+            ...
+            value = space.get('some_key')  # 'some_value'
 
         This function is safe on multiprocessing and multithreading.
 
         """
-        self.engine.set(self.prefix+'.'+key, value)
+        self.context.set(self.prefix+'.'+key, value)
 
     def reset(self):
         """
@@ -191,12 +208,7 @@ class Space(object):
         After a call to this function, ``bond()`` has to be invoked to
         return to normal mode of operation.
         """
-        try:
-            self.set('id', None)
-        except AttributeError:
-            pass
-
-        self.title = self.DEFAULT_SPACE_TITLE
+        self.values.clear()
 
         self.on_reset()
 
@@ -227,7 +239,7 @@ class Space(object):
         After a call to this function, ``bond()`` has to be invoked to
         return to normal mode of operation.
         """
-        self.engine.context.apply(settings)
+        self.context.apply(settings)
 
         if do_check:
             self.check()
@@ -293,7 +305,7 @@ class Space(object):
 
         Example::
 
-            space = Space(engine=my_engine)
+            space = Space(...)
             space.connect()
             space.bond()
 
@@ -305,7 +317,6 @@ class Space(object):
             title = self.configured_title()
 
         assert title not in (None, '')
-        self.title = title
 
         if not self.lookup_space(title=title, **kwargs):
 
@@ -352,13 +363,20 @@ class Space(object):
         """
         Retrieves id of this space
         """
-        return self.get('id')
+        return self.values.get('id')
+
+    @property
+    def title(self):
+        """
+        Retrieves title of this space
+        """
+        return self.values.get('title')
 
     def use_space(self, id, **kwargs):
         """
         Uses an existing space
 
-        :param id: title of the target space
+        :param id: id of the target space
         :type id: str
 
         :return: True on success, False otherwise
@@ -532,50 +550,10 @@ class Space(object):
         if self.title in (None, '', self.DEFAULT_SPACE_TITLE):
             title = self.configured_title()
         else:
-            title = self.title
+            title = self.values.get('title')
 
         self.delete_space(title=title, **kwargs)
         self.reset()
-
-    def archive(self, **kwargs):
-        """
-        Archives all resources
-
-        This function is useful to clean environment.
-
-        >>>space.bond(title="Working Space")
-        ...
-        >>>space.archive()
-
-        After a call to this function, ``bond()`` has to be invoked to
-        return to normal mode of operation.
-        """
-
-        if self.title in (None, '', self.DEFAULT_SPACE_TITLE):
-            title = self.configured_title()
-        else:
-            title = self.title
-
-        self.archive_space(title=title, **kwargs)
-
-    def archive_space(self, title=None, **kwargs):
-        """
-        Archives a space
-
-        :param title: title of the space to be archived (optional)
-        :type title: str
-
-        >>>space.archive_space("Obsolete Space")
-
-        This function should be implemented in sub-class.
-
-        Example::
-
-            def archive_space(self, title=None, **kwargs):
-                self.api.rooms.delete(title=title)
-
-        """
-        raise NotImplementedError()
 
     def delete_space(self, title=None, **kwargs):
         """
@@ -752,12 +730,12 @@ class Space(object):
         time.sleep(0.2)
 
         try:
-            self.engine.set('puller.counter', 0)
-            while self.engine.get('general.switch', 'on') == 'on':
+            self.context.set('puller.counter', 0)
+            while self.context.get('general.switch', 'on') == 'on':
 
                 try:
                     self.pull()
-                    self.engine.context.increment('puller.counter')
+                    self.context.increment('puller.counter')
                     time.sleep(self.PULL_INTERVAL)
 
                 except Exception as feedback:
