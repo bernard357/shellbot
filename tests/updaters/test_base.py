@@ -12,11 +12,11 @@ import sys
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot, Shell
+from shellbot import Context, Engine, ShellBot, Shell
 from shellbot.events import Message
 from shellbot.updaters import Updater
 
-my_bot = ShellBot()
+my_engine = Engine()
 
 
 class BaseTests(unittest.TestCase):
@@ -30,7 +30,7 @@ class BaseTests(unittest.TestCase):
         logging.info('***** init')
 
         u = Updater()
-        self.assertEqual(u.bot, None)
+        self.assertEqual(u.engine, None)
 
     def test_on_init(self):
 
@@ -41,13 +41,13 @@ class BaseTests(unittest.TestCase):
             def on_init(self, more=None, **kwargs):
                 self.more = more
 
-        u = MyUpdater(bot=mock.Mock(),
+        u = MyUpdater(engine=mock.Mock(),
                       more='more',
                       weird='weird')
         self.assertEqual(u.more, 'more')
         with self.assertRaises(AttributeError):
             self.assertEqual(u.weird, 'weird')
-        self.assertTrue(u.bot.subscribe.called)
+        self.assertTrue(u.engine.subscribe.called)
 
     def test_on_bond(self):
 
@@ -64,9 +64,9 @@ class BaseTests(unittest.TestCase):
             def on_bond(self):
                 self.count += 1
 
-        u = MyUpdater(bot=my_bot)
+        u = MyUpdater(engine=my_engine)
         self.assertEqual(u.count, 0)
-        my_bot.dispatch('bond')
+        my_engine.dispatch('bond')
         self.assertEqual(u.count, 1)
 
     def test_on_dispose(self):
@@ -84,9 +84,9 @@ class BaseTests(unittest.TestCase):
             def on_dispose(self):
                 self.count += 1
 
-        u = MyUpdater(bot=my_bot)
+        u = MyUpdater(engine=my_engine)
         self.assertEqual(u.count, 0)
-        my_bot.dispatch('dispose')
+        my_engine.dispatch('dispose')
         self.assertEqual(u.count, 1)
 
 

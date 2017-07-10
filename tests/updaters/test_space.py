@@ -11,9 +11,11 @@ import sys
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot, Shell
+from shellbot import Context, Engine, Shell
 from shellbot.events import Event, Message, Attachment, Join, Leave
 from shellbot.updaters import SpaceUpdater
+
+my_engine = Engine()
 
 
 class UpdaterTests(unittest.TestCase):
@@ -29,7 +31,7 @@ class UpdaterTests(unittest.TestCase):
         space = mock.Mock()
         speaker = mock.Mock()
         u = SpaceUpdater(space=space, speaker=speaker)
-        self.assertEqual(u.bot, None)
+        self.assertEqual(u.engine, None)
 
     def test_put(self):
 

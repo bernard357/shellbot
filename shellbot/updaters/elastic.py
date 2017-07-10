@@ -59,7 +59,7 @@ class ElasticsearchUpdater(Updater):
         if self.host not in (None, ''):
             return self.host
 
-        return self.bot.get('elasticsearch.updater.host', 'localhost:9200')
+        return self.engine.get('elasticsearch.updater.host', 'localhost:9200')
 
     def on_bond(self):
         """

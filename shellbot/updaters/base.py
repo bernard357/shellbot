@@ -59,7 +59,7 @@ class Updater(object):
     """
 
     def __init__(self,
-                 bot=None,
+                 engine=None,
                  **kwargs):
         """
         Handles inbound events
@@ -69,15 +69,15 @@ class Updater(object):
 
         Example::
 
-            updater = Updater(bot=bot)
+            updater = Updater(engine=my_engine)
             updater.put(event)
 
         """
-        self.bot = bot
+        self.engine = engine
 
-        if self.bot:
-            self.bot.subscribe('bond', self)
-            self.bot.subscribe('dispose', self)
+        if self.engine:
+            self.engine.subscribe('bond', self)
+            self.engine.subscribe('dispose', self)
 
         self.on_init(**kwargs)
 

@@ -29,16 +29,16 @@ class List(object):
     """
 
     def __init__(self,
-                 bot=None,
+                 context=None,
                  **kwargs):
         """
         Implements an immutable list
 
-        :param bot: the overarching bot
-        :type bot: ShellBot
+        :param context: the overarching configuration
+        :type context: Context
 
         """
-        self.bot = bot
+        self.context = context
 
         self.on_init(**kwargs)
 

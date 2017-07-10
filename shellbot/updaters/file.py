@@ -57,7 +57,7 @@ class FileUpdater(Updater):
         :rtype: str
         """
         if self.path in (None, ''):
-            return self.bot.get('file.updater.path', '/var/log/shellbot.log')
+            return self.engine.get('file.updater.path', '/var/log/shellbot.log')
 
         return self.path
 

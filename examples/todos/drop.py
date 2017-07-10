@@ -30,25 +30,25 @@ class Drop(Command):
     information_message = u'Delete an item from the todo list'
     usage_message = u'drop [#<n>]'
 
-    def execute(self, arguments=None):
+    def execute(self, bot, arguments=None):
         """
         Deletes an item from the todo list
         """
-        if self.bot.factory is None:
+        if self.engine.factory is None:
             raise AttributeError(u'Todo factory has not been initialised')
 
         if arguments in (None, ''):
             index = 1
         else:
-            index = self.bot.factory.parse(arguments)
+            index = self.engine.factory.parse(arguments)
 
         if index is None:
-            self.bot.say(u"usage: {}".format(self.usage_message))
+            bot.say(u"usage: {}".format(self.usage_message))
             return
 
-        if index > len(self.bot.factory.items):
-            self.bot.say(u"Nothing to do yet.")
+        if index > len(self.engine.factory.items):
+            bot.say(u"Nothing to do yet.")
 
         else:
-            self.bot.factory.delete(index)
-            self.bot.say(u"#{} has been deleted".format(index))
+            self.engine.factory.delete(index)
+            bot.say(u"#{} has been deleted".format(index))
