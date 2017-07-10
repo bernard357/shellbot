@@ -612,6 +612,7 @@ class SparkSpace(Space):
                      text=None,
                      content=None,
                      file=None,
+                     space_id=None,
                      **kwargs):
         """
         Posts a message to a Cisco Spark room
@@ -624,6 +625,9 @@ class SparkSpace(Space):
 
         :param file: URL or local path for an attachment
         :type file: str
+
+        :param space_id: unique id of the target space
+        :type space_id: str
 
         Example message out of plain text::
 
@@ -643,6 +647,10 @@ class SparkSpace(Space):
            space.post_message(text=text,
                               file='./my_file.pdf')
 
+        If no space id is provided, then the function can use the unique id
+        of this space, if one has been defined. Or an exception may be raised
+        if no id has been made available.
+
         """
 
         logging.info(u"Posting message")
@@ -661,8 +669,9 @@ class SparkSpace(Space):
         count = 2
         while count:
             try:
+                id = space_id if space_id else self.id
                 files = [file] if file else None
-                self.api.messages.create(roomId=self.id,
+                self.api.messages.create(roomId=id,
                                          text=text,
                                          markdown=content,
                                          files=files)

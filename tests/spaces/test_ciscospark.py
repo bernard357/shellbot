@@ -665,14 +665,19 @@ class SparkSpaceTests(unittest.TestCase):
         space.post_message(content='hello world')
         self.assertTrue(space.api.messages.create.called)
 
-        try:
-            space.api = FakeApi()
-            space.post_message(text='hello world',
-                               content='hello world',
-                               file='./test_messages/sample.png')
-            self.assertTrue(space.api.messages.create.called)
-        except IOError:
-            pass
+        space.api = FakeApi()
+        space.post_message(text='hello world',
+                           content='hello world',
+                           file='./test_messages/sample.png',
+                           space_id=None)
+        self.assertTrue(space.api.messages.create.called)
+
+        space.api = FakeApi()
+        space.post_message(text='hello world',
+                           content='hello world',
+                           file='./test_messages/sample.png',
+                           space_id='123')
+        self.assertTrue(space.api.messages.create.called)
 
     def test_register(self):
 

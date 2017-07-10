@@ -207,7 +207,8 @@ class LocalSpaceTests(unittest.TestCase):
         space = LocalSpace(engine=my_engine)
         space.post_message(text="What's up, Doc?",
                            content="*unsupported",
-                           file="*unsupported")
+                           file="*unsupported",
+                           space_id='123')
 
     def test_on_start(self):
 

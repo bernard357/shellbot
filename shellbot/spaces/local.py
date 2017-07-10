@@ -243,6 +243,7 @@ class LocalSpace(Space):
                      text=None,
                      content=None,
                      file=None,
+                     space_id=None,
                      **kwargs):
         """
         Posts a message
@@ -256,9 +257,16 @@ class LocalSpace(Space):
         :param file: URL or local path for an attachment
         :type file: str
 
+        :param space_id: unique id of the target space
+        :type space_id: str
+
         Example message out of plain text::
 
         >>>space.post_message(text='hello world')
+
+        If no space id is provided, then the function can use the unique id
+        of this space, if one has been defined. Or an exception may be raised
+        if no id has been made available.
 
         """
         if content:
