@@ -164,7 +164,7 @@ class SpeakerTests(unittest.TestCase):
 
         speaker.process('hello world')  # sent to stdout
 
-        my_engine.space = SpaceFactory.get('local', bot=bot)
+        my_engine.space = SpaceFactory.get('local', engine=my_engine)
         my_engine.set('space.id', '123')
 
         speaker = Speaker(engine=my_engine)

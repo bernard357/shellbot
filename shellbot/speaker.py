@@ -107,7 +107,7 @@ class Speaker(object):
 
                 try:
                     item = self.engine.mouth.get(True, 0.1)
-                    if isinstance(item, Exception):
+                    if item is None:
                         break
 
                     self.process(item)
