@@ -18,8 +18,14 @@ from shellbot.spaces import Space, LocalSpace, SparkSpace
 my_context = Context()
 my_engine = Engine(context=my_context,
                    mouth=Queue())
-my_space = LocalSpace(engine=my_engine)
+my_space = LocalSpace(context=my_context)
 my_engine.space = my_space
+
+
+class FakeBot(object):
+    def __init__(self, engine, space_id):
+        self.engine = engine
+        self.space_id = space_id if space_id else '*bot'
 
 
 class MyCounter(object):
@@ -53,6 +59,7 @@ class EngineTests(unittest.TestCase):
             'exit': [],       # kicked off from a space (for the bot)
             'inbound': [],    # other event received from space (with event)
         }
+        my_engine.bots = {}
         collected = gc.collect()
         logging.info("Garbage collector: collected %d objects." % (collected))
 
@@ -63,14 +70,17 @@ class EngineTests(unittest.TestCase):
         engine = Engine(context=my_context)
 
         self.assertEqual(engine.context, my_context)
-        self.assertTrue(engine.space is None)
         self.assertTrue(engine.mouth is None)
-        self.assertTrue(engine.inbox is None)
-        self.assertTrue(engine.ears is None)
-        self.assertTrue(engine.shell is not None)
         self.assertTrue(engine.speaker is not None)
+        self.assertTrue(engine.inbox is None)
         self.assertTrue(engine.worker is not None)
+        self.assertTrue(engine.ears is None)
         self.assertTrue(engine.listener is not None)
+        self.assertTrue(engine.space is None)
+        self.assertTrue(engine.server is None)
+        self.assertTrue(engine.shell is not None)
+        self.assertTrue(engine.subscribed is not None)
+        self.assertEqual(engine.bots, {})
 
         engine = Engine(context=my_context,
                         type='local',
@@ -79,14 +89,18 @@ class EngineTests(unittest.TestCase):
                         ears='e')
 
         self.assertEqual(engine.context, my_context)
-        self.assertTrue(engine.space is not None)
         self.assertEqual(engine.mouth, 'm')
-        self.assertEqual(engine.inbox, 'i')
-        self.assertEqual(engine.ears, 'e')
-        self.assertTrue(engine.shell is not None)
         self.assertTrue(engine.speaker is not None)
+        self.assertEqual(engine.inbox, 'i')
         self.assertTrue(engine.worker is not None)
+        self.assertEqual(engine.ears, 'e')
         self.assertTrue(engine.listener is not None)
+        self.assertTrue(engine.fan is None)
+        self.assertTrue(engine.space is not None)
+        self.assertTrue(engine.server is None)
+        self.assertTrue(engine.shell is not None)
+        self.assertTrue(engine.subscribed is not None)
+        self.assertEqual(engine.bots, {})
 
         engine = Engine(context=my_context,
                         space=my_space,
@@ -95,19 +109,23 @@ class EngineTests(unittest.TestCase):
                         ears='e')
 
         self.assertEqual(engine.context, my_context)
-        self.assertEqual(engine.space, my_space)
         self.assertEqual(engine.mouth, 'm')
-        self.assertEqual(engine.inbox, 'i')
-        self.assertEqual(engine.ears, 'e')
-        self.assertTrue(engine.shell is not None)
         self.assertTrue(engine.speaker is not None)
+        self.assertEqual(engine.inbox, 'i')
         self.assertTrue(engine.worker is not None)
+        self.assertEqual(engine.ears, 'e')
         self.assertTrue(engine.listener is not None)
+        self.assertTrue(engine.fan is None)
+        self.assertEqual(engine.space, my_space)
+        self.assertTrue(engine.server is None)
+        self.assertTrue(engine.shell is not None)
+        self.assertTrue(engine.subscribed is not None)
+        self.assertEqual(engine.bots, {})
 
-        context = Context({
+        my_context.apply({
             'bot': {'name': 'testy', 'version': '17.4.1'},
             })
-        engine = Engine(context=context)
+        engine = Engine(context=my_context)
         self.assertEqual(engine.name, 'testy')
         self.assertEqual(engine.version, '17.4.1')
 
@@ -232,10 +250,10 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(my_engine.get('server.binding'), None)
         self.assertEqual(my_engine.get('server.port'), 8080)
 
-        my_engine.context.clear()
-        os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
-        engine = Engine(context=my_context, settings=None, configure=True, fan='f')
-        self.assertEqual(engine.get('spark.room'), 'Notifications')
+#        my_engine.context.clear()
+#        os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
+#        engine = Engine(context=my_context, settings=None, configure=True, fan='f')
+#        self.assertEqual(engine.get('spark.room'), 'Notifications')
 
     def test_get(self):
 
@@ -565,6 +583,57 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(my_engine.get('listener.counter', 0), 0)
         self.assertEqual(my_engine.get('worker.counter', 0), 0)
         self.assertEqual(my_engine.get('speaker.counter', 0), 0)
+
+    def test_get_bot(self):
+
+        logging.info('*** get_bot ***')
+
+        my_engine.bots = {
+            '123': FakeBot(my_engine, '123'),
+            '456': FakeBot(my_engine, '456'),
+            '789': FakeBot(my_engine, '789'),
+        }
+
+        bot = my_engine.get_bot('123')
+        self.assertEqual(bot.space_id, '123')
+        self.assertEqual(bot, my_engine.bots['123'])
+
+        bot = my_engine.get_bot('456')
+        self.assertEqual(bot.space_id, '456')
+        self.assertEqual(bot, my_engine.bots['456'])
+
+        bot = my_engine.get_bot('789')
+        self.assertEqual(bot.space_id, '789')
+        self.assertEqual(bot, my_engine.bots['789'])
+
+        with mock.patch.object(my_engine,
+                               'build_bot',
+                               return_value=FakeBot(my_engine, '*bot')) as mocked:
+
+            bot = my_engine.get_bot()
+            self.assertEqual(bot.space_id, '*bot')
+            self.assertTrue('*bot' in my_engine.bots.keys())
+
+    def test_build_bot(self):
+
+        logging.info('*** build_bot ***')
+
+        my_engine.bots = {}
+
+        bot = my_engine.build_bot('123', FakeBot)
+        self.assertEqual(bot.space_id, '123')
+
+        bot = my_engine.build_bot('456', FakeBot)
+        self.assertEqual(bot.space_id, '456')
+
+        bot = my_engine.build_bot('789', FakeBot)
+        self.assertEqual(bot.space_id, '789')
+
+    def test_on_build(self):
+
+        logging.info('*** on_build ***')
+
+        my_engine.on_build(FakeBot(my_engine, '*dummy'))
 
 
 if __name__ == '__main__':

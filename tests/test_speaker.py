@@ -65,7 +65,7 @@ class SpeakerTests(unittest.TestCase):
         logging.info('*** Dynamic test ***')
 
         my_engine.space = SpaceFactory.get('local', engine=my_engine)
-        my_engine.set('local.id', '123')
+        my_engine.space.values['id'] = '123'
 
         items = ['hello', 'world']
         for item in items:
@@ -90,7 +90,7 @@ class SpeakerTests(unittest.TestCase):
         logging.info("*** start")
 
         my_engine.space = SpaceFactory.get('local', engine=my_engine)
-        my_engine.space.set('id', '123')
+        my_engine.space.values['id'] = '123'
         my_engine.mouth.put('ping')
 
         def my_post(item):
@@ -119,7 +119,7 @@ class SpeakerTests(unittest.TestCase):
         logging.info("*** run")
 
         my_engine.space = SpaceFactory.get('local', engine=my_engine)
-        my_engine.space.set('id', '123')
+        my_engine.space.values['id'] = '123'
 
         my_engine.speaker.process = mock.Mock(side_effect=Exception('TEST'))
         my_engine.mouth.put(('dummy'))
@@ -146,10 +146,10 @@ class SpeakerTests(unittest.TestCase):
         t = Timer(0.1, my_engine.mouth.put, ['ping'])
         t.start()
 
-        def set_ready(context, *args, **kwargs):
-            context.set('space.id', '123')
+        def set_ready(space, *args, **kwargs):
+            space.values['id'] = '123'
 
-        t = Timer(0.15, set_ready, [my_engine])
+        t = Timer(0.15, set_ready, [my_engine.space])
         t.start()
 
         time.sleep(0.2)
@@ -165,7 +165,7 @@ class SpeakerTests(unittest.TestCase):
         speaker.process('hello world')  # sent to stdout
 
         my_engine.space = SpaceFactory.get('local', engine=my_engine)
-        my_engine.set('space.id', '123')
+        my_engine.space.values['id'] = '123'
 
         speaker = Speaker(engine=my_engine)
 

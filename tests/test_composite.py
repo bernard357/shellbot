@@ -32,7 +32,7 @@ my_engine.set('bot.id', "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjA
 my_engine.shell.load_default_commands()
 my_engine.space = Space(my_engine.context)
 my_engine.space.post_message = MagicMock()
-my_engine.set('space.id', '123')
+my_engine.space.values['id'] = '123'
 
 
 class Bot(object):

@@ -76,7 +76,7 @@ my_attachment = Attachment({
 
 my_join = Join({
     "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-    "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+    "space_id" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
     "roomType" : "group",
     "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
     "toPersonEmail" : "julie@example.com",
@@ -93,7 +93,7 @@ my_join = Join({
 
 my_leave = Leave({
     "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-    "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+    "spce_id" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
     "roomType" : "group",
     "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
     "toPersonEmail" : "julie@example.com",
@@ -110,7 +110,7 @@ my_leave = Leave({
 
 my_enter = Join({
     "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-    "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+    "space_id" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
     "roomType" : "group",
     "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
     "toPersonEmail" : "julie@example.com",
@@ -127,7 +127,7 @@ my_enter = Join({
 
 my_exit = Leave({
     "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-    "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+    "space_id" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
     "roomType" : "group",
     "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
     "toPersonEmail" : "julie@example.com",
@@ -359,10 +359,10 @@ class ListenerTests(unittest.TestCase):
                 self.entered = False
                 self.joined = False
 
-            def on_enter(self, received):
+            def on_enter(self, **kwargs):
                 self.entered = True
 
-            def on_join(self, received):
+            def on_join(self, **kwargs):
                 self.joined = True
 
         handler = Handler()
@@ -409,10 +409,10 @@ class ListenerTests(unittest.TestCase):
                 self.out = False
                 self.left = False
 
-            def on_exit(self, received):
+            def on_exit(self, **kwargs):
                 self.out = True
 
-            def on_leave(self, received):
+            def on_leave(self, **kwargs):
                 self.left = True
 
         handler = Handler()
