@@ -2,8 +2,8 @@
 #
 bot:
 
-    on_start: How can I help you?
-    on_stop: Bye for now
+    on_enter: How can I help you?
+    on_exit: Bye for now
 
 # shell settings
 #

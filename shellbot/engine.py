@@ -186,9 +186,8 @@ class Engine(object):
         if self.space is None:
             logging.debug(u"Building new space")
             self.space = SpaceFactory.build(self)
-        else:
-            self.space.configure()
 
+        self.space.configure()
         self.space.connect()
 
         if (self.server is None
@@ -211,8 +210,8 @@ class Engine(object):
             engine.configure_fom_dict({
 
                 'bot': {
-                    'on_start': 'You can now chat with Batman',
-                    'on_stop': 'Batman is now quitting the room, bye',
+                    'on_enter': 'You can now chat with Batman',
+                    'on_exit': 'Batman is now quitting the room, bye',
                 },
 
                 'server': {
@@ -230,8 +229,8 @@ class Engine(object):
         """
 
         self.context.apply(settings)
-        self.context.check('bot.on_start', '', filter=True)
-        self.context.check('bot.on_stop', '', filter=True)
+        self.context.check('bot.on_enter', '', filter=True)
+        self.context.check('bot.on_exit', '', filter=True)
 
     def get(self, key, default=None):
         """

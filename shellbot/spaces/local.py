@@ -133,7 +133,7 @@ class LocalSpace(Space):
         self.engine.context.check(self.prefix+'.moderators', [], filter=True)
         self.engine.context.check(self.prefix+'.participants', [], filter=True)
 
-        self.engine.context.set('server.binding', None)  # no web server at all
+        self.engine.set('server.binding', None)  # no web server at all
 
     def on_bond(self):
         """

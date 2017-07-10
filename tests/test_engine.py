@@ -39,7 +39,7 @@ class MyCounter(object):
 class EngineTests(unittest.TestCase):
 
     def tearDown(self):
-        my_context.clear()
+        my_engine.context.clear()
         my_engine.subscribed = {
             'bond': [],       # connected to a space
             'dispose': [],    # space will be destroyed
@@ -117,7 +117,7 @@ class EngineTests(unittest.TestCase):
 
         my_engine.configure({})
 
-        my_context.clear()
+        my_engine.context.clear()
         settings = {
 
             'bot': {
@@ -140,31 +140,30 @@ class EngineTests(unittest.TestCase):
 
         }
         my_engine.configure(settings)
-        self.assertEqual(my_engine.context.get('bot.on_enter'), 'Hello!')
-        self.assertEqual(my_engine.context.get('bot.on_exit'), 'Bye!')
-        self.assertEqual(my_engine.context.get('local.title'), 'space name')
-        self.assertEqual(my_engine.context.get('local.moderators'),
+        self.assertEqual(my_engine.get('bot.on_enter'), 'Hello!')
+        self.assertEqual(my_engine.get('bot.on_exit'), 'Bye!')
+        self.assertEqual(my_engine.get('local.title'), 'space name')
+        self.assertEqual(my_engine.get('local.moderators'),
                          ['foo.bar@acme.com'])
-        self.assertEqual(my_engine.context.get('local.participants'),
+        self.assertEqual(my_engine.get('local.participants'),
                          ['joe.bar@acme.com'])
-        self.assertEqual(my_engine.context.get('server.url'), 'http://to.no.where')
-        self.assertEqual(my_engine.context.get('server.hook'), '/hook')
+        self.assertEqual(my_engine.get('server.url'), 'http://to.no.where')
+        self.assertEqual(my_engine.get('server.hook'), '/hook')
 
-        my_context.clear()
+        my_engine.context.clear()
         my_engine.configure_from_path(os.path.dirname(os.path.abspath(__file__))
                                       + '/test_settings/regular.yaml')
-        self.assertEqual(my_engine.context.get('engine.on_start'),
-                         'How can I help you?')
-        self.assertEqual(my_engine.context.get('engine.on_stop'), 'Bye for now')
-        self.assertEqual(my_engine.context.get('local.title'), 'Support room')
-        self.assertEqual(my_engine.context.get('local.moderators'),
+        self.assertEqual(my_engine.get('bot.on_enter'), 'How can I help you?')
+        self.assertEqual(my_engine.get('bot.on_exit'), 'Bye for now')
+        self.assertEqual(my_engine.get('local.title'), 'Support room')
+        self.assertEqual(my_engine.get('local.moderators'),
                          ['foo.bar@acme.com'])
-        self.assertEqual(my_engine.context.get('local.participants'),
+        self.assertEqual(my_engine.get('local.participants'),
                          ['joe.bar@acme.com', 'super.support@help.org'])
-        self.assertEqual(my_engine.context.get('server.url'), None)
-        self.assertEqual(my_engine.context.get('server.hook'), None)
-        self.assertEqual(my_engine.context.get('server.binding'), None)
-        self.assertEqual(my_engine.context.get('server.port'), None)
+        self.assertEqual(my_engine.get('server.url'), None)
+        self.assertEqual(my_engine.get('server.hook'), None)
+        self.assertEqual(my_engine.get('server.binding'), None)
+        self.assertEqual(my_engine.get('server.port'), None)
 
     def test_configuration_2(self):
 
@@ -173,8 +172,8 @@ class EngineTests(unittest.TestCase):
         settings = {
 
             'bot': {
-                'on_start': 'Start!',
-                'on_stop': 'Stop!',
+                'on_enter': 'Hello!',
+                'on_exit': 'Bye!',
             },
 
             'local': {
@@ -194,17 +193,17 @@ class EngineTests(unittest.TestCase):
 
         context = Context(settings)
         engine = Engine(context=context, configure=True)
-        self.assertEqual(engine.context.get('bot.on_start'), 'Start!')
-        self.assertEqual(engine.context.get('bot.on_stop'), 'Stop!')
-        self.assertEqual(engine.context.get('local.title'), 'Support room')
-        self.assertEqual(engine.context.get('local.moderators'),
+        self.assertEqual(engine.get('bot.on_enter'), 'Hello!')
+        self.assertEqual(engine.get('bot.on_exit'), 'Bye!')
+        self.assertEqual(engine.get('local.title'), 'Support room')
+        self.assertEqual(engine.get('local.moderators'),
                          ['foo.bar@acme.com'])
-        self.assertEqual(engine.context.get('local.participants'), [])
-        self.assertEqual(engine.context.get('server.url'), 'http://to.nowhere/')
-        self.assertEqual(engine.context.get('server.hook'), '/hook')
-        self.assertEqual(engine.context.get('server.trigger'), '/trigger')
-        self.assertEqual(engine.context.get('server.binding'), None)
-        self.assertEqual(engine.context.get('server.port'), 8080)
+        self.assertEqual(engine.get('local.participants'), [])
+        self.assertEqual(engine.get('server.url'), 'http://to.nowhere/')
+        self.assertEqual(engine.get('server.hook'), '/hook')
+        self.assertEqual(engine.get('server.trigger'), '/trigger')
+        self.assertEqual(engine.get('server.binding'), None)
+        self.assertEqual(engine.get('server.port'), 8080)
 
     def test_configure_default(self):
 
@@ -212,38 +211,38 @@ class EngineTests(unittest.TestCase):
 
         logging.debug("- default configuration is not interpreted")
 
-        os.environ["BOT_ON_START"] = 'Start!'
-        os.environ["BOT_ON_STOP"] = 'Stop!'
+        os.environ["BOT_ON_ENTER"] = 'Hello!'
+        os.environ["BOT_ON_EXIT"] = 'Bye!'
         os.environ["CHAT_ROOM_TITLE"] = 'Support room'
         os.environ["CHAT_ROOM_MODERATORS"] = 'foo.bar@acme.com'
         os.environ["CISCO_SPARK_BOT_TOKEN"] = '*token'
         os.environ["SERVER_URL"] = 'http://to.nowhere/'
         my_engine.configure()
 
-        self.assertEqual(my_engine.context.get('bot.on_start'), 'Start!')
-        self.assertEqual(my_engine.context.get('bot.on_stop'), 'Stop!')
+        self.assertEqual(my_engine.get('bot.on_enter'), 'Hello!')
+        self.assertEqual(my_engine.get('bot.on_exit'), 'Bye!')
 
-        self.assertEqual(my_engine.context.get('spark.room'), '$CHAT_ROOM_TITLE')
-        self.assertEqual(my_engine.context.get('spark.moderators'), '$CHAT_ROOM_MODERATORS')
-        self.assertEqual(my_engine.context.get('spark.participants'), None)
-        self.assertEqual(my_engine.context.get('spark.token'), None)
+        self.assertEqual(my_engine.get('spark.room'), '$CHAT_ROOM_TITLE')
+        self.assertEqual(my_engine.get('spark.moderators'), '$CHAT_ROOM_MODERATORS')
+        self.assertEqual(my_engine.get('spark.participants'), None)
+        self.assertEqual(my_engine.get('spark.token'), None)
 
-        self.assertEqual(my_engine.context.get('server.url'), '$SERVER_URL')
-        self.assertEqual(my_engine.context.get('server.hook'), '/hook')
-        self.assertEqual(my_engine.context.get('server.binding'), None)
-        self.assertEqual(my_engine.context.get('server.port'), 8080)
+        self.assertEqual(my_engine.get('server.url'), '$SERVER_URL')
+        self.assertEqual(my_engine.get('server.hook'), '/hook')
+        self.assertEqual(my_engine.get('server.binding'), None)
+        self.assertEqual(my_engine.get('server.port'), 8080)
 
-        my_context.clear()
+        my_engine.context.clear()
         os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
-        bot = ShellBot(context=my_context, settings=None, configure=True, fan='f')
+        engine = Engine(context=my_context, settings=None, configure=True, fan='f')
         self.assertEqual(engine.get('spark.room'), 'Notifications')
 
     def test_get(self):
 
         logging.info('*** get ***')
 
-        os.environ["BOT_ON_START"] = 'Start!'
-        os.environ["BOT_ON_STOP"] = 'Stop!'
+        os.environ["BOT_ON_ENTER"] = 'Hello!'
+        os.environ["BOT_ON_EXIT"] = 'Bye!'
         os.environ["CHAT_ROOM_TITLE"] = 'Support room'
         os.environ["CHAT_ROOM_MODERATORS"] = 'foo.bar@acme.com'
         os.environ["CISCO_SPARK_BOT_TOKEN"] = '*token'
@@ -252,8 +251,8 @@ class EngineTests(unittest.TestCase):
         settings = {
 
             'bot': {
-                'on_start': '$BOT_ON_START',
-                'on_stop': '$BOT_ON_STOP',
+                'on_enter': 'Hello!',
+                'on_exit': 'Bye!',
             },
 
             'local': {
@@ -272,8 +271,8 @@ class EngineTests(unittest.TestCase):
 
         my_engine.configure(settings=settings)
 
-        self.assertEqual(my_engine.get('bot.on_start'), 'Start!')
-        self.assertEqual(my_engine.get('bot.on_stop'), 'Stop!')
+        self.assertEqual(my_engine.get('bot.on_enter'), 'Hello!')
+        self.assertEqual(my_engine.get('bot.on_exit'), 'Bye!')
         self.assertEqual(my_engine.get('local.title'), 'Support room')
         self.assertEqual(my_engine.get('local.moderators'),
                          'foo.bar@acme.com')
@@ -318,8 +317,10 @@ class EngineTests(unittest.TestCase):
             my_engine.subscribe('', counter)
         with self.assertRaises(AssertionError):
             my_engine.subscribe(1.2, counter)
+
         my_engine.subscribe('bond', counter)
         my_engine.subscribe('dispose', counter)
+
         with self.assertRaises(AttributeError):
             my_engine.subscribe('start', counter)
         with self.assertRaises(AttributeError):
