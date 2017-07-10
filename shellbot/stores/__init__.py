@@ -30,14 +30,13 @@ class StoreFactory(object):
 
     Example::
 
-        context = Context(settings={
+        my_context = Context(settings={
             'sqlite': {
                 'db': 'my_store.db',
             }
         })
 
-        bot = ShellBot(context=context)
-        store = StoreFactory.build(bot)
+        store = StoreFactory.build(context=my_context)
 
     """
 
@@ -47,22 +46,22 @@ class StoreFactory(object):
     }
 
     @classmethod
-    def build(self, bot, **kwargs):
+    def build(self, context, **kwargs):
         """
         Builds an instance based on provided configuration
 
-        :param bot: configuration to be used
-        :type bot: ShellBot
+        :param context: configuration to be used
+        :type context: Context
 
         :return: a ready-to-use store
         :rtype: Store
 
         A ``ValueError`` is raised if no type could be identified.
         """
-        assert bot is not None
+        assert context is not None
 
-        type = self.sense(bot.context)
-        store = self.get(type, bot=bot, **kwargs)
+        type = self.sense(context)
+        store = self.get(type, context=context, **kwargs)
         store.check()
 
         return store

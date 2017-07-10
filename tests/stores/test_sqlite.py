@@ -9,34 +9,37 @@ import sys
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import Context, ShellBot
+from shellbot import Context
 from shellbot.stores import SqliteStore
 
 
-my_bot = ShellBot()
+my_context = Context()
 my_db_name = os.path.dirname(os.path.abspath(__file__)) + '/../local/store.db'
 
 
 class SqliteStoreTests(unittest.TestCase):
 
+    def tearDown(self):
+        my_context.clear()
+
     def test_init(self):
 
         logging.info('***** init')
 
-        store = SqliteStore(bot=my_bot)
+        store = SqliteStore(context=my_context)
 
     def test_check(self):
 
         logging.info('***** check')
 
-        store = SqliteStore(bot=my_bot)
+        store = SqliteStore(context=my_context)
         store.check()
 
     def test_bond(self):
 
         logging.info('***** bond')
 
-        store = SqliteStore(bot=my_bot, db=my_db_name)
+        store = SqliteStore(context=my_context, db=my_db_name)
 
         store.bond()
 
@@ -46,7 +49,7 @@ class SqliteStoreTests(unittest.TestCase):
 
         logging.info('***** _set')
 
-        store = SqliteStore(bot=my_bot, db=my_db_name)
+        store = SqliteStore(context=my_context, db=my_db_name)
         store.bond()
 
         choices = ['hello', 'world', 'how', 'are', 'you']
@@ -74,7 +77,7 @@ class SqliteStoreTests(unittest.TestCase):
 
         logging.info('***** _get')
 
-        store = SqliteStore(bot=my_bot, db=my_db_name)
+        store = SqliteStore(context=my_context, db=my_db_name)
         store.bond()
 
         key = '*no*chance*it*exists'
@@ -103,7 +106,7 @@ class SqliteStoreTests(unittest.TestCase):
 
         logging.info('***** _clear')
 
-        store = SqliteStore(bot=my_bot, db=my_db_name)
+        store = SqliteStore(context=my_context, db=my_db_name)
         store.bond()
 
         # set a key and then forget it
@@ -125,7 +128,7 @@ class SqliteStoreTests(unittest.TestCase):
 
         logging.info('***** unicode')
 
-        store = SqliteStore(bot=my_bot, db=my_db_name)
+        store = SqliteStore(context=my_context, db=my_db_name)
         store.bond()
 
         store._set('hello', 'world')

@@ -33,7 +33,7 @@ class SpaceFactory(object):
 
     Example::
 
-        context = Context(settings={
+        my_context = Context(settings={
             'spark': {
                 'room': 'My preferred room',
                 'moderators':
@@ -48,7 +48,7 @@ class SpaceFactory(object):
             }
         })
 
-        space = SpaceFactory.build(context)
+        space = SpaceFactory.build(context=my_context)
 
     """
 

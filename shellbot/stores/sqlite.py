@@ -55,7 +55,7 @@ class SqliteStore(Store):
 
         Example::
 
-            store = SqliteStore(bot=bot, prefix='sqlite')
+            store = SqliteStore(context=context, prefix='sqlite')
 
         Here we create a new store powered by Sqlite, and use
         settings under the key ``sqlite`` in the context of this bot.
@@ -65,19 +65,19 @@ class SqliteStore(Store):
         self.id = id if id else '*id'
 
         if db not in (None, ''):
-            self.bot.context.set(self.prefix+'.db', db)
+            self.context.set(self.prefix+'.db', db)
 
     def check(self):
         """
         Checks configuration
         """
-        self.bot.context.check(self.prefix+'.db', 'store.db')
+        self.context.check(self.prefix+'.db', 'store.db')
 
     def get_db(self):
         """
         Gets a handle on the database
         """
-        db = self.bot.context.get(self.prefix+'.db', 'store.db')
+        db = self.context.get(self.prefix+'.db', 'store.db')
         return sqlite3.connect(db)
 
     def bond(self, id=None):
