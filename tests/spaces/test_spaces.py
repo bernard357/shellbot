@@ -63,30 +63,30 @@ class SpaceFactoryTests(unittest.TestCase):
         self.assertEqual(space.id, None)   #  set after bond()
         self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
 
-#    def test_build_spark(self):
-#
-#        logging.info("***** build Cisco Spark space from settings")
-#
-#        bot = ShellBot(settings={  # from settings to member attributes
-#            'spark': {
-#                'room': 'My preferred room',
-#                'moderators':
-#                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
-#                'participants':
-#                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
-#                'team': 'Anchor team',
-#                'token': 'hkNWEtMJNkODVGlZWU1NmYtyY',
-#                'personal_token': '*personal*secret*token',
-#                'webhook': "http://73a1e282.ngrok.io",
-#            }
-#        })
-#
-#        space = SpaceFactory.build(bot=bot)
-#        self.assertEqual(space.token, 'hkNWEtMJNkODVGlZWU1NmYtyY')
-#        self.assertEqual(space.personal_token, '*personal*secret*token')
-#        self.assertEqual(space.id, None)   #  set after bond()
-#        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
-#        self.assertEqual(space.teamId, None)
+    def test_build_spark(self):
+
+        logging.info("***** build Cisco Spark space from settings")
+
+        engine = Engine(settings={  # from settings to member attributes
+            'spark': {
+                'room': 'My preferred room',
+                'moderators':
+                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+                'participants':
+                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+                'team': 'Anchor team',
+                'token': 'hkNWEtMJNkODVGlZWU1NmYtyY',
+                'personal_token': '*personal*secret*token',
+                'webhook': "http://73a1e282.ngrok.io",
+            }
+        })
+
+        space = SpaceFactory.build(engine=engine)
+        self.assertEqual(space.token, 'hkNWEtMJNkODVGlZWU1NmYtyY')
+        self.assertEqual(space.personal_token, '*personal*secret*token')
+        self.assertEqual(space.id, None)   #  set after bond()
+        self.assertEqual(space.title, space.DEFAULT_SPACE_TITLE)
+        self.assertEqual(space.teamId, None)
 
     def test_sense_space(self):
 
