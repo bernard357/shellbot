@@ -28,8 +28,8 @@ class Bot(object):
     def __init__(self, engine):
         self.engine = engine
 
-    def say(self, text, content=None, file=None):
-        self.engine.mouth.put(Vibes(text, content, file))
+    def say(self, text, content=None, file=None, space_id=None):
+        self.engine.mouth.put(Vibes(text, content, file, space_id))
 
 
 my_bot = Bot(engine=my_engine)
@@ -176,52 +176,49 @@ class SpeakerTests(unittest.TestCase):
             speaker.process('hello world')
             mocked.assert_called_with('hello world')
 
-            class WithContent(object):
-                text = ''
-                content = 'me **too**'
-                file = None
-
-            item = WithContent()
+            item = Vibes(
+                text='',
+                content='me **too**',
+                file=None,
+                space_id='123')
             speaker.process(item)
             mocked.assert_called_with('',
                                       content='me **too**',
-                                      file=None)
+                                      file=None,
+                                      space_id='123')
 
-            class WithFile(object):
-                text = '*with*attachment'
-                content = None
-                file = 'http://a.server/with/file'
-
-            item = WithFile()
+            item = Vibes(
+                text='*with*attachment',
+                content=None,
+                file='http://a.server/with/file',
+                space_id='456')
             speaker.process(item)
             mocked.assert_called_with('*with*attachment',
                                       content=None,
-                                      file='http://a.server/with/file')
+                                      file='http://a.server/with/file',
+                                      space_id='456')
 
-            class WithAll(object):
-                text = 'hello world'
-                content = 'hello **world**'
-                file = 'http://a.server/with/file'
-
-            item = WithAll()
+            item = Vibes(
+                text='hello world',
+                content='hello **world**',
+                file='http://a.server/with/file',
+                space_id='789')
             speaker.process(item)
             mocked.assert_called_with('hello world',
                                       content='hello **world**',
-                                      file='http://a.server/with/file')
+                                      file='http://a.server/with/file',
+                                      space_id='789')
 
-            class WithAllAndInit(object):
-                def __init__(self, text, content, file):
-                    self.text = text
-                    self.content = content
-                    self.file = file
-
-            item = WithAllAndInit(text = 'hello world',
-                                  content = 'hello **world**',
-                                  file = 'http://a.server/with/file')
+            item = Vibes(
+                text='hello world',
+                content='hello **world**',
+                file='http://a.server/with/file',
+                space_id='007')
             speaker.process(item)
             mocked.assert_called_with('hello world',
                                       content='hello **world**',
-                                      file='http://a.server/with/file')
+                                      file='http://a.server/with/file',
+                                      space_id='007')
 
 
 if __name__ == '__main__':
