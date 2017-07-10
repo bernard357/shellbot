@@ -31,6 +31,7 @@ from .server import Server
 from .bot import ShellBot
 from .spaces import SpaceFactory
 from .speaker import Speaker
+from .stores import StoreFactory
 from .worker import Worker
 from .routes.wrapper import Wrapper
 
@@ -728,7 +729,7 @@ class Engine(object):
         This function receives a bot, and returns
         a store bound to it.
         """
-        return None
+        return StoreFactory.get(type='memory')
 
     def build_machine(self, bot):
         """

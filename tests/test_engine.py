@@ -23,7 +23,7 @@ my_engine.space = my_space
 
 
 class FakeBot(object):
-    def __init__(self, engine, space_id):
+    def __init__(self, engine=None, space_id=None):
         self.engine = engine
         self.space_id = space_id if space_id else '*bot'
 
@@ -622,19 +622,44 @@ class EngineTests(unittest.TestCase):
 
         bot = my_engine.build_bot('123', FakeBot)
         self.assertEqual(bot.space_id, '123')
+        bot.store.remember('a', 'b')
+        self.assertEqual(bot.store.recall('a'), 'b')
 
         bot = my_engine.build_bot('456', FakeBot)
         self.assertEqual(bot.space_id, '456')
+        bot.store.remember('c', 'd')
+        self.assertEqual(bot.store.recall('a'), None)
+        self.assertEqual(bot.store.recall('c'), 'd')
 
         bot = my_engine.build_bot('789', FakeBot)
         self.assertEqual(bot.space_id, '789')
+        bot.store.remember('e', 'f')
+        self.assertEqual(bot.store.recall('a'), None)
+        self.assertEqual(bot.store.recall('c'), None)
+        self.assertEqual(bot.store.recall('e'), 'f')
 
     def test_on_build(self):
 
         logging.info('*** on_build ***')
 
-        my_engine.on_build(FakeBot(my_engine, '*dummy'))
+    def test_build_store(self):
 
+        logging.info('*** build_store ***')
+
+        store_1 = my_engine.build_store(bot=FakeBot())
+        store_1.append('names', 'Alice')
+        store_1.append('names', 'Bob')
+        self.assertEqual(store_1.recall('names'), ['Alice', 'Bob'])
+
+        store_2 = my_engine.build_store(bot=FakeBot())
+        store_2.append('names', 'Chloe')
+        store_2.append('names', 'David')
+        self.assertEqual(store_2.recall('names'), ['Chloe', 'David'])
+
+        self.assertEqual(store_1.recall('names'), ['Alice', 'Bob'])
+        store_2.forget()
+        self.assertEqual(store_1.recall('names'), ['Alice', 'Bob'])
+        self.assertEqual(store_2.recall('names'), None)
 
 if __name__ == '__main__':
 
