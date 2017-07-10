@@ -30,8 +30,8 @@ class Machine(object):
 
     1. A machine instance is created and configured::
 
-           >>>bot = ShellBot(...)
-           >>>machine = Machine(bot=bot)
+           >>>a_bot = ShellBot(...)
+           >>>machine = Machine(bot=a_bot)
 
            >>>machine.set(states=states, transitions=transitions, ...
 
@@ -46,7 +46,7 @@ class Machine(object):
     4. When a machine is expecting data from the chat space, it listens
        from the ``fan`` queue used by the shell::
 
-           >>>bot.fan.put('special command')
+           >>>engine.fan.put('special command')
 
     4. When the machine is coming end of life, resources can be disposed::
 
@@ -69,8 +69,8 @@ class Machine(object):
         """
         Implements a state machine
 
-        :param bot: the overarching bot
-        :type bot: ShellBot
+        :param bot: the bot linked to this machine
+        :type : ShellBot
 
         :param states: All states supported by this machine
         :type states: list of str
@@ -165,7 +165,6 @@ class Machine(object):
         """
 
         with self.lock:
-
             self.mutables[key] = value
 
     def build(self,
@@ -375,15 +374,15 @@ class Machine(object):
         The loop is also stopped when the parameter ``general.switch``
         is changed in the context. For example::
 
-            bot.context.set('general.switch', 'off')
+            engine.set('general.switch', 'off')
 
         """
         logging.info(u"Starting machine")
-        logging.debug(u"- general.switch={}".format(self.bot.context.get('general.switch', 'on')))
+        logging.debug(u"- general.switch={}".format(self.bot.engine.get('general.switch', 'on')))
         self.set('is_running', True)
 
         try:
-            while self.bot.context.get('general.switch', 'on') == 'on':
+            while self.bot.engine.get('general.switch', 'on') == 'on':
 
                 try:
                     if self.mixer.empty():
@@ -430,7 +429,7 @@ class Machine(object):
 
 class State(object):
     """
-    Represents a state in the machine
+    Represents a state of the machine
 
     Each state has a function to perform while it's active, when it's entered
     into, and when it's exited. These functions may be None.

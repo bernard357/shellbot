@@ -12,7 +12,7 @@ import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import Context, Engine
+from shellbot import Context, Engine, ShellBot
 from shellbot.spaces import Space, LocalSpace, SparkSpace
 
 my_context = Context()
@@ -618,6 +618,7 @@ class EngineTests(unittest.TestCase):
 
         logging.info('*** build_bot ***')
 
+        my_engine.context.apply(my_engine.DEFAULT_SETTINGS)
         my_engine.bots = {}
 
         bot = my_engine.build_bot('123', FakeBot)
@@ -638,20 +639,23 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(bot.store.recall('c'), None)
         self.assertEqual(bot.store.recall('e'), 'f')
 
-    def test_on_build(self):
+    def test_build_space(self):
 
-        logging.info('*** on_build ***')
+        logging.info('*** build_space ***')
+
+        my_engine.context.apply(my_engine.DEFAULT_SETTINGS)
+        space = my_engine.build_space('123')
 
     def test_build_store(self):
 
         logging.info('*** build_store ***')
 
-        store_1 = my_engine.build_store(bot=FakeBot())
+        store_1 = my_engine.build_store('123')
         store_1.append('names', 'Alice')
         store_1.append('names', 'Bob')
         self.assertEqual(store_1.recall('names'), ['Alice', 'Bob'])
 
-        store_2 = my_engine.build_store(bot=FakeBot())
+        store_2 = my_engine.build_store('456')
         store_2.append('names', 'Chloe')
         store_2.append('names', 'David')
         self.assertEqual(store_2.recall('names'), ['Chloe', 'David'])
@@ -660,6 +664,21 @@ class EngineTests(unittest.TestCase):
         store_2.forget()
         self.assertEqual(store_1.recall('names'), ['Alice', 'Bob'])
         self.assertEqual(store_2.recall('names'), None)
+
+    def test_build_machine(self):
+
+        logging.info('*** build_machine ***')
+
+        bot = ShellBot(engine=my_engine)
+        machine = my_engine.build_machine(bot)
+
+    def test_on_build(self):
+
+        logging.info('*** on_build ***')
+
+        bot = ShellBot(engine=my_engine)
+        my_engine.on_build(bot)
+
 
 if __name__ == '__main__':
 

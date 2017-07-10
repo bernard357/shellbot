@@ -22,75 +22,80 @@ from six import string_types
 import sys
 import time
 import yaml
-import weakref
+
+from .speaker import Vibes
 
 
 class ShellBot(object):
     """
-    Wraps underlying services in a single instance
+    Manages interactions with one space, one store, one state machine
 
-    Shellbot allows the creation of bots with a given set of commands.
-    Each bot instance is bonded to a single chat space. The chat space can be
-    either created by the bot itself, or the bot can join an existing space.
+    A bot consists of multiple components devoted to one chat space:
+    - a space
+    - a store
+    - a state machine
 
-    The first use case is adapted when a collaboration space is created for
-    semi-automated interactions between human and machines.
-    In the example below, the bot controls the entire life cycle of the chat
-    space. A chat space is created when the program is launched. And it is
-    deleted when the program is stopped.
+    It is designated by a unique id, that is also the unique id of the space
+    itself.
 
-    Chat space creation example::
-
-        from shellbot import ShellBot, Context, Command
-        Context.set_logger()
-
-        # create a bot and load command
-        #
-        class Hello(Command):
-            keyword = 'hello'
-            information_message = u"Hello, World!"
-
-        bot = ShellBot(command=Hello())
-
-        # load configuration
-        #
-        bot.configure()
-
-        # create a chat room, or connect to an existing one
-        #
-        bot.bond(reset=True)
-
-        # run the bot
-        #
-        bot.run()
-
-        # delete the chat room when the bot is killed
-        #
-        bot.dispose()
-
-    A second interesting use case is when a bot is invited to an existing chat
-    space. On such an event, a new bot instance can be created and bonded
-    to the chat space.
-
-    Chat space bonding example::
-
-        def on_invitation(self, space_id):
-            bot = ShellBot()
-            bot.configure()
-            bot.use_space(id=space_id)
-            return bot
-
-    A bot is an extensible set of components that share the same context,
-    that is, configuration settings.
-
+    A bot relies on an underlying engine instance for actual access
+    to the infrastructure, including configuration settings.
     """
 
-    def __init__(self, engine):
+    def __init__(self,
+                 engine,
+                 space_id=None,
+                 space=None,
+                 store=None,
+                 fan=None,
+                 machine=None):
         """
-        Wraps underlying services in a single instance
+        Manages interactions with one space, one store, one state machine
+
+        :param engine: Engine instance for acces of the infrastructure
+        :type engine: Engine
+
+        :param space_id: Unique id of the related chat space
+        :type space_id: str
+
+        :param space: Chat space related to this bot
+        :type space: Space
+
+        :param store: Data store related to this bot
+        :type store: Store
+
+        :param fan: For asynchronous handling of user input
+        :type fan: Queue
+
+        :param machine: State machine related to this bot
+        :type machine: Machine
 
         """
         self.engine = engine
+
+        assert space_id is None or space is None  # use only one
+        if space_id:
+            self.space = self.engine.build_space(space_id)
+        else:
+            self.space = space
+
+        self.store = store
+
+        self.fan = fan
+
+        self.machine = machine
+
+    @property
+    def space_id(self):
+        """
+        Gets unique id of the related chat space
+
+        :return: the id of the underlying space, or None
+        """
+        if self.space:
+            return self.space.id
+
+        return None
 
     def bond(self, reset=False):
         """
@@ -102,18 +107,18 @@ class ShellBot(object):
         This function creates a room, or connect to an existing one.
         """
         if reset:
-            self.space.delete_space(title=self.context.get('spark.room'))
+            self.space.delete_space(title=self.engine.get('spark.room'))
 
         self.space.bond(
-            title=self.context.get('spark.room', 'Bot under test'),
-            ex_team=self.context.get('spark.team'),
-            moderators=self.context.get('spark.moderators', []),
-            participants=self.context.get('spark.participants', []),
+            title=self.engine.get('spark.room', 'Bot under test'),
+            ex_team=self.engine.get('spark.team'),
+            moderators=self.engine.get('spark.moderators', []),
+            participants=self.engine.get('spark.participants', []),
         )
 
         self.store.bond(id=self.space.id)
 
-        self.dispatch('bond')
+        self.engine.dispatch('bond')
 
     def add_moderators(self, *args, **kwargs):
         """
@@ -165,7 +170,7 @@ class ShellBot(object):
         Disposes all resources
 
         """
-        self.dispatch('dispose')
+        self.engine.dispatch('dispose')
         self.space.dispose(*args, **kwargs)
 
     def say(self, text, content=None, file=None):
@@ -187,13 +192,15 @@ class ShellBot(object):
 
         logging.info(u"Bot says: {}".format(text))
 
-        if self.mouth:
+        if self.engine.mouth:
             logging.debug(u"- pushing message to mouth queue")
-            self.mouth.put(Vibes(text, content, file))
+            self.engine.mouth.put(
+                Vibes(text, content, file, self.space_id))
 
         else:
             logging.debug(u"- calling speaker directly")
-            self.speaker.process(Vibes(text, content, file))
+            self.engine.speaker.process(
+                Vibes(text, content, file, self.space_id))
 
     def remember(self, key, value):
         """

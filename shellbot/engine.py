@@ -282,8 +282,7 @@ class Engine(object):
         self.shell.configure()
 
         if self.space is None:
-            logging.debug(u"Building new space")
-            self.space = SpaceFactory.build(self.context)
+            self.space = SpaceFactory.build(context=self.context, ears=self.ears)
 
         self.space.configure()
         self.space.connect()
@@ -703,30 +702,53 @@ class Engine(object):
         This function receives the id of a chat space, and returns
         the related bot.
         """
-        logging.debug(u"- building new bot instance")
+        logging.debug(u"- building bot instance")
         bot = driver(engine=self, space_id=id)
 
         if id:
+            logging.debug(u"- adding related space")
+            bot.space = self.build_space(space_id=id)
+
             logging.debug(u"- adding related store")
-            bot.store = self.build_store(bot)
+            bot.store = self.build_store(space_id=id)
 
             logging.debug(u"- adding related machine")
-            bot.machine = self.build_machine(bot)
+            bot.machine = self.build_machine(bot=bot)
 
         self.on_build(bot)
 
         return bot
 
-    def build_store(self, bot):
+    def build_space(self, space_id=None):
+        """
+        Builds a space for this bot
+
+        :param space_id: Identifier of the target chat space
+        :type space_id: str
+
+        :return: a Space instance, or None
+
+        This function receives an identifier, and returns
+        a space bound to it.
+        """
+        logging.debug(u"- building space instance")
+        space = SpaceFactory.build(context=self.context, ears=self.ears)
+        space.configure()
+        space.connect()
+        if space_id:
+            space.use_space(id=space_id)
+        return space
+
+    def build_store(self, space_id=None):
         """
         Builds a store for this bot
 
-        :param bot: The target bot
-        :type bot: ShellBot
+        :param space_id: Identifier of the target chat space
+        :type space_id: str
 
         :return: a Store instance, or None
 
-        This function receives a bot, and returns
+        This function receives an identifier, and returns
         a store bound to it.
         """
         return StoreFactory.get(type='memory')
