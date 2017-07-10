@@ -13,11 +13,12 @@ import time
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot
+from shellbot import Context, Engine, ShellBot
 from shellbot.machines import Machine, State, Transition
 
 
-my_bot = ShellBot()
+my_engine = Engine()
+my_bot = ShellBot(engine=my_engine)
 
 
 class Helper(object):
@@ -51,6 +52,7 @@ class Helper(object):
 class MachineTests(unittest.TestCase):
 
     def tearDown(self):
+        my_engine.context.clear()
         collected = gc.collect()
         logging.info("Garbage collector: collected %d objects." % (collected))
 
@@ -233,7 +235,7 @@ class MachineTests(unittest.TestCase):
                       initial='one',
                       on_enter=on_enter)
 
-        my_bot.context.set('general.switch', 'on')
+        my_engine.set('general.switch', 'on')
         machine_process = machine.start(tick=0.001)
         while machine.current_state.name != 'two':
             time.sleep(0.01)
@@ -550,11 +552,11 @@ class MachineTests(unittest.TestCase):
                           transitions=transitions,
                           initial='one')
 
-        my_bot.context.set('general.switch', 'on')
+        my_engine.set('general.switch', 'on')
         machine_process = machine.start(tick=0.001)
         machine.step()
         time.sleep(0.05)
-        my_bot.context.set('general.switch', 'off')
+        my_engine.set('general.switch', 'off')
         machine_process.join()
 
         self.assertTrue(machine.current_state.name != 'one')
@@ -576,7 +578,7 @@ class MachineTests(unittest.TestCase):
                           transitions=transitions,
                           initial='one')
 
-        my_bot.context.set('general.switch', 'on')
+        my_engine.set('general.switch', 'on')
         machine_process = machine.start(tick=0.001)
         machine.step()
         time.sleep(0.05)
@@ -604,7 +606,7 @@ class MachineTests(unittest.TestCase):
                       initial='one',
                       on_enter=on_enter)
 
-        my_bot.context.set('general.switch', 'on')
+        my_engine.set('general.switch', 'on')
         machine_process = machine.start(tick=0.001)
         machine_process.join()
 
@@ -632,10 +634,10 @@ class MachineTests(unittest.TestCase):
                             transitions=transitions,
                             initial='one')
 
-        my_bot.context.set('general.switch', 'off')
+        my_engine.set('general.switch', 'off')
         machine.tick()  # general switch is off
 
-        my_bot.context.set('general.switch', 'on')
+        my_engine.set('general.switch', 'on')
 
         machine.TICK_DURATION = 0.003
         t = Timer(0.004, machine.stop)

@@ -13,10 +13,13 @@ import time
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot
+from shellbot import Context, Engine, ShellBot
 from shellbot.machines.steps import Step, Steps
+from shellbot.stores import MemoryStore
 
-my_bot = ShellBot()
+my_engine = Engine()
+my_store = MemoryStore()
+my_bot = ShellBot(engine=my_engine, store=my_store)
 
 
 class FakeMachine(object):

@@ -233,7 +233,7 @@ class Menu(Machine):
         beginning = time.time()
         self.set('answer', None)
         try:
-            while self.bot.context.get('general.switch', 'on') == 'on':
+            while self.bot.engine.get('general.switch', 'on') == 'on':
 
                 if self.get('answer'):
                     break  # on good answer
@@ -246,12 +246,12 @@ class Menu(Machine):
                         break  # on cancellation limit
 
                 try:
-                    if self.bot.fan.empty():
-                        self.bot.context.set('fan.stamp', time.time())
+                    if self.bot.engine.fan.empty():
+                        self.bot.engine.set('fan.stamp', time.time())
                         time.sleep(self.TICK_DURATION)
                         continue
 
-                    item = self.bot.fan.get(True, self.TICK_DURATION)
+                    item = self.bot.engine.fan.get(True, self.TICK_DURATION)
                     if item is None:
                         break
 
@@ -301,11 +301,6 @@ class Menu(Machine):
         except Exception as feedback:
             return None
         return text
-
-    def wait(self):
-        """
-        Wait input
-        """
 
     def cancel(self):
         """

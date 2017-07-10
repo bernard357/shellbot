@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import gc
 import logging
 import mock
 import os
@@ -12,8 +13,11 @@ import time
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot
+from shellbot import Context, Engine, ShellBot
 from shellbot.machines import Sequence
+
+my_engine = Engine()
+my_bot = ShellBot(engine=my_engine)
 
 
 class FakeMachine(object):
@@ -28,6 +32,11 @@ class FakeMachine(object):
 
 
 class SequenceTests(unittest.TestCase):
+
+    def tearDown(self):
+        my_engine.context.clear()
+        collected = gc.collect()
+        logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 

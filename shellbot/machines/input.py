@@ -139,7 +139,7 @@ class Input(Machine):
             is_mandatory = self.IS_MANDATORY
         assert int(is_mandatory) >= 0
         self.is_mandatory = is_mandatory
-        
+
         if is_markdown in (None, ''):
             is_markdown = self.IS_MARKDOWN
         assert int(is_markdown) >= 0
@@ -238,7 +238,7 @@ class Input(Machine):
         beginning = time.time()
         self.set('answer', None)
         try:
-            while self.bot.context.get('general.switch', 'on') == 'on':
+            while self.bot.engine.get('general.switch', 'on') == 'on':
 
                 if self.get('answer'):
                     break  # on good answer
@@ -251,12 +251,12 @@ class Input(Machine):
                         break  # on cancellation limit
 
                 try:
-                    if self.bot.fan.empty():
-                        self.bot.context.set('fan.stamp', time.time())
+                    if self.bot.engine.fan.empty():
+                        self.bot.engine.set('fan.stamp', time.time())
                         time.sleep(self.TICK_DURATION)
                         continue
 
-                    item = self.bot.fan.get(True, self.TICK_DURATION)
+                    item = self.bot.engine.fan.get(True, self.TICK_DURATION)
                     if item is None:
                         break
 
