@@ -607,6 +607,9 @@ class Engine(object):
             self.ears = Queue()
             self.space.ears = self.ears
 
+        if self.fan is None:
+            self.fan = Queue()
+
         self.start_processes()
 
         self.on_start()
@@ -791,35 +794,35 @@ class Engine(object):
         bot.bond(reset=True)
         return bot
 
-    def on_enter(self, bot):
+    def on_enter(self, join):
         """
         Bot has been invited to a chat space
 
-        :param bot: The bot associated with the joined space
-        :type bot: ShellBot
+        :param join: The join event received from the chat space
+        :type join: Join
 
         Provide your own implementation in a sub-class where required.
 
         Example::
 
-            on_enter(self, bot):
-                mailer.post(u"Invited to {}".format(bot.space.title))
+            on_enter(self, join):
+                mailer.post(u"Invited to {}".format(join.space_title))
         """
         pass
 
-    def on_exit(self, bot):
+    def on_exit(self, leave):
         """
         Bot has been kicked off from a chat space
 
-        :param bot: The bot associated with the left space
-        :type bot: ShellBot
+        :param leave: The leave event received from the chat space
+        :type leave: Leave
 
         Provide your own implementation in a sub-class where required.
 
         Example::
 
-            on_exit(self, bot):
-                mailer.post(u"Kicked off from {}".format(bot.space.title))
+            on_exit(self, leave):
+                mailer.post(u"Kicked off from {}".format(leave.space_title))
         """
         pass
 

@@ -266,6 +266,7 @@ class Listener(object):
 
             elapsed = time.time() - self.engine.get('fan.stamp', 0)
             if elapsed < self.FRESH_DURATION:
+                logging.debug(u"- putting input to fan queue")
                 self.engine.fan.put(input)  # forward downstream
 
             logging.info(u"- not for me, thrown away")
@@ -307,9 +308,9 @@ class Listener(object):
 
         if received.actor_id == self.engine.get('bot.id'):
             if received.get('hook') != 'shellbot-participants':
+                self.engine.on_enter(received)
+                self.engine.dispatch('enter', received=received)
                 bot = self.engine.get_bot(received.space_id)
-                self.engine.on_enter(bot)
-                self.engine.dispatch('enter', bot=bot)
                 bot.say(self.engine.get('bot.enter'))
         else:
             if received.get('hook') != 'shellbot-rooms':
@@ -333,9 +334,8 @@ class Listener(object):
 
         if received.actor_id == self.engine.get('bot.id'):
             if received.get('hook') != 'shellbot-participants':
-                bot = self.engine.get_bot(received.space_id)
-                self.engine.on_exit(bot)
-                self.engine.dispatch('exit', bot=bot)
+                self.engine.on_exit(received)
+                self.engine.dispatch('exit', received=received)
         else:
             if received.get('hook') != 'shellbot-rooms':
                 self.engine.dispatch('leave', received=received)

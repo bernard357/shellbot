@@ -98,14 +98,6 @@ class Speaker(object):
                     time.sleep(self.EMPTY_DELAY)
                     continue
 
-                if not self.engine.space.is_ready:
-                    if not_ready_flag:
-                        logging.debug(
-                            u"Speaker is waiting for space to be ready...")
-                        not_ready_flag = False
-                    time.sleep(self.NOT_READY_DELAY)
-                    continue
-
                 try:
                     item = self.engine.mouth.get(True, 0.1)
                     if item is None:

@@ -46,40 +46,57 @@ import logging
 from multiprocessing import Process
 import os
 
-from shellbot import ShellBot, Context
+from shellbot import Engine, Context
+from shellbot.machines import Input
 Context.set_logger()
 
 # create a bot and configure it
 #
-bot = ShellBot()
+engine = Engine()
 os.environ['CHAT_ROOM_TITLE'] = '*dummy'
-bot.configure()
+engine.configure()
 
 # add some event handler
 #
 class Handler(object):
 
+    def __init__(self, engine):
+        self.engine = engine
+
     def on_enter(self, received):
-        logging.info(u"Happy to enter '{}'".format(received.space_title))
+        bot = self.engine.get_bot(received.space_id)
+        bot.say(u"Happy to enter '{}'".format(bot.space.title))
+        bot.machine = Input(bot=bot,
+                question="PO number please?",
+                mask="9999A",
+                on_retry="PO number should have 4 digits and a letter",
+                on_answer="Ok, PO number has been noted: {}",
+                on_cancel="Ok, forget about the PO number",
+                tip=20,
+                timeout=40,
+                key='order.id')
+        bot.machine.start()
 
     def on_exit(self, received):
         logging.info(u"Sad to exit '{}'".format(received.space_title))
 
     def on_join(self, received):
-        logging.info(u"Welcome to '{}' in '{}'".format(
+        bot = self.engine.get_bot(received.space_id)
+        bot.say(u"Welcome to '{}' in '{}'".format(
             received.actor_label, received.space_title))
 
     def on_leave(self, received):
-        logging.info(u"Bye bye '{}', we will miss you in '{}'".format(
+        bot = self.engine.get_bot(received.space_id)
+        bot.say(u"Bye bye '{}', we will miss you in '{}'".format(
             received.actor_label, received.space_title))
 
 
-handler = Handler()
-bot.subscribe('enter', handler)
-bot.subscribe('exit', handler)
-bot.subscribe('join', handler)
-bot.subscribe('leave', handler)
+handler = Handler(engine)
+engine.subscribe('enter', handler)
+engine.subscribe('exit', handler)
+engine.subscribe('join', handler)
+engine.subscribe('leave', handler)
 
 # run the server
 #
-bot.run()
+engine.run()

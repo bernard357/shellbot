@@ -197,6 +197,10 @@ class ShellBot(object):
 
         logging.info(u"Bot says: {}".format(text))
 
+#        logging.debug(u"- calling speaker directly")
+#        self.engine.speaker.process(
+#            Vibes(text, content, file, self.space_id))
+
         if self.engine.mouth:
             logging.debug(u"- pushing message to mouth queue")
             self.engine.mouth.put(
