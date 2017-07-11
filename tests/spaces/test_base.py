@@ -280,12 +280,20 @@ class SpaceTests(unittest.TestCase):
             space.add_moderators(persons=[])
             self.assertFalse(mocked.called)
 
-        space = Space(context=my_context)
-        with mock.patch.object(space,
-                               'add_moderator') as mocked:
+        class MySpace(Space):
+            def on_reset(self):
+                self._persons = []
 
-            space.add_moderators(persons=['foo.bar@acme.com'])
-            mocked.assert_called_with('foo.bar@acme.com')
+            def add_moderator(self, person):
+                self._persons.append(person)
+
+        space = MySpace(context=my_context)
+        space.add_moderators(
+            persons=['alice@acme.com', 'bob@acme.com'])
+
+        self.assertEqual(
+            space._persons,
+            ['alice@acme.com', 'bob@acme.com'])
 
     def test_add_moderator(self):
 
@@ -306,13 +314,20 @@ class SpaceTests(unittest.TestCase):
             space.add_participants(persons=[])
             self.assertFalse(mocked.called)
 
-        space = Space(context=my_context)
-        with mock.patch.object(space,
-                               'add_participant') as mocked:
+        class MySpace(Space):
+            def on_reset(self):
+                self._persons = []
 
-            space.add_participants(persons=['foo.bar@acme.com'])
+            def add_participant(self, person):
+                self._persons.append(person)
 
-            mocked.assert_called_with('foo.bar@acme.com')
+        space = MySpace(context=my_context)
+        space.add_participants(
+            persons=['alice@acme.com', 'bob@acme.com'])
+
+        self.assertEqual(
+            space._persons,
+            ['alice@acme.com', 'bob@acme.com'])
 
     def test_add_participant(self):
 
@@ -333,12 +348,18 @@ class SpaceTests(unittest.TestCase):
             space.remove_participants(persons=[])
             self.assertFalse(mocked.called)
 
-        space = Space(context=my_context)
-        with mock.patch.object(space,
-                               'remove_participant') as mocked:
+        class MySpace(Space):
+            def on_reset(self):
+                self._persons = ['alice@acme.com', 'bob@acme.com']
 
-            space.remove_participants(persons=['foo.bar@acme.com'])
-            mocked.assert_called_with('foo.bar@acme.com')
+            def remove_participant(self, person):
+                self._persons.remove(person)
+
+        space = MySpace(context=my_context)
+        space.remove_participants(
+            persons=['bob@acme.com', 'alice@acme.com'])
+
+        self.assertEqual(space._persons, [])
 
     def test_remove_participant(self):
 
@@ -422,6 +443,9 @@ class SpaceTests(unittest.TestCase):
         self.assertFalse(space.pull.called)
 
         class ExSpace(Space):
+            def on_reset(self):
+                self._bot_id = None
+
             def on_start(self):
                 self._bot_id = 123
 
@@ -430,12 +454,15 @@ class SpaceTests(unittest.TestCase):
         space.pull = mock.Mock()
         space.PULL_INTERVAL = 0.01
         space.start()
-        time.sleep(0.4)
-        my_context.set('general.switch', 'off')
         time.sleep(0.1)
+        while space._bot_id is None:
+            time.sleep(0.1)
+        while my_context.get('puller.counter', 0) < 4:
+            time.sleep(0.1)
+        my_context.set('general.switch', 'off')
         self.assertFalse(space.register.called)
-        self.assertTrue(my_context.get('puller.counter') > 0)
         self.assertEqual(space._bot_id, 123)
+        self.assertTrue(my_context.get('puller.counter') > 4)
 
     def test_run(self):
 

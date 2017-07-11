@@ -727,7 +727,6 @@ class Space(object):
         """
 
         logging.info(u'Pulling updates')
-        time.sleep(0.2)
 
         try:
             self.context.set('puller.counter', 0)
