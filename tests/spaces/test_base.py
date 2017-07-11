@@ -434,7 +434,7 @@ class SpaceTests(unittest.TestCase):
         my_context.set('general.switch', 'off')
         time.sleep(0.1)
         self.assertFalse(space.register.called)
-        self.assertTrue(my_context.get('puller.counter') > 1)
+        self.assertTrue(my_context.get('puller.counter') > 0)
         self.assertEqual(space._bot_id, 123)
 
     def test_run(self):

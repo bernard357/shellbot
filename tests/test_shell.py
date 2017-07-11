@@ -114,19 +114,6 @@ class ShellTests(unittest.TestCase):
         self.assertEqual(shell.command('help'), help)
         self.assertEqual(shell.command('pass'), noop)
 
-    def test_load_commands_via_settings(self):
-
-        logging.debug('***** load_commands via settings')
-
-        my_engine.context.apply(settings = {
-            'shell': {'commands': ['shellbot.commands.help',
-                                   'shellbot.commands.noop']},
-        })
-
-        shell = Shell(engine=my_engine)
-
-        self.assertEqual(shell.commands, ['help', 'pass'])
-
     def test_load_commands_via_configure(self):
 
         logging.debug('***** load_commands via configure')
