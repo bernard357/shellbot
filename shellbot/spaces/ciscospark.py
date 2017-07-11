@@ -939,6 +939,7 @@ class SparkSpace(Space):
         message.mentioned_ids = message.get('mentionedPeople', [])
         message.space_id = message.get('roomId')
 
+        logging.debug(u"- putting message to ears")
         queue.put(str(message))
 
         for url in item.get('files', []):
@@ -948,6 +949,7 @@ class SparkSpace(Space):
             attachment.from_label = item.get('personEmail', None)
             attachment.space_id = item.get('roomId', None)
 
+            logging.debug(u"- putting attachment to ears")
             queue.put(str(attachment))
 
     def download_attachment(self, url):

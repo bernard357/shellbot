@@ -75,7 +75,6 @@ class Engine(object):
         # settings of the chat space are provided
         # in the engine configuration itself
         #
-        bot = engine.bond()
         bot = ShellBot(engine=engine)
         bot.bond(reset=True)
 
@@ -606,6 +605,7 @@ class Engine(object):
 
         if self.ears is None:
             self.ears = Queue()
+            self.space.ears = self.ears
 
         self.start_processes()
 
@@ -705,15 +705,12 @@ class Engine(object):
         logging.debug(u"- building bot instance")
         bot = driver(engine=self, space_id=id)
 
-        if id:
-            logging.debug(u"- adding related space")
-            bot.space = self.build_space(space_id=id)
+        bot.space = self.build_space(space_id=id)
 
-            logging.debug(u"- adding related store")
-            bot.store = self.build_store(space_id=id)
+        bot.store = self.build_store(space_id=id)
 
-            logging.debug(u"- adding related machine")
-            bot.machine = self.build_machine(bot=bot)
+        logging.debug(u"- building state machine")
+        bot.machine = self.build_machine(bot=bot)
 
         self.on_build(bot)
 
@@ -732,12 +729,14 @@ class Engine(object):
         a space bound to it.
         """
         logging.debug(u"- building space instance")
-        space = SpaceFactory.build(context=self.context, ears=self.ears)
-        space.configure()
-        space.connect()
         if space_id:
+            space = SpaceFactory.build(context=self.context, ears=self.ears)
+            space.configure()
+            space.connect()
             space.use_space(id=space_id)
-        return space
+            return space
+        else:
+            return self.space
 
     def build_store(self, space_id=None):
         """
@@ -751,6 +750,7 @@ class Engine(object):
         This function receives an identifier, and returns
         a store bound to it.
         """
+        logging.debug(u"- building data store")
         return StoreFactory.get(type='memory')
 
     def build_machine(self, bot):
@@ -782,6 +782,14 @@ class Engine(object):
                 bot.secondary_machine = Input(...)
         """
         pass
+
+    def bond(self, reset):
+        """
+        Bonds this engine to a single space
+        """
+        bot = self.get_bot()
+        bot.bond(reset=True)
+        return bot
 
     def on_enter(self, bot):
         """

@@ -46,7 +46,7 @@ ngrok for exposing services to the Internet::
 
 import os
 
-from shellbot import ShellBot, Context, Command
+from shellbot import Engine, ShellBot, Context, Command
 Context.set_logger()
 
 # create a bot and load command
@@ -55,20 +55,20 @@ class Hello(Command):
     keyword = 'hello'
     information_message = u"Hello, World!"
 
-bot = ShellBot(command=Hello())
+engine = Engine(command=Hello())
 
 # load configuration
 #
 os.environ['CHAT_ROOM_TITLE'] = 'Hello tutorial'
-bot.configure()
+engine.configure()
 
 # create a chat room
 #
-bot.bond(reset=True)
+bot = engine.bond(reset=True)
 
 # run the bot
 #
-bot.run()
+engine.run()
 
 # delete the chat room when the bot is stopped
 #

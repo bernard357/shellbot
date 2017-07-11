@@ -76,10 +76,15 @@ class ShellBot(object):
         assert space_id is None or space is None  # use only one
         if space_id:
             self.space = self.engine.build_space(space_id)
-        else:
+        elif space:
             self.space = space
+        else:
+            self.space = engine.space
 
-        self.store = store
+        if store:
+            self.store = store
+        else:
+            self.store = self.engine.build_store(space_id)
 
         self.fan = fan
 
