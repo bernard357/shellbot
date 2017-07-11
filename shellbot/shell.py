@@ -41,7 +41,6 @@ class Shell(object):
         self.engine.shell = self
 
         self._commands = {}
-        self.load_commands(self.engine.get('shell.commands', []))
 
         self.line = None
         self.count = 0
