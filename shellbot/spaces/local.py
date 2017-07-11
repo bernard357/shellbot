@@ -34,14 +34,21 @@ class LocalSpace(Space):
     This class allows developers to test their commands interface
     locally, without the need for a real API back-end.
 
-    Example::
+    If a list of commands is provided as input, then the space will consume
+    all of them and then it will stop. All kinds of automated tests and
+    scenarios can be build with this approach.
 
-        bot = ShellBot(command=Hello(), type='local')
-        bot.space.push(['help', 'hello', 'help help'])
+    Example of automated interaction with some commands::
 
-        bot.configure()
-        bot.bond()
-        bot.run()
+        engine = Engine(command=Hello(), type='local')
+        engine.space.push(['help', 'hello', 'help help'])
+
+        engine.configure()
+        engine.run()
+
+    If no input is provided, then the space provides a command-line interface
+    so that you can play interactively with your bot. This setup is handy
+    since it does not require access to a real chat back-end.
 
     """
 
@@ -59,7 +66,7 @@ class LocalSpace(Space):
 
         Example::
 
-            space = LocalSpace(bot=bot, prefix='local.audit')
+            space = LocalSpace(context=context, prefix='local.audit')
 
         Here we create a new local space, and use
         settings under the key ``local.audit`` in the context of this bot.
@@ -289,7 +296,7 @@ class LocalSpace(Space):
         """
         Fetches updates
 
-        This function senses most recent items, and pushes them
+        This function senses most recent item, and pushes it
         to the listening queue.
 
         """
