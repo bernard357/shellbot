@@ -281,12 +281,26 @@ class Menu(Machine):
             self.say(self.on_retry)
             return
 
-        self.set('answer', arguments)
+        option = self.options[int(arguments)-1]
+        self.set('answer', option)
         if self.key:
-            self.bot.update('input', self.key, self.options[int(arguments)-1])
+            self.bot.update('input', self.key, option)
 
-        self.say(self.on_answer.format(arguments))
+        self.say(self.on_answer.format(option))
+
+        self.on_input(value=option)
+
         self.step(event='tick')
+
+    def on_input(self, value):
+        """
+        Processes input data
+
+        :param value: Data that has been captured
+        :type value: str
+
+        """
+        pass
 
     def filter(self, text):
         """

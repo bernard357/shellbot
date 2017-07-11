@@ -300,7 +300,20 @@ class Input(Machine):
             self.bot.update('input', self.key, arguments)
 
         self.say(self.on_answer.format(arguments))
+
+        self.on_input(value=arguments)
+
         self.step(event='tick')
+
+    def on_input(self, value):
+        """
+        Processes input data
+
+        :param value: Data that has been captured
+        :type value: str
+
+        """
+        pass
 
     def filter(self, text):
         """
