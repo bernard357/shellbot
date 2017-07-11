@@ -189,6 +189,22 @@ class Engine(object):
 
         self.fan = fan
 
+        self.subscribed = {
+            'bond': [],       # connected to a space
+            'dispose': [],    # space will be destroyed
+            'start': [],      # starting bot services
+            'stop': [],       # stopping bot services
+            'message': [],    # message received (with message)
+            'attachment': [], # attachment received (with attachment)
+            'join': [],       # joining a space (with person)
+            'leave': [],      # leaving a space (with person)
+            'enter': [],      # invited to a space (for the bot)
+            'exit': [],       # kicked off from a space (for the bot)
+            'inbound': [],    # other event received from space (with event)
+        }
+
+        self.bots = {}
+
         assert space is None or type is None  # use only one
         if type:
             space = SpaceFactory.get(type=type)
@@ -208,22 +224,6 @@ class Engine(object):
 
         if command:
             self.load_command(command)
-
-        self.subscribed = {
-            'bond': [],       # connected to a space
-            'dispose': [],    # space will be destroyed
-            'start': [],      # starting bot services
-            'stop': [],       # stopping bot services
-            'message': [],    # message received (with message)
-            'attachment': [], # attachment received (with attachment)
-            'join': [],       # joining a space (with person)
-            'leave': [],      # leaving a space (with person)
-            'enter': [],      # invited to a space (for the bot)
-            'exit': [],       # kicked off from a space (for the bot)
-            'inbound': [],    # other event received from space (with event)
-        }
-
-        self.bots = {}
 
     def configure_from_path(self, path="settings.yaml"):
         """
@@ -284,6 +284,7 @@ class Engine(object):
             self.space = SpaceFactory.build(context=self.context, ears=self.ears)
 
         self.space.configure()
+
         self.space.connect()
 
         if (self.server is None
