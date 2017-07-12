@@ -102,7 +102,7 @@ class Input(Machine):
                 key=None,
                 **kwargs):
         """
-        Handles extended initialisation parameters
+        Asks for some input
 
         :param question: Message to ask for some input (mandatory)
         :type question: str
@@ -222,7 +222,7 @@ class Input(Machine):
             self.RETRY_DELAY = float(retry_delay)
 
         if cancel_delay is not None:
-            assert float(cancel_delay) >= 0
+            assert float(cancel_delay) > 0
             self.CANCEL_DELAY = float(cancel_delay)
             assert self.CANCEL_DELAY > self.RETRY_DELAY
 
@@ -406,7 +406,7 @@ class Input(Machine):
         except KeyboardInterrupt:
             pass
 
-        logging.info(u"Receiver has been stopped")
+        logging.info(u"Input receiver has been stopped")
 
     def execute(self, arguments):
         """
@@ -447,7 +447,12 @@ class Input(Machine):
         """
         Filters data from user input
 
-        If a mask is provided, or a reular expression, they are used
+        :param text: Text coming from the chat space
+        :type text: str
+
+        :return: Data to be captured, or None
+
+        If a mask is provided, or a regular expression, they are used
         to extract useful information from provided data.
 
         Example to read a PO mumber::
