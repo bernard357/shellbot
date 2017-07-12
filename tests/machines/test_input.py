@@ -32,15 +32,29 @@ class InputTests(unittest.TestCase):
 
         logging.info("******** init")
 
+        with self.assertRaises(AssertionError):
+            machine = Input(bot=my_bot)  # missing question
+
+        with self.assertRaises(AssertionError):
+            machine = Input(bot=my_bot,  # too many args
+                            question="What's up, Doc?",
+                            mask="*mask",
+                            regex="*regex")
+
         machine = Input(bot=my_bot,
                         question="What's up, Doc?")
         self.assertEqual(machine.bot, my_bot)
-        self.assertEqual(machine.prefix, "machine")
         self.assertEqual(machine.question, "What's up, Doc?")
-        self.assertEqual(machine.on_retry, machine.RETRY_MESSAGE)
-        self.assertEqual(machine.on_answer, machine.ANSWER_MESSAGE)
-        self.assertEqual(machine.on_cancel, machine.CANCEL_MESSAGE)
-        self.assertEqual(machine.is_mandatory, machine.IS_MANDATORY)
+        self.assertEqual(machine.on_answer, None)
+        self.assertEqual(machine.on_answer_content, None)
+        self.assertEqual(machine.on_answer_file, None)
+        self.assertEqual(machine.on_retry, None)
+        self.assertEqual(machine.on_retry_content, None)
+        self.assertEqual(machine.on_retry_file, None)
+        self.assertEqual(machine.on_cancel, None)
+        self.assertEqual(machine.on_cancel_content, None)
+        self.assertEqual(machine.on_cancel_file, None)
+        self.assertEqual(machine.is_mandatory, False)
         self.assertEqual(machine.key, None)
 
         self.assertEqual(sorted(machine._states.keys()),
@@ -49,34 +63,43 @@ class InputTests(unittest.TestCase):
                          ['begin', 'delayed', 'waiting'])
 
         machine = Input(bot=my_bot,
-                        prefix='who.cares',
                         question="What's up, Doc?",
-                        mask="9999A",
-                        on_retry="Come on, you can do better! Please retry",
-                        on_answer="Thank you, you are doing great",
+                        mask="*mask")
+        self.assertEqual(machine.mask, "*mask")
+
+        machine = Input(bot=my_bot,
+                        question="What's up, Doc?",
+                        regex="*regex",
+                        on_answer="ok for {}",
+                        on_answer_content="*ok* for {}",
+                        on_answer_file="/file/to/upload.pdf",
+                        on_retry="please retry",
+                        on_retry_content="please *retry*",
+                        on_retry_file="/file/to/upload.pdf",
                         on_cancel="Ok, forget about it",
-                        s_mandatory=0,
-                        tip=20,
-                        timeout=40,
+                        on_cancel_content="*cancelled*",
+                        on_cancel_file="/file/to/upload.pdf",
+                        is_mandatory=True,
+                        retry_delay=9,
+                        cancel_delay=99,
                         key='rabbit.input')
         self.assertEqual(machine.bot, my_bot)
-        self.assertEqual(machine.question,
-                         "What's up, Doc?")
-        self.assertEqual(machine.mask,
-                         "9999A")
-        self.assertEqual(machine.on_retry,
-                         'Come on, you can do better! Please retry')
-        self.assertEqual(machine.on_answer,
-                         "Thank you, you are doing great")
-        self.assertEqual(machine.on_cancel,
-                         "Ok, forget about it")
-        self.assertEqual(machine.is_mandatory, 0)
-        self.assertEqual(machine.WAIT_DURATION, 20)
-        self.assertEqual(machine.CANCEL_DURATION, 40)
-        self.assertEqual(machine.key,
-                         'rabbit.input')
-        self.assertEqual(machine.prefix,
-                         "who.cares")
+        self.assertEqual(machine.question, "What's up, Doc?")
+        self.assertEqual(machine.mask, None)
+        self.assertEqual(machine.regex, "*regex")
+        self.assertEqual(machine.on_answer, "ok for {}")
+        self.assertEqual(machine.on_answer_content, "*ok* for {}")
+        self.assertEqual(machine.on_answer_file, "/file/to/upload.pdf")
+        self.assertEqual(machine.on_retry, "please retry")
+        self.assertEqual(machine.on_retry_content, "please *retry*")
+        self.assertEqual(machine.on_retry_file, "/file/to/upload.pdf")
+        self.assertEqual(machine.on_cancel, "Ok, forget about it")
+        self.assertEqual(machine.on_cancel_content, "*cancelled*")
+        self.assertEqual(machine.on_cancel_file, "/file/to/upload.pdf")
+        self.assertEqual(machine.is_mandatory, True)
+        self.assertEqual(machine.RETRY_DELAY, 9)
+        self.assertEqual(machine.CANCEL_DELAY, 99)
+        self.assertEqual(machine.key, 'rabbit.input')
 
     def test_elapsed(self):
 
@@ -87,6 +110,126 @@ class InputTests(unittest.TestCase):
 
         time.sleep(0.01)
         self.assertTrue(machine.elapsed > 0.01)
+
+    def test_say_answer(self):
+
+        logging.info("******** say_answer")
+
+        class MyBot(ShellBot):
+            def on_init(self):
+                self.said = []
+
+            def say(self, message, content=None, file=None):
+                if message:
+                    self.said.append(message)
+                if content:
+                    self.said.append(content)
+                if file:
+                    self.said.append(file)
+
+        my_bot = MyBot(engine=my_engine)
+
+        machine = Input(bot=my_bot,
+                        question="What's up, Doc?")
+
+        my_bot.said = []
+        machine.say_answer('*test')
+        self.assertEqual(
+            my_bot.said,
+            [machine.ANSWER_MESSAGE])
+
+        machine = Input(bot=my_bot,
+                        question="What's up, Doc?",
+                        on_answer="ok for {}",
+                        on_answer_content="*ok* for {}",
+                        on_answer_file="/file/to/upload.pdf",
+                        )
+
+        my_bot.said = []
+        machine.say_answer('*test')
+        self.assertEqual(
+            my_bot.said,
+            ['ok for *test', ' ', '*ok* for *test', '/file/to/upload.pdf'])
+
+    def test_say_retry(self):
+
+        logging.info("******** say_retry")
+
+        class MyBot(ShellBot):
+            def on_init(self):
+                self.said = []
+
+            def say(self, message, content=None, file=None):
+                if message:
+                    self.said.append(message)
+                if content:
+                    self.said.append(content)
+                if file:
+                    self.said.append(file)
+
+        my_bot = MyBot(engine=my_engine)
+
+        machine = Input(bot=my_bot,
+                        question="What's up, Doc?")
+
+        my_bot.said = []
+        machine.say_retry()
+        self.assertEqual(
+            my_bot.said,
+            [machine.RETRY_MESSAGE])
+
+        machine = Input(bot=my_bot,
+                        question="What's up, Doc?",
+                        on_retry="please retry",
+                        on_retry_content="please *retry*",
+                        on_retry_file="/file/to/upload.pdf",
+                        )
+
+        my_bot.said = []
+        machine.say_retry()
+        self.assertEqual(
+            my_bot.said,
+            ['please retry', ' ', 'please *retry*', '/file/to/upload.pdf'])
+
+    def test_say_cancel(self):
+
+        logging.info("******** say_cancel")
+
+        class MyBot(ShellBot):
+            def on_init(self):
+                self.said = []
+
+            def say(self, message, content=None, file=None):
+                if message:
+                    self.said.append(message)
+                if content:
+                    self.said.append(content)
+                if file:
+                    self.said.append(file)
+
+        my_bot = MyBot(engine=my_engine)
+
+        machine = Input(bot=my_bot,
+                        question="What's up, Doc?")
+
+        my_bot.said = []
+        machine.say_cancel()
+        self.assertEqual(
+            my_bot.said,
+            [machine.CANCEL_MESSAGE])
+
+        machine = Input(bot=my_bot,
+                        question="What's up, Doc?",
+                        on_cancel="Ok, forget about it",
+                        on_cancel_content="*cancelled*",
+                        on_cancel_file="/file/to/upload.pdf",
+                        )
+
+        my_bot.said = []
+        machine.say_cancel()
+        self.assertEqual(
+            my_bot.said,
+            ['Ok, forget about it', ' ', '*cancelled*', '/file/to/upload.pdf'])
 
     def test_ask(self):
 
@@ -152,10 +295,10 @@ class InputTests(unittest.TestCase):
         self.assertEqual(machine.get('answer'), 'ping')
 
         logging.debug("- exit on cancellation time out")
-        machine.CANCEL_DURATION = 0.001
+        machine.CANCEL_DELAY = 0.001
         machine.receive()
         self.assertEqual(machine.get('answer'), None)
-        machine.CANCEL_DURATION = 40.0
+        machine.CANCEL_DELAY = 40.0
 
         logging.debug("- exit on poison pill")
         my_engine.fan.put(None)
@@ -195,23 +338,23 @@ class InputTests(unittest.TestCase):
         machine.step = mock.Mock()
 
         machine.execute(arguments=None)
-        my_bot.say.assert_called_with(machine.on_retry)
+        my_bot.say.assert_called_with(machine.RETRY_MESSAGE)
         self.assertEqual(machine.get('answer'), None)
         self.assertFalse(machine.step.called)
 
         machine.execute(arguments='')
-        my_bot.say.assert_called_with(machine.on_retry)
+        my_bot.say.assert_called_with(machine.RETRY_MESSAGE)
         self.assertEqual(machine.get('answer'), None)
         self.assertFalse(machine.step.called)
 
         machine.execute(arguments='something at least')
-        my_bot.say.assert_called_with(machine.on_answer)
+        my_bot.say.assert_called_with(machine.ANSWER_MESSAGE)
         self.assertTrue(machine.step.called)
 
         machine.filter = mock.Mock(return_value=None)
         machine.step = mock.Mock()
         machine.execute(arguments='something else')
-        my_bot.say.assert_called_with(machine.on_retry)
+        my_bot.say.assert_called_with(machine.RETRY_MESSAGE)
         self.assertFalse(machine.step.called)
 
     def test_filter(self):
@@ -228,42 +371,92 @@ class InputTests(unittest.TestCase):
 
         self.assertEqual(machine.filter('PO: 1324'), '1324')
 
-    def test_search(self):
+    def test_search_mask(self):
 
-        logging.info("******** search")
+        logging.info("******** search_mask")
 
         machine = Input(bot=my_bot,
                         question="What's up, Doc?")
 
         with self.assertRaises(AssertionError):
-            machine.search(None, 'hello world')
+            machine.search_mask(None, 'hello world')
 
         with self.assertRaises(AssertionError):
-            machine.search('', 'hello world')
+            machine.search_mask('', 'hello world')
 
         with self.assertRaises(AssertionError):
-            machine.search('999A', None)
+            machine.search_mask('999A', None)
 
         with self.assertRaises(AssertionError):
-            machine.search('999A', '')
+            machine.search_mask('999A', '')
 
-        self.assertEqual(machine.search('999A', 'hello world'), None)
+        self.assertEqual(machine.search_mask('999A', 'hello world'), None)
 
-        self.assertEqual(machine.search('999A', 'PO: 1324'), '1324')
+        self.assertEqual(machine.search_mask('999A', 'PO: 1324'), '1324')
+
+    def test_search_expression(self):
+
+        logging.info("******** search_expression")
+
+        machine = Input(bot=my_bot,
+                        question="What's up, Doc?")
+
+        with self.assertRaises(AssertionError):
+            machine.search_expression(None, 'hello world')
+
+        with self.assertRaises(AssertionError):
+            machine.search_expression('', 'hello world')
+
+        id = r'ID-\d\w\d+'  # match with a direct pattern
+
+        with self.assertRaises(AssertionError):
+            machine.search_expression(id, None)
+
+        with self.assertRaises(AssertionError):
+            machine.search_expression(id, '')
+
+        self.assertEqual(
+            machine.search_expression(id, 'hello world'), None)
+
+        self.assertEqual(
+            machine.search_expression(id, 'The id is ID-1W27 I believe'),
+            'ID-1W27')
+
+        email_domain = r'@([\w.]+)'  # match with a group
+
+        with self.assertRaises(AssertionError):
+            machine.search_expression(email_domain, None)
+
+        with self.assertRaises(AssertionError):
+            machine.search_expression(email_domain, '')
+
+        self.assertEqual(
+            machine.search_expression(email_domain, 'hello world'), None)
+
+        self.assertEqual(
+            machine.search_expression(
+                email_domain, 'my address is foo.bar@acme.com'), 'acme.com')
+
+    def test_on_input(self):
+
+        logging.info("******** on_input")
+
+        machine = Input(bot=my_bot,
+                        question="What's up, Doc?")
+
+        machine.on_input(value='ok!')
 
     def test_cancel(self):
 
         logging.info("******** cancel")
 
-        my_bot = ShellBot(engine=my_engine)
-        my_bot.say = mock.Mock()
-
         machine = Input(bot=my_bot,
                         question="What's up, Doc?")
 
+        machine.say_cancel = mock.Mock()
         machine.stop = mock.Mock()
         machine.cancel()
-        my_bot.say.assert_called_with(machine.on_cancel)
+        self.assertTrue(machine.say_cancel.called)
         self.assertTrue(machine.stop.called)
 
     def test_cycle(self):
@@ -280,7 +473,12 @@ class InputTests(unittest.TestCase):
         my_bot = MyBot(engine=my_engine, store=store)
         my_bot.fan = Queue()
 
-        machine = Input(bot=my_bot,
+        class MyInput(Input):
+
+            def on_input(self, value):
+                assert value == 'here we go'
+
+        machine = MyInput(bot=my_bot,
                         question="What's up, Doc?",
                         key='my.input')
 
@@ -290,8 +488,10 @@ class InputTests(unittest.TestCase):
         my_engine.fan.put('here we go')
         p.join()
 
+        self.assertEqual(machine.get('answer'), 'here we go')
         self.assertEqual(my_bot.recall('input'), {u'my.input': u'here we go'})
-        self.assertEqual(my_engine.get('said'), machine.on_answer)
+
+        self.assertEqual(my_engine.get('said'), machine.ANSWER_MESSAGE)
 
     def test_delayed(self):
 
@@ -311,7 +511,7 @@ class InputTests(unittest.TestCase):
                         question="What's up, Doc?",
                         key='my.input')
 
-        machine.WAIT_DURATION = 0.01
+        machine.RETRY_DELAY = 0.01
         p = machine.start(tick=0.001)
 
         time.sleep(0.03)
@@ -319,7 +519,7 @@ class InputTests(unittest.TestCase):
         p.join()
 
         self.assertEqual(my_bot.recall('input'), {u'my.input': u'here we go'})
-        self.assertEqual(my_engine.get('said'), machine.on_answer)
+        self.assertEqual(my_engine.get('said'), machine.ANSWER_MESSAGE)
 
     def test_cancelled(self):
 
@@ -338,14 +538,14 @@ class InputTests(unittest.TestCase):
                         question="What's up, Doc?",
                         key='my.input')
 
-        machine.CANCEL_DURATION = 0.02
-        machine.WAIT_DURATION = 0.01
+        machine.CANCEL_DELAY = 0.02
+        machine.RETRY_DELAY = 0.01
         machine.TICK_DURATION = 0.001
         p = machine.start()
         p.join()
 
         self.assertEqual(my_engine.get('my.input'), '*void')
-        self.assertEqual(my_engine.get('said'), machine.on_cancel)
+        self.assertEqual(my_engine.get('said'), machine.CANCEL_MESSAGE)
 
 
 if __name__ == '__main__':

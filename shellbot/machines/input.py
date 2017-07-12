@@ -27,78 +27,133 @@ class Input(Machine):
     """
     Asks for some input
 
+    This implements a state machine that can get one piece of input
+    from chat participants. It can ask a question, wait for some input,
+    check provided data and provide guidance when needed.
+
     Example::
 
         machine = Input(bot=bot, question="PO Number?", key="order.id")
         machine.start()
         ...
 
+    In normal operation mode, the machine asks a question in the chat space,
+    then listen for an answer, captures it, and stops.
+
+    When no adequate answer is provided, the machine will provide guidance
+    in the chat space after some delay, and ask for a retry. Multiple retries
+    can take place, until correct input is provided, or the machine is
+    timed out.
+
+    The machine can also time out after a (possibly) long duration, and send
+    a message in the chat space when giving up.
+
+    If correct input is mandatory, no time out will take place and the machine
+    will really need a correct answer to stop.
+
+    Data that has been captured can be read from the machine itself.
+    For example::
+
+        value = machine.get('answer')
+
+    If the machine is given a key, this is used for feeding the bot store.
+    For example::
+
+        machine.build(key='my_field', ...)
+        ...
+
+        value = bot.recall('input')['my_field']
+
+    The most straightforward way to process captured data in real-time
+    is to subclass ``Input``, like in the following example::
+
+        class MyInput(Input):
+
+            def on_input(self, value):
+                mail.send_message(value)
+
+        machine = MyInput(...)
+        machine.start()
 
     """
-    IS_MARKDOWN = 0
-    IS_MANDATORY = 0
-    RETRY_MESSAGE = u"Invalid input, please retry"
     ANSWER_MESSAGE = u"Ok, this has been noted"
+    RETRY_MESSAGE = u"Invalid input, please retry"
     CANCEL_MESSAGE = u"Ok, forget about it"
 
-    WAIT_DURATION = 20.0  # amount of time before being delayed
-    CANCEL_DURATION = 40.0   # amount of time before being cancelled
+    RETRY_DELAY = 20.0  # amount of seconds between retries
+    CANCEL_DELAY = 40.0   # amount of seconds before time out
 
     def on_init(self,
-                question,
-                regex=None,
+                question=None,
                 mask=None,
-                on_retry=None,
+                regex=None,
                 on_answer=None,
+                on_answer_content=None,
+                on_answer_file=None,
+                on_retry=None,
+                on_retry_content=None,
+                on_retry_file=None,
+                retry_delay=None,
                 on_cancel=None,
-                is_mandatory=None,
-                is_markdown=None,
-                tip=None,
-                timeout=None,
+                on_cancel_content=None,
+                on_cancel_file=None,
+                cancel_delay=None,
+                is_mandatory=False,
                 key=None,
-                prefix='machine',
                 **kwargs):
         """
         Handles extended initialisation parameters
 
-        :param question: The question to be asked in the chat room
+        :param question: Message to ask for some input (mandatory)
         :type question: str
 
-        :param regex: The expected regex mask for the input (optional)
-        :type regex: str
-
-        :param mask: The expected mask for the input (optional)
+        :param mask: A mask to filter the input
         :type mask: str
 
-        :param on_retry: The message to ask for retry
-        :type on_retry: str
+        :param regex: A regular expression to filter the input
+        :type regex: str
 
-        :param on_answer: The message on successful answer
+        :param on_answer: Message on successful data capture
         :type on_answer: str
 
-        :param on_cancel: The message on overall cancellation
+        :param on_answer_content: Rich message on successful data capture
+        :type on_answer_content: str in Markdown or HTML format
+
+        :param on_answer_file: File to be uploaded on successful data capture
+        :type on_answer_file: str
+
+        :param on_retry: Message to provide guidance and ask for retry
+        :type on_retry: str
+
+        :param on_retry_content: Rich message on retry
+        :type on_retry_content: str in Markdown or HTML format
+
+        :param on_retry_file: File to be uploaded on retry
+        :type on_retry_file: str
+
+        :param retry_delay: Repeat the on_retry message after this delay in seconds
+        :type retry_delay: int
+
+        :param on_cancel: Message on time out
         :type on_cancel: str
 
-        :param is_mandatory: The reply will be mandatory
+        :param on_cancel_content: Rich message on time out
+        :type on_cancel_content: str in Markdown or HTML format
+
+        :param on_cancel_file: File to be uploaded on time out
+        :type on_cancel_file: str
+
+        :param is_mandatory: If the bot will insist and never give up
         :type is_mandatory: boolean
 
-        :param is_markdown: Indicate if text is provided with markdown format
-        :type is_markdown: boolean
+        :param cancel_delay: Give up on this input after this delay in seconds
+        :type cancel_delay: int
 
-        :param tip: Display the on_retry message after this delay in seconds
-        :type tip: int
-
-        :param timeout: Display the on_cancel message after this delay (0 for mandatory)
-            in seconds
-        :type timeout: int
-
-        :param key: The label associated with saved data
+        :param key: The label associated with data captured in bot store
         :type key: str
 
-        :param prefix: the main keyword for configuration of this machine
-        :type prefix: str
 
-        If a mask is provided, it is used to check provided input.
+        If a mask is provided, it is used to filter provided input.
         Use following conventions to build the mask:
 
         * ``A`` - Any kind of unicode symbol such as ``g`` or ``ç``
@@ -113,46 +168,63 @@ class Input(Machine):
         * ``9999A``  will match 4 digits and 1 additional character
         * ``#9-A+`` will match ``#3-June 2017``
 
-        """
-        super(Input, self).on_init(prefix, **kwargs)
+        Alternatively, you can provide a regular expression (regex) to extract
+        useful information from the input.
 
+        You can use almost every regular expression that is supported
+        by python. If parenthesis are used, the function returns the first
+        matching group.
+
+        For example, you can capture an identifier with a given prefix::
+
+            machine.build(question="What is the identifier?",
+                          regex=r'ID-\d\w\d+', ...)
+            ...
+
+            id = machine.filter('The id is ID-1W27 I believe')
+            assert id == 'ID-1W27'
+
+        As a grouping example, you can capture a domain name by asking for
+        some e-mail address like this::
+
+            machine.build(question="please enter your e-mail address",
+                          regex=r'@([\w.]+)', ...)
+            ...
+
+            domain_name = machine.filter('my address is foo.bar@acme.com')
+            assert domain_name == 'acme.com'
+
+        """
         assert question not in (None, '')
         self.question = question
 
+        assert regex is None or mask is None  # use only one of them
         self.regex = regex
-
         self.mask = mask
 
-        if on_retry in (None, ''):
-            on_retry = self.RETRY_MESSAGE
-        self.on_retry = on_retry
-
-        if on_answer in (None, ''):
-            on_answer = self.ANSWER_MESSAGE
         self.on_answer = on_answer
+        self.on_answer_content = on_answer_content
+        self.on_answer_file = on_answer_file
 
-        if on_cancel in (None, ''):
-            on_cancel = self.CANCEL_MESSAGE
+        self.on_retry = on_retry
+        self.on_retry_content = on_retry_content
+        self.on_retry_file = on_retry_file
+
         self.on_cancel = on_cancel
+        self.on_cancel_content = on_cancel_content
+        self.on_cancel_file = on_cancel_file
 
-        if is_mandatory in (None, ''):
-            is_mandatory = self.IS_MANDATORY
-        assert int(is_mandatory) >= 0
+        assert is_mandatory in (True, False)
         self.is_mandatory = is_mandatory
 
-        if is_markdown in (None, ''):
-            is_markdown = self.IS_MARKDOWN
-        assert int(is_markdown) >= 0
-        self.is_markdown = is_markdown
+        if retry_delay is not None:
+            assert float(retry_delay) > 0
+            self.RETRY_DELAY = float(retry_delay)
 
-        if tip is not None:
-            assert int(tip) > 0
-            self.WAIT_DURATION = tip
-
-        if timeout is not None:
-            assert int(timeout) >= 0
-            assert self.CANCEL_DURATION > self.WAIT_DURATION
-            self.CANCEL_DURATION = timeout
+        if cancel_delay is not None:
+            assert float(cancel_delay) >= 0
+            self.CANCEL_DELAY = float(cancel_delay)
+            assert self.CANCEL_DELAY > self.RETRY_DELAY
 
         self.key = key
 
@@ -174,8 +246,8 @@ class Input(Machine):
 
             {'source': 'waiting',
              'target': 'delayed',
-             'condition': lambda **z : self.elapsed > self.WAIT_DURATION,
-             'action': lambda: self.say(self.on_retry),
+             'condition': lambda **z : self.elapsed > self.RETRY_DELAY,
+             'action': lambda: self.say_retry,
             },
 
             {'source': 'delayed',
@@ -185,7 +257,7 @@ class Input(Machine):
 
             {'source': 'delayed',
              'target': 'end',
-             'condition': lambda **z : self.elapsed > self.CANCEL_DURATION and self.is_mandatory == 0,
+             'condition': lambda **z : self.elapsed > self.CANCEL_DELAY and not self.is_mandatory,
              'action': self.cancel},
 
         ]
@@ -200,16 +272,79 @@ class Input(Machine):
     def elapsed(self):
         """
         Measures time since the question has been asked
+
+        Used in the state machine for repeating the question and on time out.
         """
         return time.time() - self.start_time
 
+    def say_answer(self, input):
+        """
+        Responds on correct capture
+
+        :param input: the text that has been noted
+        :type input: str
+
+        """
+        text = self.on_answer.format(input) if self.on_answer else None
+        content = self.on_answer_content.format(input) if self.on_answer_content else None
+        file = self.on_answer_file if self.on_answer_file else None
+
+        if text in (None, '') and content in (None, ''):
+            text = self.ANSWER_MESSAGE.format(input)
+
+        self.bot.say(text)
+
+        if content or file:
+            self.bot.say(' ',
+                         content=content,
+                         file=file)
+
+    def say_retry(self):
+        """
+        Provides guidance on retry
+
+        """
+        text = self.on_retry if self.on_retry else None
+        content = self.on_retry_content if self.on_retry_content else None
+        file = self.on_retry_file if self.on_retry_file else None
+
+        if text in (None, '') and content in (None, ''):
+            text = self.RETRY_MESSAGE
+
+        self.bot.say(text)
+
+        if content or file:
+            self.bot.say(' ',
+                         content=content,
+                         file=file)
+
+    def say_cancel(self):
+        """
+        Says that input has been timed out
+
+        """
+        text = self.on_cancel if self.on_cancel else None
+        content = self.on_cancel_content if self.on_cancel_content else None
+        file = self.on_cancel_file if self.on_cancel_file else None
+
+        if text in (None, '') and content in (None, ''):
+            text = self.CANCEL_MESSAGE
+
+        self.bot.say(text)
+
+        if content or file:
+            self.bot.say(' ',
+                         content=content,
+                         file=file)
+
     def ask(self):
         """
-        Asks the question in the chat
+        Asks the question in the chat space
+
         """
-        self.say(self.question)
-        self.listen()
+        self.bot.say(self.question)
         self.start_time = time.time()
+        self.listen()
 
     def listen(self):
         """
@@ -227,15 +362,17 @@ class Input(Machine):
         """
         Receives data from the chat space
 
+        This function implements a loop until some data has been
+        actually captured, or until the state machine stops for some reason.
+
         The loop is also stopped when the parameter ``general.switch``
         is changed in the context. For example::
 
-            bot.context.set('general.switch', 'off')
+            engine.set('general.switch', 'off')
 
         """
         logging.info(u"Receiving input")
 
-        beginning = time.time()
         self.set('answer', None)
         try:
             while self.bot.engine.get('general.switch', 'on') == 'on':
@@ -246,9 +383,8 @@ class Input(Machine):
                 if not self.is_running:
                     break  # on machine stop
 
-                if self.is_mandatory == 0:
-                    if time.time() - beginning > self.CANCEL_DURATION + 0.2:
-                        break  # on cancellation limit
+                if self.elapsed > self.CANCEL_DELAY:
+                    break  # on time out
 
                 try:
                     if self.bot.engine.fan.empty():
@@ -272,103 +408,199 @@ class Input(Machine):
 
         logging.info(u"Receiver has been stopped")
 
-    def say(self,arguments):
-        """
-        Say what is requested
-        """
-        if self.is_markdown == 0:
-            self.bot.say(arguments)
-        else:
-            self.bot.say(arguments, content=arguments)
-
     def execute(self, arguments):
         """
         Receives data from the chat
+
+        :param arguments: data captured from the chat space
+        :type arguments: str
+
+        This function checks data that is provided, and provides guidance
+        if needed. It can extract information from the provided mask
+        or regular expression, and save it for later use.
         """
         if arguments in (None, ''):
-            self.say(self.on_retry)
+            self.say_retry()
             return
 
         arguments = self.filter(text=arguments)
 
         if arguments in (None, ''):
-            self.say(self.on_retry)
+            self.say_retry()
             return
 
+        # storage at machine level
         self.set('answer', arguments)
+
+        # storage at bot level
         if self.key:
             self.bot.update('input', self.key, arguments)
 
-        self.say(self.on_answer.format(arguments))
+        self.say_answer(arguments)
 
+        # use the input as soon as possible
         self.on_input(value=arguments)
 
         self.step(event='tick')
-
-    def on_input(self, value):
-        """
-        Processes input data
-
-        :param value: Data that has been captured
-        :type value: str
-
-        """
-        pass
 
     def filter(self, text):
         """
         Filters data from user input
 
-        If a mask is provided, this function uses it to extract data
-        and to validate the presence of useful content.
+        If a mask is provided, or a reular expression, they are used
+        to extract useful information from provided data.
+
+        Example to read a PO mumber::
+
+            machine.build(mask='9999A', ...)
+            ...
+
+            po = machine.filter('PO Number is 2413v')
+            assert po == '2413v'
+
         """
-
-        if self.regex:
-            return self.searchRegex(self.regex, text)
-
 
         if self.mask:
-            return self.search(self.mask, text)
+            return self.search_mask(self.mask, text)
+
+        if self.regex:
+            return self.search_expression(self.regex, text)
+
         return text
 
-    def searchRegex(self, regex, text):
-        """
-        Searches with regex in text
-        """
-        assert regex not in (None, '')
-        assert text not in (None, '')
-
-        pattern = re.compile(regex, re.IGNORECASE)
-        searched = pattern.search(text)
-        if searched:
-            return searched.group()
-
-        return None
-
-
-    def search(self, mask, text):
+    def search_mask(self, mask, text):
         """
         Searches for structured data in text
+
+        :param mask: A simple expression to be searched
+        :type mask: str
+
+        :param text: The string from the chat space
+        :type text: str
+
+        :return: either the matching expression, or None
+
+        Use following conventions to build the mask:
+
+        * ``A`` - Any kind of unicode symbol, such as ``g`` or ``ç``
+        * ``9`` - A digit, such as ``0`` or ``2``
+        * ``+`` - When following ``#`` or ``9``, indicates optional extensions
+           of the same type
+        * Any other symbol, including punctuation or white space, has to match
+           exactly.
+
+        Some mask examples:
+
+        * ``9999A``  will match 4 digits and 1 additional character
+        * ``#9-A+`` will match ``#3-June 2017``
+
+        Example to read a PO mumber::
+
+            machine.build(question="What is the PO number?",
+                          mask='9999A', ...)
+            ...
+
+            po = machine.filter('PO Number is 2413v')
+            assert po == '2413v'
+
         """
         assert mask not in (None, '')
         assert text not in (None, '')
 
+        logging.debug(u"Searching for mask '{}'".format(mask))
         mask = mask.replace('+', 'pLuS')
         mask = re.escape(mask)
         mask = mask.replace('pLuS', '+').replace('A', '\S').replace('9', '\d').replace('Z','[^0-9]')
+        logging.debug(u"- translated to expression '{}'".format(mask))
 
         pattern = re.compile(mask, re.U)
-
         searched = pattern.search(text)
+        if not searched:
+            logging.debug(u"- no match")
+            return None
 
-        if searched:
-            return searched.group()
+        matched = searched.group()
+        logging.debug(u"- found '{}'".format(matched))
+        return matched
 
-        return None
+    def search_expression(self, regex, text):
+        """
+        Searches for a regular expression in text
+
+        :param regex: A regular expression to be matched
+        :type regex: str
+
+        :param text: The string from the chat space
+        :type text: str
+
+        :return: either the matching expression, or None
+
+        You can use almost every regular expression that is supported
+        by python. If parenthesis are used, the function returns the first
+        matching group.
+
+        For example, you can capture an identifier with a given prefix::
+
+            machine.build(question="What is the identifier?",
+                          regex=r'ID-\d\w\d+', ...)
+            ...
+
+            id = machine.filter('The id is ID-1W27 I believe')
+            assert id == 'ID-1W27'
+
+        As a grouping example, you can capture a domain name by asking for
+        some e-mail address like this::
+
+            machine.build(question="please enter your e-mail address",
+                          regex=r'@([\w.]+)', ...)
+            ...
+
+            domain_name = machine.filter('my address is foo.bar@acme.com')
+            assert domain_name == 'acme.com'
+
+        """
+        assert regex not in (None, '')
+        assert text not in (None, '')
+
+        logging.debug(u"Searching for expression '{}'".format(regex))
+        pattern = re.compile(regex, re.I)
+        searched = pattern.search(text)
+        if not searched:
+            logging.debug(u"- no match")
+            return None
+
+        matched = searched.group()
+        if len(searched.groups()) > 0:  # return the first matching group
+            matched = searched.groups()[0]
+        logging.debug(u"- found '{}'".format(matched))
+        return matched
+
+    def on_input(self, value):
+        """
+        Processes input data
+
+        :param value: data that has been captured
+        :type value: str
+
+        This function is called as soon as some input has been captured.
+        It can be overlaid in subclass, as in the following example::
+
+            class MyInput(Input):
+
+                def on_input(self, value):
+                    mail.send_message(value)
+
+            machine = MyInput(...)
+            machine.start()
+
+        """
+        pass
 
     def cancel(self):
         """
         Cancels the question
+
+        Used by the state machine on time out
         """
-        self.say(self.on_cancel)
+        self.say_cancel()
         self.stop()
