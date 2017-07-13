@@ -83,6 +83,27 @@ class BotTests(unittest.TestCase):
         self.assertEqual(bot.store, my_store)
         self.assertEqual(bot.fan, 'f')
 
+    def test_on_init(self):
+
+        logging.info('*** on_init ***')
+
+        bot = ShellBot(engine=my_engine, fan='f')
+        bot.on_init()
+
+    def test_space_id(self):
+
+        logging.info('*** space_id ***')
+
+        bot = ShellBot(engine=my_engine, fan='f')
+
+        self.assertEqual(bot.space_id, None)
+
+        class MySpace(object):
+            id = '123'
+
+        bot.space = MySpace()
+        self.assertEqual(bot.space_id, '123')
+
     def test_bond(self):
 
         logging.info('*** bond ***')
@@ -207,6 +228,21 @@ class BotTests(unittest.TestCase):
         self.assertEqual(item.text, message_5)
         self.assertEqual(item.content, content_5)
         self.assertEqual(item.file, file_5)
+
+        content_6 = 'life is *good*'
+        file_6 = 'http://some.server/some/file'
+        my_bot.say(content=content_6, file=file_6)
+        item = my_engine.mouth.get()
+        self.assertEqual(item.text, None)
+        self.assertEqual(item.content, content_6)
+        self.assertEqual(item.file, file_6)
+
+        content_7 = 'life is _very_ *good*'
+        my_bot.say(content=content_7)
+        item = my_engine.mouth.get()
+        self.assertEqual(item.text, None)
+        self.assertEqual(item.content, content_7)
+        self.assertEqual(item.file, None)
 
     def test_remember(self):
 

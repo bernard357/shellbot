@@ -22,7 +22,7 @@ import time
 
 
 class Vibes(object):
-    def __init__(self, text, content=None, file=None, space_id=None):
+    def __init__(self, text=None, content=None, file=None, space_id=None):
         self.text = text
         self.content = content
         self.file = file

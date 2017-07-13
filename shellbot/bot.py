@@ -90,6 +90,16 @@ class ShellBot(object):
 
         self.machine = machine
 
+        self.on_init()
+
+    def on_init(self):
+        """
+        Adds to bot initialization
+
+        It can be overlaid in subclass, where needed
+        """
+        pass
+
     @property
     def space_id(self):
         """
@@ -178,7 +188,7 @@ class ShellBot(object):
         self.engine.dispatch('dispose')
         self.space.dispose(*args, **kwargs)
 
-    def say(self, text, content=None, file=None):
+    def say(self, text=None, content=None, file=None):
         """
         Sends a message to the chat space
 
@@ -192,14 +202,14 @@ class ShellBot(object):
         :type file: str or None
 
         """
-        if text in (None, ''):
+        if text:
+            line = text[:50] + (text[50:] and '..')
+        elif content:
+            line = content[:50] + (content[50:] and '..')
+        else:
             return
 
-        logging.info(u"Bot says: {}".format(text))
-
-#        logging.debug(u"- calling speaker directly")
-#        self.engine.speaker.process(
-#            Vibes(text, content, file, self.space_id))
+        logging.info(u"Bot says: {}".format(line))
 
         if self.engine.mouth:
             logging.debug(u"- pushing message to mouth queue")
