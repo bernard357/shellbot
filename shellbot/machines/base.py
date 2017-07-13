@@ -48,14 +48,14 @@ class Machine(object):
 
            >>>engine.fan.put('special command')
 
-    4. When the machine is coming end of life, resources can be disposed::
+    5. When the machine is coming end of life, resources can be disposed::
 
            >>>machine.stop()
 
     credit: Alex Bertsch <abertsch@dropbox.com>   securitybot/state_machine.py
     """
 
-    TICK_DURATION = 0.2  # time to wait between ticks
+    TICK_DURATION = 0.2  # time to wait between ticks, in seconds
 
     def __init__(self,
                  bot=None,
@@ -307,29 +307,41 @@ class Machine(object):
 
         :return: True if the machine has been actually reset, else False
 
-        This function move back to the initial state, if the machine is not
-        running.
-
-        Example::
+        This function moves a state machine back to its initial state.
+        A typical use case is when you have to recycle a state machine
+        multiple times, like in the following example::
 
             if new_cycle():
                 machine.reset()
                 machine.start()
 
+        If the machine is running, calling ``reset()`` will have no effect
+        and you will get False in return. Therefore, if you have to force
+        a reset, you may have to stop the machine first.
+
+        Example of forced reset::
+
+            machine.stop()
+            machine.reset()
+
         """
         if self.is_running:
             logging.warning(u"Cannot reset a running state machine")
             return False
-        else:
-            self.set('state', self.get('initial_state'))
-            logging.warning(u"Resetting machine to '{}'".format(
-                self.current_state.name))
 
-            while not self.mixer.empty():
-                self.mixer.get()
+        # purge the mixer queue
+        while not self.mixer.empty():
+            self.mixer.get()
 
-            self.on_reset()
-            return True
+        # restore initial state
+        self.set('state', self.get('initial_state'))
+        logging.warning(u"Resetting machine to '{}'".format(
+            self.current_state.name))
+
+        # do the rest
+        self.on_reset()
+
+        return True
 
     def on_reset(self):
         """
@@ -354,11 +366,18 @@ class Machine(object):
         - ``current_state.during(**kwargs)``
         - ``transition.condition(**kwargs)``
 
+        Since parameters can vary on complex state machines, you are advised
+        to pay specific attention to the signatures of related functions.
+        If you expect some parameter in a function, use ``kwargs.get()``to
+        get its value safely.
+
         For example, to inject the value of a gauge in the state machine
         on each tick::
 
-            def remember(gauge):
-                db.save(gauge)
+            def remember(**kwargs):
+                gauge = kwargs.get('gauge')
+                if gauge:
+                    db.save(gauge)
 
             during = { 'measuring', remember }
 
@@ -367,10 +386,16 @@ class Machine(object):
             machine.build(during=during, ... )
 
             while machine.is_running:
-                machine.tick(gauge=get_measurement())
+                machine.step(gauge=get_measurement())
 
         Or, if you have to transition on a specific threshold for a gauge,
         you could do::
+
+            def if_threshold(**kwargs):
+                gauge = kwargs.get('gauge')
+                if gauge > 20:
+                    return True
+                return False
 
             def raise_alarm():
                 mail.post_message()
@@ -379,7 +404,7 @@ class Machine(object):
 
                 {'source': 'normal',
                  'target': 'alarm',
-                 'condition': lambda gauge, **z : gauge > 20,
+                 'condition': if_threshold,
                  'action': raise_alarm},
 
                  ...
@@ -391,7 +416,7 @@ class Machine(object):
             machine.build(transitions=transitions, ... )
 
             while machine.is_running:
-                machine.tick(gauge=get_measurement())
+                machine.step(gauge=get_measurement())
 
         This machine should report on progress by sending
         messages with one or multiple ``self.bot.say("Whatever message")``.
@@ -412,7 +437,7 @@ class Machine(object):
         """
         Starts the machine
 
-        :param tick: The duration set for each tick
+        :param tick: The duration set for each tick (optional)
         :type tick: float
 
         :return: either the process that has been started, or None
@@ -424,8 +449,7 @@ class Machine(object):
             assert tick > 0.0
             self.TICK_DURATION = tick
 
-        p = Process(target=self.tick)
-#        p.daemon = True
+        p = Process(target=self.run)  # do not daemonize
         p.start()
         return p
 
@@ -436,15 +460,16 @@ class Machine(object):
         This function sends a poison pill to the queue that is read
         on each tick.
         """
-        if self.mixer is not None:
+        if self.is_running:
             self.mixer.put(None)
+            time.sleep(self.TICK_DURATION+0.05)
 
-    def tick(self):
+    def run(self):
         """
         Continuously ticks the machine
 
-        This function is looping in the background, and calls the function
-        ``step()`` at regular intervals.
+        This function is looping in the background, and calls
+        ``step(event='tick')`` at regular intervals.
 
         The recommended way for stopping the process is to call the function
         ``stop()``. For example::

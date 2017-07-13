@@ -612,9 +612,9 @@ class MachineTests(unittest.TestCase):
 
         self.assertEqual(machine.current_state.name, 'four')
 
-    def test_tick(self):
+    def test_run(self):
 
-        logging.info("***** machine/tick")
+        logging.info("***** machine/run")
 
         class MyMachine(Machine):
 
@@ -635,23 +635,23 @@ class MachineTests(unittest.TestCase):
                             initial='one')
 
         my_engine.set('general.switch', 'off')
-        machine.tick()  # general switch is off
+        machine.run()  # general switch is off
 
         my_engine.set('general.switch', 'on')
 
         machine.TICK_DURATION = 0.003
         t = Timer(0.004, machine.stop)
         t.start()
-        machine.tick()  # poison pill on delay
+        machine.run()  # poison pill on delay
 
         machine.mixer.put(None)
-        machine.tick()  # exit on poison pill
+        machine.run()  # exit on poison pill
 
         machine.mixer.put('exception')
-        machine.tick()  # break on Exception
+        machine.run()  # break on Exception
 
         machine.mixer.put('ctl-c')
-        machine.tick()  # break on KeyboardInterrupt
+        machine.run()  # break on KeyboardInterrupt
 
     def test_execute(self):
 
