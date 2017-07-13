@@ -449,9 +449,9 @@ class Machine(object):
             assert tick > 0.0
             self.TICK_DURATION = tick
 
-        p = Process(target=self.run)  # do not daemonize
-        p.start()
-        return p
+        process = Process(target=self.run)  # do not daemonize
+        process.start()
+        return process
 
     def stop(self):
         """
