@@ -28,6 +28,13 @@ class Vibes(object):
         self.file = file
         self.space_id=space_id
 
+    def __str__(self):
+        """
+        Returns a human-readable string representation of this object.
+        """
+        return u"text={}, content={}, file={}, space_id={}".format(
+            self.text, self.content, self.file, self.space_id)
+
 
 class Speaker(object):
     """
