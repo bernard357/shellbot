@@ -20,7 +20,6 @@ class MyEngine(Engine):
 
 
 my_engine = MyEngine(inbox=Queue(), mouth=Queue())
-my_engine.shell.load_default_commands()
 
 
 class Bot(object):
