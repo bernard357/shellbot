@@ -44,8 +44,7 @@ class Worker(object):
         This function starts a separate daemonic process to work
         in the background.
         """
-        p = Process(target=self.run)
-        p.daemon = True
+        p = Process(target=self.run)  # do not daemonize
         p.start()
         return p
 

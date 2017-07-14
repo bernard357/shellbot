@@ -74,7 +74,7 @@ class Listener(object):
         This function starts a separate process to listen
         in the background.
         """
-        p = Process(target=self.run)
+        p = Process(target=self.run)  # do not daemonize
         p.start()
         return p
 
