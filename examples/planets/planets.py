@@ -17,9 +17,9 @@
 
 import logging
 
-from shellbot import Command
+from .mission import Mission
 
-class Planets(Command):
+class Planets(Mission):
     """
     Displays the list of available planets
 
@@ -31,15 +31,16 @@ class Planets(Command):
     keyword = u'planets'
     information_message = u'List reachable planets'
     list_header = u"Available destinations:"
+    is_interactive = True
 
-    def execute(self, arguments=None):
+    def execute(self, bot, arguments=None):
         """
         Displays the list of available planets
         """
 
-        items = self.bot.context.get('planets.items', [])
+        items = self.get_planets(bot)
         if len(items):
-            self.bot.say(self.list_header
-                         + '\n- ' + '\n- '.join(items))
+            bot.say(self.list_header
+                    + '\n- ' + '\n- '.join(items))
         else:
-            self.bot.say(u"Nowhere to go right now.")
+            bot.say(u"Nowhere to go right now.")

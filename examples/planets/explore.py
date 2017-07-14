@@ -33,15 +33,15 @@ class Explore(Mission):
     usage_message = u'explore <destination>'
 
     action_begin_template = u"Exploring {}, this is interesting"
-    action_begin_file = "http://static.ddmcdn.com/gif/blogs/6a00d8341bf67c53ef012877b0bdec970c-800wi.jpg"
+    action_begin_file = "http://www.dummysoftware.com/mars/lander.jpg"
 
     action_end_template = u"End of the exploration"
 
-    def on_target_action(self):
-        self.bot.say(u"#{} - ".format(self.counter)
-                     + self.action_begin_template.format(self.target),
-                     file=self.action_begin_file)
+    def on_target_action(self, bot):
+        bot.say(u"#{} - ".format(self.counter)
+                + self.action_begin_template.format(self.target),
+                file=self.action_begin_file)
         time.sleep(5)
-        self.bot.say(u"#{} - ".format(self.counter)
-                     + self.action_end_template.format(self.target))
+        bot.say(u"#{} - ".format(self.counter)
+                + self.action_end_template.format(self.target))
 

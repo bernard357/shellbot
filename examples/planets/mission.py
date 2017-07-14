@@ -42,65 +42,74 @@ class Mission(Command):
 
     counter = 0
 
-    def execute(self, arguments=None):
+    def execute(self, bot, arguments=None):
         """
         Flights to a planet and comes back
         """
 
         if arguments in (None, ''):
-            self.bot.say(u"usage: {}".format(self.usage_message))
+            bot.say(u"usage: {}".format(self.usage_message))
             return
 
-        items = self.bot.context.get('planets.items', [])
+        items = self.engine.get('planets.items', [])
         if arguments.capitalize() not in items:
-            self.bot.say(u"Planet '{}' is unknown".format(arguments))
+            bot.say(u"Planet '{}' is unknown".format(arguments))
             return
 
         Mission.counter += 1
         self.target = arguments.capitalize()
 
-        self.on_home_departure()
+        self.on_home_departure(bot)
         time.sleep(9)
 
-        self.on_target_approach()
+        self.on_target_approach(bot)
         time.sleep(3)
 
-        self.on_target_landing()
+        self.on_target_landing(bot)
 
-        self.on_target_action()
+        self.on_target_action(bot)
 
-        self.on_target_departure()
+        self.on_target_departure(bot)
         time.sleep(9)
 
-        self.on_home_approach()
+        self.on_home_approach(bot)
         time.sleep(3)
 
-        self.on_home_landing()
+        self.on_home_landing(bot)
 
-    def on_home_departure(self):
-        self.bot.say(u"#{} - ".format(self.counter)
-                     + self.home_departure_template.format(self.target))
+    def on_home_departure(self, bot):
+        bot.say(u"#{} - ".format(self.counter)
+                + self.home_departure_template.format(self.target))
 
-    def on_target_approach(self):
-        self.bot.say(u"#{} - ".format(self.counter)
-                     + self.target_approach_template.format(self.target))
+    def on_target_approach(self, bot):
+        bot.say(u"#{} - ".format(self.counter)
+                + self.target_approach_template.format(self.target))
 
-    def on_target_landing(self):
-        self.bot.say(u"#{} - ".format(self.counter)
-                     + self.target_landed_template.format(self.target))
+    def on_target_landing(self, bot):
+        bot.say(u"#{} - ".format(self.counter)
+                + self.target_landed_template.format(self.target))
 
-    def on_target_action(self):
+    def on_target_action(self, bot):
         pass
 
-    def on_target_departure(self):
-        self.bot.say(u"#{} - ".format(self.counter)
-                     + self.target_departure_template.format(self.target))
+    def on_target_departure(self, bot):
+        bot.say(u"#{} - ".format(self.counter)
+                + self.target_departure_template.format(self.target))
 
-    def on_home_approach(self):
-        self.bot.say(u"#{} - ".format(self.counter)
-                     + self.home_approach_template.format(self.target))
+    def on_home_approach(self, bot):
+        bot.say(u"#{} - ".format(self.counter)
+                + self.home_approach_template.format(self.target))
 
-    def on_home_landing(self):
-        self.bot.say(u"#{} - ".format(self.counter)
-                     + self.home_landed_template.format(self.target))
+    def on_home_landing(self, bot):
+        bot.say(u"#{} - ".format(self.counter)
+                + self.home_landed_template.format(self.target))
         time.sleep(1)
+
+    def get_planets(self, bot):
+        items = bot.recall('planets.items')
+        if not items:
+            items = self.engine.get('planets.items', [])
+            bot.remember('planets.items', items)
+        return items
+
+

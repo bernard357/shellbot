@@ -37,15 +37,15 @@ class Blast(Mission):
     action_end_template = u"{} has been entirely blasted"
     action_end_file = "http://blogs.discovermagazine.com/badastronomy/files/2012/07/nuke_castleromeo.jpg"
 
-    def on_target_action(self):
-        self.bot.say(u"#{} - ".format(self.counter)
-                     + self.action_begin_template.format(self.target))
+    def on_target_action(self, bot):
+        bot.say(u"#{} - ".format(self.counter)
+                + self.action_begin_template.format(self.target))
         time.sleep(1)
 
-        items = self.bot.context.get('planets.items', [])
+        items = self.get_planets(bot)
         items.remove(self.target)
-        self.bot.context.set('planets.items', items)
+        bot.remember('planets.items', items)
 
-        self.bot.say(u"#{} - ".format(self.counter)
-                     + self.action_end_template.format(self.target),
-                     file=self.action_end_file)
+        bot.say(u"#{} - ".format(self.counter)
+                + self.action_end_template.format(self.target),
+                file=self.action_end_file)
