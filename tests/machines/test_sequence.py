@@ -128,17 +128,21 @@ class SequenceTests(unittest.TestCase):
         sequence = Sequence([FakeMachine(), FakeMachine(running=True), FakeMachine()])
         process = sequence.start()
 
-        time.sleep(0.1)
-        self.assertTrue(sequence.machines[0].mutables.get('started'))
-        self.assertTrue(sequence.machines[0].mutables.get('ran'))
-        self.assertTrue(sequence.machines[1].mutables.get('started'))
-        self.assertTrue(sequence.machines[1].mutables.get('ran'))
+        while sequence.machines[0].mutables.get('started') != True:
+            time.sleep(0.001)
+        while sequence.machines[0].mutables.get('ran') != True:
+            time.sleep(0.001)
+        while sequence.machines[1].mutables.get('started') != True:
+            time.sleep(0.001)
+        while sequence.machines[1].mutables.get('ran') != True:
+            time.sleep(0.001)
         self.assertFalse(sequence.machines[1].mutables.get('stopped'))
         self.assertFalse(sequence.machines[2].mutables.get('started'))
         self.assertFalse(sequence.machines[2].mutables.get('ran'))
 
         sequence.stop()
         process.join()
+
         self.assertTrue(sequence.machines[0].mutables.get('started'))
         self.assertTrue(sequence.machines[0].mutables.get('ran'))
         self.assertTrue(sequence.machines[1].mutables.get('started'))
