@@ -84,7 +84,7 @@ Credit: https://developer.ciscospark.com/blog/blog-details-8110.html
 import os
 import time
 
-from shellbot import ShellBot, Context, Command
+from shellbot import Engine, ShellBot, Context, Command
 Context.set_logger()
 
 #
@@ -101,11 +101,11 @@ class Batcave(Command):
     keyword = 'cave'
     information_message = u"The Batcave is silent..."
 
-    def execute(self, arguments=None):
+    def execute(self, bot, arguments=None):
         if arguments:
-            self.bot.say(u"The Batcave echoes, '{0}'".format(arguments))
+            bot.say(u"The Batcave echoes, '{0}'".format(arguments))
         else:
-            self.bot.say(self.information_message)
+            bot.say(self.information_message)
 
 
 class Batsignal(Command):
@@ -113,9 +113,9 @@ class Batsignal(Command):
     information_message = u"NANA NANA NANA NANA"
     information_file = "https://upload.wikimedia.org/wikipedia/en/c/c6/Bat-signal_1989_film.jpg"
 
-    def execute(self, arguments=None):
-        self.bot.say(self.information_message,
-                     file=self.information_file)
+    def execute(self, bot, arguments=None):
+        bot.say(self.information_message,
+                file=self.information_file)
 
 
 class Batsuicide(Command):
@@ -123,28 +123,28 @@ class Batsuicide(Command):
     information_message = u"Go back to Hell"
     is_interactive = False
 
-    def execute(self, arguments=None):
+    def execute(self, bot, arguments=None):
         time.sleep(3)
-        self.bot.say(self.information_message)
-        self.bot.stop()
+        bot.say(self.information_message)
+        bot.dispose()
 
 
-bot = ShellBot(commands=[Batman(), Batcave(), Batsignal(), Batsuicide()])
+engine = Engine(commands=[Batman(), Batcave(), Batsignal(), Batsuicide()])
 
 # load configuration
 #
 os.environ['BOT_ON_START'] = 'You can now chat with Batman'
 os.environ['BOT_ON_STOP'] = 'Batman is now quitting the room, bye'
 os.environ['CHAT_ROOM_TITLE'] = 'Chat with Batman'
-bot.configure()
+engine.configure()
 
 # initialise a chat room
 #
-bot.bond(reset=True)
+bot = engine.bond(reset=True)
 
 # run the bot
 #
-bot.run()
+engine.run()
 
 # delete the chat room when the bot is stopped
 #
