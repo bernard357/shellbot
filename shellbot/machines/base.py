@@ -451,6 +451,10 @@ class Machine(object):
 
         process = Process(target=self.run)  # do not daemonize
         process.start()
+
+        while not self.is_running:  # prevent race condition on stop()
+            time.sleep(0.001)
+
         return process
 
     def stop(self):

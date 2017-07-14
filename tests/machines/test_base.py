@@ -580,12 +580,8 @@ class MachineTests(unittest.TestCase):
 
         my_engine.set('general.switch', 'on')
         machine_process = machine.start(tick=0.001)
-        machine.step()
-        time.sleep(0.05)
         machine.stop()
         machine_process.join()
-
-        self.assertTrue(machine.current_state.name != 'one')
 
     def test_lifecycle(self):
         """Machine stops itself on last transition"""
@@ -671,6 +667,7 @@ class MachineTests(unittest.TestCase):
         machine.step = mock.Mock()
         machine.execute('ping pong')
         machine.step.assert_called_with(arguments='ping pong', event='input')
+
 
 class StateTests(unittest.TestCase):
 
