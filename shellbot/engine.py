@@ -127,7 +127,6 @@ class Engine(object):
                  mouth=None,
                  inbox=None,
                  ears=None,
-                 fan=None,
                  space=None,
                  type=None,
                  server=None,
@@ -186,8 +185,6 @@ class Engine(object):
 
         self.ears = ears
         self.listener = Listener(engine=self)
-
-        self.fan = fan
 
         self.subscribed = {
             'bond': [],       # connected to a space
@@ -607,9 +604,6 @@ class Engine(object):
         if self.ears is None:
             self.ears = Queue()
             self.space.ears = self.ears
-
-        if self.fan is None:
-            self.fan = Queue()
 
         self.start_processes()
 

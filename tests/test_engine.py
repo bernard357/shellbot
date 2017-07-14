@@ -95,7 +95,6 @@ class EngineTests(unittest.TestCase):
         self.assertTrue(engine.worker is not None)
         self.assertEqual(engine.ears, 'e')
         self.assertTrue(engine.listener is not None)
-        self.assertTrue(engine.fan is None)
         self.assertTrue(engine.space is not None)
         self.assertTrue(engine.server is None)
         self.assertTrue(engine.shell is not None)
@@ -115,7 +114,6 @@ class EngineTests(unittest.TestCase):
         self.assertTrue(engine.worker is not None)
         self.assertEqual(engine.ears, 'e')
         self.assertTrue(engine.listener is not None)
-        self.assertTrue(engine.fan is None)
         self.assertEqual(engine.space, my_space)
         self.assertTrue(engine.server is None)
         self.assertTrue(engine.shell is not None)
@@ -252,7 +250,7 @@ class EngineTests(unittest.TestCase):
 
 #        my_engine.context.clear()
 #        os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
-#        engine = Engine(context=my_context, settings=None, configure=True, fan='f')
+#        engine = Engine(context=my_context, settings=None, configure=True)
 #        self.assertEqual(engine.get('spark.room'), 'Notifications')
 
     def test_get(self):

@@ -19,12 +19,12 @@ from shellbot.stores import MemoryStore
 my_context = Context()
 my_engine = Engine(context=my_context,
                    ears=Queue(),
-                   mouth=Queue(),
-                   fan='f')
+                   mouth=Queue())
 my_space = LocalSpace(context=my_context, ears=my_engine.ears)
 my_space.values['id'] = '*id'
 my_store = MemoryStore(context=my_context)
 my_bot = ShellBot(engine=my_engine, space=my_space, store=my_store)
+
 
 class MyCounter(object):
     def __init__(self, name='counter'):
@@ -70,7 +70,7 @@ class BotTests(unittest.TestCase):
         self.assertEqual(bot.engine, my_engine)
         self.assertTrue(bot.space is None)
         self.assertTrue(bot.store is not None)
-        self.assertTrue(bot.fan is None)
+        self.assertTrue(bot.fan is not None)
         self.assertTrue(bot.machine is None)
 
         bot = ShellBot(engine=my_engine,

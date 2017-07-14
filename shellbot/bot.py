@@ -86,7 +86,7 @@ class ShellBot(object):
         else:
             self.store = self.engine.build_store(space_id)
 
-        self.fan = fan
+        self.fan = fan if fan else Queue()
 
         self.machine = machine
 

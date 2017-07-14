@@ -230,10 +230,10 @@ class Listener(object):
 
         * Check the ``bot.fan`` queue frequently
 
-        * On each check, update the string ``fan.stamp`` in the context with
-          the value of ``time.time()``. This will signal that you are around.
+        * On each check, update the string ``fan.<space_id>`` in the context
+          with the value of ``time.time()``. This will say that you are around.
 
-        The value of ``fan.stamp`` is checked on every message that is not
+        The value of ``fan.<space_id>`` is checked on every message that is not
         for the bot itself. If this is fresh enough, then data is put to the
         ``bot.fan`` queue. Else message is just thrown away.
         """
@@ -264,10 +264,14 @@ class Listener(object):
 
         else: # not explicitly intended for the bot
 
-            elapsed = time.time() - self.engine.get('fan.stamp', 0)
+            label = 'fan.' + received.space_id
+            logging.debug(u"- sensing listener on '{}'".format(label))
+
+            elapsed = time.time() - self.engine.get(label, 0)
             if elapsed < self.FRESH_DURATION:
                 logging.debug(u"- putting input to fan queue")
-                self.engine.fan.put(input)  # forward downstream
+                bot = self.engine.get_bot(received.space_id)
+                bot.fan.put(input)  # forward downstream
 
             logging.info(u"- not for me, thrown away")
             return
