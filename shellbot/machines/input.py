@@ -387,12 +387,13 @@ class Input(Machine):
                     break  # on time out
 
                 try:
-                    if self.bot.engine.fan.empty():
-                        self.bot.engine.set('fan.stamp', time.time())
+                    if self.bot.fan.empty():
+                        label = 'fan.' + self.bot.space_id
+                        self.bot.engine.set(label, time.time())
                         time.sleep(self.TICK_DURATION)
                         continue
 
-                    item = self.bot.engine.fan.get(True, self.TICK_DURATION)
+                    item = self.bot.fan.get(True, self.TICK_DURATION)
                     if item is None:
                         break
 

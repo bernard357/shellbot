@@ -13,12 +13,37 @@ import time
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, Engine, ShellBot
+from shellbot import Context, Engine
 from shellbot.machines import Menu
 from shellbot.stores import MemoryStore
 
-my_engine = Engine(fan=Queue())
-my_bot = ShellBot(engine=my_engine)
+class MyEngine(Engine):
+    def get_bot(self, id):
+        logging.debug("Injecting test bot")
+        return my_bot
+
+
+my_engine = MyEngine()
+
+class FakeBot(object):
+    space_id = '234'
+    fan = Queue()
+
+    def __init__(self, engine, store=None):
+        self.engine = engine
+        self.store = store
+
+    def say(self, text, content=None, file=None):
+        self.engine.mouth.put(Vibes(text, content, file, self.space_id))
+
+    def update(self, key, label, item):
+        self.store.update(key, label, item)
+
+    def recall(self, key, default=None):
+        return self.store.recall(key, default)
+
+
+my_bot = FakeBot(engine=my_engine)
 
 
 class MenuTests(unittest.TestCase):
@@ -122,7 +147,7 @@ class MenuTests(unittest.TestCase):
 
         logging.info("******** say_answer")
 
-        class MyBot(ShellBot):
+        class MyBot(FakeBot):
             def on_init(self):
                 self.said = []
 
@@ -164,7 +189,7 @@ class MenuTests(unittest.TestCase):
 
         logging.info("******** say_retry")
 
-        class MyBot(ShellBot):
+        class MyBot(FakeBot):
             def on_init(self):
                 self.said = []
 
@@ -206,7 +231,7 @@ class MenuTests(unittest.TestCase):
 
         logging.info("******** say_cancel")
 
-        class MyBot(ShellBot):
+        class MyBot(FakeBot):
             def on_init(self):
                 self.said = []
 
@@ -248,7 +273,7 @@ class MenuTests(unittest.TestCase):
 
         logging.info("******** ask")
 
-        class MyBot(ShellBot):
+        class MyBot(FakeBot):
 
             def say(self, message, **kwargs):
                 self.engine.set('said', message)
@@ -287,11 +312,14 @@ class MenuTests(unittest.TestCase):
                     raise Exception('TEST')
                 if arguments == 'ctl-c':
                     raise KeyboardInterrupt()
-                self.set('answer', arguments)
+                if arguments == '1':
+                    self.set('answer', 'option 1')
+                else:
+                    self.set('answer', arguments)
 
         machine = MyMenu(bot=my_bot,
-                       question="What's up, Doc?",
-                       options=["option 1", "option 2"])
+                         question="What's up, Doc?",
+                         options=["option 1", "option 2"])
 
         logging.debug("- with general switch off")
         my_engine.set('general.switch', 'off')
@@ -304,6 +332,12 @@ class MenuTests(unittest.TestCase):
         self.assertEqual(machine.get('answer'), None)
         machine.set('is_running', True)
 
+        logging.debug("- feed the queue after delay")
+        t = Timer(0.1, my_bot.fan.put, ['1'])
+        t.start()
+        machine.receive()
+        self.assertEqual(machine.get('answer'), 'option 1')
+
         logging.debug("- exit on cancellation time out")
         machine.CANCEL_DELAY = 0.001
         machine.receive()
@@ -311,17 +345,22 @@ class MenuTests(unittest.TestCase):
         machine.CANCEL_DELAY = 40.0
 
         logging.debug("- exit on poison pill")
-        my_engine.fan.put(None)
+        my_bot.fan.put(None)
         machine.receive()
         self.assertEqual(machine.get('answer'), None)
 
+        logging.debug("- exit on regular answer")
+        my_bot.fan.put('1')
+        machine.receive()
+        self.assertEqual(machine.get('answer'), 'option 1')
+
         logging.debug("- exit on exception")
-        my_engine.fan.put('exception')
+        my_bot.fan.put('exception')
         machine.receive()
         self.assertEqual(machine.get('answer'), None)
 
         logging.debug("- exit on keyboard interrupt")
-        my_engine.fan.put('ctl-c')
+        my_bot.fan.put('ctl-c')
         machine.receive()
         self.assertEqual(machine.get('answer'), None)
 
@@ -329,7 +368,7 @@ class MenuTests(unittest.TestCase):
 
         logging.info("******** execute")
 
-        my_bot = ShellBot(engine=my_engine)
+        my_bot = FakeBot(engine=my_engine)
         my_bot.store = mock.Mock()
         my_bot.say = mock.Mock()
 
@@ -412,13 +451,12 @@ class MenuTests(unittest.TestCase):
 
         store = MemoryStore()
 
-        class MyBot(ShellBot):
+        class MyBot(FakeBot):
 
             def say(self, message):
                 self.engine.set('said', message)
 
         my_bot = MyBot(engine=my_engine, store=store)
-        my_bot.fan = Queue()
 
         class MyMenu(Menu):
 
@@ -433,7 +471,7 @@ class MenuTests(unittest.TestCase):
         p = machine.start(tick=0.001)
 
         time.sleep(0.01)
-        my_engine.fan.put('2')
+        my_bot.fan.put('2')
         p.join()
 
         self.assertEqual(machine.get('answer'), 'option 2')
@@ -447,13 +485,12 @@ class MenuTests(unittest.TestCase):
 
         store = MemoryStore()
 
-        class MyBot(ShellBot):
+        class MyBot(FakeBot):
 
             def say(self, message):
                 self.engine.set('said', message)
 
         my_bot = MyBot(engine=my_engine, store=store)
-        my_bot.fan = Queue()
 
         machine = Menu(bot=my_bot,
                        question="What's up, Doc?",
@@ -464,7 +501,7 @@ class MenuTests(unittest.TestCase):
         p = machine.start(tick=0.001)
 
         time.sleep(0.03)
-        my_engine.fan.put('2')
+        my_bot.fan.put('2')
         p.join()
 
         self.assertEqual(my_bot.recall('input'), {u'my.input': u'option 2'})
@@ -474,21 +511,20 @@ class MenuTests(unittest.TestCase):
 
         logging.info("******** cancelled")
 
-        class MyBot(ShellBot):
+        class MyBot(FakeBot):
 
             def say(self, message):
                 self.engine.set('said', message)
 
         my_bot = MyBot(engine=my_engine)
-        my_bot.fan = Queue()
         my_engine.set('my.input', '*void')
 
         machine = Menu(bot=my_bot,
                        question="What's up, Doc?",
                        options=["option 1", "option 2"])
 
-        machine.CANCEL_DELAY = 0.003
-        machine.RETRY_DELAY = 0.002
+        machine.CANCEL_DELAY = 0.02
+        machine.RETRY_DELAY = 0.01
         machine.TICK_DURATION = 0.001
         p = machine.start()
         p.join()

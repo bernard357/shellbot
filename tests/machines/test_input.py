@@ -13,12 +13,38 @@ import time
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, Engine, ShellBot
+from shellbot import Context, Engine
 from shellbot.machines import Input
 from shellbot.stores import MemoryStore
 
-my_engine = Engine(fan=Queue())
-my_bot = ShellBot(engine=my_engine)
+class MyEngine(Engine):
+    def get_bot(self, id):
+        logging.debug("Injecting test bot")
+        return my_bot
+
+
+my_engine = MyEngine()
+
+class FakeBot(object):
+    space_id = '234'
+    fan = Queue()
+
+    def __init__(self, engine, store=None):
+        self.engine = engine
+        self.store = store
+
+    def say(self, text, content=None, file=None):
+        self.engine.mouth.put(Vibes(text, content, file, self.space_id))
+
+    def update(self, key, label, item):
+        self.store.update(key, label, item)
+
+    def recall(self, key, default=None):
+        return self.store.recall(key, default)
+
+
+my_bot = FakeBot(engine=my_engine)
+
 
 
 class InputTests(unittest.TestCase):
@@ -115,7 +141,7 @@ class InputTests(unittest.TestCase):
 
         logging.info("******** say_answer")
 
-        class MyBot(ShellBot):
+        class MyBot(FakeBot):
             def on_init(self):
                 self.said = []
 
@@ -155,7 +181,7 @@ class InputTests(unittest.TestCase):
 
         logging.info("******** say_retry")
 
-        class MyBot(ShellBot):
+        class MyBot(FakeBot):
             def on_init(self):
                 self.said = []
 
@@ -195,7 +221,7 @@ class InputTests(unittest.TestCase):
 
         logging.info("******** say_cancel")
 
-        class MyBot(ShellBot):
+        class MyBot(FakeBot):
             def on_init(self):
                 self.said = []
 
@@ -235,7 +261,7 @@ class InputTests(unittest.TestCase):
 
         logging.info("******** ask")
 
-        class MyBot(ShellBot):
+        class MyBot(FakeBot):
 
             def say(self, message, **kwargs):
                 self.engine.set('said', message)
@@ -289,7 +315,7 @@ class InputTests(unittest.TestCase):
         machine.set('is_running', True)
 
         logging.debug("- feed the queue after delay")
-        t = Timer(0.1, my_engine.fan.put, ['ping'])
+        t = Timer(0.1, my_bot.fan.put, ['ping'])
         t.start()
         machine.receive()
         self.assertEqual(machine.get('answer'), 'ping')
@@ -301,22 +327,22 @@ class InputTests(unittest.TestCase):
         machine.CANCEL_DELAY = 40.0
 
         logging.debug("- exit on poison pill")
-        my_engine.fan.put(None)
+        my_bot.fan.put(None)
         machine.receive()
         self.assertEqual(machine.get('answer'), None)
 
         logging.debug("- exit on regular answer")
-        my_engine.fan.put('pong')
+        my_bot.fan.put('pong')
         machine.receive()
         self.assertEqual(machine.get('answer'), 'pong')
 
         logging.debug("- exit on exception")
-        my_engine.fan.put('exception')
+        my_bot.fan.put('exception')
         machine.receive()
         self.assertEqual(machine.get('answer'), None)
 
         logging.debug("- exit on keyboard interrupt")
-        my_engine.fan.put('ctl-c')
+        my_bot.fan.put('ctl-c')
         machine.receive()
         self.assertEqual(machine.get('answer'), None)
 
@@ -324,11 +350,11 @@ class InputTests(unittest.TestCase):
 
         logging.info("******** execute")
 
-        my_bot = ShellBot(engine=my_engine)
-        my_bot.store = mock.Mock()
-        my_bot.say = mock.Mock()
+        bot = FakeBot(engine=my_engine)
+        bot.store = mock.Mock()
+        bot.say = mock.Mock()
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=bot,
                         question="What's up, Doc?",
                         key='my.key')
         self.assertEqual(machine.get('answer'), None)
@@ -338,23 +364,23 @@ class InputTests(unittest.TestCase):
         machine.step = mock.Mock()
 
         machine.execute(arguments=None)
-        my_bot.say.assert_called_with(machine.RETRY_MESSAGE)
+        bot.say.assert_called_with(machine.RETRY_MESSAGE)
         self.assertEqual(machine.get('answer'), None)
         self.assertFalse(machine.step.called)
 
         machine.execute(arguments='')
-        my_bot.say.assert_called_with(machine.RETRY_MESSAGE)
+        bot.say.assert_called_with(machine.RETRY_MESSAGE)
         self.assertEqual(machine.get('answer'), None)
         self.assertFalse(machine.step.called)
 
         machine.execute(arguments='something at least')
-        my_bot.say.assert_called_with(machine.ANSWER_MESSAGE)
+        bot.say.assert_called_with(machine.ANSWER_MESSAGE)
         self.assertTrue(machine.step.called)
 
         machine.filter = mock.Mock(return_value=None)
         machine.step = mock.Mock()
         machine.execute(arguments='something else')
-        my_bot.say.assert_called_with(machine.RETRY_MESSAGE)
+        bot.say.assert_called_with(machine.RETRY_MESSAGE)
         self.assertFalse(machine.step.called)
 
     def test_filter(self):
@@ -465,13 +491,12 @@ class InputTests(unittest.TestCase):
 
         store = MemoryStore()
 
-        class MyBot(ShellBot):
+        class MyBot(FakeBot):
 
             def say(self, message):
                 self.engine.set('said', message)
 
         my_bot = MyBot(engine=my_engine, store=store)
-        my_bot.fan = Queue()
 
         class MyInput(Input):
 
@@ -485,7 +510,7 @@ class InputTests(unittest.TestCase):
         p = machine.start(tick=0.001)
 
         time.sleep(0.01)
-        my_engine.fan.put('here we go')
+        my_bot.fan.put('here we go')
         p.join()
 
         self.assertEqual(machine.get('answer'), 'here we go')
@@ -499,13 +524,12 @@ class InputTests(unittest.TestCase):
 
         store = MemoryStore()
 
-        class MyBot(ShellBot):
+        class MyBot(FakeBot):
 
             def say(self, message):
                 self.engine.set('said', message)
 
         my_bot = MyBot(engine=my_engine, store=store)
-        my_bot.fan = Queue()
 
         machine = Input(bot=my_bot,
                         question="What's up, Doc?",
@@ -515,7 +539,7 @@ class InputTests(unittest.TestCase):
         p = machine.start(tick=0.001)
 
         time.sleep(0.03)
-        my_engine.fan.put('here we go')
+        my_bot.fan.put('here we go')
         p.join()
 
         self.assertEqual(my_bot.recall('input'), {u'my.input': u'here we go'})
@@ -525,13 +549,12 @@ class InputTests(unittest.TestCase):
 
         logging.info("******** cancelled")
 
-        class MyBot(ShellBot):
+        class MyBot(FakeBot):
 
             def say(self, message):
                 self.engine.set('said', message)
 
         my_bot = MyBot(engine=my_engine)
-        my_bot.fan = Queue()
         my_engine.set('my.input', '*void')
 
         machine = Input(bot=my_bot,

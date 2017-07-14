@@ -21,7 +21,7 @@ from shellbot.events import Event, Message, Attachment, Join, Leave
 
 class MyEngine(Engine):
     def get_bot(self, id):
-        logging.debug("injecting test bot")
+        logging.debug("Injecting test bot")
         return my_bot
 
 
