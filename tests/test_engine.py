@@ -26,6 +26,7 @@ class FakeBot(object):
     def __init__(self, engine=None, space_id=None):
         self.engine = engine
         self.space_id = space_id if space_id else '*bot'
+        self.store = self.engine.build_store(space_id)
 
 
 class MyCounter(object):
