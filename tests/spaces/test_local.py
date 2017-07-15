@@ -155,7 +155,7 @@ class LocalSpaceTests(unittest.TestCase):
         space = LocalSpace(context=my_context)
         self.assertTrue(space.lookup_space(title='hello there'))
         self.assertEqual(space.title, 'hello there')
-        self.assertEqual(space.id, '*id')
+        self.assertEqual(space.id, '*local')
 
         with self.assertRaises(AssertionError):
             space.lookup_space(title=None)
@@ -170,7 +170,7 @@ class LocalSpaceTests(unittest.TestCase):
         space = LocalSpace(context=my_context)
         space.create_space(title='hello there')
         self.assertEqual(space.title, 'hello there')
-        self.assertEqual(space.id, '*id')
+        self.assertEqual(space.id, '*local')
 
         with self.assertRaises(AssertionError):
             space.create_space(title=None)
@@ -237,7 +237,11 @@ class LocalSpaceTests(unittest.TestCase):
                            input="hello world")
         space.pull()
         self.assertEqual(json.loads(my_ears.get()),
-                         {'text': 'hello world', 'from_id': '*user', 'type': 'message', 'mentioned_ids': ['*bot']})
+                         {'text': 'hello world',
+                          'from_id': '*user',
+                          'type': 'message',
+                          'mentioned_ids': ['*bot'],
+                          'space_id': None})
 
         original_stdin = sys.stdin
         sys.stdin = io.StringIO(u'hello world')
@@ -245,7 +249,11 @@ class LocalSpaceTests(unittest.TestCase):
         space = LocalSpace(context=my_context, ears=my_ears)
         space.pull()
         self.assertEqual(json.loads(my_ears.get()),
-                         {'text': u'hello world', 'from_id': '*user', 'type': 'message', 'mentioned_ids': ['*bot']})
+                         {'text': u'hello world',
+                          'from_id': '*user',
+                          'type': 'message',
+                          'mentioned_ids': ['*bot'],
+                          'space_id': None})
 
         sys.stdin = original_stdin
 
@@ -260,7 +268,8 @@ class LocalSpaceTests(unittest.TestCase):
                          {'from_id': '*user',
                           'mentioned_ids': ['*bot'],
                           'text': 'hello world',
-                          'type': 'message'})
+                          'type': 'message',
+                          'space_id': None})
 
 
 if __name__ == '__main__':

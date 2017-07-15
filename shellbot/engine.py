@@ -683,7 +683,8 @@ class Engine(object):
 
         bot = self.build_bot(space_id)
 
-        if bot:
+        if bot and bot.space_id:
+            logging.debug(u"- remembering bot {}".format(bot.space_id))
             self.bots[bot.space_id] = bot
 
         return bot
@@ -702,10 +703,6 @@ class Engine(object):
         """
         logging.debug(u"- building bot instance")
         bot = driver(engine=self, space_id=id)
-
-        bot.space = self.build_space(space_id=id)
-
-        bot.store = self.build_store(space_id=id)
 
         logging.debug(u"- building state machine")
         bot.machine = self.build_machine(bot=bot)
@@ -781,12 +778,16 @@ class Engine(object):
         """
         pass
 
-    def bond(self, reset):
+    def bond(self, reset=False):
         """
         Bonds this engine to a single space
         """
         bot = self.get_bot()
         bot.bond(reset=True)
+
+        logging.debug(u"- remembering bot {}".format(bot.space_id))
+        self.bots[bot.space_id] = bot
+
         return bot
 
     def on_enter(self, join):

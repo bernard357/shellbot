@@ -254,6 +254,16 @@ class Listener(object):
         if len(input) > 0 and input[0] in ['@', '/', '!']:
             input = input[1:]
 
+        label = 'fan.' + received.space_id
+        logging.debug(u"- sensing fan listener on '{}'".format(label))
+
+        elapsed = time.time() - self.engine.get(label, 0)
+        if elapsed < self.FRESH_DURATION:
+            logging.debug(u"- putting input to fan queue")
+            bot = self.engine.get_bot(received.space_id)
+            bot.fan.put(input)  # forward downstream
+            return
+
         name = self.engine.get('bot.name', 'shelly')
         if input.startswith(name):
             logging.debug(u"- bot name in command")
@@ -262,17 +272,7 @@ class Listener(object):
         elif self.engine.get('bot.id') in received.mentioned_ids:
             logging.debug(u"- bot mentioned in command")
 
-        else: # not explicitly intended for the bot
-
-            label = 'fan.' + received.space_id
-            logging.debug(u"- sensing listener on '{}'".format(label))
-
-            elapsed = time.time() - self.engine.get(label, 0)
-            if elapsed < self.FRESH_DURATION:
-                logging.debug(u"- putting input to fan queue")
-                bot = self.engine.get_bot(received.space_id)
-                bot.fan.put(input)  # forward downstream
-
+        else:
             logging.info(u"- not for me, thrown away")
             return
 

@@ -183,7 +183,7 @@ class LocalSpace(Space):
         """
         assert title not in (None, '')
 
-        self.values['id'] = '*id'
+        self.values['id'] = '*local'
         self.values['title'] = title
 
         return True
@@ -201,7 +201,7 @@ class LocalSpace(Space):
         """
         assert title not in (None, '')
 
-        self.values['id'] = '*id'
+        self.values['id'] = '*local'
         self.values['title'] = title
 
     def add_moderator(self, person):
@@ -327,5 +327,6 @@ class LocalSpace(Space):
         message = Message(item)
         message.from_id = '*user'
         message.mentioned_ids = [self.context.get('bot.id')]
+        message.space_id = self.id
 
         queue.put(str(message))

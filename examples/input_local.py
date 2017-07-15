@@ -47,36 +47,32 @@ For example, if you run this script under Linux or macOs::
 import logging
 import os
 
-from shellbot import ShellBot, Context, Command
+from shellbot import Engine, ShellBot, Context, Command
 from shellbot.spaces import SpaceFactory
 from shellbot.machines import Input, Sequence
 Context.set_logger()
 
 # create a local bot
 #
-bot = ShellBot(type='local', command='shellbot.commands.input')
-bot.configure()
-bot.bond()
+engine = Engine(type='local', command='shellbot.commands.input')
+engine.configure()
+bot = engine.bond()
 
 # ask some information
 #
 order_id = Input(bot=bot,
                 question="PO number please?",
                 mask="9999A",
-                on_retry="PO number should have 4 digits and a letter",
                 on_answer="Ok, PO number has been noted: {}",
+                on_retry="PO number should have 4 digits and a letter",
                 on_cancel="Ok, forget about the PO number",
-                tip=20,
-                timeout=40,
                 key='order.id')
 
 description = Input(bot=bot,
                 question="Issue description please?",
-                on_retry="Please enter a one-line description of the issue",
                 on_answer="Ok, description noted: {}",
+                on_retry="Please enter a one-line description of the issue",
                 on_cancel="Ok, forget about the description",
-                tip=20,
-                timeout=40,
                 key='description')
 
 sequence = Sequence(machines=[order_id, description])
@@ -84,4 +80,4 @@ sequence.start()
 
 # interact locally
 #
-bot.run()
+engine.run()

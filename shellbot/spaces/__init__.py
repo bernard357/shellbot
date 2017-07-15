@@ -125,6 +125,7 @@ class SpaceFactory(object):
         """
 
         try:
+            logging.debug(u"Building space of type '{}'".format(type))
             return self.types[type](**kwargs)
 
         except KeyError:
