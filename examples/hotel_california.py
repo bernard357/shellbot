@@ -64,7 +64,7 @@ Credit: https://github.com/flint-bot/flint
 import os
 import time
 
-from shellbot import ShellBot, Context, Command
+from shellbot import Engine, ShellBot, Context, Command
 Context.set_logger()
 
 #
@@ -76,48 +76,48 @@ class Open(Command):
     keyword = 'open'
     information_message = u"Open Hotel California"
 
-    def execute(self, arguments=None):
-        if self.bot.get('hotel_california.state', 'off') == 'on':
-            self.bot.say('Hotel California mode is already activated!')
+    def execute(self, bot, arguments=None):
+        if bot.engine.get('hotel_california.state', 'off') == 'on':
+            bot.say('Hotel California mode is already activated!')
         else:
-            self.bot.set('hotel_california.state', 'on')
-            self.bot.say('Hotel California mode activated!')
+            bot.engine.set('hotel_california.state', 'on')
+            bot.say('Hotel California mode activated!')
 
 
 class Close(Command):
     keyword = 'close'
     information_message = u"Close Hotel California"
 
-    def execute(self, arguments=None):
-        if self.bot.get('hotel_california.state', 'off') == 'off':
-            self.bot.say('Hotel California mode is already deactivated!')
+    def execute(self, bot, arguments=None):
+        if bot.engine.get('hotel_california.state', 'off') == 'off':
+            bot.say('Hotel California mode is already deactivated!')
         else:
-            self.bot.set('hotel_california.state', 'off')
-            self.bot.say('Hotel California mode deactivated!')
+            bot.engine.set('hotel_california.state', 'off')
+            bot.say('Hotel California mode deactivated!')
 
 
 class Hotel(Command):
     keyword = 'hotel'
     information_message = u"Get status of Hotel California"
 
-    def execute(self, arguments=None):
-        if self.bot.get('hotel_california.state', 'off') == 'off':
-            self.bot.say('Hotel California will let you escape')
+    def execute(self, bot, arguments=None):
+        if bot.engine.get('hotel_california.state', 'off') == 'off':
+            bot.say('Hotel California will let you escape')
         else:
-            self.bot.say('Hotel California will keep you here forever!')
+            bot.say('Hotel California will keep you here forever!')
 
 
-bot = ShellBot(commands=[Open(), Close(), Hotel()])
+engine = Engine(commands=[Open(), Close(), Hotel()])
 
 # load configuration
 #
 os.environ['BOT_ON_START'] = 'On a dark desert highway, cool wind in my hair...'
 os.environ['CHAT_ROOM_TITLE'] = 'Hotel California'
-bot.configure()
+engine.configure()
 
 # initialise a chat room
 #
-bot.bond(reset=True)
+bot = engine.bond(reset=True)
 
 # add stickiness to the hotel
 #
@@ -136,7 +136,7 @@ class Magic(object):
 
     def on_leave(self, received):
 
-        if self.bot.get('hotel_california.state', 'off') == 'off':
+        if self.bot.engine.get('hotel_california.state', 'off') == 'off':
             self.addresses.discard(received.actor_address)
             self.bot.say('On a dark desert highway, cool wind in my hair...')
 
@@ -149,12 +149,12 @@ class Magic(object):
                 content=u'<@personEmail:{}|{}>, you can **check out any time you like**, but you can **never** leave!'.format(received.actor_address, received.actor_label))
 
 magic = Magic(bot=bot)
-bot.register('join', magic)
-bot.register('leave', magic)
+engine.subscribe('join', magic)
+engine.subscribe('leave', magic)
 
 # run the bot
 #
-bot.run()
+engine.run()
 
 # delete the chat room when the bot is stopped
 #
