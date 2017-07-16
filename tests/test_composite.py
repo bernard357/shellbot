@@ -16,18 +16,17 @@ from shellbot import Engine
 from shellbot import Listener
 from shellbot import Shell
 from shellbot import Speaker, Vibes
-from shellbot import Worker
 from shellbot.events import Message
 from shellbot.spaces import Space
 
 
 class MyEngine(Engine):
     def get_bot(self, id):
-        logging.debug("injecting test bot")
+        logging.debug("Injecting test bot")
         return my_bot
 
 
-my_engine = MyEngine(ears=Queue(), inbox=Queue(), mouth=Queue())
+my_engine = MyEngine(ears=Queue(), mouth=Queue())
 my_engine.set('bot.id', "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg")
 my_engine.shell.load_default_commands()
 my_engine.space = Space(my_engine.context)
@@ -59,7 +58,6 @@ class CompositeTests(unittest.TestCase):
         logging.info('*** Static test ***')
 
         speaker_process = my_engine.speaker.start()
-        worker_process = my_engine.worker.start()
         listener_process = my_engine.listener.start()
 
         listener_process.join(0.2)
@@ -67,11 +65,9 @@ class CompositeTests(unittest.TestCase):
             logging.info('Stopping all threads')
             my_engine.set('general.switch', 'off')
             listener_process.join()
-            worker_process.join()
             speaker_process.join()
 
         self.assertEqual(my_engine.get('listener.counter', 0), 0)
-        self.assertEqual(my_engine.get('worker.counter', 0), 0)
         self.assertEqual(my_engine.get('speaker.counter', 0), 0)
 
     def test_dynamic(self):
@@ -79,7 +75,6 @@ class CompositeTests(unittest.TestCase):
         logging.info('*** Dynamic test ***')
 
         speaker_process = my_engine.speaker.start()
-        worker_process = my_engine.worker.start()
         listener_process = my_engine.listener.start()
 
         items = [
@@ -177,12 +172,10 @@ class CompositeTests(unittest.TestCase):
             logging.info('Stopping all threads')
             my_engine.set('general.switch', 'off')
             listener_process.join()
-            worker_process.join()
             speaker_process.join()
 
         self.assertEqual(my_engine.get('listener.counter', 0), 5)
-        self.assertEqual(my_engine.get('worker.counter', 0), 1)
-        self.assertEqual(my_engine.get('speaker.counter', 0), 3)
+        self.assertEqual(my_engine.get('speaker.counter', 0), 2)
 
 
 if __name__ == '__main__':

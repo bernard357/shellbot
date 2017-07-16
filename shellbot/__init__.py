@@ -20,7 +20,6 @@ from .listener import Listener
 from .server import Server
 from .shell import Shell
 from .speaker import Speaker, Vibes
-from .worker import Worker
 
 from .spaces import SpaceFactory
 
@@ -41,7 +40,6 @@ __all__ = [
     'Server',
     'Shell',
     'Speaker',
-    'Worker',
     'SpaceFactory',
     'Command',
     'Route',

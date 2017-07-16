@@ -32,7 +32,6 @@ from .bot import ShellBot
 from .spaces import SpaceFactory
 from .speaker import Speaker
 from .stores import StoreFactory
-from .worker import Worker
 from .routes.wrapper import Wrapper
 
 
@@ -125,7 +124,6 @@ class Engine(object):
                  settings={},
                  configure=False,
                  mouth=None,
-                 inbox=None,
                  ears=None,
                  space=None,
                  type=None,
@@ -148,9 +146,6 @@ class Engine(object):
 
         :param mouth: For asynchronous transmission to the chat space
         :type mouth: Queue
-
-        :param inbox: For asynchronous processing of commands
-        :type inbox: Queue
 
         :param ears: For asynchronous updates from the chat space
         :type ears: Queue
@@ -179,9 +174,6 @@ class Engine(object):
 
         self.mouth = mouth
         self.speaker = Speaker(engine=self)
-
-        self.inbox = inbox
-        self.worker = Worker(engine=self)
 
         self.ears = ears
         self.listener = Listener(engine=self)
@@ -598,9 +590,6 @@ class Engine(object):
         if self.mouth is None:
             self.mouth = Queue()
 
-        if self.inbox is None:
-            self.inbox = Queue()
-
         if self.ears is None:
             self.ears = Queue()
             self.space.ears = self.ears
@@ -616,13 +605,12 @@ class Engine(object):
         Starts the engine processes
 
         This function starts a separate process for each
-        main component of the architecture: listener, speaker, and worker.
+        main component of the architecture: listener, speaker, etc.
         """
 
         self.context.set('general.switch', 'on')
 
         self._speaker_process = self.speaker.start()
-        self._worker_process = self.worker.start()
         self._listener_process = self.listener.start()
 
     def on_start(self):

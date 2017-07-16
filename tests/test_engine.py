@@ -73,8 +73,6 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(engine.context, my_context)
         self.assertTrue(engine.mouth is None)
         self.assertTrue(engine.speaker is not None)
-        self.assertTrue(engine.inbox is None)
-        self.assertTrue(engine.worker is not None)
         self.assertTrue(engine.ears is None)
         self.assertTrue(engine.listener is not None)
         self.assertTrue(engine.space is None)
@@ -86,14 +84,11 @@ class EngineTests(unittest.TestCase):
         engine = Engine(context=my_context,
                         type='local',
                         mouth='m',
-                        inbox='i',
                         ears='e')
 
         self.assertEqual(engine.context, my_context)
         self.assertEqual(engine.mouth, 'm')
         self.assertTrue(engine.speaker is not None)
-        self.assertEqual(engine.inbox, 'i')
-        self.assertTrue(engine.worker is not None)
         self.assertEqual(engine.ears, 'e')
         self.assertTrue(engine.listener is not None)
         self.assertTrue(engine.space is not None)
@@ -105,14 +100,11 @@ class EngineTests(unittest.TestCase):
         engine = Engine(context=my_context,
                         space=my_space,
                         mouth='m',
-                        inbox='i',
                         ears='e')
 
         self.assertEqual(engine.context, my_context)
         self.assertEqual(engine.mouth, 'm')
         self.assertTrue(engine.speaker is not None)
-        self.assertEqual(engine.inbox, 'i')
-        self.assertTrue(engine.worker is not None)
         self.assertEqual(engine.ears, 'e')
         self.assertTrue(engine.listener is not None)
         self.assertEqual(engine.space, my_space)
@@ -566,7 +558,6 @@ class EngineTests(unittest.TestCase):
 
         engine.start()
         self.assertTrue(engine.ears is not None)
-        self.assertTrue(engine.inbox is not None)
         self.assertTrue(engine.mouth is not None)
         self.assertTrue(engine.start_processes.called)
         self.assertTrue(engine.on_start.called)
@@ -580,7 +571,6 @@ class EngineTests(unittest.TestCase):
         my_engine.stop()
 
         self.assertEqual(my_engine.get('listener.counter', 0), 0)
-        self.assertEqual(my_engine.get('worker.counter', 0), 0)
         self.assertEqual(my_engine.get('speaker.counter', 0), 0)
 
     def test_get_bot(self):
