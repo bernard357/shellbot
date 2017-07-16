@@ -152,6 +152,28 @@ class Menu(Input):
         assert self.mask is None  # not supported
         assert self.regex is None  # not supported
 
+    def ask(self):
+        """
+        Asks the question in the chat space
+
+        """
+        i = 1
+        opt = '\n'
+        for key in self.options:
+            opt += u"{}. {}\n".format(i, key)
+            i += 1
+
+        text = self.question.format(input) if self.question else None
+        if text not in (None, ''):
+            self.bot.say(text + opt)
+
+        content = self.question_content.format(input) if self.question_content else None
+        if content not in (None, ''):
+            self.bot.say('',content + opt)
+        
+        self.start_time = time.time()
+        self.listen()
+
     def filter(self, text):
         """
         Filters data from user input
