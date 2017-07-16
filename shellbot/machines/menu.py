@@ -152,6 +152,37 @@ class Menu(Input):
         assert self.mask is None  # not supported
         assert self.regex is None  # not supported
 
+    def ask(self):
+        """
+        Asks which menu option to select
+
+        If a bare question is provided, then text is added to list
+        all available options.
+
+        If a rich question is provided, then we assume that it also
+        contains a representation of menu options and displays it 'as-is'.
+
+        """
+        text = self.question if self.question else None
+
+        if text:
+            index = 1
+            text += '\n'
+            for option in self.options:
+                text += u"{}. {}\n".format(index, option)
+                index += 1
+
+        self.bot.say(text)
+
+        content = self.question_content if self.question_content else None
+
+        if content:
+            self.bot.say(' ',
+                         content=content)
+
+        self.start_time = time.time()
+        self.listen()
+
     def filter(self, text):
         """
         Filters data from user input

@@ -85,6 +85,7 @@ class Input(Machine):
 
     def on_init(self,
                 question=None,
+                question_content=None,
                 mask=None,
                 regex=None,
                 on_answer=None,
@@ -104,8 +105,11 @@ class Input(Machine):
         """
         Asks for some input
 
-        :param question: Message to ask for some input (mandatory)
+        :param question: Message to ask for some input
         :type question: str
+
+        :param question_content: Rich message to ask for some input
+        :type question_content: str
 
         :param mask: A mask to filter the input
         :type mask: str
@@ -195,8 +199,9 @@ class Input(Machine):
             assert domain_name == 'acme.com'
 
         """
-        assert question not in (None, '')
+        assert question not in (None, '') or question_content not in (None, '')
         self.question = question
+        self.question_content = question_content
 
         assert regex is None or mask is None  # use only one of them
         self.regex = regex
@@ -342,7 +347,16 @@ class Input(Machine):
         Asks the question in the chat space
 
         """
-        self.bot.say(self.question)
+
+        text = self.question if self.question else None
+        content = self.question_content if self.question_content else None
+
+        self.bot.say(text)
+
+        if content:
+            self.bot.say(' ',
+                         content=content)
+
         self.start_time = time.time()
         self.listen()
 
