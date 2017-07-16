@@ -52,6 +52,22 @@ class LocalSpace(Space):
 
     """
 
+    DEFAULT_SETTINGS = {
+
+        'local': {
+            'room': '$CHAT_ROOM_TITLE',
+            'moderators': '$CHAT_ROOM_MODERATORS',
+        },
+
+        'server': {
+            'url': '$SERVER_URL',
+            'hook': '/hook',
+            'binding': None,
+            'port': 8080,
+        },
+
+    }
+
     DEFAULT_PROMPT = u'> '
 
     def on_init(self, prefix='local', input=None, **kwargs):

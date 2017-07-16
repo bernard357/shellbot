@@ -99,22 +99,13 @@ class LocalSpaceTests(unittest.TestCase):
 
         settings = {'local.key': 'my value',}
         space = LocalSpace(context=my_context)
-        space.configure(settings=settings, do_check=True)
+        space.configure(settings=settings)
         self.assertEqual(space.context.get('local.title'), 'Local space')
         self.assertEqual(space.context.get('local.key'), 'my value')
         self.assertEqual(space.context.get('local.moderators'), [])
         self.assertEqual(space.context.get('local.participants'), [])
 
         self.assertEqual(space.context.get('server.binding'), None)
-
-        my_context.clear()
-        settings = {'local.key': 'my value',}
-        space = LocalSpace(context=my_context)
-        space.configure(settings=settings, do_check=False)
-        self.assertEqual(space.context.get('local.title'), None)
-        self.assertEqual(space.context.get('local.key'), 'my value')
-        self.assertEqual(space.context.get('local.moderators'), None)
-        self.assertEqual(space.context.get('local.participants'), None)
 
         my_context.clear()
         space = LocalSpace(context=my_context)
