@@ -154,23 +154,32 @@ class Menu(Input):
 
     def ask(self):
         """
-        Asks the question in the chat space
+        Asks which menu option to select
+
+        If a bare question is provided, then text is added to list
+        all available options.
+
+        If a rich question is provided, then we assume that it also
+        contains a representation of menu options and displays it 'as-is'.
 
         """
-        i = 1
-        opt = '\n'
-        for key in self.options:
-            opt += u"{}. {}\n".format(i, key)
-            i += 1
+        text = self.question if self.question else None
 
-        text = self.question.format(input) if self.question else None
-        if text not in (None, ''):
-            self.bot.say(text + opt)
+        if text:
+            index = 1
+            text += '\n'
+            for option in self.options:
+                text += u"{}. {}\n".format(index, option)
+                index += 1
 
-        content = self.question_content.format(input) if self.question_content else None
-        if content not in (None, ''):
-            self.bot.say('',content + opt)
-        
+        self.bot.say(text)
+
+        content = self.question_content if self.question_content else None
+
+        if content:
+            self.bot.say(' ',
+                         content=content)
+
         self.start_time = time.time()
         self.listen()
 

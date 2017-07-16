@@ -81,6 +81,7 @@ class MenuTests(unittest.TestCase):
                        options=["option 1", "option 2"])
         self.assertEqual(machine.bot, my_bot)
         self.assertEqual(machine.question, "What's up, Doc?")
+        self.assertEqual(machine.question_content, None)
         self.assertEqual(machine.options, [u"option 1", u"option 2"])
         self.assertEqual(machine.on_answer, None)
         self.assertEqual(machine.on_answer_content, None)
@@ -100,23 +101,32 @@ class MenuTests(unittest.TestCase):
                          ['begin', 'delayed', 'waiting'])
 
         machine = Menu(bot=my_bot,
+                       question_content="What's *up*, Doc?",
+                       options=["option 1", "option 2"])
+        self.assertEqual(machine.question, None)
+        self.assertEqual(machine.question_content, "What's *up*, Doc?")
+        self.assertEqual(machine.options, [u"option 1", u"option 2"])
+
+        machine = Menu(bot=my_bot,
                        question="What's up, Doc?",
+                       question_content="What's *up*, Doc?",
                        options=[u"option 1", u"option 2"],
-                        on_answer="ok for {}",
-                        on_answer_content="*ok* for {}",
-                        on_answer_file="/file/to/upload.pdf",
-                        on_retry="please retry",
-                        on_retry_content="please *retry*",
-                        on_retry_file="/file/to/upload.pdf",
-                        on_cancel="Ok, forget about it",
-                        on_cancel_content="*cancelled*",
-                        on_cancel_file="/file/to/upload.pdf",
-                        is_mandatory=True,
-                        retry_delay=9,
-                        cancel_delay=99,
-                        key='rabbit.input')
+                       on_answer="ok for {}",
+                       on_answer_content="*ok* for {}",
+                       on_answer_file="/file/to/upload.pdf",
+                       on_retry="please retry",
+                       on_retry_content="please *retry*",
+                       on_retry_file="/file/to/upload.pdf",
+                       on_cancel="Ok, forget about it",
+                       on_cancel_content="*cancelled*",
+                       on_cancel_file="/file/to/upload.pdf",
+                       is_mandatory=True,
+                       retry_delay=9,
+                       cancel_delay=99,
+                       key='rabbit.input')
         self.assertEqual(machine.bot, my_bot)
         self.assertEqual(machine.question, "What's up, Doc?")
+        self.assertEqual(machine.question_content, "What's *up*, Doc?")
         self.assertEqual(machine.options, [u"option 1", u"option 2"])
         self.assertEqual(machine.on_answer, "ok for {}")
         self.assertEqual(machine.on_answer_content, "*ok* for {}")
@@ -286,7 +296,9 @@ class MenuTests(unittest.TestCase):
         machine.listen = mock.Mock()
 
         machine.ask()
-        self.assertEqual(my_engine.get('said'), machine.question)
+        self.assertEqual(
+            my_engine.get('said'),
+            "What's up, Doc?\n1. option 1\n2. option 2\n")
         machine.listen.assert_called_with()
 
     def test_listen(self):

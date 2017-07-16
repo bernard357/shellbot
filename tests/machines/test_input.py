@@ -71,6 +71,7 @@ class InputTests(unittest.TestCase):
                         question="What's up, Doc?")
         self.assertEqual(machine.bot, my_bot)
         self.assertEqual(machine.question, "What's up, Doc?")
+        self.assertEqual(machine.question_content, None)
         self.assertEqual(machine.on_answer, None)
         self.assertEqual(machine.on_answer_content, None)
         self.assertEqual(machine.on_answer_file, None)
@@ -83,13 +84,15 @@ class InputTests(unittest.TestCase):
         self.assertEqual(machine.is_mandatory, False)
         self.assertEqual(machine.key, None)
 
-        machine = Input(bot=my_bot,
-                        question_content="What's up, Doc?")
-
         self.assertEqual(sorted(machine._states.keys()),
                          ['begin', 'delayed', 'end', 'waiting'])
         self.assertEqual(sorted(machine._transitions.keys()),
                          ['begin', 'delayed', 'waiting'])
+
+        machine = Input(bot=my_bot,
+                        question_content="What's *up*, Doc?")
+        self.assertEqual(machine.question, None)
+        self.assertEqual(machine.question_content, "What's *up*, Doc?")
 
         machine = Input(bot=my_bot,
                         question="What's up, Doc?",
@@ -274,9 +277,15 @@ class InputTests(unittest.TestCase):
         machine = Input(bot=my_bot,
                         question="What's up, Doc?")
         machine.listen = mock.Mock()
-
         machine.ask()
         self.assertEqual(my_engine.get('said'), machine.question)
+        machine.listen.assert_called_with()
+
+        machine = Input(bot=my_bot,
+                        question_content="What's *up*, Doc?")
+        machine.listen = mock.Mock()
+        machine.ask()
+        self.assertEqual(my_engine.get('said'), ' ')
         machine.listen.assert_called_with()
 
     def test_listen(self):

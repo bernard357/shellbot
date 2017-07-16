@@ -105,10 +105,10 @@ class Input(Machine):
         """
         Asks for some input
 
-        :param question: Message to ask for some input (mandatory)
+        :param question: Message to ask for some input
         :type question: str
 
-        :param question_content: Rich message to ask for some input (mandatory)
+        :param question_content: Rich message to ask for some input
         :type question_content: str
 
         :param mask: A mask to filter the input
@@ -348,13 +348,14 @@ class Input(Machine):
 
         """
 
-        text = self.question.format(input) if self.question else None
-        if text not in (None, ''):
-            self.bot.say(text)
+        text = self.question if self.question else None
+        content = self.question_content if self.question_content else None
 
-        content = self.question_content.format(input) if self.question_content else None
-        if content not in (None, ''):
-           self.bot.say(' ',content=content)
+        self.bot.say(text)
+
+        if content:
+            self.bot.say(' ',
+                         content=content)
 
         self.start_time = time.time()
         self.listen()
