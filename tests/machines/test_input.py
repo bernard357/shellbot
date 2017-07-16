@@ -83,6 +83,9 @@ class InputTests(unittest.TestCase):
         self.assertEqual(machine.is_mandatory, False)
         self.assertEqual(machine.key, None)
 
+        machine = Input(bot=my_bot,
+                        question_content="What's up, Doc?")
+
         self.assertEqual(sorted(machine._states.keys()),
                          ['begin', 'delayed', 'end', 'waiting'])
         self.assertEqual(sorted(machine._transitions.keys()),
