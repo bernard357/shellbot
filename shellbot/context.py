@@ -83,6 +83,16 @@ class Context(object):
         with self.lock:
             self.values.clear()
 
+    @property
+    def is_empty(self):
+        """
+        Does the context store something?
+
+        :return: True if there at least one value, False otherwise
+        """
+        with self.lock:
+            return len(self.values.keys()) < 1
+
     def check(self,
               key,
               default=None,

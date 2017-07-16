@@ -17,6 +17,7 @@ my_context = Context()
 class ContextTests(unittest.TestCase):
 
     def tearDown(self):
+        my_context.clear()
         collected = gc.collect()
         logging.info("Garbage collector: collected %d objects." % (collected))
 
@@ -39,10 +40,7 @@ class ContextTests(unittest.TestCase):
 
     def test_apply(self):
 
-        context = my_context
-        context.clear()
-
-        self.assertEqual(context.get('general.port'), None)
+        self.assertEqual(my_context.get('general.port'), None)
 
         settings = {
             'spark': {'CISCO_SPARK_BTTN_BOT': 'who_knows'},
@@ -51,21 +49,18 @@ class ContextTests(unittest.TestCase):
             'server': {'port': 80, 'url': 'http://www.acme.com/'},
         }
 
-        context.apply(settings)
+        my_context.apply(settings)
 
-        self.assertEqual(context.get('general.DEBUG'), True)
-        self.assertEqual(context.get('spark.CISCO_SPARK_BTTN_BOT'),
+        self.assertEqual(my_context.get('general.DEBUG'), True)
+        self.assertEqual(my_context.get('spark.CISCO_SPARK_BTTN_BOT'),
                          'who_knows')
-        self.assertEqual(context.get('spark.room'), 'title')
-        self.assertEqual(context.get('server.port'), 80)
-        self.assertEqual(context.get('server.url'), 'http://www.acme.com/')
+        self.assertEqual(my_context.get('spark.room'), 'title')
+        self.assertEqual(my_context.get('server.port'), 80)
+        self.assertEqual(my_context.get('server.url'), 'http://www.acme.com/')
 
     def test_clear(self):
 
-        context = my_context
-        context.clear()
-
-        self.assertEqual(context.get('general.port'), None)
+        self.assertEqual(my_context.get('general.port'), None)
 
         settings = {
             'spark': {'CISCO_SPARK_BTTN_BOT': 'who_knows'},
@@ -74,29 +69,48 @@ class ContextTests(unittest.TestCase):
             'server': {'port': 80, 'url': 'http://www.acme.com/'},
         }
 
-        context.apply(settings)
+        my_context.apply(settings)
 
-        self.assertEqual(context.get('general.DEBUG'), True)
-        self.assertEqual(context.get('spark.CISCO_SPARK_BTTN_BOT'),
+        self.assertEqual(my_context.get('general.DEBUG'), True)
+        self.assertEqual(my_context.get('spark.CISCO_SPARK_BTTN_BOT'),
                          'who_knows')
-        self.assertEqual(context.get('spark.room'), 'title')
-        self.assertEqual(context.get('server.port'), 80)
-        self.assertEqual(context.get('server.url'), 'http://www.acme.com/')
+        self.assertEqual(my_context.get('spark.room'), 'title')
+        self.assertEqual(my_context.get('server.port'), 80)
+        self.assertEqual(my_context.get('server.url'), 'http://www.acme.com/')
 
-        context.clear()
+        my_context.clear()
 
-        self.assertEqual(context.get('general.DEBUG'), None)
-        self.assertEqual(context.get('spark.CISCO_SPARK_BTTN_BOT'), None)
-        self.assertEqual(context.get('spark.room'), None)
-        self.assertEqual(context.get('server.port'), None)
-        self.assertEqual(context.get('server.url'), None)
+        self.assertEqual(my_context.get('general.DEBUG'), None)
+        self.assertEqual(my_context.get('spark.CISCO_SPARK_BTTN_BOT'), None)
+        self.assertEqual(my_context.get('spark.room'), None)
+        self.assertEqual(my_context.get('server.port'), None)
+        self.assertEqual(my_context.get('server.url'), None)
+
+    def test_is_empty(self):
+
+        self.assertTrue(my_context.is_empty)
+
+        # set a key
+        my_context.set('hello', 'world')
+        self.assertEqual(my_context.get('hello'), 'world')
+        self.assertFalse(my_context.is_empty)
+
+        my_context.clear()
+        self.assertTrue(my_context.is_empty)
+
+        settings = {
+            'spark': {'CISCO_SPARK_BTTN_BOT': 'who_knows'},
+            'spark.room': 'title',
+            'DEBUG': True,
+            'server': {'port': 80, 'url': 'http://www.acme.com/'},
+        }
+
+        my_context.apply(settings)
+        self.assertFalse(my_context.is_empty)
 
     def test_check(self):
 
-        context = my_context
-        context.clear()
-
-        self.assertEqual(context.get('spark.room'), None)
+        self.assertEqual(my_context.get('spark.room'), None)
 
         settings = {
             'spark': {
@@ -113,79 +127,79 @@ class ContextTests(unittest.TestCase):
             }
         }
 
-        context.apply(settings)
+        my_context.apply(settings)
 
-        context.check('spark.room', is_mandatory=True)
-        self.assertEqual(context.get('spark.room'), 'My preferred room')
+        my_context.check('spark.room', is_mandatory=True)
+        self.assertEqual(my_context.get('spark.room'), 'My preferred room')
 
-        context.check('spark.team')
-        self.assertEqual(context.get('spark.team'), 'Anchor team')
+        my_context.check('spark.team')
+        self.assertEqual(my_context.get('spark.team'), 'Anchor team')
 
-        context.check('spark.*not*present')   # will be set to None
-        self.assertEqual(context.get('spark.*not*present'), None)
+        my_context.check('spark.*not*present')   # will be set to None
+        self.assertEqual(my_context.get('spark.*not*present'), None)
 
-        context.check('spark.absent_list', default=[])
-        self.assertEqual(context.get('spark.absent_list'), [])
+        my_context.check('spark.absent_list', default=[])
+        self.assertEqual(my_context.get('spark.absent_list'), [])
 
-        context.check('spark.absent_dict', default={})
-        self.assertEqual(context.get('spark.absent_dict'), {})
+        my_context.check('spark.absent_dict', default={})
+        self.assertEqual(my_context.get('spark.absent_dict'), {})
 
-        context.check('spark.absent_text', default='*born')
-        self.assertEqual(context.get('spark.absent_text'), '*born')
+        my_context.check('spark.absent_text', default='*born')
+        self.assertEqual(my_context.get('spark.absent_text'), '*born')
 
         # is_mandatory is useless if default is set
-        context.check('spark.*not*present',
-                      default='*born',
-                      is_mandatory=True)
-        self.assertEqual(context.get('spark.*not*present'), '*born')
+        my_context.check('spark.*not*present',
+                         default='*born',
+                         is_mandatory=True)
+        self.assertEqual(my_context.get('spark.*not*present'), '*born')
 
         # missing key
         with self.assertRaises(KeyError):
-            context.check('spark.*unknown*key*',
-                          is_mandatory=True)
+            my_context.check('spark.*unknown*key*',
+                             is_mandatory=True)
 
         # validate implies is_mandatory
         with self.assertRaises(KeyError):
-            context.check('spark.*unknown*key*',
-                          validate=lambda line: True)
+            my_context.check('spark.*unknown*key*',
+                             validate=lambda line: True)
 
         # filter does imply is_mandatory
         with self.assertRaises(KeyError):
-            context.check('spark.*unknown*key*',
-                          filter=True)
+            my_context.check('spark.*unknown*key*',
+                             filter=True)
 
-        context.check('spark.webhook',
-                      validate=lambda line: line.startswith('http'))
-        self.assertEqual(context.get('spark.webhook'),
+        my_context.check('spark.webhook',
+                         validate=lambda line: line.startswith('http'))
+        self.assertEqual(my_context.get('spark.webhook'),
                          "http://73a1e282.ngrok.io")
 
         with self.assertRaises(ValueError):
-            context.check('spark.token',
-                          validate=lambda line: len(line) == 32)
-        self.assertEqual(context.get('spark.token'),
+            my_context.check('spark.token',
+                             validate=lambda line: len(line) == 32)
+        self.assertEqual(my_context.get('spark.token'),
                          'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY')
 
-        context.check('spark.personal_token')
-        self.assertEqual(context.get('spark.personal_token'),
+        my_context.check('spark.personal_token')
+        self.assertEqual(my_context.get('spark.personal_token'),
                          '$MY_FUZZY_SPARK_TOKEN')
 
-        context.check('spark.personal_token', filter=True)  # warning in log
-        self.assertEqual(context.get('spark.personal_token'),
+        my_context.check('spark.personal_token', filter=True)  # warning in log
+        self.assertEqual(my_context.get('spark.personal_token'),
                          None)
 
-        context.apply(settings)
+        my_context.apply(settings)
 
         os.environ['MY_FUZZY_SPARK_TOKEN'] = ''
-        context.check('spark.personal_token', filter=True)
-        self.assertEqual(context.get('spark.personal_token'), '')
+        my_context.check('spark.personal_token', filter=True)
+        self.assertEqual(my_context.get('spark.personal_token'), '')
 
-        context.check('spark.fuzzy_token')
-        self.assertEqual(context.get('spark.fuzzy_token'),
+        my_context.check('spark.fuzzy_token')
+        self.assertEqual(my_context.get('spark.fuzzy_token'),
                          '$MY_FUZZY_SPARK_TOKEN')
 
         os.environ['MY_FUZZY_SPARK_TOKEN'] = 'hello'
-        context.check('spark.fuzzy_token', filter=True)
-        self.assertEqual(context.get('spark.fuzzy_token'), 'hello')
+        my_context.check('spark.fuzzy_token', filter=True)
+        self.assertEqual(my_context.get('spark.fuzzy_token'), 'hello')
 
     def test__filter(self):
 
@@ -203,10 +217,7 @@ class ContextTests(unittest.TestCase):
 
     def test_has(self):
 
-        context = my_context
-        context.clear()
-
-        context.apply({
+        my_context.apply({
             'spark': {
                 'room': 'My preferred room',
                 'moderators':
@@ -222,115 +233,98 @@ class ContextTests(unittest.TestCase):
         })
 
         # undefined prefix
-        self.assertFalse(context.has('hello'))
+        self.assertFalse(my_context.has('hello'))
 
         # top-level prefix
-        self.assertTrue(context.has('spark'))
+        self.assertTrue(my_context.has('spark'))
 
         # 2-level prefix
-        self.assertTrue(context.has('spark.team'))
+        self.assertTrue(my_context.has('spark.team'))
 
         # undefined 2-level prefix
-        self.assertFalse(context.has('.token'))
+        self.assertFalse(my_context.has('.token'))
 
     def test_getter(self):
 
-        context = my_context
-        context.clear()
-
         # undefined key
-        self.assertEqual(context.get('hello'), None)
+        self.assertEqual(my_context.get('hello'), None)
 
         # undefined key with default value
         whatever = 'whatever'
-        self.assertEqual(context.get('hello', whatever), whatever)
+        self.assertEqual(my_context.get('hello', whatever), whatever)
 
-        # set the key
-        context.set('hello', 'world')
-        self.assertEqual(context.get('hello'), 'world')
+        # set a key
+        my_context.set('hello', 'world')
+        self.assertEqual(my_context.get('hello'), 'world')
 
         # default value is meaningless when key has been set
-        self.assertEqual(context.get('hello', 'whatever'), 'world')
+        self.assertEqual(my_context.get('hello', 'whatever'), 'world')
 
         # except when set to None
-        context.set('special', None)
-        self.assertEqual(context.get('special', []), [])
+        my_context.set('special', None)
+        self.assertEqual(my_context.get('special', []), [])
 
     def test_unicode(self):
 
-        context = my_context
-        context.clear()
+        my_context.set('hello', 'world')
+        self.assertEqual(my_context.get('hello'), 'world')
+        self.assertEqual(my_context.get(u'hello'), 'world')
 
-        context.set('hello', 'world')
-        self.assertEqual(context.get('hello'), 'world')
-        self.assertEqual(context.get(u'hello'), 'world')
+        my_context.set('hello', u'wôrld')
+        self.assertEqual(my_context.get('hello'), u'wôrld')
 
-        context.set('hello', u'wôrld')
-        self.assertEqual(context.get('hello'), u'wôrld')
-
-        context.set(u'hello', u'wôrld')
-        self.assertEqual(context.get(u'hello'), u'wôrld')
+        my_context.set(u'hello', u'wôrld')
+        self.assertEqual(my_context.get(u'hello'), u'wôrld')
 
     def test_increment(self):
 
-        context = my_context
-
-        context.clear()
-
-        self.assertEqual(context.get('gauge'), None)
-        value = context.increment('gauge')
+        self.assertEqual(my_context.get('gauge'), None)
+        value = my_context.increment('gauge')
         self.assertEqual(value, 1)
 
-        context.set('gauge', 'world')
-        self.assertEqual(context.get('gauge'), 'world')
-        value = context.increment('gauge')
+        my_context.set('gauge', 'world')
+        self.assertEqual(my_context.get('gauge'), 'world')
+        value = my_context.increment('gauge')
         self.assertEqual(value, 1)
 
     def test_decrement(self):
 
-        context = my_context
-
-        context.clear()
-
-        self.assertEqual(context.get('gauge'), None)
-        value = context.decrement('gauge')
+        self.assertEqual(my_context.get('gauge'), None)
+        value = my_context.decrement('gauge')
         self.assertEqual(value, -1)
 
-        context.set('gauge', 'world')
-        self.assertEqual(context.get('gauge'), 'world')
-        value = context.decrement('gauge')
+        my_context.set('gauge', 'world')
+        self.assertEqual(my_context.get('gauge'), 'world')
+        value = my_context.decrement('gauge')
         self.assertEqual(value, -1)
 
     def test_gauge(self):
 
-        context = my_context
-        context.clear()
-
         # undefined key
-        self.assertEqual(context.get('gauge'), None)
+        self.assertEqual(my_context.get('gauge'), None)
 
         # see if type mismatch would create an error
-        context.set('gauge', 'world')
-        self.assertEqual(context.get('gauge'), 'world')
+        my_context.set('gauge', 'world')
+        self.assertEqual(my_context.get('gauge'), 'world')
 
         # increment and decrement the counter
-        value = context.increment('gauge')
+        value = my_context.increment('gauge')
         self.assertEqual(value, 1)
-        self.assertEqual(context.get('gauge'), 1)
+        self.assertEqual(my_context.get('gauge'), 1)
 
-        self.assertEqual(context.decrement('gauge', 2), -1)
+        self.assertEqual(my_context.decrement('gauge', 2), -1)
 
-        self.assertEqual(context.increment('gauge', 4), 3)
-        self.assertEqual(context.decrement('gauge', 10), -7)
-        self.assertEqual(context.increment('gauge', 27), 20)
-        self.assertEqual(context.get('gauge'), 20)
+        self.assertEqual(my_context.increment('gauge', 4), 3)
+        self.assertEqual(my_context.decrement('gauge', 10), -7)
+        self.assertEqual(my_context.increment('gauge', 27), 20)
+        self.assertEqual(my_context.get('gauge'), 20)
 
         # default value is meaningless when key has been set
-        self.assertEqual(context.get('gauge', 'world'), 20)
+        self.assertEqual(my_context.get('gauge', 'world'), 20)
 
         # reset the gauge
-        context.set('gauge', 123)
-        self.assertEqual(context.get('gauge'), 123)
+        my_context.set('gauge', 123)
+        self.assertEqual(my_context.get('gauge'), 123)
 
     def test_concurrency(self):
 
