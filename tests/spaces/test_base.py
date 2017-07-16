@@ -159,19 +159,9 @@ class SpaceTests(unittest.TestCase):
         self.assertEqual(space.context.get('space.title'), None)
         self.assertEqual(space.context.get('space.key'), 'my value')
 
-        space = ExSpace(context=my_context)
-        space.configure(settings=settings, do_check=False)
-
-        self.assertEqual(space.context.get('space.title'), None)
-        self.assertEqual(space.context.get('space.key'), 'my value')
-
     def test_configured_title(self):
 
         logging.info("*** configured_title")
-
-        class ExSpace(Space):
-            def configured_title(self):
-                return self.engine.get('spark.room', self.DEFAULT_SPACE_TITLE)
 
         space = Space(context=my_context, prefix='alien')
 
@@ -180,7 +170,10 @@ class SpaceTests(unittest.TestCase):
 
         settings = {'alien.title': 'my room'}
 
-        space.configure(settings=settings, do_check=False)
+        space.configure(settings=settings)
+        self.assertEqual(my_context.get('alien.title'), 'my room')
+        self.assertEqual(space.prefix, 'alien')
+        self.assertEqual(space.get('title'), 'my room')
         self.assertEqual(space.configured_title(), 'my room')
 
     def test_connect(self):

@@ -88,6 +88,22 @@ class Space(object):
             space.run()
     """
 
+    DEFAULT_SETTINGS = {
+
+        'space': {
+            'room': '$CHAT_ROOM_TITLE',
+            'moderators': '$CHAT_ROOM_MODERATORS',
+        },
+
+        'server': {
+            'url': '$SERVER_URL',
+            'hook': '/hook',
+            'binding': None,
+            'port': 8080,
+        },
+
+    }
+
     DEFAULT_SPACE_TITLE = u'Collaboration space'
 
     PULL_INTERVAL = 0.05  # time between pulls, when not hooked
@@ -226,24 +242,18 @@ class Space(object):
         """
         pass
 
-    def configure(self, settings={}, do_check=True):
+    def configure(self, settings={}):
         """
         Changes settings of the space
 
         :param settings: a dictionary with some statements for this instance
         :type settings: dict
 
-        :param do_check: also adds full checking of settings
-        :type do_check: bool
-
         After a call to this function, ``bond()`` has to be invoked to
         return to normal mode of operation.
         """
         self.context.apply(settings)
-
-        if do_check:
-            self.check()
-
+        self.check()
         self.reset()
 
     def check(self):
@@ -255,7 +265,8 @@ class Space(object):
         Example::
 
             def check(self):
-                self.engine.context.check(self.prefix+'.title', is_mandatory=True)
+                self.engine.context.check(self.prefix+'.title',
+                                          is_mandatory=True)
 
         """
         pass
