@@ -71,6 +71,22 @@ class SparkSpace(Space):
 
     """
 
+    DEFAULT_SETTINGS = {
+
+        'spark': {
+            'room': '$CHAT_ROOM_TITLE',
+            'moderators': '$CHAT_ROOM_MODERATORS',
+        },
+
+        'server': {
+            'url': '$SERVER_URL',
+            'hook': '/hook',
+            'binding': '0.0.0.0',
+            'port': 8080,
+        },
+
+    }
+
     def on_init(self,
                 prefix='spark',
                 token=None,
