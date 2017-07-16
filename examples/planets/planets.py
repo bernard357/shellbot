@@ -15,11 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
+from shellbot import Command
 
-from .mission import Mission
 
-class Planets(Mission):
+class Planets(Command):
     """
     Displays the list of available planets
 
@@ -31,14 +30,13 @@ class Planets(Mission):
     keyword = u'planets'
     information_message = u'List reachable planets'
     list_header = u"Available destinations:"
-    is_interactive = True
 
     def execute(self, bot, arguments=None):
         """
         Displays the list of available planets
         """
 
-        items = self.get_planets(bot)
+        items = bot.recall('planets.items', [])
         if len(items):
             bot.say(self.list_header
                     + '\n- ' + '\n- '.join(items))

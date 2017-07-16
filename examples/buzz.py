@@ -121,6 +121,12 @@ engine.set('planets.items', ['Mercury',
 #
 bot = engine.bond(reset=True)
 
+# add a rocket and ignite it
+#
+from planets.rocket import Rocket
+bot.rocket = Rocket(bot)
+bot.rocket.start()
+
 # run the bot
 #
 engine.run()

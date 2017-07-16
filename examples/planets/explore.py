@@ -15,11 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
+from shellbot import Command
 
-from .mission import Mission
 
-class Explore(Mission):
+class Explore(Command):
     """
     Explores a planet and comes back
 
@@ -32,16 +31,13 @@ class Explore(Mission):
     information_message = u'Explore a planet and come back'
     usage_message = u'explore <destination>'
 
-    action_begin_template = u"Exploring {}, this is interesting"
-    action_begin_file = "http://www.dummysoftware.com/mars/lander.jpg"
+    def execute(self, bot, arguments=None):
+        """
+        Explores a planet and comes back
+        """
 
-    action_end_template = u"End of the exploration"
+        if arguments in (None, ''):
+            bot.say(u"usage: {}".format(self.usage_message))
+            return
 
-    def on_target_action(self, bot):
-        bot.say(u"#{} - ".format(self.counter)
-                + self.action_begin_template.format(self.target),
-                file=self.action_begin_file)
-        time.sleep(5)
-        bot.say(u"#{} - ".format(self.counter)
-                + self.action_end_template.format(self.target))
-
+        bot.rocket.go('explore', arguments)

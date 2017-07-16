@@ -105,7 +105,6 @@ class StepsTests(unittest.TestCase):
         self.assertEqual(s.keyword, 'state')
         self.assertEqual(s.information_message,
                          u'Display current state in process')
-        self.assertTrue(s.is_interactive)
         self.assertFalse(s.is_hidden)
 
         s.execute()
@@ -122,7 +121,6 @@ class StepsTests(unittest.TestCase):
 
         self.assertEqual(n.keyword, 'escalate')
         self.assertEqual(n.information_message, u'Move process to next state')
-        self.assertTrue(n.is_interactive)
         self.assertFalse(n.is_hidden)
 
         n.execute()

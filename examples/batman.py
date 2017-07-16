@@ -121,10 +121,8 @@ class Batsignal(Command):
 class Batsuicide(Command):
     keyword = 'suicide'
     information_message = u"Go back to Hell"
-    is_interactive = False
 
     def execute(self, bot, arguments=None):
-        time.sleep(3)
         bot.say(self.information_message)
         bot.dispose()
 

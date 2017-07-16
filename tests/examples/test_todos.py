@@ -53,7 +53,6 @@ class TodosTests(unittest.TestCase):
         self.assertEqual(c.keyword, 'done')
         self.assertEqual(c.information_message,
                          u'Archive an item from the todo list')
-        self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
         c.execute(my_bot)
@@ -91,7 +90,6 @@ class TodosTests(unittest.TestCase):
         self.assertEqual(c.keyword, 'drop')
         self.assertEqual(c.information_message,
                          u'Delete an item from the todo list')
-        self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
         c.execute(my_bot)
@@ -137,7 +135,6 @@ class TodosTests(unittest.TestCase):
         self.assertEqual(c.keyword, 'history')
         self.assertEqual(c.information_message,
                          u'List archived items')
-        self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
         c.execute(my_bot)
@@ -163,7 +160,6 @@ class TodosTests(unittest.TestCase):
         self.assertEqual(c.keyword, 'next')
         self.assertEqual(c.information_message,
                          u'Display next item to do')
-        self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
         c.execute(my_bot)
@@ -189,7 +185,6 @@ class TodosTests(unittest.TestCase):
         self.assertEqual(c.keyword, 'todo')
         self.assertEqual(c.information_message,
                          u'Append an item to the todo list, or change it')
-        self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
         c.execute(my_bot)  # no argument
@@ -239,7 +234,6 @@ class TodosTests(unittest.TestCase):
         self.assertEqual(c.keyword, 'todos')
         self.assertEqual(c.information_message,
                          u'List items to do')
-        self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
         c.execute(my_bot)

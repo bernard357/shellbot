@@ -236,7 +236,7 @@ class ShellBot(object):
 
         Example::
 
-            bot.remember('parameter_123', 'George')
+            bot.remember('variable_123', 'George')
 
         """
         self.store.remember(key, value)
@@ -255,7 +255,7 @@ class ShellBot(object):
 
         Example::
 
-            value = bot.recall('parameter_123')
+            value = bot.recall('variable_123')
 
         """
         return self.store.recall(key, default)
@@ -270,7 +270,7 @@ class ShellBot(object):
         To clear only one value, provides the name of it.
         For example::
 
-            bot.forget('parameter_123')
+            bot.forget('variable_123')
 
         To clear all values in the store, just call the function
         without a value.
@@ -317,8 +317,10 @@ class ShellBot(object):
         Example::
 
             >>>bot.update('input', 'PO Number', '1234A')
+            >>>bot.update('input', 'description', 'some description')
             >>>bot.recall('input')
-            {'PO Number': '1234A'}
+            {'PO Number': '1234A',
+             'description': 'some description'}
 
         """
         self.store.update(key, label, item)
