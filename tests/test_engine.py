@@ -75,7 +75,7 @@ class EngineTests(unittest.TestCase):
         self.assertTrue(engine.speaker is not None)
         self.assertTrue(engine.ears is None)
         self.assertTrue(engine.listener is not None)
-        self.assertTrue(engine.space is None)
+        self.assertFalse(engine.space is None)
         self.assertTrue(engine.server is None)
         self.assertTrue(engine.shell is not None)
         self.assertTrue(engine.subscribed is not None)
@@ -231,10 +231,10 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(my_engine.get('bot.on_enter'), 'Hello!')
         self.assertEqual(my_engine.get('bot.on_exit'), 'Bye!')
 
-        self.assertEqual(my_engine.get('spark.room'), '$CHAT_ROOM_TITLE')
-        self.assertEqual(my_engine.get('spark.moderators'), '$CHAT_ROOM_MODERATORS')
-        self.assertEqual(my_engine.get('spark.participants'), None)
-        self.assertEqual(my_engine.get('spark.token'), None)
+        self.assertEqual(my_engine.get('local.title'), 'Support room')
+        self.assertEqual(my_engine.get('local.moderators'), 'foo.bar@acme.com')
+        self.assertEqual(my_engine.get('local.participants'), [])
+        self.assertEqual(my_engine.get('local.token'), None)
 
         self.assertEqual(my_engine.get('server.url'), '$SERVER_URL')
         self.assertEqual(my_engine.get('server.hook'), '/hook')
@@ -633,6 +633,7 @@ class EngineTests(unittest.TestCase):
         logging.info('*** build_space ***')
 
         my_engine.context.apply(my_engine.DEFAULT_SETTINGS)
+        my_engine.context.apply(my_engine.space.DEFAULT_SETTINGS)
         space = my_engine.build_space('123')
 
     def test_build_store(self):

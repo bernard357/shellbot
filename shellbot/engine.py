@@ -64,7 +64,7 @@ class Engine(object):
             keyword = 'hello'
             information_message = u"Hello, World!"
 
-        engine = Engine(command=Hello())
+        engine = Engine(command=Hello(), type='spark')
 
         # load configuration
         #
@@ -74,8 +74,7 @@ class Engine(object):
         # settings of the chat space are provided
         # in the engine configuration itself
         #
-        bot = ShellBot(engine=engine)
-        bot.bond(reset=True)
+        bot = engine.bond(reset=True)
 
         # run the engine
         #
@@ -96,6 +95,67 @@ class Engine(object):
             bot.use_space(id=space_id)
             return bot
 
+    The engine is configured by setting values in the context that is attached
+    to it. This is commonly done by loading the context with a dict before the
+    creation of the engine itself, as in the following example::
+
+        context = Context({
+
+            'bot': {
+                'on_enter': 'You can now chat with Batman',
+                'on_exit': 'Batman is now quitting the room, bye',
+            },
+
+            'server': {
+                'url': 'http://d9b62df9.ngrok.io',
+                'hook': '/hook',
+            },
+
+        })
+
+        engine = Engine(context=context)
+
+        engine.configure()
+
+    Please note that the configuration is checked and actually used on the
+    call ``engine.configure()``, rather on the initialisation itself.
+
+    When configuration statements have been stored in a separate text file
+    in YAML format, then the engine can be initialised with an empty context,
+    and configuration is loaded afterwards.
+
+    Example::
+
+        engine = Engine()
+        engine.configure_from_path('/opt/shellbot/my_bot.yaml')
+
+    When no configuration is provided to the engine, then default settings
+    are considered for the engine itself, and for various components.
+
+    For example, for a basic engine interacting in a Cisco Spark room::
+
+        engine = Engine(type='spark')
+        engine.configure()
+
+    When no indication is provided at all, the engine loads a space of type
+    'local'.
+
+    So, in other terms::
+
+        engine = Engine()
+        engine.configure()
+
+    is strictly equivalent to::
+
+        engine = Engine('local')
+        engine.configure()
+
+    In principle, the configuration of the engine is set once for the full
+    life of the instance. This being said, some settings can be changed
+    globally with the member function `set()`. For example::
+
+        engine.set('bot.on_banner': 'Hello, I am here to help')
+
     """
 
     DEFAULT_SETTINGS = {
@@ -103,18 +163,6 @@ class Engine(object):
         'bot': {
             'on_enter': '$BOT_ON_ENTER',
             'on_exit': '$BOT_ON_EXIT',
-        },
-
-        'spark': {
-            'room': '$CHAT_ROOM_TITLE',
-            'moderators': '$CHAT_ROOM_MODERATORS',
-        },
-
-        'server': {
-            'url': '$SERVER_URL',
-            'hook': '/hook',
-            'binding': '0.0.0.0',
-            'port': 8080,
         },
 
     }
@@ -150,23 +198,35 @@ class Engine(object):
         :param ears: For asynchronous updates from the chat space
         :type ears: Queue
 
+        :param type: Chat space to load for this engine. Default to 'local'
+        :type type: str
+
         :param space: Chat space to be used by this engine
         :type space: Space
 
-        :param type: Chat space to load for this engine
-        :type type: str
-
         :param server: Web server to be used by this engine
         :type server: Server
-
-        :param store: Data store to be used by this engine
-        :type store: Store
 
         :param command: A command to initialize the shell
         :type command: str or Command
 
         :param commands: A list of commands to initialize the shell
         :type commands: list of str, or list of Command
+
+        If a chat type is provided, e.g., 'spark', then one space instance is
+        loaded from the SpaceFactory. Else a space of type 'local' is used.
+
+        Example::
+
+            engine = Engine(type='spark')
+
+        There is also an option to inject a pre-existing space. This can be
+        useful for testing purpose, or for similar advanced usage.
+
+        Example::
+
+            my_space = MySpecialSpace( ... )
+            engine = Engine(space=my_space)
 
         """
 
@@ -195,11 +255,13 @@ class Engine(object):
         self.bots = {}
 
         assert space is None or type is None  # use only one
-        if type:
-            space = SpaceFactory.get(type=type)
-        self.space = space
-        if self.space:
-            self.space.context = self.context
+        if space:
+            self.space = space
+        elif type:
+            self.space = SpaceFactory.get(type=type)
+        else:
+            self.space = SpaceFactory.get(type='local')
+        self.space.context = self.context
 
         self.server = server
 
@@ -251,49 +313,51 @@ class Engine(object):
 
         self.configure(settings=settings)
 
-    def configure(self, settings=None):
+    def configure(self, settings={}):
         """
         Checks settings
 
         :param settings: configuration information
         :type settings: dict
 
-        If no settings is provided, then ``self.DEFAULT_SETTINGS`` is used
-        instead.
+        If no settings is provided, and the context is empty, then
+        ``self.DEFAULT_SETTINGS`` and ``self.space.DEFAULT_SETTINGS``
+        are used instead.
         """
 
-        if settings is None:
-            settings = self.DEFAULT_SETTINGS
+        self.context.apply(settings)
 
-        self.configure_from_dict(settings)
+        if self.context.is_empty:
+            self.context.apply(self.DEFAULT_SETTINGS)
+            self.context.apply(self.space.DEFAULT_SETTINGS)
 
-        self.shell.configure()
-
-        if self.space is None:
-            self.space = SpaceFactory.build(context=self.context, ears=self.ears)
-
-        self.space.configure()
-
-        self.space.connect()
+        self.check()
 
         if (self.server is None
-            and self.context.get('server.binding') is not None):
+            and self.get('server.binding') is not None):
 
             logging.debug(u"Adding web server")
             self.server = Server(context=self.context, check=True)
 
-    def configure_from_dict(self, settings):
+        self.space.ears = self.ears
+        self.space.configure()
+        self.space.connect()
+
+        self.shell.configure()
+
+    def check(self):
         """
-        Changes settings of the engine
+        Checks settings of the engine
 
         :param settings: a dictionary with some statements for this instance
         :type settings: dict
 
         This function reads key ``bot`` and below, and update
         the context accordingly.
-        It also reads hook parameters under ``server``::
 
-            engine.configure_fom_dict({
+        Example::
+
+            context = Context({
 
                 'bot': {
                     'on_enter': 'You can now chat with Batman',
@@ -306,15 +370,10 @@ class Engine(object):
                 },
 
             })
-
-        This can also be written in a more compact form::
-
-            engine.configure_from_dict(
-                {'bot.on_banner': 'Hello, I am here to help'})
+            engine = Engine(context=context)
+            engine.check()
 
         """
-
-        self.context.apply(settings)
         self.context.check('bot.on_enter', '', filter=True)
         self.context.check('bot.on_exit', '', filter=True)
 

@@ -68,7 +68,7 @@ class BotTests(unittest.TestCase):
         bot = ShellBot(engine=my_engine)
 
         self.assertEqual(bot.engine, my_engine)
-        self.assertTrue(bot.space is None)
+        self.assertTrue(bot.space is not None)
         self.assertTrue(bot.store is not None)
         self.assertTrue(bot.fan is not None)
         self.assertTrue(bot.machine is None)

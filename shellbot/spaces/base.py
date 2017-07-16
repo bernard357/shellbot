@@ -91,7 +91,7 @@ class Space(object):
     DEFAULT_SETTINGS = {
 
         'space': {
-            'room': '$CHAT_ROOM_TITLE',
+            'title': '$CHAT_ROOM_TITLE',
             'moderators': '$CHAT_ROOM_MODERATORS',
         },
 

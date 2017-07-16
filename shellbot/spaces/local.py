@@ -55,7 +55,7 @@ class LocalSpace(Space):
     DEFAULT_SETTINGS = {
 
         'local': {
-            'room': '$CHAT_ROOM_TITLE',
+            'title': '$CHAT_ROOM_TITLE',
             'moderators': '$CHAT_ROOM_MODERATORS',
         },
 
