@@ -20,7 +20,7 @@ class MyEngine(Engine):
         return Bot(self)
 
 
-my_engine = MyEngine(inbox=Queue(), mouth=Queue())
+my_engine = MyEngine(mouth=Queue())
 
 
 class Bot(object):
@@ -148,8 +148,6 @@ class ShellTests(unittest.TestCase):
                          "Sorry, I do not know how to handle '*unknown*'")
         with self.assertRaises(Exception):
             shell.engine.mouth.get_nowait()
-        with self.assertRaises(Exception):
-            shell.bot.inbox.get_nowait()
 
         shell.do('echo hello world', space_id='*id')
         self.assertEqual(shell.line, 'echo hello world')
@@ -157,8 +155,6 @@ class ShellTests(unittest.TestCase):
         self.assertEqual(shell.engine.mouth.get().text, 'hello world')
         with self.assertRaises(Exception):
             shell.engine.mouth.get_nowait()
-        with self.assertRaises(Exception):
-            shell.bot.inbox.get_nowait()
 
         shell.do('help help', space_id='*id')
         self.assertEqual(shell.line, 'help help')
@@ -168,16 +164,12 @@ class ShellTests(unittest.TestCase):
                          + u'usage: help <command>')
         with self.assertRaises(Exception):
             print(shell.engine.mouth.get_nowait())
-        with self.assertRaises(Exception):
-            shell.bot.inbox.get_nowait()
 
         shell.do('pass', space_id='*id')
         self.assertEqual(shell.line, 'pass')
         self.assertEqual(shell.count, 4)
         with self.assertRaises(Exception):
             shell.engine.mouth.get_nowait()
-        with self.assertRaises(Exception):
-            shell.bot.inbox.get_nowait()
 
         shell.do('sleep .0103', space_id='*id')
         self.assertEqual(shell.line, 'sleep .0103')
@@ -196,8 +188,6 @@ class ShellTests(unittest.TestCase):
         self.assertEqual(shell.engine.mouth.get().text, u'Shelly version *unknown*')
         with self.assertRaises(Exception):
             shell.engine.mouth.get_nowait()
-        with self.assertRaises(Exception):
-            shell.engine.inbox.get_nowait()
 
         shell.do('', space_id='*id')
         self.assertEqual(shell.line, '')
@@ -208,8 +198,6 @@ class ShellTests(unittest.TestCase):
             + u'help - Show commands and usage')
         with self.assertRaises(Exception):
             print(shell.engine.mouth.get_nowait())
-        with self.assertRaises(Exception):
-            shell.engine.inbox.get_nowait()
 
     def test_empty(self):
 
