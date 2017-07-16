@@ -11,11 +11,11 @@ import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import Context, ShellBot
+from shellbot import Context
 from shellbot.lists import List
 
 
-my_bot = ShellBot()
+my_context = Context()
 
 
 class ListTests(unittest.TestCase):
@@ -25,10 +25,10 @@ class ListTests(unittest.TestCase):
         logging.info('***** init')
 
         list = List()
-        self.assertEqual(list.bot, None)
+        self.assertEqual(list.context, None)
 
-        list = List(bot=my_bot)
-        self.assertEqual(list.bot, my_bot)
+        list = List(context=my_context)
+        self.assertEqual(list.context, my_context)
 
     def test_on_init(self):
 

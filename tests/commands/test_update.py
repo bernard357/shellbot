@@ -10,13 +10,31 @@ import sys
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot, Shell
+from shellbot import Context, Engine, Shell, Vibes
 from shellbot.stores import MemoryStore
 from shellbot.commands import Update
 
-
 my_store = MemoryStore()
-my_bot = ShellBot(mouth=Queue(), store=my_store)
+my_engine = Engine(mouth=Queue(), store=my_store)
+my_engine.shell = Shell(engine=my_engine)
+
+
+class Bot(object):
+    def __init__(self, engine):
+        self.engine = engine
+        self.data = {}
+
+    def say(self, text, content=None, file=None):
+        self.engine.mouth.put(Vibes(text, content, file))
+
+    def update(self, label, key, value):
+        self.data[key] = value
+
+    def recall(self, label):
+        return self.data
+
+
+my_bot = Bot(engine=my_engine)
 
 
 class UpdateTests(unittest.TestCase):
@@ -25,34 +43,41 @@ class UpdateTests(unittest.TestCase):
 
         logging.info('***** init')
 
-        c = Update(my_bot)
+        c = Update(my_engine)
 
         self.assertEqual(c.keyword, u'update')
         self.assertEqual(
             c.information_message,
             u'Update input content')
-        self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
     def test_execute(self):
 
         logging.info('***** execute')
 
-        c = Update(my_bot)
-        c.execute(u'')
+        c = Update(my_engine)
+        c.execute(my_bot, u'')
         self.assertEqual(
-            my_bot.mouth.get().text,
+            my_engine.mouth.get().text,
             u'Thanks to provide the key and the data')
         with self.assertRaises(Exception):
-            my_bot.mouth.get_nowait()
+            my_engine.mouth.get_nowait()
 
-        my_bot.update('update', 'PO', '1234A')
-        c.execute(u'description')
+        c.execute(my_bot, u'description')
         self.assertEqual(
-            my_bot.mouth.get().text,
+            my_engine.mouth.get().text,
             u'There is nothing to update, input is empty')
         with self.assertRaises(Exception):
-            my_bot.mouth.get_nowait()
+            my_engine.mouth.get_nowait()
+
+        my_bot.update('update', 'PO', '1234A')
+        c.execute(my_bot, u'description')
+        self.assertEqual(
+            my_engine.mouth.get().text,
+            u'Thanks to provide the key and the data')
+        with self.assertRaises(Exception):
+            my_engine.mouth.get_nowait()
+
 
 if __name__ == '__main__':
 

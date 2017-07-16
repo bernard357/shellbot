@@ -12,11 +12,11 @@ import yaml
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot, Shell
+from shellbot import Context, Engine, Shell
 from shellbot.events import Message
 from shellbot.updaters import QueueUpdater
 
-my_bot = ShellBot()
+my_engine = Engine()
 
 
 class UpdaterTests(unittest.TestCase):
@@ -30,10 +30,10 @@ class UpdaterTests(unittest.TestCase):
         logging.info('***** init')
 
         u = QueueUpdater()
-        self.assertEqual(u.bot, None)
+        self.assertEqual(u.engine, None)
 
-        u = QueueUpdater(bot=my_bot)
-        self.assertEqual(u.bot, my_bot)
+        u = QueueUpdater(engine=my_engine)
+        self.assertEqual(u.engine, my_engine)
 
     def test_on_init(self):
 

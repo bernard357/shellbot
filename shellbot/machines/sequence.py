@@ -26,7 +26,9 @@ class Sequence(object):
     """
     Implements a sequence of multiple machines
 
-    Machines are provided and activated one by one in sequence.
+    This implements one state machine that is actually a combination
+    of multiple sub-machines, ran in sequence. When one sub-machine stops,
+    the next one is activated.
 
     Example::
 
@@ -39,7 +41,7 @@ class Sequence(object):
     the second machine is triggered.
 
     """
-    def __init__(self, machines=None):
+    def __init__(self, machines=None, **kwargs):
         """
         Implements a sequence of multiple machines
 
@@ -59,9 +61,34 @@ class Sequence(object):
         # restore current handler for the rest of the program
         signal.signal(signal.SIGINT, handler)
 
+        self.on_init(**kwargs)
+
+    def on_init(self, **kwargs):
+        """
+        Adds to machine initialisation
+
+        This function should be expanded in sub-class, where necessary.
+
+        Example::
+
+            def on_init(self, prefix='my.machine', **kwargs):
+                ...
+
+        """
+        pass
+
     def get(self, key, default=None):
         """
         Retrieves the value of one key
+
+        :param key: one attribute of this state machine instance
+        :type key: str
+
+        :param default: default value is the attribute has not been set yet
+        :type default: an type that can be serialized
+
+        This function can be used across multiple processes, so that
+        a consistent view of the state machine is provided.
         """
 
         with self.lock:
@@ -76,56 +103,97 @@ class Sequence(object):
     def set(self, key, value):
         """
         Remembers the value of one key
+
+        :param key: one attribute of this state machine instance
+        :type key: str
+
+        :param value: new value of the attribute
+        :type value: an type that can be serialized
+
+        This function can be used across multiple processes, so that
+        a consistent view of the state machine is provided.
         """
 
         with self.lock:
-
             self.mutables[key] = value
 
     def reset(self):
         """
         Resets a state machine before it is restarted
 
-        This function move back to the initial state, if the machine is not
-        running.
+        :return: True if the machine has been actually reset, else False
 
-        Example::
+        This function moves a state machine back to its initial state.
+        A typical use case is when you have to recycle a state machine
+        multiple times, like in the following example::
 
             if new_cycle():
                 machine.reset()
                 machine.start()
 
+        If the machine is running, calling ``reset()`` will have no effect
+        and you will get False in return. Therefore, if you have to force
+        a reset, you may have to stop the machine first.
+
+        Example of forced reset::
+
+            machine.stop()
+            machine.reset()
+
         """
         if self.is_running:
-            logging.warning(u"Cannot reset a running sequence")
-        else:
-            logging.warning(u"Resetting sequence")
+            logging.warning(u"Cannot reset a running state machine")
+            return False
 
-            for machine in self.machines:
-                machine.reset()
+        logging.warning(u"Resetting sequence")
 
-            self.on_reset()
+        # reset all sub machines
+        for machine in self.machines:
+            machine.reset()
+
+        # do the rest
+        self.on_reset()
+
+        return True
 
     def on_reset(self):
+        """
+        Adds processing to machine reset
+
+        This function should be expanded in sub-class, where necessary.
+
+        """
         pass
 
     def start(self):
         """
-        Runs the sequence
-
-        :param tick: The duration set for each tick
-        :type tick: float
+        Starts the sequence
 
         :return: either the process that has been started, or None
 
-        This function starts a separate thread to tick the machine
+        This function starts a separate thread to run machines
         in the background.
         """
-        p = Process(target=self.tick)
-        p.start()
-        return p
+        process = Process(target=self.run)  # do not daemonize
+        process.start()
+        return process
 
-    def tick(self):
+    def stop(self):
+        """
+        Stops the sequence
+
+        This function stops the underlying machine and breaks the sequence.
+        """
+        if self.is_running:
+            self.set('is_running', False)
+
+        index = self.get('_index')
+        if index:
+            machine = self.machines[index]
+            machine.stop()
+            self.set('_index', None)
+
+    def run(self):
         """
         Continuously ticks the sequence
 
@@ -141,8 +209,22 @@ class Sequence(object):
         logging.info(u"Beginning of the sequence")
         self.set('is_running', True)
 
-        for machine in self.machines:
-            machine.tick()
+        index = 0
+        while index < len(self.machines):
+
+            logging.info(u"- running machine #{}".format(index+1))
+            self.set('_index', index)
+            machine = self.machines[index]
+
+            process = machine.start()
+            if process:
+                process.join()
+            index += 1
+
+            if not self.is_running:
+                break
+
+        self.set('_index', None)
 
         logging.info(u"End of the sequence")
         self.set('is_running', False)
@@ -155,5 +237,3 @@ class Sequence(object):
         :return: True or False
         """
         return self.get('is_running', False)
-
-

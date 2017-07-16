@@ -25,31 +25,42 @@ class Steps(Machine):
     """
     Implements a linear process with multiple steps
 
-    Example::
+    This implements a state machine that appears as a phased process to chat
+    participants. On each, it can add new participants or moderators, display
+    some information, and run a child state machine..
+
+    For example, to run an escalation process::
+
+        po_input = Input( ... )
+        details_input = Input( ... )
+
+        decision_menu = Menu( ...)
 
         steps = [
 
-            Step({
+            {
                 'label': u'Level 1',
                 'message': u'Initial capture of information',
-            }, 1),
+                'machine': Sequence([po_input, details_input]),
+            },
 
-            Step({
+            {
                 'label': u'Level 2',
                 'message': u'Escalation to technical experts',
                 'moderators': 'alice@acme.com',
-            }, 2),
+            },
 
-            Step({
+            {
                 'label': u'Level 3',
                 'message': u'Escalation to decision stakeholders',
                 'participants': 'bob@acme.com',
-            }, 3),
+                'machine': decision_menu,
+            },
 
-            Step({
+            {
                 'label': u'Terminated',
                 'message': u'Process is closed, yet conversation can continue',
-            }, 4),
+            },
 
         ]
         machine = Steps(bot=bot, steps=steps)
@@ -61,19 +72,15 @@ class Steps(Machine):
 
     def on_init(self,
                 steps=None,
-                prefix='steps',
                 **kwargs):
         """
         Handles extended initialisation parameters
 
         :param steps: The steps for this process
-        :type steps: list of Step or of dict
-
-        :param prefix: the main keyword for configuration of this machine
-        :type prefix: str
+        :type steps: list of Step or list of dict
 
         """
-        super(Steps, self).on_init(prefix, **kwargs)
+        super(Steps, self).on_init(**kwargs)
 
         self.steps = []
         if steps:
@@ -128,6 +135,16 @@ class Steps(Machine):
                    initial='begin')
 
     def on_reset(self):
+        """
+        Restore initial state of this machine
+
+        If a sub-machine is running at current step, it is stopped first.
+        """
+
+        current = self.current_step
+        if current:
+            current.stop()
+
         logging.debug(u"- seeking back before first step")
         self.set('_index', None)
 
@@ -152,8 +169,12 @@ class Steps(Machine):
 
         This function loads and runs the next step in the process, if any.
         If all steps have been consumed it returns None.
+
+        If a sub-machine is running at current step, it is stopped before
+        moving to the next step.
+
         """
-        logging.debug(u"Moving to next step of the process")
+        logging.debug(u"Moving to next step")
 
         if not self.steps or len(self.steps) < 1:
             logging.debug(u"- no steps have ben set")
@@ -169,13 +190,14 @@ class Steps(Machine):
             logging.debug(u"- all steps have ben consumed")
             return None
 
-        logging.debug(u"- triggering step #{}".format(index))
+        current = self.current_step
+        if current:
+            current.stop()
 
+        logging.debug(u"- triggering step #{}".format(index+1))
         self.set('_index', index)
-
         step = self.steps[index]
         step.trigger(bot=self.bot)
-
         return step
 
     def step_has_completed(self, **kwargs):
@@ -198,8 +220,19 @@ class Steps(Machine):
         """
         Checks if state machine can engage on first step
 
-        To be implemented in sub-class where complex initialization activities
+        To be overlaid in sub-class where complex initialization activities
         are required.
+
+        Example::
+
+            class MyMachine(Machine):
+
+                def if_ready(self, **kwargs):
+                    if kwargs.get('phase') == 'warming up':
+                        return False
+                    else:
+                        return True
+
         """
         return True
 
@@ -213,7 +246,7 @@ class Steps(Machine):
         This function is used by the state machine for testing the transition
         to the next available step in the process.
 
-        Since this function is an integral part of the state machine itself, it
+        Since this function is an integral part of the state machine, it
         should be triggered via a call of the ``step()`` member function.
 
         For example::
@@ -223,6 +256,7 @@ class Steps(Machine):
         """
 
         if kwargs.get('event') == 'next':
+            logging.debug(u"- asked to move to next step")
             return True
 
         return False
@@ -231,7 +265,7 @@ class Steps(Machine):
         """
         Checks if all steps have been used
 
-        Since this function is an integral part of the state machine itself, it
+        Since this function is an integral part of the state machine, it
         should be triggered via a call of the ``step()`` member function.
 
         For example::
@@ -283,6 +317,12 @@ class Step(object):
 
         self.machine = attributes.get('machine', None)
 
+    def __str__(self):
+        """
+        Returns a human-readable string representation of this object.
+        """
+        return u"{} - {}".format(self.label, self.message)
+
     def say(self, bot):
         """
         Reports on this step
@@ -304,7 +344,7 @@ class Step(object):
         """
         Triggers a step
 
-        :param bot: the bit to use
+        :param bot: the bot to use
         :type bot: ShellBot
 
         This function does everything that is coming with a step:
@@ -312,8 +352,7 @@ class Step(object):
         - maybe in MarkDown or HTML,
         - maybe with some attachment,
         - add participants and/or moderators to the space,
-        - start a state machine
-
+        - reset and start a state machine
 
         Example::
 
@@ -332,5 +371,14 @@ class Step(object):
         bot.add_participants(self.participants)
 
         if self.machine:
+            self.machine.stop()
             self.machine.reset()
             self._step_process = self.machine.start()
+
+    def stop(self):
+        """
+        Stops a step
+        """
+        if self.machine:
+            self.machine.stop()
+

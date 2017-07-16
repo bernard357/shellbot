@@ -34,12 +34,12 @@ class Listener(object):
 
     FRESH_DURATION = 0.5  # maximum amount of time for listener detection
 
-    def __init__(self, bot=None, filter=None):
+    def __init__(self, engine=None, filter=None):
         """
-        Handles events received from chat space
+        Handles events received from chat spaces
 
-        :param bot: the overarching bot
-        :type bot: ShellBot
+        :param engine: the overarching engine
+        :type engine: Engine
 
         :param filter: if provided, used to filter every event
         :type filter: callable
@@ -62,7 +62,7 @@ class Listener(object):
 
             listener = Listener(filter=filter)
         """
-        self.bot = bot
+        self.engine = engine
         self.filter = filter
 
     def start(self):
@@ -74,7 +74,7 @@ class Listener(object):
         This function starts a separate process to listen
         in the background.
         """
-        p = Process(target=self.run)
+        p = Process(target=self.run)  # do not daemonize
         p.start()
         return p
 
@@ -88,33 +88,33 @@ class Listener(object):
         Processing should be handled in a separate background process, like
         in the following example::
 
-            listener = Listener(bot=bot)
+            listener = Listener(engine=my_engine)
             process = listener.start()
 
         The recommended way for stopping the process is to change the
         parameter ``general.switch`` in the context. For example::
 
-            bot.context.set('general.switch', 'off')
+            engine.set('general.switch', 'off')
 
-        Alternatively, the loop is also broken when an exception is pushed
+        Alternatively, the loop is also broken when a poison pill is pushed
         to the queue. For example::
 
-            bot.ears.put(Exception('EOQ'))
+            engine.ears.put(None)
 
         """
         logging.info(u"Starting listener")
 
         try:
-            self.bot.context.set('listener.counter', 0)
-            while self.bot.context.get('general.switch', 'on') == 'on':
+            self.engine.set('listener.counter', 0)
+            while self.engine.get('general.switch', 'on') == 'on':
 
-                if self.bot.ears.empty():
+                if self.engine.ears.empty():
                     time.sleep(self.EMPTY_DELAY)
                     continue
 
                 try:
-                    item = self.bot.ears.get(True, self.EMPTY_DELAY)
-                    if isinstance(item, Exception):
+                    item = self.engine.ears.get_nowait()
+                    if item is None:
                         break
 
                     self.process(item)
@@ -145,16 +145,18 @@ class Listener(object):
         * ``attachment`` -- A file has been attached to the chat space. The
           ``on_attachment()`` function is invoked.
 
-        * ``join`` -- This is when a person join a space. The function
-          ``on_join()`` is called, providing details on the person who joined
+        * ``join`` -- This is when a person or the bot joins a space.
+          The function ``on_join()`` is called, providing details on the
+          person or the bot who joined
 
-        * ``leave`` -- This is when a person leaves a space. The function
-          ``on_leave()`` is called with details on the leaving person.
+        * ``leave`` -- This is when a person or the bot leaves a space.
+          The function ``on_leave()`` is called with details on the
+          leaving person or bot.
 
-        * on any other case, the function ``on_event()`` is
+        * on any other case, the function ``on_inbound()`` is
           called.
         """
-        counter = self.bot.context.increment('listener.counter')
+        counter = self.engine.context.increment('listener.counter')
         logging.debug(u'Listener is working on {}'.format(counter))
 
         try:
@@ -200,7 +202,7 @@ class Listener(object):
 
         except AssertionError as feedback:
             logging.debug(u"- invalid format, thrown away")
-            raise ValueError(feedback)
+            raise
 
         except Exception as feedback:
             logging.debug(u"- invalid format, thrown away")
@@ -214,7 +216,7 @@ class Listener(object):
         :type received: Message
 
         Received information is dispatched to subscribers of the event
-        ``message`` at the bot level.
+        ``message`` at the engine level.
 
         When a message is directed to the bot it is submitted directly to the
         shell. This is handled as a command, that can be executed immediately,
@@ -228,18 +230,18 @@ class Listener(object):
 
         * Check the ``bot.fan`` queue frequently
 
-        * On each check, update the string ``fan.stamp`` in the context with
-          the value of ``time.time()``. This will signal that you are around.
+        * On each check, update the string ``fan.<space_id>`` in the context
+          with the value of ``time.time()``. This will say that you are around.
 
-        The value of ``fan.stamp`` is checked on every message that is not
+        The value of ``fan.<space_id>`` is checked on every message that is not
         for the bot itself. If this is fresh enough, then data is put to the
         ``bot.fan`` queue. Else message is just thrown away.
         """
         assert received.type == 'message'  # sanity check
 
-        self.bot.dispatch('message', received=received)
+        self.engine.dispatch('message', received=received)
 
-        if received.from_id == self.bot.context.get('bot.id'):
+        if received.from_id == self.engine.get('bot.id'):
             logging.debug(u"- sent by me, thrown away")
             return
 
@@ -252,23 +254,30 @@ class Listener(object):
         if len(input) > 0 and input[0] in ['@', '/', '!']:
             input = input[1:]
 
-        bot = self.bot.context.get('bot.name', 'shelly')
-        if input.startswith(bot):
-            input = input[len(bot):].strip()
+        label = 'fan.' + received.space_id
+        logging.debug(u"- sensing fan listener on '{}'".format(label))
 
-        elif self.bot.context.get('bot.id') in received.mentioned_ids:
-            pass # send to the shell
+        elapsed = time.time() - self.engine.get(label, 0)
+        if elapsed < self.FRESH_DURATION:
+            logging.debug(u"- putting input to fan queue")
+            bot = self.engine.get_bot(received.space_id)
+            bot.fan.put(input)  # forward downstream
+            return
 
-        else: # not explicitly intended for the bot
+        name = self.engine.get('bot.name', 'shelly')
+        if input.startswith(name):
+            logging.debug(u"- bot name in command")
+            input = input[len(name):].strip()
 
-            elapsed = time.time() - self.bot.context.get('fan.stamp', 0)
-            if elapsed < self.FRESH_DURATION:
-                self.bot.fan.put(input)  # forward downstream
+        elif self.engine.get('bot.id') in received.mentioned_ids:
+            logging.debug(u"- bot mentioned in command")
 
+        else:
             logging.info(u"- not for me, thrown away")
             return
 
-        self.bot.shell.do(input)
+        logging.debug(u"- submitting command to the shell")
+        self.engine.shell.do(input, space_id=received.space_id)
 
     def on_attachment(self, received):
         """
@@ -278,42 +287,62 @@ class Listener(object):
         :type received: Attachment
 
         Received information is dispatched to subscribers of the event
-        ``attachment`` at the bot level.
+        ``attachment`` at the engine level.
 
         """
         assert received.type == 'attachment'
 
-        self.bot.dispatch('attachment', received=received)
+        self.engine.dispatch('attachment', received=received)
 
     def on_join(self, received):
         """
-        A person has joined a space
+        A person, or the bot, has joined a space
 
         :param received: the event received
         :type received: Join
 
         Received information is dispatched to subscribers of the event
-        ``join`` at the bot level.
+        ``join`` at the engine level.
+
+        In the special case where the bot itself is joining a room by
+        invitation, then the event ``enter`` is dispatched instead.
 
         """
         assert received.type == 'join'
 
-        self.bot.dispatch('join', received=received)
+        if received.actor_id == self.engine.get('bot.id'):
+            if received.get('hook') != 'shellbot-participants':
+                self.engine.on_enter(received)
+                self.engine.dispatch('enter', received=received)
+                bot = self.engine.get_bot(received.space_id)
+                bot.say(self.engine.get('bot.enter'))
+        else:
+            if received.get('hook') != 'shellbot-rooms':
+                self.engine.dispatch('join', received=received)
 
     def on_leave(self, received):
         """
-        A person has leaved a space
+        A person, or the bot, has left a space
 
         :param received: the event received
         :type received: Leave
 
         Received information is dispatched to subscribers of the event
-        ``leave`` at the bot level.
+        ``leave`` at the engine level.
+
+        In the special case where the bot itself has been kicked off
+        from a room, then the event ``exit`` is dispatched instead.
 
         """
         assert received.type == 'leave'
 
-        self.bot.dispatch('leave', received=received)
+        if received.actor_id == self.engine.get('bot.id'):
+            if received.get('hook') != 'shellbot-participants':
+                self.engine.on_exit(received)
+                self.engine.dispatch('exit', received=received)
+        else:
+            if received.get('hook') != 'shellbot-rooms':
+                self.engine.dispatch('leave', received=received)
 
     def on_inbound(self, received):
         """
@@ -323,10 +352,10 @@ class Listener(object):
         :type received: Event or derivative
 
         Received information is dispatched to subscribers of the event
-        ``inbound`` at the bot level.
+        ``inbound`` at the engine level.
 
         """
         assert received.type not in ('message', 'attachment', 'join', 'leave')
 
-        self.bot.dispatch('inbound', received=received)
+        self.engine.dispatch('inbound', received=received)
 

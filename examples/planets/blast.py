@@ -15,12 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-import time
+from shellbot import Command
 
-from .mission import Mission
 
-class Blast(Mission):
+class Blast(Command):
     """
     Blasts a planet and comes back
 
@@ -33,19 +31,13 @@ class Blast(Mission):
     information_message = u'Blast a planet and come back'
     usage_message = u'blast <destination>'
 
-    action_begin_template = u"Blasting {}, nobody will survive"
-    action_end_template = u"{} has been entirely blasted"
-    action_end_file = "http://blogs.discovermagazine.com/badastronomy/files/2012/07/nuke_castleromeo.jpg"
+    def execute(self, bot, arguments=None):
+        """
+        Flights to a planet and comes back
+        """
 
-    def on_target_action(self):
-        self.bot.say(u"#{} - ".format(self.counter)
-                     + self.action_begin_template.format(self.target))
-        time.sleep(1)
+        if arguments in (None, ''):
+            bot.say(u"usage: {}".format(self.usage_message))
+            return
 
-        items = self.bot.context.get('planets.items', [])
-        items.remove(self.target)
-        self.bot.context.set('planets.items', items)
-
-        self.bot.say(u"#{} - ".format(self.counter)
-                     + self.action_end_template.format(self.target),
-                     file=self.action_end_file)
+        bot.rocket.go('blast', arguments)

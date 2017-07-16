@@ -140,7 +140,7 @@ class Event(object):
                ...
 
         """
-        value = self.attributes.get(key) # do not use default here!
+        value = self.attributes.get(key)  # do not use default here!
         if value is None:
             value = default
         return value

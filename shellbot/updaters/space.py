@@ -20,7 +20,7 @@ from multiprocessing import Queue
 import os
 
 from shellbot.context import Context
-from shellbot.speaker import Speaker
+from shellbot.speaker import Speaker, Vibes
 from .base import Updater
 from shellbot.spaces import SparkSpace
 
@@ -45,7 +45,7 @@ class SpaceUpdater(Updater):
 
         # create a secondary room
         #
-        self.space = space if space else SparkSpace(bot=self)
+        self.space = space if space else SparkSpace(context=self.engine.context)
 
         self.space.connect()
 
@@ -59,8 +59,8 @@ class SpaceUpdater(Updater):
         self.context = Context()
         self.mouth = Queue()
 
-        self.speaker = speaker if speaker else Speaker(bot=self)
-        self.speaker.run()
+        self.speaker = speaker if speaker else Speaker(engine=self.engine)
+        self.speaker.start()
 
     def put(self, event):
         """
@@ -79,8 +79,8 @@ class SpaceUpdater(Updater):
             file = self.space.download_attachment(event.url)
             message = u"{}: {}".format(event.from_label, os.path.basename(file))
 
-            self.mouth.put(WithAttachment(text=message,
-                                          file=file))
+            self.mouth.put(Vibes(text=message,
+                                 file=file))
 
         else:
             self.mouth.put(self.format(event))
@@ -105,9 +105,9 @@ class SpaceUpdater(Updater):
             if event.content == event.text:
                 return u"{}: {}".format(event.from_label, event.text)
 
-            return WithAttachment(text=u"{}: {}".format(event.from_label, event.text),
-                                  content=u"{}: {}".format(event.from_label, event.content),
-                                  file=None)
+            return Vibes(text=u"{}: {}".format(event.from_label, event.text),
+                         content=u"{}: {}".format(event.from_label, event.content),
+                         file=None)
 
         if event.type == 'attachment':
             return u"{} has been shared".format(event.url)
@@ -119,11 +119,3 @@ class SpaceUpdater(Updater):
             return u"{} has left".format(event.actor_label)
 
         return u"an unknown event has been received"
-
-
-class WithAttachment(object):
-    def __init__(self, text, content=None, file=None):
-        self.text = text
-        self.content = content if content else text
-        self.file = file
-

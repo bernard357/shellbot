@@ -33,7 +33,7 @@ class Store(object):
 
     Example::
 
-        store = Store(bot=bot)
+        store = Store(context=my_context)
 
     Normally a store is related to one single space. For this, you can use the
     function ``bond()`` to set the space unique id.
@@ -52,7 +52,7 @@ class Store(object):
 
     """
 
-    def __init__(self, bot=None, **kwargs):
+    def __init__(self, context=None, **kwargs):
         """
         Stores data for one space
 
@@ -60,7 +60,7 @@ class Store(object):
         :type bot: ShellBot
 
         """
-        self.bot = bot
+        self.context = context
 
         self.lock = Lock()
 
@@ -95,7 +95,7 @@ class Store(object):
         Example::
 
             def check(self):
-                self.bot.context.check(self.prefix+'.db', 'store.db')
+                self.context.check(self.prefix+'.db', 'store.db')
 
         """
         pass
@@ -172,11 +172,8 @@ class Store(object):
         This function is safe on multiprocessing and multithreading.
 
         """
-        self.lock.acquire()
-        try:
+        with self.lock:
             self._set(key, self.to_text(value))
-        finally:
-            self.lock.release()
 
     def _set(self, key, value):
         """
@@ -225,15 +222,12 @@ class Store(object):
         This function is safe on multiprocessing and multithreading.
 
         """
-        self.lock.acquire()
-        value = None
-        try:
+        with self.lock:
             value = self.from_text(self._get(key))
 
             if value is None:  # when value remembered was None
                 value = default
-        finally:
-            self.lock.release()
+
             return value
 
     def _get(self, key):
@@ -281,11 +275,8 @@ class Store(object):
         This function is safe on multiprocessing and multithreading.
 
         """
-        self.lock.acquire()
-        try:
+        with self.lock:
             self._clear(key)
-        finally:
-            self.lock.release()
 
     def _clear(self, key=None):
         """
@@ -333,16 +324,12 @@ class Store(object):
             value = store.increment('gauge')
 
         """
-        self.lock.acquire()
-        value = 0
-        try:
+        with self.lock:
             value = self.from_text(self._get(key))
             if not isinstance(value, int):
                 value = 0
             value += delta
             self._set(key, self.to_text(value))
-        finally:
-            self.lock.release()
             return value
 
     def decrement(self, key, delta=1):
@@ -362,15 +349,12 @@ class Store(object):
             value = store.decrement('gauge')
 
         """
-        self.lock.acquire()
-        try:
+        with self.lock:
             value = self.from_text(self._get(key))
             if not isinstance(value, int):
                 value = 0
             value -= delta
             self._set(key, self.to_text(value))
-        finally:
-            self.lock.release()
             return value
 
     def append(self, key, item):
@@ -391,15 +375,12 @@ class Store(object):
             ['Alice', 'Bob']
 
         """
-        self.lock.acquire()
-        try:
+        with self.lock:
             value = self.from_text(self._get(key))
             if not isinstance(value, list):
                 value = []
             value.append(item)
             self._set(key, self.to_text(value))
-        finally:
-            self.lock.release()
 
     def update(self, key, label, item):
         """
@@ -423,12 +404,9 @@ class Store(object):
         """
         assert label not in (None, '')
 
-        self.lock.acquire()
-        try:
+        with self.lock:
             value = self.from_text(self._get(key))
             if not isinstance(value, dict):
                 value = {}
             value[label] = item
             self._set(key, self.to_text(value))
-        finally:
-            self.lock.release()

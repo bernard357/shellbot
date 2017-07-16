@@ -11,11 +11,11 @@ import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import Context, ShellBot
+from shellbot import Context
 from shellbot.stores import Store
 
 
-my_bot = ShellBot()
+my_context = Context()
 
 
 class MyStore(Store):
@@ -38,16 +38,19 @@ class MyStore(Store):
 
 class StoreTests(unittest.TestCase):
 
+    def tearDown(self):
+        my_context.clear()
+
     def test_init(self):
 
         logging.info('***** init')
 
         store = Store()
-        self.assertEqual(store.bot, None)
+        self.assertEqual(store.context, None)
         self.assertTrue(store.lock is not None)
 
-        store = Store(bot=my_bot)
-        self.assertEqual(store.bot, my_bot)
+        store = Store(context=my_context)
+        self.assertEqual(store.context, my_context)
 
     def test_on_init(self):
 
@@ -67,14 +70,14 @@ class StoreTests(unittest.TestCase):
 
         logging.info('***** check')
 
-        store = Store(bot=my_bot)
+        store = Store(context=my_context)
         store.check()
 
     def test_bond(self):
 
         logging.info('***** bond')
 
-        store = Store(bot=my_bot)
+        store = Store(context=my_context)
         store.bond()
 
         store.bond(id='*123')

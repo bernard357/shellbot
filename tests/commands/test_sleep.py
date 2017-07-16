@@ -10,12 +10,22 @@ import sys
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot, Shell
+from shellbot import Context, Engine, Shell, Vibes
 from shellbot.commands import Sleep
 
+my_engine = Engine(mouth=Queue())
+my_engine.shell = Shell(engine=my_engine)
 
-my_bot = ShellBot(mouth=Queue())
-my_bot.shell = Shell(bot=my_bot)
+
+class Bot(object):
+    def __init__(self, engine):
+        self.engine = engine
+
+    def say(self, text, content=None, file=None):
+        self.engine.mouth.put(Vibes(text, content, file))
+
+
+my_bot = Bot(engine=my_engine)
 
 
 class SleepTests(unittest.TestCase):
@@ -24,28 +34,27 @@ class SleepTests(unittest.TestCase):
 
         logging.info('***** init')
 
-        c = Sleep(my_bot)
+        c = Sleep(my_engine)
 
         self.assertEqual(c.keyword, u'sleep')
         self.assertEqual(c.information_message, u'Sleep for a while')
         self.assertEqual(c.usage_message, u'sleep <n>')
-        self.assertFalse(c.is_interactive)
         self.assertTrue(c.is_hidden)
 
     def test_execute(self):
 
         logging.info('***** execute')
 
-        c = Sleep(my_bot)
+        c = Sleep(my_engine)
 
         c.DEFAULT_DELAY = 0.001
-        c.execute(u'')
+        c.execute(my_bot, u'')
         with self.assertRaises(Exception):
-            my_bot.mouth.get_nowait()
+            my_engine.mouth.get_nowait()
 
-        c.execute(u'0.001')
+        c.execute(my_bot, u'0.001')
         with self.assertRaises(Exception):
-            my_bot.mouth.get_nowait()
+            my_engine.mouth.get_nowait()
 
 
 if __name__ == '__main__':

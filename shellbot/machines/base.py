@@ -30,12 +30,12 @@ class Machine(object):
 
     1. A machine instance is created and configured::
 
-           >>>bot = ShellBot(...)
-           >>>machine = Machine(bot=bot)
+           >>>a_bot = ShellBot(...)
+           >>>machine = Machine(bot=a_bot)
 
            >>>machine.set(states=states, transitions=transitions, ...
 
-    2. The machine is switched on::
+    2. The machine is switched on and ticked at regular intervals::
 
            >>>machine.start()
 
@@ -46,16 +46,16 @@ class Machine(object):
     4. When a machine is expecting data from the chat space, it listens
        from the ``fan`` queue used by the shell::
 
-           >>>bot.fan.put('special command')
+           >>>engine.fan.put('special command')
 
-    4. When the machine is coming end of life, resources can be disposed::
+    5. When the machine is coming end of life, resources can be disposed::
 
            >>>machine.stop()
 
     credit: Alex Bertsch <abertsch@dropbox.com>   securitybot/state_machine.py
     """
 
-    TICK_DURATION = 0.2  # time to wait between ticks
+    TICK_DURATION = 0.2  # time to wait between ticks, in seconds
 
     def __init__(self,
                  bot=None,
@@ -69,8 +69,8 @@ class Machine(object):
         """
         Implements a state machine
 
-        :param bot: the overarching bot
-        :type bot: ShellBot
+        :param bot: the bot linked to this machine
+        :type : ShellBot
 
         :param states: All states supported by this machine
         :type states: list of str
@@ -124,15 +124,12 @@ class Machine(object):
 
         self.on_init(**kwargs)
 
-        if states is not None:
+        if states:
             self.build(states, transitions, initial, during, on_enter, on_exit)
 
-    def on_init(self, prefix='machine', **kwargs):
+    def on_init(self, **kwargs):
         """
-        Handles extended initialisation parameters
-
-        :param prefix: the main keyword for configuration of this machine
-        :type prefix: str
+        Adds to machine initialisation
 
         This function should be expanded in sub-class, where necessary.
 
@@ -142,12 +139,20 @@ class Machine(object):
                 ...
 
         """
-        assert prefix not in (None, '')
-        self.prefix = prefix
+        pass
 
     def get(self, key, default=None):
         """
         Retrieves the value of one key
+
+        :param key: one attribute of this state machine instance
+        :type key: str
+
+        :param default: default value is the attribute has not been set yet
+        :type default: an type that can be serialized
+
+        This function can be used across multiple processes, so that
+        a consistent view of the state machine is provided.
         """
 
         with self.lock:
@@ -162,10 +167,18 @@ class Machine(object):
     def set(self, key, value):
         """
         Remembers the value of one key
+
+        :param key: one attribute of this state machine instance
+        :type key: str
+
+        :param value: new value of the attribute
+        :type value: an type that can be serialized
+
+        This function can be used across multiple processes, so that
+        a consistent view of the state machine is provided.
         """
 
         with self.lock:
-
             self.mutables[key] = value
 
     def build(self,
@@ -267,6 +280,8 @@ class Machine(object):
         :type name: str
 
         :return: State
+
+        This function raises KeyError if an unknown name is provided.
         """
         return self._states[name]
 
@@ -290,33 +305,118 @@ class Machine(object):
         """
         Resets a state machine before it is restarted
 
-        This function move back to the initial state, if the machine is not
-        running.
+        :return: True if the machine has been actually reset, else False
 
-        Example::
+        This function moves a state machine back to its initial state.
+        A typical use case is when you have to recycle a state machine
+        multiple times, like in the following example::
 
             if new_cycle():
                 machine.reset()
                 machine.start()
 
+        If the machine is running, calling ``reset()`` will have no effect
+        and you will get False in return. Therefore, if you have to force
+        a reset, you may have to stop the machine first.
+
+        Example of forced reset::
+
+            machine.stop()
+            machine.reset()
+
         """
         if self.is_running:
             logging.warning(u"Cannot reset a running state machine")
-        else:
-            self.set('state', self.get('initial_state'))
-            logging.warning(u"Resetting machine to '{}'".format(self.current_state.name))
+            return False
 
-            while not self.mixer.empty():
-                self.mixer.get()
+        # purge the mixer queue
+        while not self.mixer.empty():
+            self.mixer.get()
 
-            self.on_reset()
+        # restore initial state
+        self.set('state', self.get('initial_state'))
+        logging.warning(u"Resetting machine to '{}'".format(
+            self.current_state.name))
+
+        # do the rest
+        self.on_reset()
+
+        return True
 
     def on_reset(self):
+        """
+        Adds processing to machine reset
+
+        This function should be expanded in sub-class, where necessary.
+
+        Example::
+
+            def on_reset(self):
+                self.sub_machine.reset()
+
+        """
         pass
 
     def step(self, **kwargs):
         """
         Brings some life to the state machine
+
+        Thanks to ``**kwargs``, it is easy to transmit parameters
+        to underlying functions:
+        - ``current_state.during(**kwargs)``
+        - ``transition.condition(**kwargs)``
+
+        Since parameters can vary on complex state machines, you are advised
+        to pay specific attention to the signatures of related functions.
+        If you expect some parameter in a function, use ``kwargs.get()``to
+        get its value safely.
+
+        For example, to inject the value of a gauge in the state machine
+        on each tick::
+
+            def remember(**kwargs):
+                gauge = kwargs.get('gauge')
+                if gauge:
+                    db.save(gauge)
+
+            during = { 'measuring', remember }
+
+            ...
+
+            machine.build(during=during, ... )
+
+            while machine.is_running:
+                machine.step(gauge=get_measurement())
+
+        Or, if you have to transition on a specific threshold for a gauge,
+        you could do::
+
+            def if_threshold(**kwargs):
+                gauge = kwargs.get('gauge')
+                if gauge > 20:
+                    return True
+                return False
+
+            def raise_alarm():
+                mail.post_message()
+
+            transitions = [
+
+                {'source': 'normal',
+                 'target': 'alarm',
+                 'condition': if_threshold,
+                 'action': raise_alarm},
+
+                 ...
+
+                ]
+
+            ...
+
+            machine.build(transitions=transitions, ... )
+
+            while machine.is_running:
+                machine.step(gauge=get_measurement())
 
         This machine should report on progress by sending
         messages with one or multiple ``self.bot.say("Whatever message")``.
@@ -337,7 +437,7 @@ class Machine(object):
         """
         Starts the machine
 
-        :param tick: The duration set for each tick
+        :param tick: The duration set for each tick (optional)
         :type tick: float
 
         :return: either the process that has been started, or None
@@ -346,26 +446,34 @@ class Machine(object):
         in the background.
         """
         if tick:
+            assert tick > 0.0
             self.TICK_DURATION = tick
 
-        p = Process(target=self.tick)
-#        p.daemon = True
-        p.start()
-        return p
+        process = Process(target=self.run)  # do not daemonize
+        process.start()
+
+        while not self.is_running:  # prevent race condition on stop()
+            time.sleep(0.001)
+
+        return process
 
     def stop(self):
         """
         Stops the machine
-        """
-        if self.mixer is not None:
-            self.mixer.put(None)
 
-    def tick(self):
+        This function sends a poison pill to the queue that is read
+        on each tick.
+        """
+        if self.is_running:
+            self.mixer.put(None)
+            time.sleep(self.TICK_DURATION+0.05)
+
+    def run(self):
         """
         Continuously ticks the machine
 
-        This function is looping in the background, and calls the function
-        ``step()`` at regular intervals.
+        This function is looping in the background, and calls
+        ``step(event='tick')`` at regular intervals.
 
         The recommended way for stopping the process is to call the function
         ``stop()``. For example::
@@ -375,15 +483,14 @@ class Machine(object):
         The loop is also stopped when the parameter ``general.switch``
         is changed in the context. For example::
 
-            bot.context.set('general.switch', 'off')
+            engine.set('general.switch', 'off')
 
         """
         logging.info(u"Starting machine")
-        logging.debug(u"- general.switch={}".format(self.bot.context.get('general.switch', 'on')))
         self.set('is_running', True)
 
         try:
-            while self.bot.context.get('general.switch', 'on') == 'on':
+            while self.bot.engine.get('general.switch', 'on') == 'on':
 
                 try:
                     if self.mixer.empty():
@@ -414,6 +521,9 @@ class Machine(object):
         """
         Processes data received from the chat
 
+        :param arguments: input to be injected into the state machine
+        :type arguments: str is recommended
+
         This function can be used to feed the machine asynchronously
         """
         self.step(event='input', arguments=arguments)
@@ -430,7 +540,7 @@ class Machine(object):
 
 class State(object):
     """
-    Represents a state in the machine
+    Represents a state of the machine
 
     Each state has a function to perform while it's active, when it's entered
     into, and when it's exited. These functions may be None.
@@ -498,7 +608,7 @@ class State(object):
 
     def on_exit(self):
         """
-        Does some stuf while transitioning out of this state
+        Does some stuff while transitioning out of this state
         """
         if self._on_exit is not None:
             self._on_exit()

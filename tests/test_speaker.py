@@ -13,10 +13,26 @@ import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import Context, ShellBot, Speaker, SpaceFactory
+from shellbot import Context, Engine, Speaker, SpaceFactory, Vibes
 
-my_mouth = Queue()
-my_bot = ShellBot(mouth=my_mouth)
+class MyEngine(Engine):
+    def get_bot(self, id):
+        logging.debug("injecting test bot")
+        return my_bot
+
+
+my_engine = MyEngine(mouth=Queue())
+
+
+class Bot(object):
+    def __init__(self, engine):
+        self.engine = engine
+
+    def say(self, text, content=None, file=None, space_id=None):
+        self.engine.mouth.put(Vibes(text, content, file, space_id))
+
+
+my_bot = Bot(engine=my_engine)
 
 
 class SpeakerTests(unittest.TestCase):
@@ -29,36 +45,36 @@ class SpeakerTests(unittest.TestCase):
 
         logging.info('*** Static test ***')
 
-        bot = my_bot
-        speaker = Speaker(bot=bot)
+        speaker = Speaker(engine=my_engine)
 
         speaker_process = speaker.start()
 
         speaker_process.join(0.1)
         if speaker_process.is_alive():
             logging.info('Stopping speaker')
-            bot.context.set('general.switch', 'off')
+            my_engine.set('general.switch', 'off')
             speaker_process.join()
 
+        logging.debug("here")
+
         self.assertFalse(speaker_process.is_alive())
-        self.assertEqual(bot.context.get('speaker.counter', 0), 0)
+        self.assertEqual(my_engine.get('speaker.counter', 0), 0)
 
     def test_dynamic(self):
 
         logging.info('*** Dynamic test ***')
 
-        bot = my_bot
-        bot.space = SpaceFactory.get('local', bot=bot)
-        bot.set('local.id', '123')
+        my_engine.space = SpaceFactory.get('local', engine=my_engine)
+        my_engine.space.values['id'] = '123'
 
         items = ['hello', 'world']
         for item in items:
-            bot.mouth.put(item)
-        bot.mouth.put(Exception('EOQ'))
+            my_engine.mouth.put(item)
+        my_engine.mouth.put(None)
 
-        speaker = Speaker(bot=bot)
+        speaker = Speaker(engine=my_engine)
 
-        with mock.patch.object(bot.space,
+        with mock.patch.object(my_engine.space,
                                'post_message',
                                return_value=None) as mocked:
 
@@ -67,150 +83,142 @@ class SpeakerTests(unittest.TestCase):
             mocked.assert_called_with('world')
 
             with self.assertRaises(Exception):
-                mouth.get_nowait()
+                engine.mouth.get_nowait()
 
     def test_start(self):
 
         logging.info("*** start")
 
-        bot = my_bot
-        bot.space = SpaceFactory.get('local', bot=bot)
-        bot.space.set('id', '123')
-        bot.mouth.put('ping')
+        my_engine.space = SpaceFactory.get('local', engine=my_engine)
+        my_engine.space.values['id'] = '123'
+        my_engine.mouth.put('ping')
 
         def my_post(item):
             logging.info("- speaking")
-            bot.context.set('speaker.last', item)
+            my_engine.set('speaker.last', item)
 
-        bot.space.post_message = my_post
-        bot.context.set('general.switch', 'on')
-        bot.context.set('speaker.counter', 0) # do not wait for run()
+        my_engine.space.post_message = my_post
+        my_engine.set('general.switch', 'on')
+        my_engine.set('speaker.counter', 0) # do not wait for run()
 
-        speaker = Speaker(bot=bot)
+        speaker = Speaker(engine=my_engine)
         speaker_process = speaker.start()
         while True:
-            counter = bot.context.get('speaker.counter', 0)
+            counter = my_engine.get('speaker.counter', 0)
             if counter > 0:
                 logging.info("- speaker.counter > 0")
                 break
-        bot.context.set('general.switch', 'off')
+        my_engine.set('general.switch', 'off')
         speaker_process.join()
 
-        self.assertTrue(bot.context.get('speaker.counter') > 0)
-        self.assertEqual(bot.context.get('speaker.last'), 'ping')
+        self.assertTrue(my_engine.get('speaker.counter') > 0)
+        self.assertEqual(my_engine.get('speaker.last'), 'ping')
 
     def test_run(self):
 
         logging.info("*** run")
 
-        bot = my_bot
-        bot.space = SpaceFactory.get('local', bot=bot)
-        bot.space.set('id', '123')
+        my_engine.space = SpaceFactory.get('local', engine=my_engine)
+        my_engine.space.values['id'] = '123'
 
-        bot.speaker.process = mock.Mock(side_effect=Exception('TEST'))
-        bot.mouth.put(('dummy'))
-        bot.mouth.put(Exception('EOQ'))
-        bot.speaker.run()
-        self.assertEqual(bot.context.get('speaker.counter'), 0)
+        my_engine.speaker.process = mock.Mock(side_effect=Exception('TEST'))
+        my_engine.mouth.put(('dummy'))
+        my_engine.mouth.put(None)
+        my_engine.speaker.run()
+        self.assertEqual(my_engine.get('speaker.counter'), 0)
 
-        bot.speaker = Speaker(bot=bot)
-        bot.speaker.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
-        bot.mouth.put(('dummy'))
-        bot.speaker.run()
-        self.assertEqual(bot.context.get('speaker.counter'), 0)
+        my_engine.speaker = Speaker(engine=my_engine)
+        my_engine.speaker.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
+        my_engine.mouth.put(('dummy'))
+        my_engine.speaker.run()
+        self.assertEqual(my_engine.get('speaker.counter'), 0)
 
     def test_run_wait(self):
 
         logging.info("*** run/wait while empty and not ready")
 
-        bot = my_bot
-        bot.space = SpaceFactory.get('local', bot=bot)
+        my_engine.space = SpaceFactory.get('local', engine=my_engine)
 
-        bot.speaker.NOT_READY_DELAY = 0.01
-        bot.context.set('general.switch', 'on')
-        speaker_process = bot.speaker.start()
+        my_engine.speaker.NOT_READY_DELAY = 0.01
+        my_engine.set('general.switch', 'on')
+        speaker_process = my_engine.speaker.start()
 
-        t = Timer(0.1, bot.mouth.put, ['ping'])
+        t = Timer(0.1, my_engine.mouth.put, ['ping'])
         t.start()
 
-        def set_ready(bot, *args, **kwargs):
-            bot.set('space.id', '123')
+        def set_ready(space, *args, **kwargs):
+            space.values['id'] = '123'
 
-        t = Timer(0.15, set_ready, [bot])
+        t = Timer(0.15, set_ready, [my_engine.space])
         t.start()
 
         time.sleep(0.2)
-        bot.context.set('general.switch', 'off')
+        my_engine.set('general.switch', 'off')
         speaker_process.join()
 
     def test_process(self):
 
         logging.info('*** process ***')
 
-        bot = ShellBot()
-        speaker = Speaker(bot=bot)
+        speaker = Speaker(engine=my_engine)
 
         speaker.process('hello world')  # sent to stdout
 
-        bot = my_bot
-        bot.space = SpaceFactory.get('local', bot=bot)
-        bot.set('space.id', '123')
+        my_engine.space = SpaceFactory.get('local', engine=my_engine)
+        my_engine.space.values['id'] = '123'
 
-        speaker = Speaker(bot=bot)
+        speaker = Speaker(engine=my_engine)
 
-        with mock.patch.object(bot.space,
+        with mock.patch.object(my_engine.space,
                                'post_message',
                                return_value=None) as mocked:
 
             speaker.process('hello world')
             mocked.assert_called_with('hello world')
 
-            class WithContent(object):
-                text = ''
-                content = 'me **too**'
-                file = None
-
-            item = WithContent()
+            item = Vibes(
+                text='',
+                content='me **too**',
+                file=None,
+                space_id='123')
             speaker.process(item)
             mocked.assert_called_with('',
                                       content='me **too**',
-                                      file=None)
+                                      file=None,
+                                      space_id='123')
 
-            class WithFile(object):
-                text = '*with*attachment'
-                content = None
-                file = 'http://a.server/with/file'
-
-            item = WithFile()
+            item = Vibes(
+                text='*with*attachment',
+                content=None,
+                file='http://a.server/with/file',
+                space_id='456')
             speaker.process(item)
             mocked.assert_called_with('*with*attachment',
                                       content=None,
-                                      file='http://a.server/with/file')
+                                      file='http://a.server/with/file',
+                                      space_id='456')
 
-            class WithAll(object):
-                text = 'hello world'
-                content = 'hello **world**'
-                file = 'http://a.server/with/file'
-
-            item = WithAll()
+            item = Vibes(
+                text='hello world',
+                content='hello **world**',
+                file='http://a.server/with/file',
+                space_id='789')
             speaker.process(item)
             mocked.assert_called_with('hello world',
                                       content='hello **world**',
-                                      file='http://a.server/with/file')
+                                      file='http://a.server/with/file',
+                                      space_id='789')
 
-            class WithAllAndInit(object):
-                def __init__(self, text, content, file):
-                    self.text = text
-                    self.content = content
-                    self.file = file
-
-            item = WithAllAndInit(text = 'hello world',
-                                  content = 'hello **world**',
-                                  file = 'http://a.server/with/file')
+            item = Vibes(
+                text='hello world',
+                content='hello **world**',
+                file='http://a.server/with/file',
+                space_id='007')
             speaker.process(item)
             mocked.assert_called_with('hello world',
                                       content='hello **world**',
-                                      file='http://a.server/with/file')
+                                      file='http://a.server/with/file',
+                                      space_id='007')
 
 
 if __name__ == '__main__':

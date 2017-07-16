@@ -13,24 +13,34 @@ import time
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot
+from shellbot import Context, Engine, ShellBot
 from shellbot.machines.steps import Step, Steps
+from shellbot.stores import MemoryStore
 
-my_bot = ShellBot()
+my_engine = Engine()
+my_store = MemoryStore()
+my_bot = ShellBot(engine=my_engine, store=my_store)
 
 
-class FakeMachine(object):
+class FakeMachine(object):  # do not change is_running during life cycle
 
     def __init__(self, running=False):
         self.running = running
         self._reset = False
         self.started = False
+        self.stopped = False
 
     def reset(self):
         self._reset = True
+        if self.running:
+            return False
+        return True
 
     def start(self):
         self.started = True
+
+    def stop(self):
+        self.stopped = True
 
     @property
     def is_running(self):
@@ -151,7 +161,6 @@ class StepsTests(unittest.TestCase):
 
         machine = Steps(bot=my_bot)
         self.assertEqual(machine.bot, my_bot)
-        self.assertEqual(machine.prefix, "steps")
         self.assertEqual(len(machine.steps), 0)
 
         machine = Steps(bot=my_bot,
@@ -430,62 +439,77 @@ class StepsTests(unittest.TestCase):
             self.assertEqual(machine.current_step, None)
             self.assertEqual(machine.mutables['state'], 'begin')
 
+            logging.debug("Step")
             machine.step()
             self.assertEqual(machine.mutables['state'], 'running')
             self.assertEqual(machine.current_step, my_steps[0])
 
+            logging.debug("Step(tick)")
             machine.step(event='tick')
             self.assertEqual(machine.mutables['state'], 'completed')
             self.assertEqual(machine.current_step, my_steps[0])
 
+            logging.debug("Step(tick)")
             machine.step(event='tick')
             self.assertEqual(machine.mutables['state'], 'completed')
             self.assertEqual(machine.current_step, my_steps[0])
 
+            logging.debug("Step(next)")
             machine.step(event='next')
             self.assertEqual(machine.mutables['state'], 'running')
             self.assertEqual(machine.current_step, my_steps[1])
 
+            logging.debug("Step(tick)")
             machine.step(event='tick')
             self.assertEqual(machine.mutables['state'], 'completed')
             self.assertEqual(machine.current_step, my_steps[1])
 
+            logging.debug("Step(tick)")
             machine.step(event='tick')
             self.assertEqual(machine.mutables['state'], 'completed')
             self.assertEqual(machine.current_step, my_steps[1])
 
+            logging.debug("Step(next)")
             machine.step(event='next')
             self.assertEqual(machine.mutables['state'], 'running')
             self.assertEqual(machine.current_step, my_steps[2])
 
+            logging.debug("Step(tick)")
             machine.step(event='tick')
             self.assertEqual(machine.mutables['state'], 'completed')
             self.assertEqual(machine.current_step, my_steps[2])
 
+            logging.debug("Step(tick)")
             machine.step(event='tick')
             self.assertEqual(machine.mutables['state'], 'completed')
             self.assertEqual(machine.current_step, my_steps[2])
 
+            logging.debug("Step(next)")
             machine.step(event='next')
             self.assertEqual(machine.mutables['state'], 'running')
             self.assertEqual(machine.current_step, my_steps[3])
 
+            logging.debug("Step(tick)")
             machine.step(event='tick')
             self.assertEqual(machine.mutables['state'], 'completed')
             self.assertEqual(machine.current_step, my_steps[3])
 
+            logging.debug("Step(tick)")
             machine.step(event='tick')
             self.assertEqual(machine.mutables['state'], 'end')
             self.assertEqual(machine.current_step, my_steps[3])
 
+            logging.debug("Step(next)")
             machine.step(event='next')
             self.assertEqual(machine.mutables['state'], 'end')
             self.assertEqual(machine.current_step, my_steps[3])
 
+            logging.debug("Step(tick)")
             machine.step(event='tick')
             self.assertEqual(machine.mutables['state'], 'end')
             self.assertEqual(machine.current_step, my_steps[3])
 
+            logging.debug("Step(tick)")
             machine.step(event='tick')
             self.assertEqual(machine.mutables['state'], 'end')
             self.assertEqual(machine.current_step, my_steps[3])

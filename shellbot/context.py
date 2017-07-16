@@ -227,7 +227,7 @@ class Context(object):
 
         imported = os.environ.get(value[1:], default)
         if imported is None:
-            raise AttributeError(u"Missing {}".format(value))
+            logging.warning(u"Missing {} in environment".format(value))
         return imported
 
     def has(self, prefix):

@@ -10,12 +10,22 @@ import sys
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot, Shell
+from shellbot import Context, Engine, Shell, Vibes
 from shellbot.commands import Echo
 
+my_engine = Engine(mouth=Queue())
+my_engine.shell = Shell(engine=my_engine)
 
-my_bot = ShellBot(mouth=Queue())
-my_bot.shell = Shell(bot=my_bot)
+
+class Bot(object):
+    def __init__(self, engine):
+        self.engine = engine
+
+    def say(self, text, content=None, file=None):
+        self.engine.mouth.put(Vibes(text, content, file))
+
+
+my_bot = Bot(engine=my_engine)
 
 
 class EchoTests(unittest.TestCase):
@@ -24,24 +34,24 @@ class EchoTests(unittest.TestCase):
 
         logging.info('***** init')
 
-        c = Echo(my_bot)
+        c = Echo(my_engine)
 
         self.assertEqual(c.keyword, u'echo')
         self.assertEqual(c.information_message, u'Echo input string')
-        self.assertTrue(c.is_interactive)
         self.assertTrue(c.is_hidden)
 
     def test_execute(self):
 
         logging.info('***** execute')
 
-        c = Echo(my_bot)
+        c = Echo(my_engine)
 
         message = u"hello world"
-        c.execute(message)
-        self.assertEqual(my_bot.mouth.get().text, message)
+        c.execute(my_bot, message)
+        self.assertEqual(my_engine.mouth.get().text, message)
         with self.assertRaises(Exception):
-            my_bot.mouth.get_nowait()
+            my_engine.mouth.get_nowait()
+
 
 if __name__ == '__main__':
 

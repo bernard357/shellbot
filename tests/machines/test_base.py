@@ -13,11 +13,12 @@ import time
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot
+from shellbot import Context, Engine, ShellBot
 from shellbot.machines import Machine, State, Transition
 
 
-my_bot = ShellBot()
+my_engine = Engine()
+my_bot = ShellBot(engine=my_engine)
 
 
 class Helper(object):
@@ -51,6 +52,7 @@ class Helper(object):
 class MachineTests(unittest.TestCase):
 
     def tearDown(self):
+        my_engine.context.clear()
         collected = gc.collect()
         logging.info("Garbage collector: collected %d objects." % (collected))
 
@@ -233,7 +235,7 @@ class MachineTests(unittest.TestCase):
                       initial='one',
                       on_enter=on_enter)
 
-        my_bot.context.set('general.switch', 'on')
+        my_engine.set('general.switch', 'on')
         machine_process = machine.start(tick=0.001)
         while machine.current_state.name != 'two':
             time.sleep(0.01)
@@ -550,11 +552,11 @@ class MachineTests(unittest.TestCase):
                           transitions=transitions,
                           initial='one')
 
-        my_bot.context.set('general.switch', 'on')
+        my_engine.set('general.switch', 'on')
         machine_process = machine.start(tick=0.001)
         machine.step()
         time.sleep(0.05)
-        my_bot.context.set('general.switch', 'off')
+        my_engine.set('general.switch', 'off')
         machine_process.join()
 
         self.assertTrue(machine.current_state.name != 'one')
@@ -576,14 +578,10 @@ class MachineTests(unittest.TestCase):
                           transitions=transitions,
                           initial='one')
 
-        my_bot.context.set('general.switch', 'on')
+        my_engine.set('general.switch', 'on')
         machine_process = machine.start(tick=0.001)
-        machine.step()
-        time.sleep(0.05)
         machine.stop()
         machine_process.join()
-
-        self.assertTrue(machine.current_state.name != 'one')
 
     def test_lifecycle(self):
         """Machine stops itself on last transition"""
@@ -604,15 +602,15 @@ class MachineTests(unittest.TestCase):
                       initial='one',
                       on_enter=on_enter)
 
-        my_bot.context.set('general.switch', 'on')
+        my_engine.set('general.switch', 'on')
         machine_process = machine.start(tick=0.001)
         machine_process.join()
 
         self.assertEqual(machine.current_state.name, 'four')
 
-    def test_tick(self):
+    def test_run(self):
 
-        logging.info("***** machine/tick")
+        logging.info("***** machine/run")
 
         class MyMachine(Machine):
 
@@ -632,24 +630,24 @@ class MachineTests(unittest.TestCase):
                             transitions=transitions,
                             initial='one')
 
-        my_bot.context.set('general.switch', 'off')
-        machine.tick()  # general switch is off
+        my_engine.set('general.switch', 'off')
+        machine.run()  # general switch is off
 
-        my_bot.context.set('general.switch', 'on')
+        my_engine.set('general.switch', 'on')
 
         machine.TICK_DURATION = 0.003
         t = Timer(0.004, machine.stop)
         t.start()
-        machine.tick()  # poison pill on delay
+        machine.run()  # poison pill on delay
 
         machine.mixer.put(None)
-        machine.tick()  # exit on poison pill
+        machine.run()  # exit on poison pill
 
         machine.mixer.put('exception')
-        machine.tick()  # break on Exception
+        machine.run()  # break on Exception
 
         machine.mixer.put('ctl-c')
-        machine.tick()  # break on KeyboardInterrupt
+        machine.run()  # break on KeyboardInterrupt
 
     def test_execute(self):
 
@@ -669,6 +667,7 @@ class MachineTests(unittest.TestCase):
         machine.step = mock.Mock()
         machine.execute('ping pong')
         machine.step.assert_called_with(arguments='ping pong', event='input')
+
 
 class StateTests(unittest.TestCase):
 

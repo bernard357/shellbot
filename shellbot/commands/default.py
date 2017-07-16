@@ -31,11 +31,17 @@ class Default(Command):
 
     default_message = u"Sorry, I do not know how to handle '{}'"
 
-    def execute(self, arguments):
+    def execute(self, bot, arguments):
         """
         Handles unmatched command
+
+        :param bot: The bot for this execution
+        :type bot: Shellbot
+
+        :param arguments: The arguments for this command
+        :type arguments: str or ``None``
 
         Arguments provided should include all of the user input, including
         the first token that has not been recognised as a valid command.
         """
-        self.bot.say(self.default_message.format(arguments))
+        bot.say(self.default_message.format(arguments))

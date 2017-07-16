@@ -10,13 +10,26 @@ import sys
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot, Shell
+from shellbot import Context, Engine, Shell, Vibes
 from shellbot.stores import MemoryStore
 from shellbot.commands import Step
 
 
 my_store = MemoryStore()
-my_bot = ShellBot(mouth=Queue(), store=my_store)
+my_engine = Engine(mouth=Queue(), store=my_store)
+my_engine.shell = Shell(engine=my_engine)
+
+
+class Bot(object):
+    def __init__(self, engine):
+        self.engine = engine
+
+    def say(self, text, content=None, file=None):
+        self.engine.mouth.put(Vibes(text, content, file))
+
+
+my_bot = Bot(engine=my_engine)
+
 
 
 class StepTests(unittest.TestCase):
@@ -25,31 +38,31 @@ class StepTests(unittest.TestCase):
 
         logging.info('***** init')
 
-        c = Step(my_bot)
+        c = Step(my_engine)
 
         self.assertEqual(c.keyword, u'step')
         self.assertEqual(
             c.information_message,
             u'Move process to next step')
-        self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
     def test_execute(self):
 
         logging.info('***** execute')
 
-        c = Step(my_bot)
+        c = Step(my_engine)
 
         logging.debug("- without machine")
         with self.assertRaises(AttributeError):
-            c.execute()
+            c.execute(my_bot)
 
         logging.debug("- with machine")
         my_bot.machine = mock.Mock()
-        c.execute()
+        c.execute(my_bot)
 
         with self.assertRaises(Exception):
-            my_bot.mouth.get_nowait()
+            my_engine.mouth.get_nowait()
+
 
 if __name__ == '__main__':
 

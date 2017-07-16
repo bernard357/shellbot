@@ -21,8 +21,15 @@ class Command(object):
     Implements one command
     """
 
-    def __init__(self, bot=None, **kwargs):
-        self.bot = bot
+    def __init__(self, engine=None, **kwargs):
+        """
+        Implements one command
+
+        :param engine: the engine that is powering the bot
+        :type engine: Engine
+
+        """
+        self.engine = engine
         for key, value in kwargs.items():
             setattr(self, key, value)
 
@@ -37,32 +44,32 @@ class Command(object):
         Example::
 
             def on_init(self):
-                self.bot.register('bond', self.on_bond)
-                self.bot.register('dispose', self.on_dispose)
+                self.engine.subscribe('stop', self)
 
         """
         pass
 
-    def execute(self, arguments=None):
+    def execute(self, bot, arguments=None):
         """
         Executes this command
+
+        :param bot: The bot for this execution
+        :type bot: Shellbot
 
         :param arguments: The arguments for this command
         :type arguments: str or ``None``
 
         This function should report on progress by sending
-        messages with one or multiple ``self.shell.say("Whatever response")``.
+        messages with one or multiple ``bot.say("Whatever response")``.
 
         """
         if self.information_message:
-            self.bot.say(self.information_message)
+            bot.say(self.information_message)
 
     keyword = None      # verb or token for this command
 
     information_message = None    # basic information for this command
 
     usage_message = None    # usage information for this command
-
-    is_interactive = True    # this command should be processed interactively
 
     is_hidden = False    # this command should be listed by 'help'

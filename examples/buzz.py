@@ -93,37 +93,43 @@ ngrok for exposing services to the Internet::
 
 import os
 
-from shellbot import ShellBot, Context
+from shellbot import Engine, ShellBot, Context
 Context.set_logger()
 
 # create a bot and load commands
 #
 from planets import PlanetFactory
-bot = ShellBot(commands=PlanetFactory.commands())
+engine = Engine(commands=PlanetFactory.commands())
 
 # load configuration
 #
 os.environ['BOT_ON_START'] = 'Hello Buzz, welcome to Cape Canaveral'
 os.environ['BOT_ON_STOP'] = 'Batman is now quitting the room, bye'
 os.environ['CHAT_ROOM_TITLE'] = 'Buzz flights'
-bot.configure()
-bot.context.set('planets.items', ['Mercury',
-                                  'Venus',
-                                  'Moon',
-                                  'Mars',
-                                  'Jupiter',
-                                  'Saturn',
-                                  'Uranus',
-                                  'Neptune',
-                                 ])
+engine.configure()
+engine.set('planets.items', ['Mercury',
+                             'Venus',
+                             'Moon',
+                             'Mars',
+                             'Jupiter',
+                             'Saturn',
+                             'Uranus',
+                             'Neptune',
+                            ])
 
 # initialise a chat room
 #
-bot.bond(reset=True)
+bot = engine.bond(reset=True)
+
+# add a rocket and ignite it
+#
+from planets.rocket import Rocket
+bot.rocket = Rocket(bot)
+bot.rocket.start()
 
 # run the bot
 #
-bot.run()
+engine.run()
 
 # delete the chat room when the bot is stopped
 #

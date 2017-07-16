@@ -33,7 +33,7 @@ class SpaceFactory(object):
 
     Example::
 
-        context = Context(settings={
+        my_context = Context(settings={
             'spark': {
                 'room': 'My preferred room',
                 'moderators':
@@ -48,8 +48,7 @@ class SpaceFactory(object):
             }
         })
 
-        bot = ShellBot(context=context)
-        space = SpaceFactory.build(bot)
+        space = SpaceFactory.build(context=my_context)
 
     """
 
@@ -60,23 +59,22 @@ class SpaceFactory(object):
     }
 
     @classmethod
-    def build(self, bot, **kwargs):
+    def build(self, context, **kwargs):
         """
         Builds an instance based on provided configuration
 
-        :param bot: configuration to be used
-        :type bot: ShellBot
+        :param context: configuration to be used
+        :type context: Context
 
         :return: a ready-to-use space
         :rtype: Space
 
         A ``ValueError`` is raised if no type could be identified.
         """
-        assert bot is not None
+        assert context is not None
 
-        type = self.sense(bot.context)
-        space = self.get(type, bot=bot, **kwargs)
-        space.configure()
+        type = self.sense(context)
+        space = self.get(type, context=context, **kwargs)
 
         return space
 
@@ -127,6 +125,7 @@ class SpaceFactory(object):
         """
 
         try:
+            logging.debug(u"Building space of type '{}'".format(type))
             return self.types[type](**kwargs)
 
         except KeyError:

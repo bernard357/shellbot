@@ -98,7 +98,7 @@ class ContextTests(unittest.TestCase):
 
         self.assertEqual(context.get('spark.room'), None)
 
-        context.apply({
+        settings = {
             'spark': {
                 'room': 'My preferred room',
                 'moderators':
@@ -111,7 +111,9 @@ class ContextTests(unittest.TestCase):
                 'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
                 'webhook': "http://73a1e282.ngrok.io",
             }
-        })
+        }
+
+        context.apply(settings)
 
         context.check('spark.room', is_mandatory=True)
         self.assertEqual(context.get('spark.room'), 'My preferred room')
@@ -167,10 +169,11 @@ class ContextTests(unittest.TestCase):
         self.assertEqual(context.get('spark.personal_token'),
                          '$MY_FUZZY_SPARK_TOKEN')
 
-        with self.assertRaises(AttributeError):
-            context.check('spark.personal_token', filter=True)
+        context.check('spark.personal_token', filter=True)  # warning in log
         self.assertEqual(context.get('spark.personal_token'),
-                         '$MY_FUZZY_SPARK_TOKEN')
+                         None)
+
+        context.apply(settings)
 
         os.environ['MY_FUZZY_SPARK_TOKEN'] = ''
         context.check('spark.personal_token', filter=True)
@@ -196,8 +199,7 @@ class ContextTests(unittest.TestCase):
         if os.environ.get('PATH') is not None:
             self.assertTrue(Context._filter('$PATH') != '$PATH')
 
-        with self.assertRaises(AttributeError):
-            Context._filter('$TOTALLY*UNKNOWN*HERE')
+        Context._filter('$TOTALLY*UNKNOWN*HERE')  # warning in log
 
     def test_has(self):
 

@@ -15,9 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-
 from shellbot import Command
+
 
 class Planets(Command):
     """
@@ -32,14 +31,14 @@ class Planets(Command):
     information_message = u'List reachable planets'
     list_header = u"Available destinations:"
 
-    def execute(self, arguments=None):
+    def execute(self, bot, arguments=None):
         """
         Displays the list of available planets
         """
 
-        items = self.bot.context.get('planets.items', [])
+        items = bot.recall('planets.items', [])
         if len(items):
-            self.bot.say(self.list_header
-                         + '\n- ' + '\n- '.join(items))
+            bot.say(self.list_header
+                    + '\n- ' + '\n- '.join(items))
         else:
-            self.bot.say(u"Nowhere to go right now.")
+            bot.say(u"Nowhere to go right now.")

@@ -18,456 +18,99 @@
 
 import logging
 from multiprocessing import Process, Queue
+from six import string_types
 import sys
 import time
 import yaml
-import weakref
 
-from .context import Context
-from .shell import Shell
-from .listener import Listener
-from .server import Server
-from .spaces import SpaceFactory
-from .speaker import Speaker
-from .stores import StoreFactory
-from .worker import Worker
-from .routes.wrapper import Wrapper
+from .speaker import Vibes
 
 
 class ShellBot(object):
     """
-    Wraps underlying services in a single instance
+    Manages interactions with one space, one store, one state machine
 
-    Shellbot allows the creation of bots with a given set of commands.
-    Each bot instance is bonded to a single chat space. The chat space can be
-    either created by the bot itself, or the bot can join an existing space.
+    A bot consists of multiple components devoted to one chat space:
+    - a space
+    - a store
+    - a state machine
 
-    The first use case is adapted when a collaboration space is created for
-    semi-automated interactions between human and machines.
-    In the example below, the bot controls the entire life cycle of the chat
-    space. A chat space is created when the program is launched. And it is
-    deleted when the program is stopped.
+    It is designated by a unique id, that is also the unique id of the space
+    itself.
 
-    Chat space creation example::
-
-        from shellbot import ShellBot, Context, Command
-        Context.set_logger()
-
-        # create a bot and load command
-        #
-        class Hello(Command):
-            keyword = 'hello'
-            information_message = u"Hello, World!"
-
-        bot = ShellBot(command=Hello())
-
-        # load configuration
-        #
-        bot.configure()
-
-        # create a chat room, or connect to an existing one
-        #
-        bot.bond(reset=True)
-
-        # run the bot
-        #
-        bot.run()
-
-        # delete the chat room when the bot is killed
-        #
-        bot.dispose()
-
-    A second interesting use case is when a bot is invited to an existing chat
-    space. On such an event, a new bot instance can be created and bonded
-    to the chat space.
-
-    Chat space bonding example::
-
-        def on_invitation(self, space_id):
-            bot = ShellBot()
-            bot.configure()
-            bot.use_space(id=space_id)
-            bot.run()
-            return bot
-
-    A bot is an extensible set of components that share the same context,
-    that is, configuration settings.
-
+    A bot relies on an underlying engine instance for actual access
+    to the infrastructure, including configuration settings.
     """
 
-    DEFAULT_SETTINGS = {
-
-        'bot': {
-            'on_start': '$BOT_ON_START',
-            'on_stop': '$BOT_ON_STOP',
-        },
-
-        'spark': {
-            'room': '$CHAT_ROOM_TITLE',
-            'moderators': '$CHAT_ROOM_MODERATORS',
-        },
-
-        'server': {
-            'url': '$SERVER_URL',
-            'hook': '/hook',
-            'binding': '0.0.0.0',
-            'port': 8080,
-        },
-
-    }
-
     def __init__(self,
-                 context=None,
-                 command=None,
-                 commands=None,
-                 mouth=None,
-                 inbox=None,
-                 ears=None,
-                 fan=None,
-                 configure=False,
-                 settings={},
+                 engine,
+                 space_id=None,
                  space=None,
-                 type=None,
-                 server=None,
-                 store=None):
+                 store=None,
+                 fan=None,
+                 machine=None):
         """
-        Wraps underlying services in a single instance
+        Manages interactions with one space, one store, one state machine
+
+        :param engine: Engine instance for acces of the infrastructure
+        :type engine: Engine
+
+        :param space_id: Unique id of the related chat space
+        :type space_id: str
+
+        :param space: Chat space related to this bot
+        :type space: Space
+
+        :param store: Data store related to this bot
+        :type store: Store
+
+        :param fan: For asynchronous handling of user input
+        :type fan: Queue
+
+        :param machine: State machine related to this bot
+        :type machine: Machine
 
         """
+        self.engine = engine
 
-        self.context = context if context else Context()
+        assert space_id is None or space is None  # use only one
+        if space_id:
+            self.space = self.engine.build_space(space_id)
+        elif space:
+            self.space = space
+        else:
+            self.space = engine.space
 
-        self.mouth = mouth
-        self.inbox = inbox
-        self.ears = ears
-        self.fan = fan
+        if store:
+            self.store = store
+        else:
+            self.store = self.engine.build_store(space_id)
 
-        assert space is None or type is None  # use only one
-        if type:
-            space = SpaceFactory.get(type=type)
-        self.space = space
+        self.fan = fan if fan else Queue()
+
+        self.machine = machine
+
+        self.on_init()
+
+    def on_init(self):
+        """
+        Adds to bot initialization
+
+        It can be overlaid in subclass, where needed
+        """
+        pass
+
+    @property
+    def space_id(self):
+        """
+        Gets unique id of the related chat space
+
+        :return: the id of the underlying space, or None
+        """
         if self.space:
-            self.space.bot = self
+            return self.space.id
 
-        self.server = server
-        self.store = store
-
-        self.shell = Shell(bot=self)
-
-        self.speaker = Speaker(bot=self)
-        self.worker = Worker(bot=self)
-        self.listener = Listener(bot=self)
-
-        if configure or settings:
-            self.configure(settings)
-
-        if commands:
-            self.load_commands(commands)
-
-        if command:
-            self.load_command(command)
-
-        self.registered = {
-            'bond': [],       # connected to a space
-            'dispose': [],    # space will be destroyed
-            'start': [],      # starting bot services
-            'stop': [],       # stopping bot services
-            'message': [],    # message received (with message)
-            'attachment': [], # attachment received (with attachment)
-            'join': [],       # joining a space (with person)
-            'leave': [],      # leaving a space (with person)
-            'inbound': [],    # other event received from space (with event)
-        }
-
-    def configure_from_path(self, path="settings.yaml"):
-        """
-        Reads configuration information
-
-        :param path: path to the configuration file
-        :type path: str
-
-        The function loads configuration from the file and from the
-        environment. Port number can be set from the command line.
-
-        Look at the file ``settings.yaml`` that is coming with this project
-        """
-
-        logging.info(u"Loading configuration")
-        logging.info(u"- from '{}'".format(path))
-        with open(path, 'r') as stream:
-            self.configure_from_file(stream)
-
-    def configure_from_file(self, stream):
-        """
-        Reads configuration information
-
-        :param stream: the handle that contains configuration information
-        :type stream: file
-
-        The function loads configuration from the file and from the
-        environment. Port number can be set from the command line.
-
-        Look at the file ``settings.yaml`` that is coming with this project
-        """
-
-        try:
-            settings = yaml.load(stream)
-        except Exception as feedback:
-            logging.error(feedback)
-            raise Exception(u"Unable to load valid YAML settings")
-
-        self.configure(settings=settings)
-
-    def configure(self, settings=None):
-        """
-        Checks settings
-
-        :param settings: configuration information
-        :type settings: dict
-
-        If no settings is provided, then ``self.DEFAULT_SETTINGS`` is used
-        instead.
-        """
-
-        if settings is None:
-            settings = self.DEFAULT_SETTINGS
-
-        self.configure_from_dict(settings)
-
-        if self.fan is None:
-            self.fan = Queue()
-
-        self.shell.configure()
-
-        if self.space is None:
-            logging.debug(u"Building new space")
-            self.space = SpaceFactory.build(self)
-        else:
-            self.space.configure()
-
-        self.space.connect()
-
-        if self.store is None:
-            self.store = StoreFactory.build(self)
-        else:
-            self.store.check()
-
-        if (self.server is None
-            and self.context.get('server.binding') is not None):
-
-            logging.debug(u"Adding web server")
-            self.server = Server(context=self.context, check=True)
-
-    def configure_from_dict(self, settings):
-        """
-        Changes settings of the bot
-
-        :param settings: a dictionary with some statements for this instance
-        :type settings: dict
-
-        This function reads key ``bot`` and below, and update
-        the context accordingly.
-        It also reads hook parameters under ``server``::
-
-            shell.configure_fom_dict({
-
-                'bot': {
-                    'on_start': 'You can now chat with Batman',
-                    'on_stop': 'Batman is now quitting the room, bye',
-                },
-
-                'server': {
-                    'url': 'http://d9b62df9.ngrok.io',
-                    'hook': '/hook',
-                },
-
-            })
-
-        This can also be written in a more compact form::
-
-            shell.configure({'bot.on_banner': 'Hello, I am here to help'})
-
-        """
-
-        self.context.apply(settings)
-        self.context.check('bot.on_start', '', filter=True)
-        self.context.check('bot.on_stop', '', filter=True)
-
-    def get(self, key, default=None):
-        """
-        Retrieves the value of one configuration key
-
-        :param key: name of the value
-        :type key: str
-
-        :param default: default value
-        :type default: any serializable type is accepted
-
-        :return: the actual value, or the default value, or None
-
-        Example::
-
-            message = bot.get('bot.on_start')
-
-        This function is safe on multiprocessing and multithreading.
-
-        """
-        return self.context.get(key, default)
-
-    def set(self, key, value):
-        """
-        Changes the value of one configuration key
-
-        :param key: name of the value
-        :type key: str
-
-        :param value: new value
-        :type value: any serializable type is accepted
-
-        Example::
-
-            bot.set('bot.on_start', 'hello world')
-
-        This function is safe on multiprocessing and multithreading.
-
-        """
-        self.context.set(key, value)
-
-    def register(self, event, instance):
-        """
-        Registers an object to process an event
-
-        :param event: label, such as 'start' or 'bond'
-        :type event: str
-
-        :param instance: an object that will handle the event
-        :type instance: object
-
-        This function is used to propagate bot events to any module
-        that may need it.
-
-        Example::
-
-            def on_init(self):
-                self.bot.register('bond', self)  # call self.on_bond()
-                self.bot.register('dispose', self) # call self.on_dispose()
-
-        Following events can be registered:
-
-        - 'bond' - when the bot has connected to a chat space
-
-        - 'dispose' - when resources, including chat space, will be destroyed
-
-        - 'start' - when bot services are started
-
-        - 'stop' - when bot services are stopped
-
-        - 'join' - when a person is joining a space
-
-        - 'leave' - when a person is leaving a space
-
-        On each event, the bot will look for a related member function
-        in the target instance and call it. For example for the event
-        'start' it will look for the member function 'on_start', etc.
-
-        Registration uses weakref so that it affords the unattended deletion
-        of registered objects.
-        """
-        logging.debug(u"Registering to '{}' dispatch".format(event))
-
-        assert event in self.registered.keys()  #  avoid unknown event type
-
-        name = 'on_' + event
-        callback = getattr(instance, name)
-        assert callable(callback) # ensure the event is supported
-
-        handle = weakref.proxy(instance)
-        self.registered[event].append(handle)
-
-        if len(self.registered[event]) > 1:
-            logging.debug(u"- {} objects registered to '{}'".format(
-                len(self.registered[event]), event))
-
-        else:
-            logging.debug(u"- 1 object registered to '{}'".format(event))
-
-    def dispatch(self, event, **kwargs):
-        """
-        Triggers objects that have registered to some event
-
-        :param event: label of the event
-        :type event: str
-
-        Example::
-
-            def on_bond(self):
-                self.dispatch('bond')
-
-        For each registered object, the bot will look for a related member
-        function and call it. For example for the event
-        'bond' it will look for the member function 'on_bond', etc.
-
-        Dispatch uses weakref so that it affords the unattended deletion
-        of registered objects.
-        """
-        assert event in self.registered.keys()  #  avoid unknown event type
-
-        if len(self.registered[event]) > 1:
-            logging.debug(u"Dispatching '{}' to {} objects".format(
-                event, len(self.registered[event])))
-
-        elif len(self.registered[event]) > 0:
-            logging.debug(u"Dispatching '{}' to 1 object".format(event))
-
-        else:
-            logging.debug(u"Dispatching '{}', nothing to do".format(event))
-            return
-
-        name = 'on_' + event
-        for handle in self.registered[event]:
-            try:
-                callback = getattr(handle, name)
-                callback(**kwargs)
-            except ReferenceError:
-                logging.debug(u"- registered object no longer exists")
-
-    @property
-    def name(self):
-        """
-        Retrieves the dynamic name of this bot
-
-        :return: The value of ``bot.name`` key in current context
-        :rtype: str
-
-        """
-        return self.context.get('bot.name', 'Shelly')
-
-    @property
-    def version(self):
-        """
-        Retrieves the version of this bot
-
-        :return: The value of ``bot.version`` key in current context
-        :rtype: str
-
-        """
-        return self.context.get('bot.version', '*unknown*')
-
-    def load_commands(self, *args, **kwargs):
-        """
-        Loads commands for this bot
-
-        This function is a convenient proxy for the underlying shell.
-        """
-        self.shell.load_commands(*args, **kwargs)
-
-    def load_command(self, *args, **kwargs):
-        """
-        Loads one commands for this bot
-
-        This function is a convenient proxy for the underlying shell.
-        """
-        self.shell.load_command(*args, **kwargs)
+        return None
 
     def bond(self, reset=False):
         """
@@ -479,18 +122,18 @@ class ShellBot(object):
         This function creates a room, or connect to an existing one.
         """
         if reset:
-            self.space.delete_space(title=self.context.get('spark.room'))
+            self.space.delete_space(title=self.engine.get('spark.room'))
 
         self.space.bond(
-            title=self.context.get('spark.room', 'Bot under test'),
-            ex_team=self.context.get('spark.team'),
-            moderators=self.context.get('spark.moderators', []),
-            participants=self.context.get('spark.participants', []),
+            title=self.engine.get('spark.room', 'Bot under test'),
+            ex_team=self.engine.get('spark.team'),
+            moderators=self.engine.get('spark.moderators', []),
+            participants=self.engine.get('spark.participants', []),
         )
 
         self.store.bond(id=self.space.id)
 
-        self.dispatch('bond')
+        self.engine.dispatch('bond')
 
     def add_moderators(self, *args, **kwargs):
         """
@@ -542,166 +185,10 @@ class ShellBot(object):
         Disposes all resources
 
         """
-        self.dispatch('dispose')
+        self.engine.dispatch('dispose')
         self.space.dispose(*args, **kwargs)
 
-    def archive(self, *args, **kwargs):
-        """
-        Remove users from space
-        """
-        self.del_participant(self)
-
-    def hook(self, server=None):
-        """
-        Connects this bot with back-end API
-
-        :param server: web server to be used
-        :type server: Server
-
-        This function adds a route to the provided server, and
-        asks the back-end service to send messages there.
-        """
-
-        if server is not None:
-            logging.debug('Adding hook route to web server')
-            server.add_route(
-                Wrapper(callable=self.get_hook(),
-                        route=self.context.get('server.hook', '/hook')))
-
-        if (self.context.get('server.binding') is not None
-            and self.context.get('server.url') is not None):
-
-            self.space.register(
-                hook_url=self.context.get('server.url')
-                         + self.context.get('server.hook', '/hook'))
-
-    def get_hook(self):
-        """
-        Provides the hooking function to receive messages from Cisco Spark
-        """
-        return self.space.webhook
-
-    def run(self, server=None):
-        """
-        Runs the bot
-
-        :param server: a web server
-        :type server: Server
-
-        If a server is provided, it is ran in the background. A server could
-        also have been provided during initialisation, or loaded
-        during configuration check.
-
-        If no server instance is available, a loop is started
-        to fetch messages in the background.
-
-        In both cases, this function does not return, except on interrupt.
-        """
-
-        if server is None:
-            server = self.server
-
-        self.start()
-
-        self.hook(server=server)
-
-        self.space.on_start()
-
-        if server is None:
-            self.space.run()
-
-        else:
-            p = Process(target=server.run)
-            p.daemon = True
-            p.start()
-            self._server_process = p
-
-            try:
-                self._server_process.join()
-            except KeyboardInterrupt:
-                logging.error(u"Aborted by user")
-                self.stop()
-
-    def start(self):
-        """
-        Starts the bot
-        """
-
-        logging.warning(u'Starting the bot')
-
-        if self.mouth is None:
-            self.mouth = Queue()
-
-        if self.inbox is None:
-            self.inbox = Queue()
-
-        if self.ears is None:
-            self.ears = Queue()
-
-        self.start_processes()
-
-        self.say(self.context.get('bot.on_start'))
-        self.on_start()
-
-        self.dispatch('start')
-
-    def start_processes(self):
-        """
-        Starts bot processes
-
-        This function starts a separate process for each
-        main component of the architecture: listener, speaker, and worker.
-        """
-
-        self.context.set('general.switch', 'on')
-
-        self._speaker_process = self.speaker.start()
-        self._worker_process = self.worker.start()
-        self._listener_process = self.listener.start()
-
-    def on_start(self):
-        """
-        Does additional stuff on bot start
-
-        Provide your own implementation in a sub-class where required.
-        """
-        pass
-
-    def stop(self):
-        """
-        Stops the bot
-
-        This function changes in the context a specific key that is monitored
-        by bot components.
-        """
-
-        logging.warning(u'Stopping the bot')
-
-        logging.debug(u"- dispatching 'stop' event")
-        self.dispatch('stop')
-
-        logging.debug(u"- running on_stop()")
-        self.on_stop()
-
-        logging.debug(u"- saying on_stop message")
-        self.say(self.context.get('bot.on_stop'))
-
-        logging.debug(u"- switching off")
-        self.context.set('general.switch', 'off')
-        time.sleep(1)
-
-    def on_stop(self):
-        """
-        Do additional stuff on bot top
-
-        Provide your own implementation in a sub-class where required.
-
-        Note that this function is called before the actual stop, so
-        you can access the shell or any other resource at will.
-        """
-        pass
-
-    def say(self, text, content=None, file=None):
+    def say(self, text=None, content=None, file=None):
         """
         Sends a message to the chat space
 
@@ -715,18 +202,24 @@ class ShellBot(object):
         :type file: str or None
 
         """
-        if text in (None, ''):
+        if text:
+            line = text[:50] + (text[50:] and '..')
+        elif content:
+            line = content[:50] + (content[50:] and '..')
+        else:
             return
 
-        logging.info(u"Bot says: {}".format(text))
+        logging.info(u"Bot says: {}".format(line))
 
-        if self.mouth:
+        if self.engine.mouth:
             logging.debug(u"- pushing message to mouth queue")
-            self.mouth.put(ShellBotMessage(text, content, file))
+            self.engine.mouth.put(
+                Vibes(text, content, file, self.space_id))
 
         else:
             logging.debug(u"- calling speaker directly")
-            self.speaker.process(ShellBotMessage(text, content, file))
+            self.engine.speaker.process(
+                Vibes(text, content, file, self.space_id))
 
     def remember(self, key, value):
         """
@@ -743,7 +236,7 @@ class ShellBot(object):
 
         Example::
 
-            bot.remember('parameter_123', 'George')
+            bot.remember('variable_123', 'George')
 
         """
         self.store.remember(key, value)
@@ -762,7 +255,7 @@ class ShellBot(object):
 
         Example::
 
-            value = bot.recall('parameter_123')
+            value = bot.recall('variable_123')
 
         """
         return self.store.recall(key, default)
@@ -777,7 +270,7 @@ class ShellBot(object):
         To clear only one value, provides the name of it.
         For example::
 
-            bot.forget('parameter_123')
+            bot.forget('variable_123')
 
         To clear all values in the store, just call the function
         without a value.
@@ -824,15 +317,10 @@ class ShellBot(object):
         Example::
 
             >>>bot.update('input', 'PO Number', '1234A')
+            >>>bot.update('input', 'description', 'some description')
             >>>bot.recall('input')
-            {'PO Number': '1234A'}
+            {'PO Number': '1234A',
+             'description': 'some description'}
 
         """
         self.store.update(key, label, item)
-
-
-class ShellBotMessage(object):
-    def __init__(self, text, content=None, file=None):
-        self.text = text
-        self.content = content
-        self.file = file

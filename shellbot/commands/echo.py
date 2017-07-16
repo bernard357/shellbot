@@ -27,8 +27,15 @@ class Echo(Command):
     information_message = u'Echo input string'
     is_hidden = True
 
-    def execute(self, arguments):
+    def execute(self, bot, arguments):
         """
         Echoes input string
+
+        :param bot: The bot for this execution
+        :type bot: Shellbot
+
+        :param arguments: The arguments for this command
+        :type arguments: str or ``None``
+
         """
-        self.bot.say(arguments)
+        bot.say(arguments)

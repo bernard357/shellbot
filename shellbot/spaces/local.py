@@ -34,14 +34,21 @@ class LocalSpace(Space):
     This class allows developers to test their commands interface
     locally, without the need for a real API back-end.
 
-    Example::
+    If a list of commands is provided as input, then the space will consume
+    all of them and then it will stop. All kinds of automated tests and
+    scenarios can be build with this approach.
 
-        bot = ShellBot(command=Hello(), type='local')
-        bot.space.push(['help', 'hello', 'help help'])
+    Example of automated interaction with some commands::
 
-        bot.configure()
-        bot.bond()
-        bot.run()
+        engine = Engine(command=Hello(), type='local')
+        engine.space.push(['help', 'hello', 'help help'])
+
+        engine.configure()
+        engine.run()
+
+    If no input is provided, then the space provides a command-line interface
+    so that you can play interactively with your bot. This setup is handy
+    since it does not require access to a real chat back-end.
 
     """
 
@@ -59,7 +66,7 @@ class LocalSpace(Space):
 
         Example::
 
-            space = LocalSpace(bot=bot, prefix='local.audit')
+            space = LocalSpace(context=context, prefix='local.audit')
 
         Here we create a new local space, and use
         settings under the key ``local.audit`` in the context of this bot.
@@ -129,17 +136,17 @@ class LocalSpace(Space):
         """
         Checks that valid settings are available
         """
-        self.bot.context.check(self.prefix+'.title', 'Local space', filter=True)
-        self.bot.context.check(self.prefix+'.moderators', [], filter=True)
-        self.bot.context.check(self.prefix+'.participants', [], filter=True)
+        self.context.check(self.prefix+'.title', 'Local space', filter=True)
+        self.context.check(self.prefix+'.moderators', [], filter=True)
+        self.context.check(self.prefix+'.participants', [], filter=True)
 
-        self.bot.context.set('server.binding', None)  # no web server at all
+        self.context.set('server.binding', None)  # no web server at all
 
     def on_bond(self):
         """
         Adds processing to space bond
         """
-        self.bot.set('bot.id', '*bot')
+        self.context.set('bot.id', '*bot')
 
     def use_space(self, id, **kwargs):
         """
@@ -159,8 +166,8 @@ class LocalSpace(Space):
         """
         assert id not in (None, '')
 
-        self.set('id', id)
-        self.title = self.configured_title()
+        self.values['id'] = id
+        self.values['title'] = self.configured_title()
 
         return True
 
@@ -176,8 +183,8 @@ class LocalSpace(Space):
         """
         assert title not in (None, '')
 
-        self.set('id', '*id')
-        self.title = title
+        self.values['id'] = '*local'
+        self.values['title'] = title
 
         return True
 
@@ -194,8 +201,8 @@ class LocalSpace(Space):
         """
         assert title not in (None, '')
 
-        self.set('id', '*id')
-        self.title = title
+        self.values['id'] = '*local'
+        self.values['title'] = title
 
     def add_moderator(self, person):
         """
@@ -243,6 +250,7 @@ class LocalSpace(Space):
                      text=None,
                      content=None,
                      file=None,
+                     space_id=None,
                      **kwargs):
         """
         Posts a message
@@ -256,9 +264,16 @@ class LocalSpace(Space):
         :param file: URL or local path for an attachment
         :type file: str
 
+        :param space_id: unique id of the target space
+        :type space_id: str
+
         Example message out of plain text::
 
         >>>space.post_message(text='hello world')
+
+        If no space id is provided, then the function can use the unique id
+        of this space, if one has been defined. Or an exception may be raised
+        if no id has been made available.
 
         """
         if content:
@@ -281,7 +296,7 @@ class LocalSpace(Space):
         """
         Fetches updates
 
-        This function senses most recent items, and pushes them
+        This function senses most recent item, and pushes it
         to the listening queue.
 
         """
@@ -290,11 +305,11 @@ class LocalSpace(Space):
 
         try:
             line = next(self._lines)
-            self.on_message({'text': line}, self.bot.ears)
+            self.on_message({'text': line}, self.ears)
         except StopIteration:
             sys.stdout.write(u'^C\n')
             sys.stdout.flush()
-            self.bot.context.set('general.switch', 'off')
+            self.context.set('general.switch', 'off')
 
     def on_message(self, item, queue):
         """
@@ -311,6 +326,7 @@ class LocalSpace(Space):
         """
         message = Message(item)
         message.from_id = '*user'
-        message.mentioned_ids = []
+        message.mentioned_ids = [self.context.get('bot.id')]
+        message.space_id = self.id
 
         queue.put(str(message))

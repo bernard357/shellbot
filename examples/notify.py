@@ -70,7 +70,7 @@ import os
 import random
 import time
 
-from shellbot import ShellBot, Context, Command
+from shellbot import Engine, ShellBot, Context, Command
 Context.set_logger()
 
 # a function to create a random sentence
@@ -103,11 +103,11 @@ def some_message():
 # create a bot and configure it
 #
 os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
-bot = ShellBot(settings=None, configure=True)
+engine = Engine(settings=None, configure=True)
 
 # create a chat room
 #
-bot.bond(reset=True)
+bot = engine.bond(reset=True)
 
 # send notifications to the room
 #

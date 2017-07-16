@@ -16,12 +16,14 @@
 from .blast import Blast
 from .explore import Explore
 from .planets import Planets
+from .rocket import Rocket
 
 __all__ = [
     'Blast',
     'Explore',
     'Planets',
     'PlanetFactory',
+    'Rocket',
 ]
 
 class PlanetFactory(object):

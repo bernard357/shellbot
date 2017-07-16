@@ -30,20 +30,20 @@ class Todos(Command):
     information_message = u'List items to do'
     list_header = u"On the todo list:"
 
-    def execute(self, arguments=None):
+    def execute(self, bot, arguments=None):
         """
         Displays the list of items to do
         """
-        if self.bot.factory is None:
+        if self.engine.factory is None:
             raise AttributeError(u'Todo factory has not been initialised')
 
-        if len(self.bot.factory.items):
+        if len(self.engine.factory.items):
             lines = []
             index = 1
-            for item in self.bot.factory.items:
+            for item in self.engine.factory.items:
                 lines.append(u"#{} {}".format(index, item))
                 index += 1
-            self.bot.say(self.list_header
+            bot.say(self.list_header
                          + '\n- ' + '\n- '.join(lines))
         else:
-            self.bot.say(u"Nothing to do yet.")
+            bot.say(u"Nothing to do yet.")

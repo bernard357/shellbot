@@ -11,11 +11,11 @@ import sys
 
 sys.path.insert(0, os.path.abspath('../..'))
 
-from shellbot import Context, ShellBot, Shell
+from shellbot import Context, Engine, Shell
 from shellbot.events import Message
 from shellbot.updaters import FileUpdater
 
-my_bot = ShellBot()
+my_engine = Engine()
 my_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/local'
 my_file = my_path + '/file_updater.log'
 
@@ -31,10 +31,10 @@ class UpdaterTests(unittest.TestCase):
         logging.info('***** init')
 
         u = FileUpdater()
-        self.assertEqual(u.bot, None)
+        self.assertEqual(u.engine, None)
 
-        u = FileUpdater(bot=my_bot)
-        self.assertEqual(u.bot, my_bot)
+        u = FileUpdater(engine=my_engine)
+        self.assertEqual(u.engine, my_engine)
 
     def test_on_init(self):
 
@@ -56,16 +56,16 @@ class UpdaterTests(unittest.TestCase):
 
         logging.info('***** get_path')
 
-        u = FileUpdater(bot=my_bot)
+        u = FileUpdater(engine=my_engine)
         self.assertEqual(u.get_path(), '/var/log/shellbot.log')
 
-        u = FileUpdater(bot=my_bot, path=None)
+        u = FileUpdater(engine=my_engine, path=None)
         self.assertEqual(u.get_path(), '/var/log/shellbot.log')
 
-        u = FileUpdater(bot=my_bot, path='')
+        u = FileUpdater(engine=my_engine, path='')
         self.assertEqual(u.get_path(), '/var/log/shellbot.log')
 
-        u = FileUpdater(bot=my_bot, path='here.log')
+        u = FileUpdater(engine=my_engine, path='here.log')
         self.assertEqual(u.get_path(), 'here.log')
 
     def test_on_bond(self):

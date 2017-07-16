@@ -27,9 +27,16 @@ class Version(Command):
     information_message = u'Display software version'
     is_hidden = True
 
-    def execute(self, arguments=None):
+    def execute(self, bot, arguments=None):
         """
         Displays software version
+
+        :param bot: The bot for this execution
+        :type bot: Shellbot
+
+        :param arguments: The arguments for this command
+        :type arguments: str or ``None``
+
         """
-        self.bot.say(u"{} version {}".format(self.bot.name,
-                                             self.bot.version))
+        bot.say(u"{} version {}".format(self.engine.name,
+                                        self.engine.version))

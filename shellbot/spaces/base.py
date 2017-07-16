@@ -17,8 +17,9 @@
 
 from bottle import request
 import logging
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Manager
 import os
+import signal
 from six import string_types
 import time
 
@@ -31,8 +32,8 @@ class Space(object):
 
     1. A space instance is created and configured::
 
-           >>>bot = ShellBot(...)
-           >>>space = Space(bot=bot)
+           >>>my_context = Context(...)
+           >>>space = Space(context=my_context)
 
     2. The space is connected to some back-end API::
 
@@ -92,20 +93,34 @@ class Space(object):
     PULL_INTERVAL = 0.05  # time between pulls, when not hooked
 
     def __init__(self,
-                 bot=None,
+                 context=None,
+                 ears=None,
                  **kwargs):
         """
         Handles a collaborative space
 
-        :param bot: the overarching bot
-        :type bot: ShellBot
+        :param context: the overarching context
+        :type context: Context
+
+        :param ears: the listening queue
+        :type ears: Queue
 
         Example::
 
-            space = Space(bot=bot)
+            space = Space(context=my_engine.context,
+                          ears=my_engine.ears)
 
         """
-        self.bot = bot
+        # prevent Manager() process to be interrupted
+        handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+        self.values = Manager().dict()
+
+        # restore current handler for the rest of the program
+        signal.signal(signal.SIGINT, handler)
+
+        self.context = context
+        self.ears = ears
 
         self.on_init(**kwargs)
 
@@ -149,13 +164,13 @@ class Space(object):
 
         Example::
 
-            id = space.get('id')
+            configured_title = space.get('title')
 
         This function is safe on multiprocessing and multithreading.
 
         """
         try:
-            return self.bot.get(self.prefix+'.'+key, default)
+            return self.context.get(self.prefix+'.'+key, default)
         except AttributeError:
             return default
 
@@ -177,12 +192,14 @@ class Space(object):
 
         Example::
 
-            space.set('title', 'brand new title')
+            space.set('some_key', 'some_value')
+            ...
+            value = space.get('some_key')  # 'some_value'
 
         This function is safe on multiprocessing and multithreading.
 
         """
-        self.bot.set(self.prefix+'.'+key, value)
+        self.context.set(self.prefix+'.'+key, value)
 
     def reset(self):
         """
@@ -191,12 +208,7 @@ class Space(object):
         After a call to this function, ``bond()`` has to be invoked to
         return to normal mode of operation.
         """
-        try:
-            self.set('id', None)
-        except AttributeError:
-            pass
-
-        self.title = self.DEFAULT_SPACE_TITLE
+        self.values.clear()
 
         self.on_reset()
 
@@ -227,7 +239,7 @@ class Space(object):
         After a call to this function, ``bond()`` has to be invoked to
         return to normal mode of operation.
         """
-        self.bot.context.apply(settings)
+        self.context.apply(settings)
 
         if do_check:
             self.check()
@@ -243,7 +255,7 @@ class Space(object):
         Example::
 
             def check(self):
-                self.bot.context.check(self.prefix+'.title', is_mandatory=True)
+                self.engine.context.check(self.prefix+'.title', is_mandatory=True)
 
         """
         pass
@@ -293,7 +305,7 @@ class Space(object):
 
         Example::
 
-            space = Space(context=context)
+            space = Space(...)
             space.connect()
             space.bond()
 
@@ -305,7 +317,6 @@ class Space(object):
             title = self.configured_title()
 
         assert title not in (None, '')
-        self.title = title
 
         if not self.lookup_space(title=title, **kwargs):
 
@@ -352,13 +363,20 @@ class Space(object):
         """
         Retrieves id of this space
         """
-        return self.get('id')
+        return self.values.get('id')
+
+    @property
+    def title(self):
+        """
+        Retrieves title of this space
+        """
+        return self.values.get('title')
 
     def use_space(self, id, **kwargs):
         """
         Uses an existing space
 
-        :param id: title of the target space
+        :param id: id of the target space
         :type id: str
 
         :return: True on success, False otherwise
@@ -532,50 +550,10 @@ class Space(object):
         if self.title in (None, '', self.DEFAULT_SPACE_TITLE):
             title = self.configured_title()
         else:
-            title = self.title
+            title = self.values.get('title')
 
         self.delete_space(title=title, **kwargs)
         self.reset()
-
-    def archive(self, **kwargs):
-        """
-        Archives all resources
-
-        This function is useful to clean environment.
-
-        >>>space.bond(title="Working Space")
-        ...
-        >>>space.archive()
-
-        After a call to this function, ``bond()`` has to be invoked to
-        return to normal mode of operation.
-        """
-
-        if self.title in (None, '', self.DEFAULT_SPACE_TITLE):
-            title = self.configured_title()
-        else:
-            title = self.title
-
-        self.archive_space(title=title, **kwargs)
-
-    def archive_space(self, title=None, **kwargs):
-        """
-        Archives a space
-
-        :param title: title of the space to be archived (optional)
-        :type title: str
-
-        >>>space.archive_space("Obsolete Space")
-
-        This function should be implemented in sub-class.
-
-        Example::
-
-            def archive_space(self, title=None, **kwargs):
-                self.api.rooms.delete(title=title)
-
-        """
-        raise NotImplementedError()
 
     def delete_space(self, title=None, **kwargs):
         """
@@ -606,6 +584,7 @@ class Space(object):
                      text=None,
                      content=None,
                      file=None,
+                     space_id=None,
                      **kwargs):
         """
         Posts a message
@@ -619,9 +598,16 @@ class Space(object):
         :param file: URL or local path for an attachment
         :type file: str
 
+        :param space_id: unique id of the target space
+        :type space_id: str
+
         Example message out of plain text::
 
         >>>space.post_message(text='hello world')
+
+        If no space id is provided, then the function can use the unique id
+        of this space, if one has been defined. Or an exception may be raised
+        if no id has been made available.
 
         This function should be implemented in sub-class.
 
@@ -733,7 +719,7 @@ class Space(object):
         The recommended way for stopping the process is to change the
         parameter ``general.switch`` in the context. For example::
 
-            bot.context.set('general.switch', 'off')
+            engine.set('general.switch', 'off')
 
         Note: this function should not be invoked if a webhok has been
         configured.
@@ -741,15 +727,14 @@ class Space(object):
         """
 
         logging.info(u'Pulling updates')
-        time.sleep(0.2)
 
         try:
-            self.bot.context.set('puller.counter', 0)
-            while self.bot.context.get('general.switch', 'on') == 'on':
+            self.context.set('puller.counter', 0)
+            while self.context.get('general.switch', 'on') == 'on':
 
                 try:
                     self.pull()
-                    self.bot.context.increment('puller.counter')
+                    self.context.increment('puller.counter')
                     time.sleep(self.PULL_INTERVAL)
 
                 except Exception as feedback:

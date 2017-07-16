@@ -12,20 +12,39 @@ import sys
 sys.path.insert(0, os.path.abspath('..'))
 
 from shellbot import Context
+from shellbot import Engine
 from shellbot import Listener
 from shellbot import Shell
-from shellbot import ShellBot
-from shellbot import Worker
-from shellbot import Speaker
+from shellbot import Speaker, Vibes
 from shellbot.events import Message
 from shellbot.spaces import Space
 
-my_bot = ShellBot(ears=Queue(), inbox=Queue(), mouth=Queue())
-my_bot.set('bot.id', "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg")
-my_bot.shell.load_default_commands()
-my_bot.space = Space(my_bot.context)
-my_bot.space.post_message = MagicMock()
-my_bot.set('space.id', '123')
+
+class MyEngine(Engine):
+    def get_bot(self, id):
+        logging.debug("Injecting test bot")
+        return my_bot
+
+
+my_engine = MyEngine(ears=Queue(), mouth=Queue())
+my_engine.set('bot.id', "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg")
+my_engine.shell.load_default_commands()
+my_engine.space = Space(my_engine.context)
+my_engine.space.post_message = MagicMock()
+my_engine.space.values['id'] = '123'
+
+
+class Bot(object):
+    space_id = '123'
+
+    def __init__(self, engine):
+        self.engine = engine
+
+    def say(self, text, content=None, file=None):
+        self.engine.mouth.put(Vibes(text, content, file))
+
+
+my_bot = Bot(engine=my_engine)
 
 
 class CompositeTests(unittest.TestCase):
@@ -38,35 +57,31 @@ class CompositeTests(unittest.TestCase):
 
         logging.info('*** Static test ***')
 
-        speaker_process = my_bot.speaker.start()
-        worker_process = my_bot.worker.start()
-        listener_process = my_bot.listener.start()
+        speaker_process = my_engine.speaker.start()
+        listener_process = my_engine.listener.start()
 
         listener_process.join(0.2)
         if listener_process.is_alive():
             logging.info('Stopping all threads')
-            my_bot.context.set('general.switch', 'off')
+            my_engine.set('general.switch', 'off')
             listener_process.join()
-            worker_process.join()
             speaker_process.join()
 
-        self.assertEqual(my_bot.context.get('listener.counter', 0), 0)
-        self.assertEqual(my_bot.context.get('worker.counter', 0), 0)
-        self.assertEqual(my_bot.context.get('speaker.counter', 0), 0)
+        self.assertEqual(my_engine.get('listener.counter', 0), 0)
+        self.assertEqual(my_engine.get('speaker.counter', 0), 0)
 
     def test_dynamic(self):
 
         logging.info('*** Dynamic test ***')
 
-        speaker_process = my_bot.speaker.start()
-        worker_process = my_bot.worker.start()
-        listener_process = my_bot.listener.start()
+        speaker_process = my_engine.speaker.start()
+        listener_process = my_engine.listener.start()
 
         items = [
 
             {
               "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-              "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+              "space_id" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
               "roomType" : "group",
               "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
               "toPersonEmail" : "julie@example.com",
@@ -83,7 +98,7 @@ class CompositeTests(unittest.TestCase):
 
             {
               "id" : "2_2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-              "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+              "space_id" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
               "roomType" : "group",
               "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
               "toPersonEmail" : "julie@example.com",
@@ -99,7 +114,7 @@ class CompositeTests(unittest.TestCase):
 
             {
               "id" : "3_2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-              "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+              "space_id" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
               "roomType" : "group",
               "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
               "toPersonEmail" : "julie@example.com",
@@ -115,7 +130,7 @@ class CompositeTests(unittest.TestCase):
 
             {
               "id" : "3_2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-              "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+              "space_id" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
               "roomType" : "group",
               "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
               "toPersonEmail" : "julie@example.com",
@@ -131,7 +146,7 @@ class CompositeTests(unittest.TestCase):
 
             {
               "id" : "4_2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-              "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+              "space_id" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
               "roomType" : "group",
               "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
               "toPersonEmail" : "julie@example.com",
@@ -150,19 +165,17 @@ class CompositeTests(unittest.TestCase):
         ]
 
         for item in items:
-            my_bot.ears.put(str(Message(item)))
+            my_engine.ears.put(str(Message(item)))
 
         listener_process.join(1.0)
         if listener_process.is_alive():
             logging.info('Stopping all threads')
-            my_bot.context.set('general.switch', 'off')
+            my_engine.set('general.switch', 'off')
             listener_process.join()
-            worker_process.join()
             speaker_process.join()
 
-        self.assertEqual(my_bot.context.get('listener.counter', 0), 5)
-        self.assertEqual(my_bot.context.get('worker.counter', 0), 1)
-        self.assertEqual(my_bot.context.get('speaker.counter', 0), 3)
+        self.assertEqual(my_engine.get('listener.counter', 0), 5)
+        self.assertEqual(my_engine.get('speaker.counter', 0), 2)
 
 
 if __name__ == '__main__':

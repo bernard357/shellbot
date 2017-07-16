@@ -20,16 +20,28 @@ from .base import Command
 
 class Close(Command):
     """
-    Closes the room
+    Closes the space
 
-    >>>close = Close(bot=bot)
+    >>>close = Close(engine=my_engine)
     >>>shell.load_command(close)
 
     """
     keyword = 'close'
     information_message = u"Close this space"
 
-    def execute(self, arguments=None):
-        self.bot.say("Closing this space")
-#        self.bot.stop()
-        self.bot.dispose()
+    def execute(self, bot, arguments=None):
+        """
+        Closes the space
+
+        :param bot: The bot for this execution
+        :type bot: Shellbot
+
+        :param arguments: The arguments for this command
+        :type arguments: str or ``None``
+
+        This function should report on progress by sending
+        messages with one or multiple ``bot.say("Whatever response")``.
+
+        """
+        bot.say("Closing this space")
+        bot.dispose()
