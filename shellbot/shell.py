@@ -253,20 +253,12 @@ class Shell(object):
         try:
             if verb in self._commands.keys():
                 command = self._commands[verb]
-                if command.is_interactive:
-                    self.verb = verb
-                    command.execute(bot, arguments)
-                else:
-                    if not self.engine.get('worker.busy', False):
-                        bot.say(u"Ok, working on it")
-                    else:
-                        bot.say(u"Ok, will work on it as soon as possible")
-                    self.engine.inbox.put(
-                        (command.keyword, arguments, space_id))
+                self.verb = verb
+                command.execute(bot, arguments)
 
             elif '*default' in self._commands.keys():
                 command = self._commands['*default']
-                command.execute(bot, line)  # assume this is always interactive
+                command.execute(bot, line)  # provide full input line
 
             else:
                 bot.say(u"Sorry, I do not know how to handle '{}'".format(verb))

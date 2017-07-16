@@ -49,7 +49,6 @@ class UpdateTests(unittest.TestCase):
         self.assertEqual(
             c.information_message,
             u'Update input content')
-        self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
     def test_execute(self):

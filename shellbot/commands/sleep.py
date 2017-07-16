@@ -28,7 +28,6 @@ class Sleep(Command):
     keyword = u'sleep'
     information_message = u'Sleep for a while'
     usage_message = u'sleep <n>'
-    is_interactive = False
     is_hidden = True
 
     DEFAULT_DELAY = 1.0

@@ -43,7 +43,6 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(c.information_message,
                          u'Check and change audit status')
         self.assertEqual(c.usage_message, u'audit [on|off]')
-        self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
     def test_execute(self):

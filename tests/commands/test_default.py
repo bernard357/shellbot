@@ -37,7 +37,6 @@ class DefaultTests(unittest.TestCase):
         self.assertEqual(c.keyword, u'*default')
         self.assertEqual(c.information_message, u'Handle unmatched command')
         self.assertEqual(c.usage_message, None)
-        self.assertTrue(c.is_interactive)
         self.assertTrue(c.is_hidden)
 
     def test_execute(self):

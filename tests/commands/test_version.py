@@ -39,7 +39,6 @@ class VersionTests(unittest.TestCase):
         self.assertEqual(c.keyword, u'version')
         self.assertEqual(c.information_message, u'Display software version')
         self.assertEqual(c.usage_message, None)
-        self.assertTrue(c.is_interactive)
         self.assertTrue(c.is_hidden)
 
     def test_execute(self):

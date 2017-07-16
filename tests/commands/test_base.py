@@ -44,7 +44,6 @@ class BaseTests(unittest.TestCase):
         self.assertEqual(c.keyword, None)
         self.assertEqual(c.information_message, None)
         self.assertEqual(c.usage_message, None)
-        self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
         c = Command(my_engine, hello='world')

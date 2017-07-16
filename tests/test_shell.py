@@ -16,7 +16,7 @@ from shellbot import Context, Engine, Shell, Vibes
 
 class MyEngine(Engine):
     def get_bot(self, id):
-        logging.debug("injecting test bot")
+        logging.debug("Injecting test bot")
         return Bot(self)
 
 
@@ -179,29 +179,16 @@ class ShellTests(unittest.TestCase):
         with self.assertRaises(Exception):
             shell.bot.inbox.get_nowait()
 
-        shell.do('sleep 123', space_id='*id')
-        self.assertEqual(shell.line, 'sleep 123')
+        shell.do('sleep .0103', space_id='*id')
+        self.assertEqual(shell.line, 'sleep .0103')
         self.assertEqual(shell.count, 5)
         my_engine.set('worker.busy', True)
-        shell.do('sleep 456', space_id='*id')
-        self.assertEqual(shell.line, 'sleep 456')
+        shell.do('sleep .0201', space_id='*id')
+        self.assertEqual(shell.line, 'sleep .0201')
         self.assertEqual(shell.count, 6)
         my_engine.set('worker.busy', False)
-        self.assertEqual(shell.engine.mouth.get().text, 'Ok, working on it')
-        self.assertEqual(shell.engine.mouth.get().text,
-                         'Ok, will work on it as soon as possible')
         with self.assertRaises(Exception):
             print(shell.engine.mouth.get_nowait())
-        (command, arguments, space_id) = shell.engine.inbox.get()
-        self.assertEqual(command, 'sleep')
-        self.assertEqual(arguments, '123')
-        self.assertEqual(space_id, '*id')
-        (command, arguments, space_id) = shell.engine.inbox.get()
-        self.assertEqual(command, 'sleep')
-        self.assertEqual(arguments, '456')
-        self.assertEqual(space_id, '*id')
-        with self.assertRaises(Exception):
-            shell.engine.inbox.get_nowait()
 
         shell.do('version', space_id='*id')
         self.assertEqual(shell.line, 'version')

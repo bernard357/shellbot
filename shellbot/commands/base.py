@@ -72,6 +72,4 @@ class Command(object):
 
     usage_message = None    # usage information for this command
 
-    is_interactive = True    # this command should be processed interactively
-
     is_hidden = False    # this command should be listed by 'help'

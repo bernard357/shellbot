@@ -42,7 +42,6 @@ class HelpTests(unittest.TestCase):
             c.information_message,
             u'Show commands and usage')
         self.assertEqual(c.usage_message, u'help <command>')
-        self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
         my_bot.shell = Shell(engine=my_engine)

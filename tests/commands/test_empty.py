@@ -40,7 +40,6 @@ class EmptyTests(unittest.TestCase):
         self.assertEqual(c.keyword, u'*empty')
         self.assertEqual(c.information_message, u'Handle empty command')
         self.assertEqual(c.usage_message, None)
-        self.assertTrue(c.is_interactive)
         self.assertTrue(c.is_hidden)
 
     def test_execute(self):

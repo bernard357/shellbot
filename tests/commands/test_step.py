@@ -44,7 +44,6 @@ class StepTests(unittest.TestCase):
         self.assertEqual(
             c.information_message,
             u'Move process to next step')
-        self.assertTrue(c.is_interactive)
         self.assertFalse(c.is_hidden)
 
     def test_execute(self):

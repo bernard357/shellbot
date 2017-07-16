@@ -39,7 +39,6 @@ class NoopTests(unittest.TestCase):
         self.assertEqual(c.keyword, u'pass')
         self.assertEqual(c.information_message, u'Do absolutely nothing')
         self.assertEqual(c.usage_message, None)
-        self.assertTrue(c.is_interactive)
         self.assertTrue(c.is_hidden)
 
     def test_execute(self):

@@ -39,7 +39,6 @@ class SleepTests(unittest.TestCase):
         self.assertEqual(c.keyword, u'sleep')
         self.assertEqual(c.information_message, u'Sleep for a while')
         self.assertEqual(c.usage_message, u'sleep <n>')
-        self.assertFalse(c.is_interactive)
         self.assertTrue(c.is_hidden)
 
     def test_execute(self):
