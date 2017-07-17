@@ -103,7 +103,7 @@ def some_message():
 # create a bot and configure it
 #
 os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
-engine = Engine(settings=None, configure=True)
+engine = Engine(type='spark', configure=True)
 
 # create a chat room
 #
@@ -111,10 +111,10 @@ bot = engine.bond(reset=True)
 
 # send notifications to the room
 #
-for index in range(10):
+for index in range(7):
 
     bot.say(some_message())
-    time.sleep(7)
+    time.sleep(5)
 
 bot.say(u"Nothing more to say")
 

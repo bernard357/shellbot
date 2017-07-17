@@ -127,7 +127,9 @@ class Batsuicide(Command):
         bot.dispose()
 
 
-engine = Engine(commands=[Batman(), Batcave(), Batsignal(), Batsuicide()])
+engine = Engine(
+    type='spark',
+    commands=[Batman(), Batcave(), Batsignal(), Batsuicide()])
 
 # load configuration
 #

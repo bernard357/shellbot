@@ -77,10 +77,10 @@ class Open(Command):
     information_message = u"Open Hotel California"
 
     def execute(self, bot, arguments=None):
-        if bot.engine.get('hotel_california.state', 'off') == 'on':
+        if bot.recall('hotel_california.state', 'off') == 'on':
             bot.say('Hotel California mode is already activated!')
         else:
-            bot.engine.set('hotel_california.state', 'on')
+            bot.remember('hotel_california.state', 'on')
             bot.say('Hotel California mode activated!')
 
 
@@ -89,10 +89,10 @@ class Close(Command):
     information_message = u"Close Hotel California"
 
     def execute(self, bot, arguments=None):
-        if bot.engine.get('hotel_california.state', 'off') == 'off':
+        if bot.recall('hotel_california.state', 'off') == 'off':
             bot.say('Hotel California mode is already deactivated!')
         else:
-            bot.engine.set('hotel_california.state', 'off')
+            bot.remember('hotel_california.state', 'off')
             bot.say('Hotel California mode deactivated!')
 
 
@@ -101,13 +101,13 @@ class Hotel(Command):
     information_message = u"Get status of Hotel California"
 
     def execute(self, bot, arguments=None):
-        if bot.engine.get('hotel_california.state', 'off') == 'off':
+        if bot.recall('hotel_california.state', 'off') == 'off':
             bot.say('Hotel California will let you escape')
         else:
             bot.say('Hotel California will keep you here forever!')
 
 
-engine = Engine(commands=[Open(), Close(), Hotel()])
+engine = Engine(type='spark', commands=[Open(), Close(), Hotel()])
 
 # load configuration
 #
@@ -136,7 +136,7 @@ class Magic(object):
 
     def on_leave(self, received):
 
-        if self.bot.engine.get('hotel_california.state', 'off') == 'off':
+        if self.bot.recall('hotel_california.state', 'off') == 'off':
             self.addresses.discard(received.actor_address)
             self.bot.say('On a dark desert highway, cool wind in my hair...')
 

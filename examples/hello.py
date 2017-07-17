@@ -55,7 +55,7 @@ class Hello(Command):
     keyword = 'hello'
     information_message = u"Hello, World!"
 
-engine = Engine(command=Hello())
+engine = Engine(type='spark', command=Hello())
 
 # load configuration
 #

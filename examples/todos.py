@@ -73,7 +73,7 @@ ngrok for exposing services to the Internet::
 
 import os
 
-from shellbot import ShellBot, Context
+from shellbot import Engine, Context
 Context.set_logger()
 
 #
@@ -89,24 +89,24 @@ factory = TodoFactory([
     'select the most appropriate scenario',
 ])
 
-bot = ShellBot(commands=TodoFactory.commands())
-bot.factory = factory
+engine = Engine(type='spark', commands=TodoFactory.commands())
+engine.factory = factory
 
 # load configuration
 #
 os.environ['BOT_ON_START'] = 'What do you want to do today?'
 os.environ['BOT_ON_STOP'] = 'Bot is now quitting the room, bye'
 os.environ['CHAT_ROOM_TITLE'] = 'Manage todos'
-bot.configure()
+engine.configure()
 
 # initialise a chat room
 #
-bot.bond(reset=True)
+bot = engine.bond(reset=True)
 
 # run the bot
 #
-bot.run()
+engine.run()
 
 # delete the chat room when the bot is stopped
 #
-bot.space.dispose()
+bot.dispose()

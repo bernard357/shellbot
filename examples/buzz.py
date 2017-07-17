@@ -99,7 +99,7 @@ Context.set_logger()
 # create a bot and load commands
 #
 from planets import PlanetFactory
-engine = Engine(commands=PlanetFactory.commands())
+engine = Engine(type='spark', commands=PlanetFactory.commands())
 
 # load configuration
 #
