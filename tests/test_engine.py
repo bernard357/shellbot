@@ -12,7 +12,7 @@ import time
 
 sys.path.insert(0, os.path.abspath('..'))
 
-from shellbot import Context, Engine, ShellBot
+from shellbot import Context, Engine, ShellBot, MachinesFactory
 from shellbot.spaces import Space, LocalSpace, SparkSpace
 
 my_context = Context()
@@ -661,6 +661,12 @@ class EngineTests(unittest.TestCase):
 
         bot = ShellBot(engine=my_engine)
         machine = my_engine.build_machine(bot)
+
+        previous = my_engine.factory
+        my_engine.factory = MachinesFactory(module='shellbot.machines.base',
+                                            name='Machine')
+        machine = my_engine.build_machine(bot)
+        my_engine.factory = previous
 
     def test_on_build(self):
 

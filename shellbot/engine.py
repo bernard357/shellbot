@@ -24,15 +24,15 @@ import time
 import yaml
 import weakref
 
-from .context import Context
-from .shell import Shell
-from .listener import Listener
-from .server import Server
 from .bot import ShellBot
+from .context import Context
+from .listener import Listener
+from .routes.wrapper import Wrapper
+from .server import Server
+from .shell import Shell
 from .spaces import SpaceFactory
 from .speaker import Speaker
 from .stores import StoreFactory
-from .routes.wrapper import Wrapper
 
 
 class Engine(object):
@@ -179,6 +179,7 @@ class Engine(object):
                  store=None,
                  command=None,
                  commands=None,
+                 factory=None,
                  ):
         """
         Powers multiple bots
@@ -212,6 +213,9 @@ class Engine(object):
 
         :param commands: A list of commands to initialize the shell
         :type commands: list of str, or list of Command
+
+        :param factory: For the building of a state machine for each bot
+        :type factory: MachinesFactory
 
         If a chat type is provided, e.g., 'spark', then one space instance is
         loaded from the SpaceFactory. Else a space of type 'local' is used.
@@ -275,6 +279,8 @@ class Engine(object):
 
         if command:
             self.load_command(command)
+
+        self.factory = factory
 
     def configure_from_path(self, path="settings.yaml"):
         """
@@ -807,6 +813,12 @@ class Engine(object):
         This function receives a bot, and returns
         a state machine bound to it.
         """
+        if self.factory:
+            logging.debug(u"- building state machine")
+            machine = self.factory.get_machine(bot=bot)
+            machine.start()
+            return machine
+
         return None
 
     def on_build(self, bot):
@@ -868,4 +880,3 @@ class Engine(object):
                 mailer.post(u"Kicked off from {}".format(leave.space_title))
         """
         pass
-

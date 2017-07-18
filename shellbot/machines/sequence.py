@@ -41,7 +41,7 @@ class Sequence(object):
     the second machine is triggered.
 
     """
-    def __init__(self, machines=None, **kwargs):
+    def __init__(self, bot=None, machines=None, **kwargs):
         """
         Implements a sequence of multiple machines
 
@@ -49,6 +49,7 @@ class Sequence(object):
         :type machines: list of Machine
 
         """
+        self.bot = bot
         self.machines = machines
 
         self.lock = Lock()
