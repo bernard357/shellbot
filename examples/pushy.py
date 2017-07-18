@@ -96,11 +96,12 @@ ngrok for exposing services to the Internet::
 """
 
 import logging
-#import os
 from multiprocessing import Process, Queue
 import time
 
-from shellbot import ShellBot, Context, Server, Notifier, Wrapper
+from shellbot import Engine, ShellBot, Context, Server, Notifier, Wrapper
+from shellbot.machines import Steps
+
 Context.set_logger()
 
 #
@@ -110,14 +111,13 @@ Context.set_logger()
 settings = {
 
     'bot': {
-        'on_start': 'Welcome to this on-demand collaborative room',
-        'on_stop': 'Bot is now quitting the room, bye',
+        'on_enter': 'Welcome to this on-demand collaborative room',
+        'on_exit': 'Bot is now quitting the room, bye',
     },
 
     'spark': {
         'room': 'On-demand collaboration',
         'moderators': '$CHAT_ROOM_MODERATORS',
-        'token': '$CHAT_TOKEN',
     },
 
     'server': {
@@ -133,7 +133,7 @@ settings = {
         {
             'label': u'Level 1',
             'message': u'Initial capture of information',
-            'markdown': u'If you are on the shop floor:\n'
+            'content': u'If you are on the shop floor:\n'
                 + u'* Take a picture of the faulty part\n'
                 + u'* Describe the issue in the chat box\n'
                 + u'\n'
@@ -167,17 +167,25 @@ context.check('server.trigger', '/trigger')
 context.check('server.hook', '/hook')
 
 #
+# manage custom state machines
+#
+
+class MyFactory(object):
+    def __init__(self, steps):
+        self.steps = steps
+    def get_machine(self, bot):
+        return Steps(bot=bot, steps=self.steps)
+
+#
 # create a bot and load commands
 #
 
-bot = ShellBot(context=context, configure=True)
-
-from shellbot.commands import Close
-bot.load_command(Close())  # allow space deletion from the chat
-
-from steps import StepsFactory, Steps
-bot.steps = Steps(context=context, configure=True)
-bot.load_commands(StepsFactory.commands())
+engine = Engine(
+    type='spark',
+    context=context,
+    configure=True,
+    commands=['shellbot.commands.step', 'shellbot.commands.close'],
+    factory=MyFactory(steps=context.get('process.steps')),)
 
 #
 # a queue of events between the web server and the bot
@@ -195,7 +203,7 @@ server.add_route(Notifier(queue=queue,
                           notification='click',
                           route=context.get('server.trigger')))
 
-server.add_route(Wrapper(callable=bot.get_hook(),
+server.add_route(Wrapper(callable=engine.get_hook(),
                          route=context.get('server.hook')))
 
 #
@@ -206,8 +214,8 @@ class Trigger(object):
 
     EMPTY_DELAY = 0.005   # time to wait if queue is empty
 
-    def __init__(self, bot, queue):
-        self.bot = bot
+    def __init__(self, engine, queue):
+        self.engine = engine
         self.queue = queue if queue else Queue()
 
     def start(self):
@@ -220,8 +228,8 @@ class Trigger(object):
         logging.info(u"Waiting for trigger")
 
         try:
-            self.bot.context.set('trigger.counter', 0)
-            while self.bot.context.get('general.switch', 'on') == 'on':
+            self.engine.set('trigger.counter', 0)
+            while self.engine.get('general.switch', 'on') == 'on':
 
                 if self.queue.empty():
                     time.sleep(self.EMPTY_DELAY)
@@ -229,7 +237,7 @@ class Trigger(object):
 
                 try:
                     item = self.queue.get(True, self.EMPTY_DELAY)
-                    if isinstance(item, Exception):
+                    if item is None:
                         break
 
                     self.process(item)
@@ -242,14 +250,13 @@ class Trigger(object):
 
     def process(self, item):
 
-        counter = self.bot.context.increment('trigger.counter')
+        counter = self.engine.context.increment('trigger.counter')
         logging.info(u'Trigger {} {}'.format(item, counter))
 
         if counter == 1:
-            self.bot.bond()
+            self.bot = self.engine.bond()
 #            self.bot.bond(reset=True)
-            self.bot.space.on_start()
-            self.bot.hook()
+#            self.bot.space.on_start()
 
         else:
             self.bot.say(u'{} {}'.format(item, counter))
@@ -258,9 +265,9 @@ class Trigger(object):
 # launch multiple processes to do the job
 #
 
-bot.start()
+engine.start()
 
-trigger = Trigger(bot, queue)
+trigger = Trigger(engine, queue)
 trigger.start()
 
 server.run()
