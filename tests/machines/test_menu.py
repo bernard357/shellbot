@@ -11,8 +11,6 @@ import sys
 from threading import Timer
 import time
 
-sys.path.insert(0, os.path.abspath('../..'))
-
 from shellbot import Context, Engine
 from shellbot.machines import Menu
 from shellbot.stores import MemoryStore

@@ -9,8 +9,6 @@ import os
 from multiprocessing import Process, Queue
 import sys
 
-sys.path.insert(0, os.path.abspath('..'))
-
 from shellbot import Context
 from shellbot import Engine
 from shellbot import Listener

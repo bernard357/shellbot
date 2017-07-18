@@ -2,44 +2,46 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import gc
 import logging
 import os
 import random
 import sys
 
-sys.path.insert(0, os.path.abspath('..'))
-
 from shellbot import Context
 from shellbot.stores import SqliteStore
 
 
-my_context = Context()
-my_db_name = os.path.dirname(os.path.abspath(__file__)) + '/../local/store.db'
-
-
 class SqliteStoreTests(unittest.TestCase):
 
+    def setUp(self):
+        self.context = Context()
+        self.db_name = os.path.dirname(os.path.abspath(__file__)) + '/../local/store.db'
+
     def tearDown(self):
-        my_context.clear()
+        del self.context
+        collected = gc.collect()
+        if collected:
+            logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 
         logging.info('***** init')
 
-        store = SqliteStore(context=my_context)
+        store = SqliteStore(context=self.context)
 
     def test_check(self):
 
         logging.info('***** check')
 
-        store = SqliteStore(context=my_context)
+        store = SqliteStore(context=self.context)
         store.check()
 
     def test_bond(self):
 
         logging.info('***** bond')
 
-        store = SqliteStore(context=my_context, db=my_db_name)
+        store = SqliteStore(context=self.context, db=self.db_name)
 
         store.bond()
 
@@ -49,7 +51,7 @@ class SqliteStoreTests(unittest.TestCase):
 
         logging.info('***** _set')
 
-        store = SqliteStore(context=my_context, db=my_db_name)
+        store = SqliteStore(context=self.context, db=self.db_name)
         store.bond()
 
         choices = ['hello', 'world', 'how', 'are', 'you']
@@ -77,7 +79,7 @@ class SqliteStoreTests(unittest.TestCase):
 
         logging.info('***** _get')
 
-        store = SqliteStore(context=my_context, db=my_db_name)
+        store = SqliteStore(context=self.context, db=self.db_name)
         store.bond()
 
         key = '*no*chance*it*exists'
@@ -106,7 +108,7 @@ class SqliteStoreTests(unittest.TestCase):
 
         logging.info('***** _clear')
 
-        store = SqliteStore(context=my_context, db=my_db_name)
+        store = SqliteStore(context=self.context, db=self.db_name)
         store.bond()
 
         # set a key and then forget it
@@ -128,7 +130,7 @@ class SqliteStoreTests(unittest.TestCase):
 
         logging.info('***** unicode')
 
-        store = SqliteStore(context=my_context, db=my_db_name)
+        store = SqliteStore(context=self.context, db=self.db_name)
         store.bond()
 
         store._set('hello', 'world')

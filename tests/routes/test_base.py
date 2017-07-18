@@ -8,8 +8,6 @@ import os
 from multiprocessing import Queue
 import sys
 
-sys.path.insert(0, os.path.abspath('../..'))
-
 from shellbot import Context, Route
 
 

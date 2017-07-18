@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import gc
 import logging
 from multiprocessing import Manager, Process
 import os
@@ -9,16 +10,20 @@ import random
 import sys
 import time
 
-sys.path.insert(0, os.path.abspath('..'))
-
 from shellbot import Context
 from shellbot.lists import List
 
 
-my_context = Context()
-
-
 class ListTests(unittest.TestCase):
+
+    def setUp(self):
+        self.context = Context()
+
+    def tearDown(self):
+        del self.context
+        collected = gc.collect()
+        if collected:
+            logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 
@@ -27,8 +32,8 @@ class ListTests(unittest.TestCase):
         list = List()
         self.assertEqual(list.context, None)
 
-        list = List(context=my_context)
-        self.assertEqual(list.context, my_context)
+        list = List(context=self.context)
+        self.assertEqual(list.context, self.context)
 
     def test_on_init(self):
 

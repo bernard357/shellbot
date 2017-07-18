@@ -11,14 +11,8 @@ import sys
 from threading import Timer
 import time
 
-sys.path.insert(0, os.path.abspath('../..'))
-
 from shellbot import Context, Engine, ShellBot
 from shellbot.machines import Machine, State, Transition
-
-
-my_engine = Engine()
-my_bot = ShellBot(engine=my_engine)
 
 
 class Helper(object):
@@ -51,19 +45,25 @@ class Helper(object):
 
 class MachineTests(unittest.TestCase):
 
+    def setUp(self):
+        self.engine = Engine()
+        self.bot = ShellBot(engine=self.engine)
+
     def tearDown(self):
-        my_engine.context.clear()
+        del self.bot
+        del self.engine
         collected = gc.collect()
-        logging.info("Garbage collector: collected %d objects." % (collected))
+        if collected:
+            logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 
         logging.info("***** machine/init")
 
-        machine = Machine(bot=my_bot)
-        self.assertEqual(machine.bot, my_bot)
+        machine = Machine(bot=self.bot)
+        self.assertEqual(machine.bot, self.bot)
 
-        machine = Machine(bot=my_bot, weird='w')
+        machine = Machine(bot=self.bot, weird='w')
         with self.assertRaises(AttributeError):
             print(machine.weird)
 
@@ -71,14 +71,14 @@ class MachineTests(unittest.TestCase):
             def on_init(self, extra=None, **kwargs):
                 self.extra = extra
 
-        machine = MyMachine(bot=my_bot, extra='w')
+        machine = MyMachine(bot=self.bot, extra='w')
         self.assertEqual(machine.extra, 'w')
 
     def test_getter(self):
 
         logging.info("***** machine/getter")
 
-        machine = Machine(bot=my_bot)
+        machine = Machine(bot=self.bot)
 
         # undefined key
         self.assertEqual(machine.get('hello'), None)
@@ -102,7 +102,7 @@ class MachineTests(unittest.TestCase):
 
         logging.info("***** machine/build")
 
-        machine = Machine(bot=my_bot)
+        machine = Machine(bot=self.bot)
 
         states = ['one', 'two', 'three']
         transitions = [
@@ -157,7 +157,7 @@ class MachineTests(unittest.TestCase):
 
         logging.info("***** machine/state")
 
-        machine = Machine(bot=my_bot)
+        machine = Machine(bot=self.bot)
 
         states = ['one', 'two', 'three']
         transitions = [
@@ -177,7 +177,7 @@ class MachineTests(unittest.TestCase):
 
         logging.info("***** machine/current_state")
 
-        machine = Machine(bot=my_bot)
+        machine = Machine(bot=self.bot)
 
         states = ['one', 'two', 'three']
         transitions = [
@@ -203,7 +203,7 @@ class MachineTests(unittest.TestCase):
             {'source': 'three', 'target': 'one'},
         ]
 
-        machine = Machine(bot=my_bot,
+        machine = Machine(bot=self.bot,
                           states=states,
                           transitions=transitions,
                           initial='one')
@@ -222,7 +222,7 @@ class MachineTests(unittest.TestCase):
 
         logging.info("***** machine/reset a dynamic machine")
 
-        machine = Machine(bot=my_bot)
+        machine = Machine(bot=self.bot)
 
         states = ['one', 'two', 'three', 'four']
         transitions = [
@@ -235,7 +235,7 @@ class MachineTests(unittest.TestCase):
                       initial='one',
                       on_enter=on_enter)
 
-        my_engine.set('general.switch', 'on')
+        self.engine.set('general.switch', 'on')
         machine_process = machine.start(tick=0.001)
         while machine.current_state.name != 'two':
             time.sleep(0.01)
@@ -253,7 +253,7 @@ class MachineTests(unittest.TestCase):
 
         logging.info("***** machine/step")
 
-        machine = Machine(bot=my_bot)
+        machine = Machine(bot=self.bot)
         with self.assertRaises(AttributeError):
             machine.step()
 
@@ -269,7 +269,7 @@ class MachineTests(unittest.TestCase):
             {'source': 'three', 'target': 'one'},
         ]
 
-        machine = Machine(bot=my_bot,
+        machine = Machine(bot=self.bot,
                           states=states,
                           transitions=transitions,
                           initial='one')
@@ -296,7 +296,7 @@ class MachineTests(unittest.TestCase):
             'one': helper.increment_x
         }
 
-        machine = Machine(bot=my_bot,
+        machine = Machine(bot=self.bot,
                           states=states,
                           transitions=transitions,
                           initial='one',
@@ -326,7 +326,7 @@ class MachineTests(unittest.TestCase):
             'one': helper.extended
         }
 
-        machine = Machine(bot=my_bot,
+        machine = Machine(bot=self.bot,
                           states=states,
                           transitions=transitions,
                           initial='one',
@@ -352,7 +352,7 @@ class MachineTests(unittest.TestCase):
             'one': helper.increment_x
         }
 
-        machine = Machine(bot=my_bot,
+        machine = Machine(bot=self.bot,
                           states=states,
                           transitions=transitions,
                           initial='one',
@@ -383,7 +383,7 @@ class MachineTests(unittest.TestCase):
             'one': helper.increment_x
         }
 
-        machine = Machine(bot=my_bot,
+        machine = Machine(bot=self.bot,
                           states=states,
                           transitions=transitions,
                           initial='one',
@@ -414,7 +414,7 @@ class MachineTests(unittest.TestCase):
             'one': helper.increment_x
         }
 
-        machine = Machine(bot=my_bot,
+        machine = Machine(bot=self.bot,
                           states=states,
                           transitions=transitions,
                           initial='one',
@@ -448,7 +448,7 @@ class MachineTests(unittest.TestCase):
             {'source': 'two', 'target': 'one'},
         ]
 
-        machine = Machine(bot=my_bot,
+        machine = Machine(bot=self.bot,
                           states=states,
                           transitions=transitions,
                           initial='one')
@@ -473,7 +473,7 @@ class MachineTests(unittest.TestCase):
             {'source': 'two', 'target': 'one'},
         ]
 
-        machine = Machine(bot=my_bot,
+        machine = Machine(bot=self.bot,
                           states=states,
                           transitions=transitions,
                           initial='one')
@@ -511,7 +511,7 @@ class MachineTests(unittest.TestCase):
             'one': helper.increment_z
         }
 
-        machine = Machine(bot=my_bot,
+        machine = Machine(bot=self.bot,
                           states=states,
                           transitions=transitions,
                           initial='one',
@@ -547,16 +547,16 @@ class MachineTests(unittest.TestCase):
             {'source': 'three', 'target': 'four'},
         ]
 
-        machine = Machine(bot=my_bot,
+        machine = Machine(bot=self.bot,
                           states=states,
                           transitions=transitions,
                           initial='one')
 
-        my_engine.set('general.switch', 'on')
+        self.engine.set('general.switch', 'on')
         machine_process = machine.start(tick=0.001)
         machine.step()
         time.sleep(0.05)
-        my_engine.set('general.switch', 'off')
+        self.engine.set('general.switch', 'off')
         machine_process.join()
 
         self.assertTrue(machine.current_state.name != 'one')
@@ -573,12 +573,12 @@ class MachineTests(unittest.TestCase):
             {'source': 'three', 'target': 'four'},
         ]
 
-        machine = Machine(bot=my_bot,
+        machine = Machine(bot=self.bot,
                           states=states,
                           transitions=transitions,
                           initial='one')
 
-        my_engine.set('general.switch', 'on')
+        self.engine.set('general.switch', 'on')
         machine_process = machine.start(tick=0.001)
         machine.stop()
         machine_process.join()
@@ -588,7 +588,7 @@ class MachineTests(unittest.TestCase):
 
         logging.info("***** machine/lifecycle")
 
-        machine = Machine(bot=my_bot)
+        machine = Machine(bot=self.bot)
 
         states = ['one', 'two', 'three', 'four']
         transitions = [
@@ -602,7 +602,7 @@ class MachineTests(unittest.TestCase):
                       initial='one',
                       on_enter=on_enter)
 
-        my_engine.set('general.switch', 'on')
+        self.engine.set('general.switch', 'on')
         machine_process = machine.start(tick=0.001)
         machine_process.join()
 
@@ -625,15 +625,15 @@ class MachineTests(unittest.TestCase):
             {'source': 'two', 'target': 'one'},
         ]
 
-        machine = MyMachine(bot=my_bot,
+        machine = MyMachine(bot=self.bot,
                             states=states,
                             transitions=transitions,
                             initial='one')
 
-        my_engine.set('general.switch', 'off')
+        self.engine.set('general.switch', 'off')
         machine.run()  # general switch is off
 
-        my_engine.set('general.switch', 'on')
+        self.engine.set('general.switch', 'on')
 
         machine.TICK_DURATION = 0.003
         t = Timer(0.004, machine.stop)
@@ -659,7 +659,7 @@ class MachineTests(unittest.TestCase):
             {'source': 'two', 'target': 'one'},
         ]
 
-        machine = Machine(bot=my_bot,
+        machine = Machine(bot=self.bot,
                           states=states,
                           transitions=transitions,
                           initial='one')

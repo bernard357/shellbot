@@ -10,8 +10,6 @@ import sys
 import time
 from webtest import TestApp
 
-sys.path.insert(0, os.path.abspath('..'))
-
 from shellbot import Context, Server
 from shellbot.routes import Route, Notifier, Text, Wrapper
 

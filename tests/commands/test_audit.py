@@ -10,8 +10,6 @@ import sys
 import time
 import yaml
 
-sys.path.insert(0, os.path.abspath('../..'))
-
 from shellbot import Context, Engine, Shell, Vibes
 from shellbot.commands import Audit
 from shellbot.events import Message

@@ -10,8 +10,6 @@ from multiprocessing import Manager, Process, Queue
 import sys
 import time
 
-sys.path.insert(0, os.path.abspath('..'))
-
 from shellbot import Context, Engine, ShellBot, MachinesFactory
 from shellbot.spaces import Space, LocalSpace, SparkSpace
 

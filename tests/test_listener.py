@@ -13,8 +13,6 @@ from threading import Timer
 import time
 import yaml
 
-sys.path.insert(0, os.path.abspath('..'))
-
 from shellbot import Context, Engine, Listener, SpaceFactory, Vibes
 from shellbot.events import Event, Message, Attachment, Join, Leave
 
@@ -630,8 +628,6 @@ class ListenerTests(unittest.TestCase):
             u'help - Show commands and usage\nusage: help <command>')
         with self.assertRaises(Exception):
             print(my_engine.mouth.get_nowait())
-
-        logging.debug('here we go')
 
         self.maxDiff = None
         for item in items:

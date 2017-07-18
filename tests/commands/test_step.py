@@ -2,22 +2,17 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import gc
 import logging
 import mock
 from multiprocessing import Process, Queue
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('../..'))
-
 from shellbot import Context, Engine, Shell, Vibes
+from shellbot.spaces import LocalSpace
 from shellbot.stores import MemoryStore
 from shellbot.commands import Step
-
-
-my_store = MemoryStore()
-my_engine = Engine(mouth=Queue(), store=my_store)
-my_engine.shell = Shell(engine=my_engine)
 
 
 class Bot(object):
@@ -27,18 +22,32 @@ class Bot(object):
     def say(self, text, content=None, file=None):
         self.engine.mouth.put(Vibes(text, content, file))
 
-
-my_bot = Bot(engine=my_engine)
-
-
-
 class StepTests(unittest.TestCase):
+
+    def setUp(self):
+        self.context = Context()
+        self.engine = Engine(context=self.context,
+                             mouth=Queue())
+        self.space = LocalSpace(context=self.context, ears=self.engine.ears)
+        self.space.values['id'] = '*id'
+        self.store = MemoryStore(context=self.context)
+        self.bot = Bot(engine=self.engine)
+
+    def tearDown(self):
+        del self.bot
+        del self.store
+        del self.space
+        del self.engine
+        del self.context
+        collected = gc.collect()
+        if collected:
+            logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 
         logging.info('***** init')
 
-        c = Step(my_engine)
+        c = Step(self.engine)
 
         self.assertEqual(c.keyword, u'step')
         self.assertEqual(
@@ -50,18 +59,18 @@ class StepTests(unittest.TestCase):
 
         logging.info('***** execute')
 
-        c = Step(my_engine)
+        c = Step(self.engine)
 
         logging.debug("- without machine")
         with self.assertRaises(AttributeError):
-            c.execute(my_bot)
+            c.execute(self.bot)
 
         logging.debug("- with machine")
-        my_bot.machine = mock.Mock()
-        c.execute(my_bot)
+        self.bot.machine = mock.Mock()
+        c.execute(self.bot)
 
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
 
 if __name__ == '__main__':

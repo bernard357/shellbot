@@ -12,29 +12,29 @@ from multiprocessing import Process, Queue
 import sys
 import time
 
-sys.path.insert(0, os.path.abspath('../..'))
-
 from shellbot import Context
 from shellbot.spaces import LocalSpace
 
 
-my_context = Context()
-my_ears = Queue()
-
-
 class LocalSpaceTests(unittest.TestCase):
 
+    def setUp(self):
+        self.context = Context()
+        self.context.set('bot.id', '*bot')
+        self.ears = Queue()
+
     def tearDown(self):
-        my_context.clear()
-        my_context.set('bot.id', '*bot')
+        del self.ears
+        del self.context
         collected = gc.collect()
-        logging.info("Garbage collector: collected %d objects." % (collected))
+        if collected:
+            logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 
         logging.info("***** init")
 
-        space = LocalSpace(context=my_context)
+        space = LocalSpace(context=self.context)
         self.assertEqual(space.prefix, 'local')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, None)
@@ -45,20 +45,20 @@ class LocalSpaceTests(unittest.TestCase):
 
         logging.info("***** on_init")
 
-        space = LocalSpace(context=my_context)
+        space = LocalSpace(context=self.context)
         self.assertEqual(space.input, [])
 
-        space = LocalSpace(context=my_context, input='hello world')
+        space = LocalSpace(context=self.context, input='hello world')
         self.assertEqual(space.input, ['hello world'])
 
-        space = LocalSpace(context=my_context, input=['hello', 'world'])
+        space = LocalSpace(context=self.context, input=['hello', 'world'])
         self.assertEqual(space.input, ['hello', 'world'])
 
     def test_push(self):
 
         logging.info("***** push")
 
-        space = LocalSpace(context=my_context)
+        space = LocalSpace(context=self.context)
 
         space.push(input=None)
         self.assertEqual(space.input, [])
@@ -76,7 +76,7 @@ class LocalSpaceTests(unittest.TestCase):
 
         logging.info("***** on_reset")
 
-        space = LocalSpace(context=my_context, input=["hello", "world"])
+        space = LocalSpace(context=self.context, input=["hello", "world"])
         space.on_reset()
         self.assertEqual(next(space._lines, None), "hello")
         self.assertEqual(next(space._lines, None), "world")
@@ -85,7 +85,7 @@ class LocalSpaceTests(unittest.TestCase):
         original_stdin = sys.stdin
         sys.stdin = io.StringIO(u'hello\nworld\n')
 
-        space = LocalSpace(context=my_context)
+        space = LocalSpace(context=self.context)
         space.on_reset()
         self.assertEqual(next(space._lines, None), u"hello")
         self.assertEqual(next(space._lines, None), u"world")
@@ -98,7 +98,7 @@ class LocalSpaceTests(unittest.TestCase):
         logging.info("***** configure")
 
         settings = {'local.key': 'my value',}
-        space = LocalSpace(context=my_context)
+        space = LocalSpace(context=self.context)
         space.configure(settings=settings)
         self.assertEqual(space.context.get('local.title'), 'Local space')
         self.assertEqual(space.context.get('local.key'), 'my value')
@@ -107,8 +107,8 @@ class LocalSpaceTests(unittest.TestCase):
 
         self.assertEqual(space.context.get('server.binding'), None)
 
-        my_context.clear()
-        space = LocalSpace(context=my_context)
+        self.context.clear()
+        space = LocalSpace(context=self.context)
         settings = {'local.title': 'a title',
                     'local.key': 'my value',}
         space.configure(settings=settings)
@@ -121,14 +121,14 @@ class LocalSpaceTests(unittest.TestCase):
 
         logging.info("***** on_bond")
 
-        space = LocalSpace(context=my_context)
+        space = LocalSpace(context=self.context)
         space.on_bond()
 
     def test_use_space(self):
 
         logging.info("***** use_space")
 
-        space = LocalSpace(context=my_context)
+        space = LocalSpace(context=self.context)
         self.assertTrue(space.use_space(id='12357'))
         self.assertEqual(space.title, 'Collaboration space')
         self.assertEqual(space.id, '12357')
@@ -143,7 +143,7 @@ class LocalSpaceTests(unittest.TestCase):
 
         logging.info("***** lookup_space")
 
-        space = LocalSpace(context=my_context)
+        space = LocalSpace(context=self.context)
         self.assertTrue(space.lookup_space(title='hello there'))
         self.assertEqual(space.title, 'hello there')
         self.assertEqual(space.id, '*local')
@@ -158,7 +158,7 @@ class LocalSpaceTests(unittest.TestCase):
 
         logging.info("***** create_space")
 
-        space = LocalSpace(context=my_context)
+        space = LocalSpace(context=self.context)
         space.create_space(title='hello there')
         self.assertEqual(space.title, 'hello there')
         self.assertEqual(space.id, '*local')
@@ -173,7 +173,7 @@ class LocalSpaceTests(unittest.TestCase):
 
         logging.info("***** add_moderator")
 
-        space = LocalSpace(context=my_context)
+        space = LocalSpace(context=self.context)
         space.add_moderator(person='bob@acme.com')
         self.assertEqual(space.moderators, ['bob@acme.com'])
 
@@ -181,7 +181,7 @@ class LocalSpaceTests(unittest.TestCase):
 
         logging.info("***** add_partcipant")
 
-        space = LocalSpace(context=my_context)
+        space = LocalSpace(context=self.context)
         space.add_participant(person='bob@acme.com')
         self.assertEqual(space.participants, ['bob@acme.com'])
 
@@ -189,7 +189,7 @@ class LocalSpaceTests(unittest.TestCase):
 
         logging.info("***** remove_participant")
 
-        space = LocalSpace(context=my_context)
+        space = LocalSpace(context=self.context)
         space.add_participant(person='bob@acme.com')
         self.assertEqual(space.participants, ['bob@acme.com'])
         space.remove_participant(person='bob@acme.com')
@@ -199,14 +199,14 @@ class LocalSpaceTests(unittest.TestCase):
 
         logging.info("***** delete_space")
 
-        space = LocalSpace(context=my_context)
+        space = LocalSpace(context=self.context)
         space.delete_space(title='*does*not*exist')
 
     def test_post_message(self):
 
         logging.info("***** post_message")
 
-        space = LocalSpace(context=my_context)
+        space = LocalSpace(context=self.context)
         space.post_message(text="What's up, Doc?",
                            content="*unsupported",
                            file="*unsupported",
@@ -216,18 +216,18 @@ class LocalSpaceTests(unittest.TestCase):
 
         logging.info("***** on_start")
 
-        space = LocalSpace(context=my_context)
+        space = LocalSpace(context=self.context)
         space.on_start()
 
     def test_pull(self):
 
         logging.info("***** pull")
 
-        space = LocalSpace(context=my_context,
-                           ears=my_ears,
+        space = LocalSpace(context=self.context,
+                           ears=self.ears,
                            input="hello world")
         space.pull()
-        self.assertEqual(json.loads(my_ears.get()),
+        self.assertEqual(json.loads(self.ears.get()),
                          {'text': 'hello world',
                           'from_id': '*user',
                           'type': 'message',
@@ -237,9 +237,9 @@ class LocalSpaceTests(unittest.TestCase):
         original_stdin = sys.stdin
         sys.stdin = io.StringIO(u'hello world')
 
-        space = LocalSpace(context=my_context, ears=my_ears)
+        space = LocalSpace(context=self.context, ears=self.ears)
         space.pull()
-        self.assertEqual(json.loads(my_ears.get()),
+        self.assertEqual(json.loads(self.ears.get()),
                          {'text': u'hello world',
                           'from_id': '*user',
                           'type': 'message',
@@ -252,10 +252,10 @@ class LocalSpaceTests(unittest.TestCase):
 
         logging.info("***** on_message")
 
-        space = LocalSpace(context=my_context)
-        space.on_message({'text': 'hello world'}, my_ears)
+        space = LocalSpace(context=self.context)
+        space.on_message({'text': 'hello world'}, self.ears)
 
-        self.assertEqual(json.loads(my_ears.get()),
+        self.assertEqual(json.loads(self.ears.get()),
                          {'from_id': '*user',
                           'mentioned_ids': ['*bot'],
                           'text': 'hello world',

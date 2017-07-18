@@ -21,8 +21,6 @@ from six import string_types
 import sys
 import importlib
 
-sys.path.insert(0, os.path.abspath('..'))
-
 from shellbot import Context
 
 

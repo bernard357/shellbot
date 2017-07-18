@@ -2,12 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import gc
 import logging
 from multiprocessing import Process, Queue
 import os
 import sys
-
-sys.path.insert(0, os.path.abspath('../..'))
 
 from shellbot import Context, Engine, ShellBot, SpaceFactory
 from examples.steps import StepsFactory, Steps, Next, State
@@ -43,15 +42,21 @@ my_settings = {
 
 }
 
-my_context = Context(settings=my_settings)
-
-my_engine = Engine(context=my_context,
-                   mouth=Queue(),
-                   space=SpaceFactory.get('local'))
-
-my_bot = ShellBot(engine=my_engine)
 
 class StepsTests(unittest.TestCase):
+
+    def setUp(self):
+        self.context = Context(settings=my_settings)
+        self.engine = Engine(context=self.context, mouth=Queue())
+        self.bot = ShellBot(engine=self.engine)
+
+    def tearDown(self):
+        del self.bot
+        del self.engine
+        del self.context
+        collected = gc.collect()
+        if collected:
+            logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_commands(self):
 
@@ -63,7 +68,7 @@ class StepsTests(unittest.TestCase):
 
     def test_steps(self):
 
-        steps = Steps(context=my_context, configure=True)
+        steps = Steps(context=self.context, configure=True)
 
         step = steps.step
         self.assertTrue(step is None)
@@ -98,9 +103,9 @@ class StepsTests(unittest.TestCase):
 
     def test_state(self):
 
-        steps = Steps(context=my_context, configure=True)
-        my_bot.steps = steps
-        s = State(bot=my_bot)
+        steps = Steps(context=self.context, configure=True)
+        self.bot.steps = steps
+        s = State(bot=self.bot)
 
         self.assertEqual(s.keyword, 'state')
         self.assertEqual(s.information_message,
@@ -109,15 +114,15 @@ class StepsTests(unittest.TestCase):
 
         s.execute()
 
-        self.assertEqual(my_engine.mouth.get().text, u'Current state is undefined')
+        self.assertEqual(self.engine.mouth.get().text, u'Current state is undefined')
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
     def test_next(self):
 
-        steps = Steps(context=my_context, configure=True)
-        my_bot.steps = steps
-        n = Next(bot=my_bot)
+        steps = Steps(context=self.context, configure=True)
+        self.bot.steps = steps
+        n = Next(bot=self.bot)
 
         self.assertEqual(n.keyword, 'escalate')
         self.assertEqual(n.information_message, u'Move process to next state')
@@ -125,86 +130,86 @@ class StepsTests(unittest.TestCase):
 
         n.execute()
 
-        self.assertEqual(my_engine.mouth.get().text,
+        self.assertEqual(self.engine.mouth.get().text,
                          u'New state: Level 1 - '
                          + u'Initial capture of information')
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
     def test_lifecycle(self):
 
-        steps = Steps(context=my_context, configure=True)
-        my_bot.steps = steps
-        s = State(bot=my_bot)
-        n = Next(bot=my_bot)
+        steps = Steps(context=self.context, configure=True)
+        self.bot.steps = steps
+        s = State(bot=self.bot)
+        n = Next(bot=self.bot)
 
         s.execute()
-        self.assertEqual(my_engine.mouth.get().text, u'Current state is undefined')
+        self.assertEqual(self.engine.mouth.get().text, u'Current state is undefined')
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(my_engine.mouth.get().text,
+        self.assertEqual(self.engine.mouth.get().text,
                          u'New state: Level 1 - '
                          + u'Initial capture of information')
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
         s.execute()
-        self.assertEqual(my_engine.mouth.get().text,
+        self.assertEqual(self.engine.mouth.get().text,
                          u'Current state: Level 1 - '
                          + u'Initial capture of information')
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(my_engine.mouth.get().text,
+        self.assertEqual(self.engine.mouth.get().text,
                          u'New state: Level 2 - '
                          + u'Escalation to technical experts')
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
         s.execute()
-        self.assertEqual(my_engine.mouth.get().text,
+        self.assertEqual(self.engine.mouth.get().text,
                          u'Current state: Level 2 - '
                          + u'Escalation to technical experts')
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(my_engine.mouth.get().text,
+        self.assertEqual(self.engine.mouth.get().text,
                          u'New state: Level 3 - '
                          + u'Escalation to decision stakeholders')
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
         s.execute()
-        self.assertEqual(my_engine.mouth.get().text,
+        self.assertEqual(self.engine.mouth.get().text,
                          u'Current state: Level 3 - '
                          + u'Escalation to decision stakeholders')
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(my_engine.mouth.get().text,
+        self.assertEqual(self.engine.mouth.get().text,
                          u'New state: Terminated - '
                          + u'Process is closed, yet conversation can continue')
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
         s.execute()
-        self.assertEqual(my_engine.mouth.get().text,
+        self.assertEqual(self.engine.mouth.get().text,
                          u'Current state: Terminated - '
                          + u'Process is closed, yet conversation can continue')
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
         n.execute()
-        self.assertEqual(my_engine.mouth.get().text,
+        self.assertEqual(self.engine.mouth.get().text,
                          u'Current state: Terminated - '
                          + u'Process is closed, yet conversation can continue')
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
 
 if __name__ == '__main__':

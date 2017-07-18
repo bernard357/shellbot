@@ -11,13 +11,8 @@ import sys
 from threading import Timer
 import time
 
-sys.path.insert(0, os.path.abspath('../..'))
-
 from shellbot import Context, Engine, ShellBot
 from shellbot.machines import Sequence
-
-my_engine = Engine()
-my_bot = ShellBot(engine=my_engine)
 
 
 class FakeMachine(object):  # do not change is_running during life cycle
@@ -53,31 +48,35 @@ class FakeMachine(object):  # do not change is_running during life cycle
         return self.mutables['running']
 
 
-stopped_1 = FakeMachine()
-stopped_2 = FakeMachine()
-stopped_3 = FakeMachine()
-
-running_1 = FakeMachine(running=True)
-
 class SequenceTests(unittest.TestCase):
 
+    def setUp(self):
+        self.stopped_1 = FakeMachine()
+        self.stopped_2 = FakeMachine()
+        self.stopped_3 = FakeMachine()
+        self.running_1 = FakeMachine(running=True)
+
     def tearDown(self):
-        my_engine.context.clear()
+        del self.stopped_1
+        del self.stopped_2
+        del self.stopped_3
+        del self.running_1
         collected = gc.collect()
-        logging.info("Garbage collector: collected %d objects." % (collected))
+        if collected:
+            logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 
         logging.info("***** init")
 
-        sequence = Sequence(machines=[stopped_1, stopped_2, stopped_3])
+        sequence = Sequence(machines=[self.stopped_1, self.stopped_2, self.stopped_3])
         self.assertEqual(len(sequence.machines), 3)
 
     def test_getter(self):
 
         logging.info("***** get and set")
 
-        sequence = Sequence(machines=[stopped_1, stopped_2, stopped_3])
+        sequence = Sequence(machines=[self.stopped_1, self.stopped_2, self.stopped_3])
 
         # undefined key
         self.assertEqual(sequence.get('hello'), None)
@@ -101,7 +100,7 @@ class SequenceTests(unittest.TestCase):
 
         logging.info("***** reset")
 
-        sequence = Sequence(machines=[stopped_1, stopped_2, stopped_3])
+        sequence = Sequence(machines=[self.stopped_1, self.stopped_2, self.stopped_3])
         self.assertTrue(sequence.reset())
         self.assertTrue(sequence.machines[0].mutables.get('reset'))
         self.assertTrue(sequence.machines[1].mutables.get('reset'))
@@ -111,7 +110,7 @@ class SequenceTests(unittest.TestCase):
 
         logging.info("***** start")
 
-        sequence = Sequence(machines=[stopped_1, stopped_2, stopped_3])
+        sequence = Sequence(machines=[self.stopped_1, self.stopped_2, self.stopped_3])
         process = sequence.start()
         process.join()
         self.assertTrue(sequence.machines[0].mutables.get('started'))
@@ -125,7 +124,7 @@ class SequenceTests(unittest.TestCase):
 
         logging.info("***** stop")
 
-        sequence = Sequence(machines=[FakeMachine(), FakeMachine(running=True), FakeMachine()])
+        sequence = Sequence(machines=[self.stopped_1, self.running_1, self.stopped_2])
         process = sequence.start()
 
         while sequence.machines[0].mutables.get('started') != True:
@@ -155,7 +154,7 @@ class SequenceTests(unittest.TestCase):
 
         logging.info("***** run")
 
-        sequence = Sequence(machines=[stopped_1, stopped_2, stopped_3])
+        sequence = Sequence(machines=[self.stopped_1, self.stopped_2, self.stopped_3])
         sequence.run()
         self.assertTrue(sequence.machines[0].mutables.get('started'))
         self.assertTrue(sequence.machines[0].mutables.get('ran'))
@@ -168,7 +167,7 @@ class SequenceTests(unittest.TestCase):
 
         logging.info("***** is_running")
 
-        sequence = Sequence(machines=[FakeMachine(), FakeMachine(), FakeMachine()])
+        sequence = Sequence(machines=[self.stopped_1, self.stopped_2, self.stopped_3])
         self.assertFalse(sequence.is_running)
 
 

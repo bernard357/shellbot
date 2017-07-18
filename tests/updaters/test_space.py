@@ -9,8 +9,6 @@ from multiprocessing import Process, Queue
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('../..'))
-
 from shellbot import Context, Engine, Shell
 from shellbot.events import Event, Message, Attachment, Join, Leave
 from shellbot.updaters import SpaceUpdater

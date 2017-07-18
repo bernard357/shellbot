@@ -10,12 +10,8 @@ import os
 import sys
 import yaml
 
-sys.path.insert(0, os.path.abspath('..'))
-
 from shellbot import Context
 from shellbot.events import Event, Message, Attachment, Join, Leave
-
-my_queue = Queue()
 
 
 class EventsTests(unittest.TestCase):
@@ -142,6 +138,7 @@ class EventsTests(unittest.TestCase):
 
         data = {u'hello': u'wörld', 'number': 123, 'weird': None}
         before = Event(attributes=data)
+        my_queue = Queue()
         my_queue.put(str(before))
         after = Event(my_queue.get())
         self.assertEqual(after.attributes, data)
@@ -215,6 +212,7 @@ class EventsTests(unittest.TestCase):
             }
 
         before = Message(item)
+        my_queue = Queue()
         my_queue.put(str(before))
         after = Message(my_queue.get())
         self.assertEqual(after.attributes, item)

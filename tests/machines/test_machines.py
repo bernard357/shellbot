@@ -10,18 +10,13 @@ from multiprocessing import Process
 import sys
 import time
 
-sys.path.insert(0, os.path.abspath('../..'))
-
 from shellbot import Context
 from shellbot.machines import MachinesFactory
 
 
-my_context = Context()
-
 class MachinesFactoryTests(unittest.TestCase):
 
     def tearDown(self):
-        my_context.clear()
         collected = gc.collect()
         logging.info("Garbage collector: collected %d objects." % (collected))
 

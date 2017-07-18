@@ -10,26 +10,26 @@ from multiprocessing import Process
 import sys
 import time
 
-sys.path.insert(0, os.path.abspath('../..'))
-
 from shellbot import Context
 from shellbot.spaces import SpaceFactory
 
 
-my_context = Context()
-
 class SpaceFactoryTests(unittest.TestCase):
 
+    def setUp(self):
+        self.context = Context()
+
     def tearDown(self):
-        my_context.clear()
+        del self.context
         collected = gc.collect()
-        logging.info("Garbage collector: collected %d objects." % (collected))
+        if collected:
+            logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_build_space(self):
 
         logging.info("***** build generic space from settings")
 
-        my_context.apply(settings={  # from settings to member attributes
+        self.context.apply(settings={  # from settings to member attributes
             'space': {
                 'room': 'My preferred room',
                 'moderators':
@@ -43,7 +43,7 @@ class SpaceFactoryTests(unittest.TestCase):
             }
         })
 
-        space = SpaceFactory.build(context=my_context)
+        space = SpaceFactory.build(context=self.context)
         self.assertEqual(space.id, None)   #  set after bond()
         self.assertEqual(space.title, None)
 
@@ -51,7 +51,7 @@ class SpaceFactoryTests(unittest.TestCase):
 
         logging.info("***** build local space from settings")
 
-        my_context.apply(settings={  # from settings to member attributes
+        self.context.apply(settings={  # from settings to member attributes
             'local': {
                 'room': 'My preferred room',
                 'moderators':
@@ -62,7 +62,7 @@ class SpaceFactoryTests(unittest.TestCase):
             }
         })
 
-        space = SpaceFactory.build(context=my_context)
+        space = SpaceFactory.build(context=self.context)
         self.assertEqual(space.id, None)   #  set after bond()
         self.assertEqual(space.title, None)
 
@@ -70,7 +70,7 @@ class SpaceFactoryTests(unittest.TestCase):
 
         logging.info("***** build Cisco Spark space from settings")
 
-        my_context.apply(settings={  # from settings to member attributes
+        self.context.apply(settings={  # from settings to member attributes
             'spark': {
                 'room': 'My preferred room',
                 'moderators':
@@ -84,9 +84,9 @@ class SpaceFactoryTests(unittest.TestCase):
             }
         })
 
-        space = SpaceFactory.build(context=my_context)
-        self.assertEqual(space.token, 'hkNWEtMJNkODVGlZWU1NmYtyY')
-        self.assertEqual(space.personal_token, '*personal*secret*token')
+        space = SpaceFactory.build(context=self.context)
+        self.assertEqual(space.get('token'), 'hkNWEtMJNkODVGlZWU1NmYtyY')
+        self.assertEqual(space.get('personal_token'), '*personal*secret*token')
         self.assertEqual(space.id, None)   #  set after bond()
         self.assertEqual(space.title, None)
         self.assertEqual(space.teamId, None)
@@ -95,7 +95,7 @@ class SpaceFactoryTests(unittest.TestCase):
 
         logging.info("***** sense generic space")
 
-        my_context.apply(settings={  # sense='space'
+        self.context.apply(settings={  # sense='space'
             'space': {
                 'room': 'My preferred room',
                 'moderators':
@@ -110,13 +110,13 @@ class SpaceFactoryTests(unittest.TestCase):
             }
         })
 
-        self.assertEqual(SpaceFactory.sense(my_context), 'space')
+        self.assertEqual(SpaceFactory.sense(self.context), 'space')
 
     def test_sense_local(self):
 
         logging.info("***** sense local space")
 
-        my_context.apply(settings={  # sense='local'
+        self.context.apply(settings={  # sense='local'
             'local': {
                 'room': 'My preferred room',
                 'moderators':
@@ -127,13 +127,13 @@ class SpaceFactoryTests(unittest.TestCase):
             }
         })
 
-        self.assertEqual(SpaceFactory.sense(my_context), 'local')
+        self.assertEqual(SpaceFactory.sense(self.context), 'local')
 
     def test_sense_spark(self):
 
         logging.info("***** sense Cisco Spark space")
 
-        my_context.apply(settings={  # sense='spark'
+        self.context.apply(settings={  # sense='spark'
             'spark': {
                 'room': 'My preferred room',
                 'moderators':
@@ -148,13 +148,13 @@ class SpaceFactoryTests(unittest.TestCase):
             }
         })
 
-        self.assertEqual(SpaceFactory.sense(my_context), 'spark')
+        self.assertEqual(SpaceFactory.sense(self.context), 'spark')
 
     def test_sense_alphabetical(self):
 
         logging.info("***** sense first space in alphabetical order")
 
-        my_context.apply(settings={  # 'space' is coming before 'spark'
+        self.context.apply(settings={  # 'space' is coming before 'spark'
             'spark': {
                 'room': 'My preferred room',
                 'moderators':
@@ -182,9 +182,9 @@ class SpaceFactoryTests(unittest.TestCase):
             },
         })
 
-        self.assertEqual(SpaceFactory.sense(my_context), 'space')
+        self.assertEqual(SpaceFactory.sense(self.context), 'space')
 
-        my_context.apply(settings={  # 'space' is coming before 'spark'
+        self.context.apply(settings={  # 'space' is coming before 'spark'
             'space': {
                 'room': 'My preferred room',
                 'moderators':
@@ -212,13 +212,13 @@ class SpaceFactoryTests(unittest.TestCase):
             },
         })
 
-        self.assertEqual(SpaceFactory.sense(my_context), 'space')
+        self.assertEqual(SpaceFactory.sense(self.context), 'space')
 
     def test_sense_void(self):
 
         logging.info("***** sense nothing on bad configuration")
 
-        my_context.apply(settings={  # no recognizable space type
+        self.context.apply(settings={  # no recognizable space type
             'not_a_space_type': {
                 'room': 'My preferred room',
                 'moderators':
@@ -247,7 +247,7 @@ class SpaceFactoryTests(unittest.TestCase):
         })
 
         with self.assertRaises(ValueError):
-            SpaceFactory.sense(my_context)
+            SpaceFactory.sense(self.context)
 
     def test_get_space(self):
 
@@ -281,8 +281,8 @@ class SpaceFactoryTests(unittest.TestCase):
 
         logging.info("***** get Cisco Spark space")
 
-        space = SpaceFactory.get(type='spark', context=my_context, token='b')
-        self.assertEqual(space.token, 'b')
+        space = SpaceFactory.get(type='spark', context=self.context, token='b')
+        self.assertEqual(space.get('token'), 'b')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, None)
         self.assertEqual(space.teamId, None)

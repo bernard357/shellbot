@@ -10,8 +10,6 @@ import os
 import sys
 import yaml
 
-sys.path.insert(0, os.path.abspath('../..'))
-
 from shellbot import Context, Engine, Shell
 from shellbot.events import Message
 from shellbot.updaters import QueueUpdater

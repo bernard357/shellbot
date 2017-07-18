@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import gc
 import logging
 from multiprocessing import Manager, Process
 import os
@@ -9,13 +10,8 @@ import random
 import sys
 import time
 
-sys.path.insert(0, os.path.abspath('..'))
-
 from shellbot import Context
 from shellbot.stores import Store
-
-
-my_context = Context()
 
 
 class MyStore(Store):
@@ -38,8 +34,14 @@ class MyStore(Store):
 
 class StoreTests(unittest.TestCase):
 
+    def setUp(self):
+        self.context = Context()
+
     def tearDown(self):
-        my_context.clear()
+        del self.context
+        collected = gc.collect()
+        if collected:
+            logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 
@@ -49,8 +51,8 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(store.context, None)
         self.assertTrue(store.lock is not None)
 
-        store = Store(context=my_context)
-        self.assertEqual(store.context, my_context)
+        store = Store(context=self.context)
+        self.assertEqual(store.context, self.context)
 
     def test_on_init(self):
 
@@ -70,14 +72,14 @@ class StoreTests(unittest.TestCase):
 
         logging.info('***** check')
 
-        store = Store(context=my_context)
+        store = Store(context=self.context)
         store.check()
 
     def test_bond(self):
 
         logging.info('***** bond')
 
-        store = Store(context=my_context)
+        store = Store(context=self.context)
         store.bond()
 
         store.bond(id='*123')

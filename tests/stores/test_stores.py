@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import gc
 import logging
 import mock
 import os
@@ -9,70 +10,72 @@ from multiprocessing import Process
 import sys
 import time
 
-sys.path.insert(0, os.path.abspath('../..'))
-
 from shellbot import Context
 from shellbot.stores import StoreFactory, MemoryStore, SqliteStore
-
-my_context = Context()
 
 
 class StoreFactoryTests(unittest.TestCase):
 
+    def setUp(self):
+        self.context = Context()
+
     def tearDown(self):
-        my_context.clear()
+        del self.context
+        collected = gc.collect()
+        if collected:
+            logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_build_memory(self):
 
-        store = StoreFactory.build(context=my_context)
+        store = StoreFactory.build(context=self.context)
         self.assertTrue(isinstance(store, MemoryStore))
 
     def test_build_sqlite(self):
 
-        my_context.apply(settings={  # from settings to member attributes
+        self.context.apply(settings={  # from settings to member attributes
                            'sqlite': {
-                               'db': 'my_store.db',
+                               'db': 'self.store.db',
                            }
                        })
 
-        store = StoreFactory.build(context=my_context)
+        store = StoreFactory.build(context=self.context)
         self.assertTrue(isinstance(store, SqliteStore))
-        self.assertEqual(my_context.get('sqlite.db'), 'my_store.db')
+        self.assertEqual(self.context.get('sqlite.db'), 'self.store.db')
 
     def test_sense(self):
 
-        my_context.apply(settings={  # default is 'memory'
+        self.context.apply(settings={  # default is 'memory'
             'oracle': {
-                'db': 'my_store.db',
+                'db': 'self.store.db',
             }
         })
 
-        self.assertEqual(StoreFactory.sense(my_context), 'memory')
+        self.assertEqual(StoreFactory.sense(self.context), 'memory')
 
-        my_context.clear()
-        my_context.apply(settings={  # sense='sqlite'
+        self.context.clear()
+        self.context.apply(settings={  # sense='sqlite'
             'sqlite': {
-                'db': 'my_store.db',
+                'db': 'self.store.db',
             }
         })
 
-        self.assertEqual(StoreFactory.sense(my_context), 'sqlite')
+        self.assertEqual(StoreFactory.sense(self.context), 'sqlite')
 
     def test_get_memory(self):
 
         store = StoreFactory.get(type='memory')
         self.assertTrue(isinstance(store, MemoryStore))
 
-        store = StoreFactory.get(type='memory', context=my_context, weird='w')
-        self.assertEqual(store.context, my_context)
+        store = StoreFactory.get(type='memory', context=self.context, weird='w')
+        self.assertEqual(store.context, self.context)
         with self.assertRaises(AttributeError):
             self.assertEqual(store.weird, 'w')
 
     def test_get_sqlite(self):
 
-        store = StoreFactory.get(type='sqlite', context=my_context)
+        store = StoreFactory.get(type='sqlite', context=self.context)
         self.assertTrue(isinstance(store, SqliteStore))
-        self.assertEqual(store.context, my_context)
+        self.assertEqual(store.context, self.context)
 
     def test_get_unknown(self):
 
