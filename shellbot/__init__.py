@@ -33,7 +33,7 @@ from .routes.wrapper import Wrapper
 __version__ = '17.6.6'
 
 __all__ = [
-    __version__,
+    '__version__',
     'ShellBot',
     'Context',
     'Engine',
