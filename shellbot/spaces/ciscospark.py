@@ -592,11 +592,11 @@ class SparkSpace(Space):
 
         """
         try:
-            assert self.api is not None  # connect() is prerequisite
+            assert self.personal_api is not None  # connect() is prerequisite
             assert self.id is not None  # bond() is prerequisite
 
-            self.api.memberships.create(roomId=self.id,
-                                        personEmail=person)
+            self.personal_api.memberships.create(roomId=self.id,
+                                                 personEmail=person)
 
         except Exception as feedback:
             logging.warning(u"Unable to add participant '{}'".format(person))

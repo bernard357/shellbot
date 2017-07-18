@@ -556,12 +556,12 @@ class SparkSpaceTests(unittest.TestCase):
 
         logging.info("*** add_participant")
         space = SparkSpace(context=my_context)
-        space.api = FakeApi()
+        space.personal_api = FakeApi()
         space.values['id'] = '*id'
 
         space.add_participant(person='foo.bar@acme.com')
 
-        self.assertTrue(space.api.memberships.create.called)
+        self.assertTrue(space.personal_api.memberships.create.called)
 
     def test_remove_participant(self):
 
