@@ -13,11 +13,20 @@ except ImportError:
 
 # get version from package itself
 def get_version():
-    version = None
-    sys.path.insert(0, pjoin(os.getcwd()))
-    from shellbot import __version__
-    version = __version__
-    sys.path.pop(0)
+#    version = None
+#    sys.path.insert(0, pjoin(os.getcwd()))
+#    from shellbot import __version__
+#    version = __version__
+#    sys.path.pop(0)
+#    return version
+    version = '0.0.0'
+    with open('shellbot/__init__.py') as f:
+        lines = f.read().splitlines()
+        for line in lines:
+            match = re.match(r"__version__ = '(.*?)'", line)
+            if match:
+                version = match.group(1)
+                break
     return version
 
 # get description from README.rst
