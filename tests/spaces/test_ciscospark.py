@@ -185,14 +185,14 @@ class SparkSpaceTests(unittest.TestCase):
         logging.info("*** init")
 
         space = SparkSpace(context=my_context, token='b')
-        self.assertEqual(space.token, 'b')
+        self.assertEqual(space.get('token'), 'b')
         self.assertEqual(space.id, None)
         self.assertEqual(space.title, None)
         self.assertEqual(space.teamId, None)
 
         space = SparkSpace(context=my_context, token='b', personal_token='c')
-        self.assertEqual(space.token, 'b')
-        self.assertEqual(space.personal_token, 'c')
+        self.assertEqual(space.get('token'), 'b')
+        self.assertEqual(space.get('personal_token'), 'c')
 
     def test_is_ready(self):
 
@@ -226,8 +226,8 @@ class SparkSpaceTests(unittest.TestCase):
                 'webhook': "http://73a1e282.ngrok.io",
             }
         })
-        self.assertEqual(space.token, 'hkNWEtMJNkODVGlZWU1NmYtyY')
-        self.assertEqual(space.personal_token, '*personal*secret*token')
+        self.assertEqual(space.get('token'), 'hkNWEtMJNkODVGlZWU1NmYtyY')
+        self.assertEqual(space.get('personal_token'), '*personal*secret*token')
         self.assertEqual(space.id, None)   #  set after bond()
         self.assertEqual(space.title, None)
         self.assertEqual(space.teamId, None)
@@ -348,28 +348,28 @@ class SparkSpaceTests(unittest.TestCase):
             return FakeApi(access_token=access_token)
 
         space = SparkSpace(context=my_context)
-        space.token = None
-        space.personal_token = None
+        space.set('token', None)
+        space.set('personal_token', None)
         with self.assertRaises(AssertionError):
             space.connect()
 
         space = SparkSpace(context=my_context)
-        space.token = 'a'
-        space.personal_token = None
+        space.set('token', 'a')
+        space.set('personal_token', None)
         space.connect(factory=my_factory)
         self.assertEqual(space.api.token, 'a')
         self.assertEqual(space.personal_api.token, 'a')
 
         space = SparkSpace(context=my_context)
-        space.token = None
-        space.personal_token = 'b'
+        space.set('token', None)
+        space.set('personal_token', 'b')
         space.connect(factory=my_factory)
         self.assertEqual(space.api.token, 'b')
         self.assertEqual(space.personal_api.token, 'b')
 
         space = SparkSpace(context=my_context)
-        space.token = 'a'
-        space.personal_token = 'b'
+        space.set('token', 'a')
+        space.set('personal_token', 'b')
         space.connect(factory=my_factory)
         self.assertEqual(space.api.token, 'a')
         self.assertEqual(space.personal_api.token, 'b')

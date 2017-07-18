@@ -131,10 +131,6 @@ class SparkSpace(Space):
 
         self.teamId = None
 
-        self.token = self.get('token', '')
-
-        self.personal_token = self.get('personal_token', '')
-
         self._last_message_id = 0
 
     def check(self):
@@ -244,34 +240,40 @@ class SparkSpace(Space):
         the regular CiscoSparkAPI is invoked instead.
 
         """
-        assert (self.token not in (None, '') or
-                self.personal_token not in (None, '')) # some token is needed
+        bot_token = self.get('token')
+        personal_token = self.get('personal_token')
+        assert (bot_token not in (None, '') or
+                personal_token not in (None, '')) # some token is needed
 
         if not factory:
             from ciscosparkapi import CiscoSparkAPI
             factory = CiscoSparkAPI
 
+        logging.debug(u"Loading Cisco Spark API as bot")
         self.api = None
         try:
-            if self.token:
-                logging.debug(u"Loading Cisco Spark API as bot")
-                self.api = factory(access_token=self.token)
+            if bot_token:
+                logging.debug(u"- token: {}".format(bot_token))
+                self.api = factory(access_token=bot_token)
 
             else:
-                self.api = factory(access_token=self.personal_token)
+                logging.debug(u"- token: {}".format(personal_token))
+                self.api = factory(access_token=personal_token)
 
         except Exception as feedback:
             logging.error(u"Unable to load Cisco Spark API")
             logging.exception(feedback)
 
+        logging.debug(u"Loading Cisco Spark API as person")
         self.personal_api = None
         try:
-            if self.personal_token:
-                logging.debug(u"Loading Cisco Spark API as person")
-                self.personal_api = factory(access_token=self.personal_token)
+            if personal_token:
+                logging.debug(u"- token: {}".format(personal_token))
+                self.personal_api = factory(access_token=personal_token)
 
             else:
-                self.personal_api = factory(access_token=self.token)
+                logging.debug(u"- token: {}".format(bot_token))
+                self.personal_api = factory(access_token=bot_token)
 
         except Exception as feedback:
             logging.error(u"Unable to load Cisco Spark API")
@@ -1124,5 +1126,3 @@ class SparkSpace(Space):
         space title does not come from ``space.room`` parameter.
         """
         return self.api.room.update(self.id, title)
-
-
