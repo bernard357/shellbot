@@ -16,10 +16,10 @@
 # limitations under the License.
 
 from builtins import str
+import importlib
 import logging
 from multiprocessing import Process, Queue
 from six import string_types
-import importlib
 
 from shellbot.commands import Default
 
@@ -200,11 +200,11 @@ class Shell(object):
             cls = getattr(module, name)
             command = cls(self.engine)
 
+        command.engine = self.engine
+
         if command.keyword in self._commands.keys():
             logging.debug(u"Command '{}' has been replaced".format(
                 command.keyword))
-
-        command.engine = self.engine
 
         self._commands[command.keyword] = command
 
