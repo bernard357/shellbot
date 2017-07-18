@@ -17,6 +17,7 @@ from .bot import ShellBot
 from .context import Context
 from .engine import Engine
 from .listener import Listener
+from .machines import MachinesFactory
 from .server import Server
 from .shell import Shell
 from .speaker import Speaker, Vibes
@@ -37,6 +38,7 @@ __all__ = [
     'Context',
     'Engine',
     'Listener',
+    'MachinesFactory',
     'Server',
     'Shell',
     'Speaker',
