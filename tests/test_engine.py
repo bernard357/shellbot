@@ -653,6 +653,16 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(store_1.recall('names'), ['Alice', 'Bob'])
         self.assertEqual(store_2.recall('names'), None)
 
+    def test_initialize_store(self):
+
+        logging.info('*** initialize_store ***')
+
+        settings = {'bot.store': {'planets': ['Uranus', 'Mercury']}}
+        my_engine.context.apply(settings)
+        print(my_engine.get('bot.store'))
+        bot = my_engine.build_bot('123', FakeBot)
+        self.assertEqual(bot.store.recall('planets'), ['Uranus', 'Mercury'])
+
     def test_build_machine(self):
 
         logging.info('*** build_machine ***')
@@ -660,11 +670,12 @@ class EngineTests(unittest.TestCase):
         bot = ShellBot(engine=my_engine)
         machine = my_engine.build_machine(bot)
 
-        previous = my_engine.factory
-        my_engine.factory = MachinesFactory(module='shellbot.machines.base',
-                                            name='Machine')
+        previous = my_engine.machine_factory
+        my_engine.machine_factory = MachinesFactory(
+            module='shellbot.machines.base',
+            name='Machine')
         machine = my_engine.build_machine(bot)
-        my_engine.factory = previous
+        my_engine.machine_factory = previous
 
     def test_on_build(self):
 

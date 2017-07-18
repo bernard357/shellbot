@@ -179,7 +179,7 @@ class Engine(object):
                  store=None,
                  command=None,
                  commands=None,
-                 factory=None,
+                 machine_factory=None,
                  ):
         """
         Powers multiple bots
@@ -214,8 +214,8 @@ class Engine(object):
         :param commands: A list of commands to initialize the shell
         :type commands: list of str, or list of Command
 
-        :param factory: For the building of a state machine for each bot
-        :type factory: MachinesFactory
+        :param machine_factory: Provides a state machine for each bot
+        :type machine_factory: MachinesFactory
 
         If a chat type is provided, e.g., 'spark', then one space instance is
         loaded from the SpaceFactory. Else a space of type 'local' is used.
@@ -280,7 +280,7 @@ class Engine(object):
         if command:
             self.load_command(command)
 
-        self.factory = factory
+        self.machine_factory = machine_factory
 
     def configure_from_path(self, path="settings.yaml"):
         """
@@ -757,7 +757,8 @@ class Engine(object):
         logging.debug(u"- building bot instance")
         bot = driver(engine=self, space_id=id)
 
-        logging.debug(u"- building state machine")
+        self.initialize_store(bot=bot)
+
         bot.machine = self.build_machine(bot=bot)
 
         self.on_build(bot)
@@ -801,6 +802,17 @@ class Engine(object):
         logging.debug(u"- building data store")
         return StoreFactory.get(type='memory')
 
+    def initialize_store(self, bot):
+        """
+        Copies engine settings to the bot store
+        """
+        logging.debug(u"- checking engine settings")
+        settings = self.get('bot.store', {})
+        if settings:
+            logging.debug(u"- initializing store")
+            for (key, value) in settings.items():
+                bot.store.remember(key, value)
+
     def build_machine(self, bot):
         """
         Builds a state machine for this bot
@@ -813,9 +825,9 @@ class Engine(object):
         This function receives a bot, and returns
         a state machine bound to it.
         """
-        if self.factory:
+        if self.machine_factory:
             logging.debug(u"- building state machine")
-            machine = self.factory.get_machine(bot=bot)
+            machine = self.machine_factory.get_machine(bot=bot)
             return machine
 
         return None
