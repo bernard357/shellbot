@@ -50,6 +50,7 @@ class ContextTests(unittest.TestCase):
             'spark.room': 'title',
             'DEBUG': True,
             'server': {'port': 80, 'url': 'http://www.acme.com/'},
+            'bot.store': {'planets': ['Uranus', 'Mercury']},
         }
 
         self.context.apply(settings)
@@ -59,7 +60,12 @@ class ContextTests(unittest.TestCase):
                          'who_knows')
         self.assertEqual(self.context.get('spark.room'), 'title')
         self.assertEqual(self.context.get('server.port'), 80)
-        self.assertEqual(self.context.get('server.url'), 'http://www.acme.com/')
+        self.assertEqual(self.context.get('server.url'),
+                         'http://www.acme.com/')
+        self.assertEqual(self.context.get('bot.store.planets'),
+                         ['Uranus', 'Mercury'])
+        self.assertEqual(self.context.get('bot.store'),
+                         {'planets': ['Uranus', 'Mercury']})
 
     def test_clear(self):
 

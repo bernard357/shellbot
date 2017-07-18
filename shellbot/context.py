@@ -295,10 +295,17 @@ class Context(object):
         """
         with self.lock:
 
-            value = self.values.get(key, default)
+            value = self.values.get(key)
 
             if value is not None:
                 return value
+
+            values = {}
+            for label in self.values.keys():
+                if label.startswith(key+'.'):
+                    values[label[len(key)+1:]] = self.values[label]
+            if values.keys():
+                return values
 
             return default
 
