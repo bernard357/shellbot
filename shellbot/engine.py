@@ -816,7 +816,6 @@ class Engine(object):
         if self.factory:
             logging.debug(u"- building state machine")
             machine = self.factory.get_machine(bot=bot)
-            machine.start()
             return machine
 
         return None
@@ -842,7 +841,7 @@ class Engine(object):
         Bonds this engine to a single space
         """
         bot = self.get_bot()
-        bot.bond(reset=True)
+        bot.bond(reset=reset)
 
         logging.debug(u"- remembering bot {}".format(bot.space_id))
         self.bots[bot.space_id] = bot

@@ -135,6 +135,9 @@ class ShellBot(object):
 
         self.engine.dispatch('bond')
 
+        if self.machine:
+            self.machine.start()
+
     def add_moderators(self, *args, **kwargs):
         """
         Adds moderators to the room
