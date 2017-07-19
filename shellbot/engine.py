@@ -729,7 +729,7 @@ class Engine(object):
         """
         for id in self.bots.keys():
             yield self.bots[id]
-        
+
     def get_bot(self, space_id=None):
         """
         Gets a bot by id
@@ -840,6 +840,9 @@ class Engine(object):
         if self.machine_factory:
             logging.debug(u"- building state machine")
             machine = self.machine_factory.get_machine(bot=bot)
+            if machine:
+                logging.debug(u"- starting state machine")
+                machine.start()
             return machine
 
         return None
