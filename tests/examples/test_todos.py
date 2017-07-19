@@ -31,7 +31,7 @@ class TodosTests(unittest.TestCase):
         self.context = Context(settings=my_settings)
         self.engine = Engine(context=self.context, mouth=Queue())
         self.engine.factory = TodoFactory(self.engine.get('todos.items', []))
-        self.bot = ShellBot(engine=self.engine)
+        self.bot = self.engine.bond()
 
     def tearDown(self):
         del self.bot
@@ -43,6 +43,8 @@ class TodosTests(unittest.TestCase):
 
     def test_commands(self):
 
+        logging.info(u"**** commands")
+
         commands = TodoFactory.commands()
         self.assertTrue(len(commands) == 6)
         for command in commands:
@@ -50,6 +52,8 @@ class TodosTests(unittest.TestCase):
             self.assertTrue(len(command.information_message) > 1)
 
     def test_done(self):
+
+        logging.info(u"**** done")
 
         c = Done(engine=self.engine)
 
@@ -61,14 +65,18 @@ class TodosTests(unittest.TestCase):
         c.execute(self.bot)
 
         self.assertEqual(self.engine.mouth.get().text,
-                         u'#1 has been archived')
+                         u'Archived: write down the driving question')
+        self.assertEqual(self.engine.mouth.get().text,
+                         u'Coming next: gather facts and related information')
         with self.assertRaises(Exception):
             self.engine.mouth.get_nowait()
 
         c.execute(self.bot, arguments='#2')
 
         self.assertEqual(self.engine.mouth.get().text,
-                         u'#2 has been archived')
+                         u'Archived: identify information gaps and document assumptions')
+        self.assertEqual(self.engine.mouth.get().text,
+                         u'Coming next: gather facts and related information')
         with self.assertRaises(Exception):
             self.engine.mouth.get_nowait()
 
@@ -88,6 +96,8 @@ class TodosTests(unittest.TestCase):
 
     def test_drop(self):
 
+        logging.info(u"**** drop")
+
         c = Drop(engine=self.engine)
 
         self.assertEqual(c.keyword, 'drop')
@@ -98,14 +108,18 @@ class TodosTests(unittest.TestCase):
         c.execute(self.bot)
 
         self.assertEqual(self.engine.mouth.get().text,
-                         u'#1 has been deleted')
+                         u'Deleted: write down the driving question')
+        self.assertEqual(self.engine.mouth.get().text,
+                         u'Coming next: gather facts and related information')
         with self.assertRaises(Exception):
             self.engine.mouth.get_nowait()
 
         c.execute(self.bot, arguments='#2')
 
         self.assertEqual(self.engine.mouth.get().text,
-                         u'#2 has been deleted')
+                         u'Deleted: identify information gaps and document assumptions')
+        self.assertEqual(self.engine.mouth.get().text,
+                         u'Coming next: gather facts and related information')
         with self.assertRaises(Exception):
             self.engine.mouth.get_nowait()
 
@@ -125,13 +139,19 @@ class TodosTests(unittest.TestCase):
 
     def test_history(self):
 
-        Done(engine=self.engine).execute(self.bot)
-        self.assertEqual(self.engine.mouth.get().text,
-                         u'#1 has been archived')
+        logging.info(u"**** history")
 
         Done(engine=self.engine).execute(self.bot)
         self.assertEqual(self.engine.mouth.get().text,
-                         u'#1 has been archived')
+                         u'Archived: write down the driving question')
+        self.assertEqual(self.engine.mouth.get().text,
+                         u'Coming next: gather facts and related information')
+
+        Done(engine=self.engine).execute(self.bot)
+        self.assertEqual(self.engine.mouth.get().text,
+                         u'Archived: gather facts and related information')
+        self.assertEqual(self.engine.mouth.get().text,
+                         u'Coming next: identify information gaps and document assumptions')
 
         c = History(engine=self.engine)
 
@@ -158,6 +178,8 @@ class TodosTests(unittest.TestCase):
 
     def test_next(self):
 
+        logging.info(u"**** next")
+
         c = Next(engine=self.engine)
 
         self.assertEqual(c.keyword, 'next')
@@ -180,6 +202,8 @@ class TodosTests(unittest.TestCase):
             self.engine.mouth.get_nowait()
 
     def test_todo(self):
+
+        logging.info(u"**** todo")
 
         self.engine.factory.items = []
 
@@ -207,30 +231,38 @@ class TodosTests(unittest.TestCase):
         c.execute(self.bot, arguments='something to do')  # item creation
 
         self.assertEqual(self.engine.mouth.get().text,
-                         u'#1 something to do')
+                         u'#1: something to do')
         with self.assertRaises(Exception):
             self.engine.mouth.get_nowait()
 
         c.execute(self.bot, arguments='#1 something different to do')  # item update
 
         self.assertEqual(self.engine.mouth.get().text,
-                         u'#1 something different to do')
+                         u'#1: something different to do')
         with self.assertRaises(Exception):
             self.engine.mouth.get_nowait()
 
     def test_todos(self):
 
-        Done(engine=self.engine).execute(self.bot)
-        self.assertEqual(self.engine.mouth.get().text,
-                         u'#1 has been archived')
+        logging.info(u"**** todos")
 
         Done(engine=self.engine).execute(self.bot)
         self.assertEqual(self.engine.mouth.get().text,
-                         u'#1 has been archived')
+                         u'Archived: write down the driving question')
+        self.assertEqual(self.engine.mouth.get().text,
+                         u'Coming next: gather facts and related information')
 
         Done(engine=self.engine).execute(self.bot)
         self.assertEqual(self.engine.mouth.get().text,
-                         u'#1 has been archived')
+                         u'Archived: gather facts and related information')
+        self.assertEqual(self.engine.mouth.get().text,
+                         u'Coming next: identify information gaps and document assumptions')
+
+        Done(engine=self.engine).execute(self.bot)
+        self.assertEqual(self.engine.mouth.get().text,
+                         u'Archived: identify information gaps and document assumptions')
+        self.assertEqual(self.engine.mouth.get().text,
+                         u'Coming next: formulate scenarios')
 
         c = Todos(engine=self.engine)
 
@@ -257,6 +289,8 @@ class TodosTests(unittest.TestCase):
 
     def test_steps_lifecycle(self):
 
+        logging.info(u"**** life cycle")
+
         n = Next(engine=self.engine)
         d = Done(engine=self.engine)
 
@@ -268,7 +302,9 @@ class TodosTests(unittest.TestCase):
 
         d.execute(self.bot)
         self.assertEqual(self.engine.mouth.get().text,
-                         u'#1 has been archived')
+                         u'Archived: write down the driving question')
+        self.assertEqual(self.engine.mouth.get().text,
+                         u'Coming next: gather facts and related information')
         with self.assertRaises(Exception):
             self.engine.mouth.get_nowait()
 
@@ -280,7 +316,9 @@ class TodosTests(unittest.TestCase):
 
         d.execute(self.bot)
         self.assertEqual(self.engine.mouth.get().text,
-                         u'#1 has been archived')
+                         u'Archived: gather facts and related information')
+        self.assertEqual(self.engine.mouth.get().text,
+                        u'Coming next: identify information gaps and document assumptions')
         with self.assertRaises(Exception):
             self.engine.mouth.get_nowait()
 
@@ -292,7 +330,9 @@ class TodosTests(unittest.TestCase):
 
         d.execute(self.bot)
         self.assertEqual(self.engine.mouth.get().text,
-                         u'#1 has been archived')
+                         u'Archived: identify information gaps and document assumptions')
+        self.assertEqual(self.engine.mouth.get().text,
+                         u'Coming next: formulate scenarios')
         with self.assertRaises(Exception):
             self.engine.mouth.get_nowait()
 
@@ -304,7 +344,9 @@ class TodosTests(unittest.TestCase):
 
         d.execute(self.bot)
         self.assertEqual(self.engine.mouth.get().text,
-                         u'#1 has been archived')
+                         u'Archived: formulate scenarios')
+        self.assertEqual(self.engine.mouth.get().text,
+                         u'Coming next: select the most appropriate scenario')
         with self.assertRaises(Exception):
             self.engine.mouth.get_nowait()
 
@@ -316,7 +358,9 @@ class TodosTests(unittest.TestCase):
 
         d.execute(self.bot)
         self.assertEqual(self.engine.mouth.get().text,
-                         u'#1 has been archived')
+                         u'Archived: select the most appropriate scenario')
+        self.assertEqual(self.engine.mouth.get().text,
+                         u'Nothing to do yet.')
         with self.assertRaises(Exception):
             self.engine.mouth.get_nowait()
 
