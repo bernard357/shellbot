@@ -13,12 +13,6 @@ import time
 from shellbot import Context, Engine, ShellBot, MachinesFactory
 from shellbot.spaces import Space, LocalSpace, SparkSpace
 
-my_context = Context()
-my_engine = Engine(context=my_context,
-                   mouth=Queue())
-my_space = LocalSpace(context=my_context)
-my_engine.space = my_space
-
 
 class FakeBot(object):
     def __init__(self, engine=None, space_id=None):
@@ -43,32 +37,29 @@ class MyCounter(object):
 
 class EngineTests(unittest.TestCase):
 
+    def setUp(self):
+        self.context = Context()
+        self.engine = Engine(context=self.context,
+                             mouth=Queue())
+        self.space = LocalSpace(context=self.context)
+        self.engine.space = self.space
+
+
     def tearDown(self):
-        my_engine.context.clear()
-        my_engine.subscribed = {
-            'bond': [],       # connected to a space
-            'dispose': [],    # space will be destroyed
-            'start': [],      # starting bot services
-            'stop': [],       # stopping bot services
-            'message': [],    # message received (with message)
-            'attachment': [], # attachment received (with attachment)
-            'join': [],       # joining a space (with person)
-            'leave': [],      # leaving a space (with person)
-            'enter': [],      # invited to a space (for the bot)
-            'exit': [],       # kicked off from a space (for the bot)
-            'inbound': [],    # other event received from space (with event)
-        }
-        my_engine.bots = {}
+        del self.space
+        del self.engine
+        del self.context
         collected = gc.collect()
-        logging.info("Garbage collector: collected %d objects." % (collected))
+        if collected:
+            logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 
         logging.info('*** init ***')
 
-        engine = Engine(context=my_context)
+        engine = Engine(context=self.context)
 
-        self.assertEqual(engine.context, my_context)
+        self.assertEqual(engine.context, self.context)
         self.assertTrue(engine.mouth is None)
         self.assertTrue(engine.speaker is not None)
         self.assertTrue(engine.ears is None)
@@ -78,13 +69,17 @@ class EngineTests(unittest.TestCase):
         self.assertTrue(engine.shell is not None)
         self.assertTrue(engine.subscribed is not None)
         self.assertEqual(engine.bots, {})
+        self.assertEqual(engine.driver, ShellBot)
+        self.assertEqual(engine.machine_factory, None)
 
-        engine = Engine(context=my_context,
+        del engine
+
+        engine = Engine(context=self.context,
                         type='local',
                         mouth='m',
                         ears='e')
 
-        self.assertEqual(engine.context, my_context)
+        self.assertEqual(engine.context, self.context)
         self.assertEqual(engine.mouth, 'm')
         self.assertTrue(engine.speaker is not None)
         self.assertEqual(engine.ears, 'e')
@@ -94,37 +89,64 @@ class EngineTests(unittest.TestCase):
         self.assertTrue(engine.shell is not None)
         self.assertTrue(engine.subscribed is not None)
         self.assertEqual(engine.bots, {})
+        self.assertEqual(engine.driver, ShellBot)
+        self.assertEqual(engine.machine_factory, None)
 
-        engine = Engine(context=my_context,
-                        space=my_space,
+        del engine
+
+        engine = Engine(context=self.context,
+                        space=self.space,
                         mouth='m',
                         ears='e')
 
-        self.assertEqual(engine.context, my_context)
+        self.assertEqual(engine.context, self.context)
         self.assertEqual(engine.mouth, 'm')
         self.assertTrue(engine.speaker is not None)
         self.assertEqual(engine.ears, 'e')
         self.assertTrue(engine.listener is not None)
-        self.assertEqual(engine.space, my_space)
+        self.assertEqual(engine.space, self.space)
         self.assertTrue(engine.server is None)
         self.assertTrue(engine.shell is not None)
         self.assertTrue(engine.subscribed is not None)
         self.assertEqual(engine.bots, {})
+        self.assertEqual(engine.driver, ShellBot)
+        self.assertEqual(engine.machine_factory, None)
 
-        my_context.apply({
+        del engine
+
+        engine = Engine(context=self.context,
+                        driver=FakeBot,
+                        machine_factory=MachinesFactory)
+
+        self.assertEqual(engine.context, self.context)
+        self.assertEqual(engine.mouth, None)
+        self.assertTrue(engine.speaker is not None)
+        self.assertEqual(engine.ears, None)
+        self.assertTrue(engine.listener is not None)
+        self.assertTrue(engine.space is not None)
+        self.assertTrue(engine.server is None)
+        self.assertTrue(engine.shell is not None)
+        self.assertTrue(engine.subscribed is not None)
+        self.assertEqual(engine.bots, {})
+        self.assertEqual(engine.driver, FakeBot)
+        self.assertEqual(engine.machine_factory, MachinesFactory)
+
+        self.context.apply({
             'bot': {'name': 'testy', 'version': '17.4.1'},
             })
-        engine = Engine(context=my_context)
+        engine = Engine(context=self.context)
         self.assertEqual(engine.name, 'testy')
         self.assertEqual(engine.version, '17.4.1')
+
+        del engine
 
     def test_configure(self):
 
         logging.info('*** configure ***')
 
-        my_engine.configure({})
+        self.engine.configure({})
 
-        my_engine.context.clear()
+        self.engine.context.clear()
         settings = {
 
             'bot': {
@@ -146,31 +168,31 @@ class EngineTests(unittest.TestCase):
             },
 
         }
-        my_engine.configure(settings)
-        self.assertEqual(my_engine.get('bot.on_enter'), 'Hello!')
-        self.assertEqual(my_engine.get('bot.on_exit'), 'Bye!')
-        self.assertEqual(my_engine.get('local.title'), 'space name')
-        self.assertEqual(my_engine.get('local.moderators'),
+        self.engine.configure(settings)
+        self.assertEqual(self.engine.get('bot.on_enter'), 'Hello!')
+        self.assertEqual(self.engine.get('bot.on_exit'), 'Bye!')
+        self.assertEqual(self.engine.get('local.title'), 'space name')
+        self.assertEqual(self.engine.get('local.moderators'),
                          ['foo.bar@acme.com'])
-        self.assertEqual(my_engine.get('local.participants'),
+        self.assertEqual(self.engine.get('local.participants'),
                          ['joe.bar@acme.com'])
-        self.assertEqual(my_engine.get('server.url'), 'http://to.no.where')
-        self.assertEqual(my_engine.get('server.hook'), '/hook')
+        self.assertEqual(self.engine.get('server.url'), 'http://to.no.where')
+        self.assertEqual(self.engine.get('server.hook'), '/hook')
 
-        my_engine.context.clear()
-        my_engine.configure_from_path(os.path.dirname(os.path.abspath(__file__))
+        self.engine.context.clear()
+        self.engine.configure_from_path(os.path.dirname(os.path.abspath(__file__))
                                       + '/test_settings/regular.yaml')
-        self.assertEqual(my_engine.get('bot.on_enter'), 'How can I help you?')
-        self.assertEqual(my_engine.get('bot.on_exit'), 'Bye for now')
-        self.assertEqual(my_engine.get('local.title'), 'Support room')
-        self.assertEqual(my_engine.get('local.moderators'),
+        self.assertEqual(self.engine.get('bot.on_enter'), 'How can I help you?')
+        self.assertEqual(self.engine.get('bot.on_exit'), 'Bye for now')
+        self.assertEqual(self.engine.get('local.title'), 'Support room')
+        self.assertEqual(self.engine.get('local.moderators'),
                          ['foo.bar@acme.com'])
-        self.assertEqual(my_engine.get('local.participants'),
+        self.assertEqual(self.engine.get('local.participants'),
                          ['joe.bar@acme.com', 'super.support@help.org'])
-        self.assertEqual(my_engine.get('server.url'), None)
-        self.assertEqual(my_engine.get('server.hook'), None)
-        self.assertEqual(my_engine.get('server.binding'), None)
-        self.assertEqual(my_engine.get('server.port'), None)
+        self.assertEqual(self.engine.get('server.url'), None)
+        self.assertEqual(self.engine.get('server.hook'), None)
+        self.assertEqual(self.engine.get('server.binding'), None)
+        self.assertEqual(self.engine.get('server.port'), None)
 
     def test_configuration_2(self):
 
@@ -224,24 +246,24 @@ class EngineTests(unittest.TestCase):
         os.environ["CHAT_ROOM_MODERATORS"] = 'foo.bar@acme.com'
         os.environ["CISCO_SPARK_BOT_TOKEN"] = '*token'
         os.environ["SERVER_URL"] = 'http://to.nowhere/'
-        my_engine.configure()
+        self.engine.configure()
 
-        self.assertEqual(my_engine.get('bot.on_enter'), 'Hello!')
-        self.assertEqual(my_engine.get('bot.on_exit'), 'Bye!')
+        self.assertEqual(self.engine.get('bot.on_enter'), 'Hello!')
+        self.assertEqual(self.engine.get('bot.on_exit'), 'Bye!')
 
-        self.assertEqual(my_engine.get('local.title'), 'Support room')
-        self.assertEqual(my_engine.get('local.moderators'), 'foo.bar@acme.com')
-        self.assertEqual(my_engine.get('local.participants'), [])
-        self.assertEqual(my_engine.get('local.token'), None)
+        self.assertEqual(self.engine.get('local.title'), 'Support room')
+        self.assertEqual(self.engine.get('local.moderators'), 'foo.bar@acme.com')
+        self.assertEqual(self.engine.get('local.participants'), [])
+        self.assertEqual(self.engine.get('local.token'), None)
 
-        self.assertEqual(my_engine.get('server.url'), '$SERVER_URL')
-        self.assertEqual(my_engine.get('server.hook'), '/hook')
-        self.assertEqual(my_engine.get('server.binding'), None)
-        self.assertEqual(my_engine.get('server.port'), 8080)
+        self.assertEqual(self.engine.get('server.url'), '$SERVER_URL')
+        self.assertEqual(self.engine.get('server.hook'), '/hook')
+        self.assertEqual(self.engine.get('server.binding'), None)
+        self.assertEqual(self.engine.get('server.port'), 8080)
 
-#        my_engine.context.clear()
+#        self.engine.context.clear()
 #        os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
-#        engine = Engine(context=my_context, settings=None, configure=True)
+#        engine = Engine(context=self.context, settings=None, configure=True)
 #        self.assertEqual(engine.get('spark.room'), 'Notifications')
 
     def test_get(self):
@@ -276,66 +298,66 @@ class EngineTests(unittest.TestCase):
 
         }
 
-        my_engine.configure(settings=settings)
+        self.engine.configure(settings=settings)
 
-        self.assertEqual(my_engine.get('bot.on_enter'), 'Hello!')
-        self.assertEqual(my_engine.get('bot.on_exit'), 'Bye!')
-        self.assertEqual(my_engine.get('local.title'), 'Support room')
-        self.assertEqual(my_engine.get('local.moderators'),
+        self.assertEqual(self.engine.get('bot.on_enter'), 'Hello!')
+        self.assertEqual(self.engine.get('bot.on_exit'), 'Bye!')
+        self.assertEqual(self.engine.get('local.title'), 'Support room')
+        self.assertEqual(self.engine.get('local.moderators'),
                          'foo.bar@acme.com')
-        self.assertEqual(my_engine.get('local.participants'), [])
+        self.assertEqual(self.engine.get('local.participants'), [])
 
-        self.assertEqual(my_engine.get('local.token'), None)
+        self.assertEqual(self.engine.get('local.token'), None)
 
-        self.assertEqual(my_engine.get('server.url'), '$SERVER_URL')
-        self.assertEqual(my_engine.get('server.hook'), '/hook')
-        self.assertEqual(my_engine.get('server.binding'), None)
-        self.assertEqual(my_engine.get('server.port'), 8080)
+        self.assertEqual(self.engine.get('server.url'), 'http://to.nowhere/')
+        self.assertEqual(self.engine.get('server.hook'), '/hook')
+        self.assertEqual(self.engine.get('server.binding'), None)
+        self.assertEqual(self.engine.get('server.port'), 8080)
 
     def test_set(self):
 
         logging.info('*** set ***')
 
-        my_engine.set('hello', 'world')
-        self.assertEqual(my_engine.get('hello'), 'world')
-        self.assertEqual(my_engine.get(u'hello'), 'world')
+        self.engine.set('hello', 'world')
+        self.assertEqual(self.engine.get('hello'), 'world')
+        self.assertEqual(self.engine.get(u'hello'), 'world')
 
-        my_engine.set('hello', u'wôrld')
-        self.assertEqual(my_engine.get('hello'), u'wôrld')
+        self.engine.set('hello', u'wôrld')
+        self.assertEqual(self.engine.get('hello'), u'wôrld')
 
-        my_engine.set(u'hello', u'wôrld')
-        self.assertEqual(my_engine.get(u'hello'), u'wôrld')
+        self.engine.set(u'hello', u'wôrld')
+        self.assertEqual(self.engine.get(u'hello'), u'wôrld')
 
     def test_subscribe(self):
 
         logging.info('*** subscribe ***')
 
         with self.assertRaises(AttributeError):
-            my_engine.subscribe('*unknown*event', lambda : 'ok')
+            self.engine.subscribe('*unknown*event', lambda : 'ok')
         with self.assertRaises(AttributeError):
-            my_engine.subscribe('bond', lambda : 'ok')
+            self.engine.subscribe('bond', lambda : 'ok')
         with self.assertRaises(AttributeError):
-            my_engine.subscribe('dispose', lambda : 'ok')
+            self.engine.subscribe('dispose', lambda : 'ok')
 
         counter = MyCounter('counter #1')
         with self.assertRaises(AssertionError):
-            my_engine.subscribe(None, counter)
+            self.engine.subscribe(None, counter)
         with self.assertRaises(AssertionError):
-            my_engine.subscribe('', counter)
+            self.engine.subscribe('', counter)
         with self.assertRaises(AssertionError):
-            my_engine.subscribe(1.2, counter)
+            self.engine.subscribe(1.2, counter)
 
-        my_engine.subscribe('bond', counter)
-        my_engine.subscribe('dispose', counter)
+        self.engine.subscribe('bond', counter)
+        self.engine.subscribe('dispose', counter)
 
         with self.assertRaises(AttributeError):
-            my_engine.subscribe('start', counter)
+            self.engine.subscribe('start', counter)
         with self.assertRaises(AttributeError):
-            my_engine.subscribe('stop', counter)
+            self.engine.subscribe('stop', counter)
         with self.assertRaises(AttributeError):
-            my_engine.subscribe('*unknown*event', counter)
+            self.engine.subscribe('*unknown*event', counter)
 
-        my_engine.subscribe('bond', MyCounter('counter #2'))
+        self.engine.subscribe('bond', MyCounter('counter #2'))
 
         class AllEvents(object):
             def on_bond(self):
@@ -364,42 +386,42 @@ class EngineTests(unittest.TestCase):
                 pass
 
         all_events = AllEvents()
-        my_engine.subscribe('bond', all_events)
-        my_engine.subscribe('dispose', all_events)
-        my_engine.subscribe('start', all_events)
-        my_engine.subscribe('stop', all_events)
-        my_engine.subscribe('message', all_events)
-        my_engine.subscribe('attachment', all_events)
-        my_engine.subscribe('join', all_events)
-        my_engine.subscribe('leave', all_events)
-        my_engine.subscribe('enter', all_events)
-        my_engine.subscribe('exit', all_events)
-        my_engine.subscribe('inbound', all_events)
-        my_engine.subscribe('some_custom_event', all_events)
+        self.engine.subscribe('bond', all_events)
+        self.engine.subscribe('dispose', all_events)
+        self.engine.subscribe('start', all_events)
+        self.engine.subscribe('stop', all_events)
+        self.engine.subscribe('message', all_events)
+        self.engine.subscribe('attachment', all_events)
+        self.engine.subscribe('join', all_events)
+        self.engine.subscribe('leave', all_events)
+        self.engine.subscribe('enter', all_events)
+        self.engine.subscribe('exit', all_events)
+        self.engine.subscribe('inbound', all_events)
+        self.engine.subscribe('some_custom_event', all_events)
 
-        self.assertEqual(len(my_engine.subscribed['bond']), 3)
-        self.assertEqual(len(my_engine.subscribed['dispose']), 2)
-        self.assertEqual(len(my_engine.subscribed['start']), 1)
-        self.assertEqual(len(my_engine.subscribed['stop']), 1)
-        self.assertEqual(len(my_engine.subscribed['message']), 1)
-        self.assertEqual(len(my_engine.subscribed['attachment']), 1)
-        self.assertEqual(len(my_engine.subscribed['join']), 1)
-        self.assertEqual(len(my_engine.subscribed['leave']), 1)
-        self.assertEqual(len(my_engine.subscribed['enter']), 1)
-        self.assertEqual(len(my_engine.subscribed['exit']), 1)
-        self.assertEqual(len(my_engine.subscribed['inbound']), 1)
-        self.assertEqual(len(my_engine.subscribed['some_custom_event']), 1)
+        self.assertEqual(len(self.engine.subscribed['bond']), 3)
+        self.assertEqual(len(self.engine.subscribed['dispose']), 2)
+        self.assertEqual(len(self.engine.subscribed['start']), 1)
+        self.assertEqual(len(self.engine.subscribed['stop']), 1)
+        self.assertEqual(len(self.engine.subscribed['message']), 1)
+        self.assertEqual(len(self.engine.subscribed['attachment']), 1)
+        self.assertEqual(len(self.engine.subscribed['join']), 1)
+        self.assertEqual(len(self.engine.subscribed['leave']), 1)
+        self.assertEqual(len(self.engine.subscribed['enter']), 1)
+        self.assertEqual(len(self.engine.subscribed['exit']), 1)
+        self.assertEqual(len(self.engine.subscribed['inbound']), 1)
+        self.assertEqual(len(self.engine.subscribed['some_custom_event']), 1)
 
     def test_dispatch(self):
 
         logging.info('*** dispatch ***')
 
         counter = MyCounter('counter #1')
-        my_engine.subscribe('bond', counter)
-        my_engine.subscribe('dispose', counter)
+        self.engine.subscribe('bond', counter)
+        self.engine.subscribe('dispose', counter)
 
-        my_engine.subscribe('bond', MyCounter('counter #2'))
-        my_engine.subscribe('dispose', MyCounter('counter #3'))
+        self.engine.subscribe('bond', MyCounter('counter #2'))
+        self.engine.subscribe('dispose', MyCounter('counter #3'))
 
         class AllEvents(object):
             def __init__(self):
@@ -438,34 +460,34 @@ class EngineTests(unittest.TestCase):
                 self.events.append('some_custom_event')
 
         all_events = AllEvents()
-        my_engine.subscribe('bond', all_events)
-        my_engine.subscribe('dispose', all_events)
-        my_engine.subscribe('start', all_events)
-        my_engine.subscribe('stop', all_events)
-        my_engine.subscribe('message', all_events)
-        my_engine.subscribe('attachment', all_events)
-        my_engine.subscribe('join', all_events)
-        my_engine.subscribe('leave', all_events)
-        my_engine.subscribe('enter', all_events)
-        my_engine.subscribe('exit', all_events)
-        my_engine.subscribe('inbound', all_events)
-        my_engine.subscribe('some_custom_event', all_events)
+        self.engine.subscribe('bond', all_events)
+        self.engine.subscribe('dispose', all_events)
+        self.engine.subscribe('start', all_events)
+        self.engine.subscribe('stop', all_events)
+        self.engine.subscribe('message', all_events)
+        self.engine.subscribe('attachment', all_events)
+        self.engine.subscribe('join', all_events)
+        self.engine.subscribe('leave', all_events)
+        self.engine.subscribe('enter', all_events)
+        self.engine.subscribe('exit', all_events)
+        self.engine.subscribe('inbound', all_events)
+        self.engine.subscribe('some_custom_event', all_events)
 
-        my_engine.dispatch('bond')
-        my_engine.dispatch('dispose')
-        my_engine.dispatch('start')
-        my_engine.dispatch('stop')
-        my_engine.dispatch('message', received='*void')
-        my_engine.dispatch('attachment', received='*void')
-        my_engine.dispatch('join', received='*void')
-        my_engine.dispatch('leave', received='*void')
-        my_engine.dispatch('enter', received='*void')
-        my_engine.dispatch('exit', received='*void')
-        my_engine.dispatch('inbound', received='*void')
-        my_engine.dispatch('some_custom_event', data='*data')
+        self.engine.dispatch('bond')
+        self.engine.dispatch('dispose')
+        self.engine.dispatch('start')
+        self.engine.dispatch('stop')
+        self.engine.dispatch('message', received='*void')
+        self.engine.dispatch('attachment', received='*void')
+        self.engine.dispatch('join', received='*void')
+        self.engine.dispatch('leave', received='*void')
+        self.engine.dispatch('enter', received='*void')
+        self.engine.dispatch('exit', received='*void')
+        self.engine.dispatch('inbound', received='*void')
+        self.engine.dispatch('some_custom_event', data='*data')
 
         with self.assertRaises(AssertionError):
-            my_engine.dispatch('*unknown*event')
+            self.engine.dispatch('*unknown*event')
 
         self.assertEqual(counter.count, 2)
         self.assertEqual(all_events.events,
@@ -486,41 +508,41 @@ class EngineTests(unittest.TestCase):
 
         logging.info('*** load_commands ***')
 
-        with mock.patch.object(my_engine.shell,
+        with mock.patch.object(self.engine.shell,
                                'load_commands',
                                return_value=None) as mocked:
-            my_engine.load_commands(['a', 'b', 'c', 'd'])
+            self.engine.load_commands(['a', 'b', 'c', 'd'])
             mocked.assert_called_with(['a', 'b', 'c', 'd'])
 
     def test_hook(self):
 
         logging.info('*** hook ***')
 
-        my_context.set('server.url', 'http://here.you.go:123')
+        self.context.set('server.url', 'http://here.you.go:123')
         server = mock.Mock()
-        with mock.patch.object(my_engine.space,
+        with mock.patch.object(self.engine.space,
                                'register',
                                return_value=None) as mocked:
 
-            my_engine.hook(server=server)
+            self.engine.hook(server=server)
             self.assertFalse(mocked.called)
 
-            my_context.set('server.binding', '0.0.0.0')
-            my_engine.hook(server=server)
+            self.context.set('server.binding', '0.0.0.0')
+            self.engine.hook(server=server)
             mocked.assert_called_with(hook_url='http://here.you.go:123/hook')
 
     def test_get_hook(self):
 
         logging.info('*** get_hook ***')
 
-        my_context.set('server.url', 'http://here.you.go:123')
-        self.assertEqual(my_engine.get_hook(), my_engine.space.webhook)
+        self.context.set('server.url', 'http://here.you.go:123')
+        self.assertEqual(self.engine.get_hook(), self.engine.space.webhook)
 
     def test_run(self):
 
         logging.info('*** run ***')
 
-        engine = Engine(context=my_context)
+        engine = Engine(context=self.context)
         engine.space=LocalSpace(engine=engine)
 
         engine.start = mock.Mock()
@@ -548,7 +570,7 @@ class EngineTests(unittest.TestCase):
 
         logging.info('*** start ***')
 
-        engine = Engine(context=my_context)
+        engine = Engine(context=self.context)
         engine.space=LocalSpace(engine=engine)
 
         engine.start_processes = mock.Mock()
@@ -564,62 +586,62 @@ class EngineTests(unittest.TestCase):
 
         logging.info('*** static test ***')
 
-        my_engine.start()
+        self.engine.start()
         time.sleep(0.1)
-        my_engine.stop()
+        self.engine.stop()
 
-        self.assertEqual(my_engine.get('listener.counter', 0), 0)
-        self.assertEqual(my_engine.get('speaker.counter', 0), 0)
+        self.assertEqual(self.engine.get('listener.counter', 0), 0)
+        self.assertEqual(self.engine.get('speaker.counter', 0), 0)
 
     def test_get_bot(self):
 
         logging.info('*** get_bot ***')
 
-        my_engine.bots = {
-            '123': FakeBot(my_engine, '123'),
-            '456': FakeBot(my_engine, '456'),
-            '789': FakeBot(my_engine, '789'),
+        self.engine.bots = {
+            '123': FakeBot(self.engine, '123'),
+            '456': FakeBot(self.engine, '456'),
+            '789': FakeBot(self.engine, '789'),
         }
 
-        bot = my_engine.get_bot('123')
+        bot = self.engine.get_bot('123')
         self.assertEqual(bot.space_id, '123')
-        self.assertEqual(bot, my_engine.bots['123'])
+        self.assertEqual(bot, self.engine.bots['123'])
 
-        bot = my_engine.get_bot('456')
+        bot = self.engine.get_bot('456')
         self.assertEqual(bot.space_id, '456')
-        self.assertEqual(bot, my_engine.bots['456'])
+        self.assertEqual(bot, self.engine.bots['456'])
 
-        bot = my_engine.get_bot('789')
+        bot = self.engine.get_bot('789')
         self.assertEqual(bot.space_id, '789')
-        self.assertEqual(bot, my_engine.bots['789'])
+        self.assertEqual(bot, self.engine.bots['789'])
 
-        with mock.patch.object(my_engine,
+        with mock.patch.object(self.engine,
                                'build_bot',
-                               return_value=FakeBot(my_engine, '*bot')) as mocked:
+                               return_value=FakeBot(self.engine, '*bot')) as mocked:
 
-            bot = my_engine.get_bot()
+            bot = self.engine.get_bot()
             self.assertEqual(bot.space_id, '*bot')
-            self.assertTrue('*bot' in my_engine.bots.keys())
+            self.assertTrue('*bot' in self.engine.bots.keys())
 
     def test_build_bot(self):
 
         logging.info('*** build_bot ***')
 
-        my_engine.context.apply(my_engine.DEFAULT_SETTINGS)
-        my_engine.bots = {}
+        self.engine.context.apply(self.engine.DEFAULT_SETTINGS)
+        self.engine.bots = {}
 
-        bot = my_engine.build_bot('123', FakeBot)
+        bot = self.engine.build_bot('123', FakeBot)
         self.assertEqual(bot.space_id, '123')
         bot.store.remember('a', 'b')
         self.assertEqual(bot.store.recall('a'), 'b')
 
-        bot = my_engine.build_bot('456', FakeBot)
+        bot = self.engine.build_bot('456', FakeBot)
         self.assertEqual(bot.space_id, '456')
         bot.store.remember('c', 'd')
         self.assertEqual(bot.store.recall('a'), None)
         self.assertEqual(bot.store.recall('c'), 'd')
 
-        bot = my_engine.build_bot('789', FakeBot)
+        bot = self.engine.build_bot('789', FakeBot)
         self.assertEqual(bot.space_id, '789')
         bot.store.remember('e', 'f')
         self.assertEqual(bot.store.recall('a'), None)
@@ -630,20 +652,20 @@ class EngineTests(unittest.TestCase):
 
         logging.info('*** build_space ***')
 
-        my_engine.context.apply(my_engine.DEFAULT_SETTINGS)
-        my_engine.context.apply(my_engine.space.DEFAULT_SETTINGS)
-        space = my_engine.build_space('123')
+        self.engine.context.apply(self.engine.DEFAULT_SETTINGS)
+        self.engine.context.apply(self.engine.space.DEFAULT_SETTINGS)
+        space = self.engine.build_space('123')
 
     def test_build_store(self):
 
         logging.info('*** build_store ***')
 
-        store_1 = my_engine.build_store('123')
+        store_1 = self.engine.build_store('123')
         store_1.append('names', 'Alice')
         store_1.append('names', 'Bob')
         self.assertEqual(store_1.recall('names'), ['Alice', 'Bob'])
 
-        store_2 = my_engine.build_store('456')
+        store_2 = self.engine.build_store('456')
         store_2.append('names', 'Chloe')
         store_2.append('names', 'David')
         self.assertEqual(store_2.recall('names'), ['Chloe', 'David'])
@@ -658,31 +680,31 @@ class EngineTests(unittest.TestCase):
         logging.info('*** initialize_store ***')
 
         settings = {'bot.store': {'planets': ['Uranus', 'Mercury']}}
-        my_engine.context.apply(settings)
-        print(my_engine.get('bot.store'))
-        bot = my_engine.build_bot('123', FakeBot)
+        self.engine.context.apply(settings)
+        print(self.engine.get('bot.store'))
+        bot = self.engine.build_bot('123', FakeBot)
         self.assertEqual(bot.store.recall('planets'), ['Uranus', 'Mercury'])
 
     def test_build_machine(self):
 
         logging.info('*** build_machine ***')
 
-        bot = ShellBot(engine=my_engine)
-        machine = my_engine.build_machine(bot)
+        bot = ShellBot(engine=self.engine)
+        machine = self.engine.build_machine(bot)
 
-        previous = my_engine.machine_factory
-        my_engine.machine_factory = MachinesFactory(
+        previous = self.engine.machine_factory
+        self.engine.machine_factory = MachinesFactory(
             module='shellbot.machines.base',
             name='Machine')
-        machine = my_engine.build_machine(bot)
-        my_engine.machine_factory = previous
+        machine = self.engine.build_machine(bot)
+        self.engine.machine_factory = previous
 
     def test_on_build(self):
 
         logging.info('*** on_build ***')
 
-        bot = ShellBot(engine=my_engine)
-        my_engine.on_build(bot)
+        bot = ShellBot(engine=self.engine)
+        self.engine.on_build(bot)
 
 
 if __name__ == '__main__':

@@ -179,6 +179,7 @@ class Engine(object):
                  store=None,
                  command=None,
                  commands=None,
+                 driver=ShellBot,
                  machine_factory=None,
                  ):
         """
@@ -213,6 +214,9 @@ class Engine(object):
 
         :param commands: A list of commands to initialize the shell
         :type commands: list of str, or list of Command
+
+        :param driver: Instantiated for every new bot
+        :type driver: class
 
         :param machine_factory: Provides a state machine for each bot
         :type machine_factory: MachinesFactory
@@ -279,6 +283,8 @@ class Engine(object):
 
         if command:
             self.load_command(command)
+
+        self.driver = driver if driver else ShellBot
 
         self.machine_factory = machine_factory
 
@@ -734,7 +740,7 @@ class Engine(object):
             logging.debug(u"- found matching bot instance")
             return self.bots[space_id]
 
-        bot = self.build_bot(space_id)
+        bot = self.build_bot(id=space_id, driver=self.driver)
 
         if bot and bot.space_id:
             logging.debug(u"- remembering bot {}".format(bot.space_id))
@@ -806,7 +812,6 @@ class Engine(object):
         """
         Copies engine settings to the bot store
         """
-        logging.debug(u"- checking engine settings")
         settings = self.get('bot.store', {})
         if settings:
             logging.debug(u"- initializing store")
