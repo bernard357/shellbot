@@ -50,5 +50,15 @@ class Drop(Command):
             bot.say(u"Nothing to do yet.")
 
         else:
+            old_item = self.engine.factory.read(index)
             self.engine.factory.delete(index)
-            bot.say(u"#{} has been deleted".format(index))
+
+            next_item = self.engine.factory.read()
+
+            for bot in self.engine.enumerate_bots():
+                bot.say(u"Deleted: {}".format(old_item))
+
+                if next_item:
+                    bot.say(u"Coming next: {}".format(next_item))
+                else:
+                    bot.say(u"Nothing to do yet.")

@@ -48,9 +48,11 @@ class Todo(Command):
 
         if index is None:
             self.engine.factory.create(arguments)
-            bot.say(u"#{} {}".format(len(self.engine.factory.items),
+            for bot in self.engine.enumerate_bots():
+                bot.say(u"#{}: {}".format(len(self.engine.factory.items),
                                           arguments))
         else:
             (dummy, arguments) = arguments.split(' ', 1)
             self.engine.factory.update(index, arguments)
-            bot.say(u"#{} {}".format(index, arguments))
+            for bot in self.engine.enumerate_bots():
+                bot.say(u"#{}: {}".format(index, arguments))

@@ -45,7 +45,15 @@ In this example we create following commands with some lines of code:
 
 
 Here we showcase how a bot manages information over time. A simple
-todo list is added to a room, and any participant is entitled to act on it.
+todo list is added to the engine, and any participant is entitled to act on it,
+from any room.
+
+Multiple questions are adressed in this example:
+
+- How to share information across multiple rooms? You can attach any
+  attribute to the engine, and this will be made available to every bot
+  instance. Here we add ``factory`` to the engine, and it is accessed from
+  within commands as ``bot.engine.factory``.
 
 To run this script you have to provide a custom configuration, or set
 environment variables instead::
