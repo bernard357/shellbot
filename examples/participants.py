@@ -50,9 +50,27 @@ from shellbot import Engine, Context
 from shellbot.machines import Input
 Context.set_logger()
 
+#
+# specify the state machine to use
+#
+
+class MyFactory(object):
+    def get_machine(self, bot):
+        return Input(bot=bot,
+                     question="PO number please?",
+                     mask="9999A",
+                     on_retry="PO number should have 4 digits and a letter",
+                     on_answer="Ok, PO number has been noted: {}",
+                     on_cancel="Ok, forget about the PO number",
+                     key='order.id')
+
+
+#
 # create a bot and configure it
 #
-engine = Engine()
+engine = Engine(type='spark',
+                command='shellbot.commands.input',
+                machine_factory=MyFactory())
 os.environ['CHAT_ROOM_TITLE'] = '*dummy'
 engine.configure()
 
@@ -66,16 +84,6 @@ class Handler(object):
     def on_enter(self, received):
         bot = self.engine.get_bot(received.space_id)
         bot.say(u"Happy to enter '{}'".format(bot.space.title))
-        bot.machine = Input(bot=bot,
-                question="PO number please?",
-                mask="9999A",
-                on_retry="PO number should have 4 digits and a letter",
-                on_answer="Ok, PO number has been noted: {}",
-                on_cancel="Ok, forget about the PO number",
-                tip=20,
-                timeout=40,
-                key='order.id')
-        bot.machine.start()
 
     def on_exit(self, received):
         logging.info(u"Sad to exit '{}'".format(received.space_title))
@@ -97,6 +105,7 @@ engine.subscribe('exit', handler)
 engine.subscribe('join', handler)
 engine.subscribe('leave', handler)
 
+#
 # run the server
 #
 engine.run()
