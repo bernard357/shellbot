@@ -185,7 +185,7 @@ engine = Engine(
     context=context,
     configure=True,
     commands=['shellbot.commands.step', 'shellbot.commands.close'],
-    factory=MyFactory(steps=context.get('process.steps')),)
+    machine_factory=MyFactory(steps=context.get('process.steps')),)
 
 #
 # a queue of events between the web server and the bot
