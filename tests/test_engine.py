@@ -593,6 +593,19 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(self.engine.get('listener.counter', 0), 0)
         self.assertEqual(self.engine.get('speaker.counter', 0), 0)
 
+    def test_enumerate_bots(self):
+
+        logging.info('*** enumerate_bots ***')
+
+        self.engine.bots = {
+            '123': FakeBot(self.engine, '123'),
+            '456': FakeBot(self.engine, '456'),
+            '789': FakeBot(self.engine, '789'),
+        }
+
+        for bot in self.engine.enumerate_bots():
+            self.assertTrue(bot.space_id in ['123', '456', '789'])
+
     def test_get_bot(self):
 
         logging.info('*** get_bot ***')

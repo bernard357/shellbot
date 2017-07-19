@@ -723,6 +723,13 @@ class Engine(object):
         """
         pass
 
+    def enumerate_bots(self):
+        """
+        Enumerates all bots
+        """
+        for id in self.bots.keys():
+            yield self.bots[id]
+        
     def get_bot(self, space_id=None):
         """
         Gets a bot by id
