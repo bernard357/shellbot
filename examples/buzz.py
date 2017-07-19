@@ -94,12 +94,22 @@ ngrok for exposing services to the Internet::
 import os
 
 from shellbot import Engine, ShellBot, Context
+from planets.rocket import Rocket
 Context.set_logger()
+
+# use a customized driver for new bots
+#
+class FlyingBot(ShellBot):
+    def on_init(self):
+        self.rocket = Rocket(self)
+        self.rocket.start()
 
 # create a bot and load commands
 #
 from planets import PlanetFactory
-engine = Engine(type='spark', commands=PlanetFactory.commands())
+engine = Engine(type='spark',
+                commands=PlanetFactory.commands(),
+                driver=FlyingBot)
 
 # load configuration
 #
@@ -107,25 +117,19 @@ os.environ['BOT_ON_START'] = 'Hello Buzz, welcome to Cape Canaveral'
 os.environ['BOT_ON_STOP'] = 'Batman is now quitting the room, bye'
 os.environ['CHAT_ROOM_TITLE'] = 'Buzz flights'
 engine.configure()
-engine.set('planets.items', ['Mercury',
-                             'Venus',
-                             'Moon',
-                             'Mars',
-                             'Jupiter',
-                             'Saturn',
-                             'Uranus',
-                             'Neptune',
-                            ])
+engine.set('bot.store.planets', ['Mercury',
+                                 'Venus',
+                                 'Moon',
+                                 'Mars',
+                                 'Jupiter',
+                                 'Saturn',
+                                 'Uranus',
+                                 'Neptune',
+                                 ])
 
 # initialise a chat room
 #
 bot = engine.bond(reset=True)
-
-# add a rocket and ignite it
-#
-from planets.rocket import Rocket
-bot.rocket = Rocket(bot)
-bot.rocket.start()
 
 # run the bot
 #

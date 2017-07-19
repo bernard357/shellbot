@@ -53,10 +53,7 @@ class Rocket(object):
         :type inbox: Queue
 
         """
-        items = bot.engine.get('planets.items', [])
-        bot.remember('planets.items', items)
         self.bot = bot
-
         self.inbox = inbox if inbox else Queue()
 
     def go(self, action, planet):
@@ -162,7 +159,7 @@ class Rocket(object):
 
         logging.debug(u"Rocket is working on '{} {}'".format(verb, planet))
 
-        items = self.bot.recall('planets.items', [])
+        items = self.bot.recall('planets', [])
         if planet not in items:
             self.bot.say(u"Planet '{}' is unknown".format(planet))
             return
@@ -210,9 +207,9 @@ class Rocket(object):
                      + self.blast_begin_template.format(planet))
         time.sleep(duration)
 
-        items = self.bot.recall('planets.items', [])
+        items = self.bot.recall('planets', [])
         items.remove(planet)
-        self.bot.remember('planets.items', items)
+        self.bot.remember('planets', items)
 
         self.bot.say(u"#{} - ".format(self.counter)
                      + self.blast_end_template.format(planet),
@@ -233,5 +230,3 @@ class Rocket(object):
         self.bot.say(u"#{} - ".format(self.counter)
                      + self.home_landed_template.format(planet))
         time.sleep(duration)
-
-

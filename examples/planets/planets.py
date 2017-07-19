@@ -36,7 +36,7 @@ class Planets(Command):
         Displays the list of available planets
         """
 
-        items = bot.recall('planets.items', [])
+        items = bot.recall('planets', [])
         if len(items):
             bot.say(self.list_header
                     + '\n- ' + '\n- '.join(items))
