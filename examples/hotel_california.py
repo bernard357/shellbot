@@ -124,31 +124,41 @@ bot = engine.bond(reset=True)
 
 class Magic(object):
 
-    def __init__(self, bot):
-        self.bot = bot
-        self.addresses = set()
+    def __init__(self, engine):
+        self.engine = engine
 
     def on_join(self, received):
 
-        if received.actor_address not in self.addresses:
-            self.addresses.add(received.actor_address)
-            self.bot.say(u"Welcome to Hotel California, {}".format(received.actor_label))
+        bot = self.engine.get_bot(received.space_id)
+        addresses = bot.recall('visitors', [])
+
+        if received.actor_address not in addresses:
+            addresses.append(received.actor_address)
+            bot.remember('visitors', addresses)
+            bot.say(u"Welcome to Hotel California, {}".format(received.actor_label))
 
     def on_leave(self, received):
 
-        if self.bot.recall('hotel_california.state', 'off') == 'off':
-            self.addresses.discard(received.actor_address)
-            self.bot.say('On a dark desert highway, cool wind in my hair...')
+        bot = self.engine.get_bot(received.space_id)
+        addresses = bot.recall('visitors', [])
+
+        if bot.recall('hotel_california.state', 'off') == 'off':
+            try:
+                addresses.remove(received.actor_address)
+            except ValueError:
+                pass
+            bot.remember('visitors', addresses)
+            bot.say('On a dark desert highway, cool wind in my hair...')
 
         else:
-            self.bot.say('Such a lovely place...')
+            bot.say('Such a lovely place...')
             time.sleep(5)
-            self.bot.add_participant(received.actor_address)
-            self.bot.say(
+            bot.add_participant(received.actor_address)
+            bot.say(
                 u'{}, you can check out any time you like, but you can never leave!'.format(received.actor_label),
                 content=u'<@personEmail:{}|{}>, you can **check out any time you like**, but you can **never** leave!'.format(received.actor_address, received.actor_label))
 
-magic = Magic(bot=bot)
+magic = Magic(engine=engine)
 engine.subscribe('join', magic)
 engine.subscribe('leave', magic)
 
