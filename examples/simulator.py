@@ -50,7 +50,7 @@ For example, if you run this script under Linux or macOs::
 import logging
 import os
 
-from shellbot import ShellBot, Context, Command
+from shellbot import Engine, ShellBot, Context, Command
 from shellbot.spaces import SpaceFactory
 Context.set_logger(level=logging.INFO)
 
@@ -60,12 +60,12 @@ class Hello(Command):
     keyword = 'hello'
     information_message = u"Hello, World!"
 
-bot = ShellBot(command=Hello(), type='local')
+engine = Engine(command=Hello(), type='local')
 
 # simulate the execution of commands
 #
-bot.space.push(['help', 'hello', 'help help'])
+engine.space.push(['help', 'hello', 'help help'])
 
-bot.configure()
-bot.bond()
-bot.run()
+engine.configure()
+engine.bond()
+engine.run()
