@@ -397,9 +397,6 @@ class Input(Machine):
                 if not self.is_running:
                     break  # on machine stop
 
-#                if self.elapsed > self.CANCEL_DELAY:
-#                    break  # on time out
-
                 try:
                     if self.bot.fan.empty():
                         label = 'fan.' + self.bot.space_id
