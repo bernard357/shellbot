@@ -41,7 +41,7 @@ class LocalSpaceTests(unittest.TestCase):
 
     def test_on_init(self):
 
-        logging.info("***** on_init")
+        logging.info("***** init")
 
         self.assertEqual(self.space.prefix, 'local')
         self.assertEqual(self.space.moderators, [])
@@ -138,10 +138,10 @@ class LocalSpaceTests(unittest.TestCase):
         logging.info("*** get_by_title")
 
         with self.assertRaises(AssertionError):
-            self.space.get_by_title(None)
+            channel = self.space.get_by_title(None)
 
         with self.assertRaises(AssertionError):
-            self.space.get_by_title('')
+            channel = self.space.get_by_title('')
 
         channel = self.space.get_by_title(title='*title')
         self.assertEqual(channel.id, '*local')
@@ -173,6 +173,16 @@ class LocalSpaceTests(unittest.TestCase):
 
         self.space.delete(id='*id')
 
+    def test_add_moderators(self):
+
+        logging.info("*** add_moderators")
+
+        with mock.patch.object(self.space,
+                               'add_moderator') as mocked:
+
+            self.space.add_moderators(id='*id', persons=['foo.bar@acme.com'])
+            mocked.assert_called_with(id='*id', person='foo.bar@acme.com')
+
     def test_add_moderator(self):
 
         logging.info("***** add_moderator")
@@ -180,12 +190,32 @@ class LocalSpaceTests(unittest.TestCase):
         self.space.add_moderator(id='*id', person='bob@acme.com')
         self.assertEqual(self.space.moderators, ['bob@acme.com'])
 
+    def test_add_participants(self):
+
+        logging.info("*** add_participants")
+
+        with mock.patch.object(self.space,
+                               'add_participant') as mocked:
+
+            self.space.add_participants(id='*id', persons=['foo.bar@acme.com'])
+            mocked.assert_called_with(id='*id', person='foo.bar@acme.com')
+
     def test_add_participant(self):
 
         logging.info("***** add_partcipant")
 
         self.space.add_participant(id='*id', person='bob@acme.com')
         self.assertEqual(self.space.participants, ['bob@acme.com'])
+
+    def test_remove_participants(self):
+
+        logging.info("*** remove_participants")
+
+        with mock.patch.object(self.space,
+                               'remove_participant') as mocked:
+
+            self.space.remove_participants(id='*id', persons=['foo.bar@acme.com'])
+            mocked.assert_called_with(id='*id', person='foo.bar@acme.com')
 
     def test_remove_participant(self):
 
@@ -199,6 +229,12 @@ class LocalSpaceTests(unittest.TestCase):
     def test_post_message(self):
 
         logging.info("***** post_message")
+
+        with self.assertRaises(TypeError):
+            self.space.post_message(
+                text="What's up, Doc?",
+                content="*unsupported",
+                file="*unsupported")
 
         self.space.post_message(
             id='*id',

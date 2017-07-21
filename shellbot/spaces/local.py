@@ -73,7 +73,7 @@ class LocalSpace(Space):
 
         Example::
 
-            space = LocalSpace(engine=engine, input='hello world')
+            space = LocalSpace(input='hello world')
 
         Here we create a new local space, and simulate a user
         typing 'hello world' in the chat space.
@@ -108,6 +108,9 @@ class LocalSpace(Space):
     def check(self):
         """
         Check settings
+
+        This function reads key ``local`` and below, and update
+        the context accordingly.
 
         This function also selects the right input for this local space.
         If some content has been provided during initialisation, it is used
@@ -151,6 +154,7 @@ class LocalSpace(Space):
         This function returns a representation of the local channel.
 
         """
+        assert title not in (None, '')
         return self.get_by_title(title, **kwargs)
 
     def get_by_title(self, title, **kwargs):
@@ -327,4 +331,5 @@ class LocalSpace(Space):
         message.mentioned_ids = [self.context.get('bot.id')]
         message.space_id = '*local'
 
+        logging.debug(u"- putting message to ears")
         queue.put(str(message))
