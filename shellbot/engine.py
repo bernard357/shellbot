@@ -749,9 +749,9 @@ class Engine(object):
 
         bot = self.build_bot(id=space_id, driver=self.driver)
 
-        if bot and bot.space_id:
-            logging.debug(u"- remembering bot {}".format(bot.space_id))
-            self.bots[bot.space_id] = bot
+        if bot and bot.id:
+            logging.debug(u"- remembering bot {}".format(bot.id))
+            self.bots[bot.id] = bot
 
         return bot
 
@@ -777,28 +777,6 @@ class Engine(object):
         self.on_build(bot)
 
         return bot
-
-    def build_space(self, space_id=None):
-        """
-        Builds a space for this bot
-
-        :param space_id: Identifier of the target chat space
-        :type space_id: str
-
-        :return: a Space instance, or None
-
-        This function receives an identifier, and returns
-        a space bound to it.
-        """
-        logging.debug(u"- building space instance")
-        if space_id:
-            space = SpaceFactory.build(context=self.context, ears=self.ears)
-            space.configure()
-            space.connect()
-            space.use_space(id=space_id)
-            return space
-        else:
-            return self.space
 
     def build_store(self, space_id=None):
         """
@@ -870,8 +848,8 @@ class Engine(object):
         bot = self.get_bot()
         bot.bond(reset=reset)
 
-        logging.debug(u"- remembering bot {}".format(bot.space_id))
-        self.bots[bot.space_id] = bot
+        logging.debug(u"- remembering bot {}".format(bot.id))
+        self.bots[bot.id] = bot
 
         return bot
 

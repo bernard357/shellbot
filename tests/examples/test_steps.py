@@ -48,7 +48,7 @@ class StepsTests(unittest.TestCase):
     def setUp(self):
         self.context = Context(settings=my_settings)
         self.engine = Engine(context=self.context, mouth=Queue())
-        self.bot = ShellBot(engine=self.engine)
+        self.bot = ShellBot(engine=self.engine, space_id='*id')
 
     def tearDown(self):
         del self.bot

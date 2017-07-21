@@ -29,7 +29,6 @@ class StepTests(unittest.TestCase):
         self.engine = Engine(context=self.context,
                              mouth=Queue())
         self.space = LocalSpace(context=self.context, ears=self.engine.ears)
-        self.space.values['id'] = '*id'
         self.store = MemoryStore(context=self.context)
         self.bot = Bot(engine=self.engine)
 
