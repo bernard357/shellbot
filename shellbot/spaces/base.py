@@ -15,11 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from bottle import request
 import logging
-from multiprocessing import Process, Queue, Manager
+from multiprocessing import Process, Queue
 import os
-import signal
 from six import string_types
 import time
 
@@ -28,42 +26,48 @@ class Space(object):
     """
     Handles a collaborative space
 
+    A collaborative space supports multiple channels for interactions between
+    persons and bots.
+
     The life cycle of a space can be described as follows::
 
     1. A space instance is created and configured::
 
-           >>>my_context = Context(...)
-           >>>space = Space(context=my_context)
+            >>>my_context = Context(...)
+            >>>space = Space(context=my_context)
 
     2. The space is connected to some back-end API::
 
-           >>>space.connect()
+            >>>space.connect()
 
-    3. The space is shadowed in the cloud::
+    3. Multiple channels can be handled by a single space::
 
-           >>>space.bond()
-           >>>space.is_ready
-           True
+            channel = space.create(title)
 
-       In some cases, the space can be disposed first, and recreated later on::
+            channel = space.get_by_title(title)
+            channel = space.get_by_id(id)
 
-           >>>space.dispose()
-           >>>space.is_ready
-           False
+            channel.title = 'A new title'
+            space.update(channel)
 
-           ...
+            space.delete(id)
 
-           >>>space.bond()
-           >>>space.is_ready
-           True
+       Channels feature common attributes, yet can be extended to
+       convey specificities of some platforms.
 
     4. Messages can be posted::
 
-           >>>space.post_message('Hello, World!')
+           >>>space.post_message(id, 'Hello, World!')
 
-    5. When the space is coming end of life, all resources can be disposed::
+    5. The interface distinguishes between space participants and
+       moderators::
 
-           >>space.dispose()
+            space.add_participants(id, persons)
+            space.add_participant(id, person)
+            space.add_moderators(id, persons)
+            space.add_moderator(id, person)
+            space.remove_participants(id, persons)
+            space.remove_participant(id, person)
 
 
     Multiple modes can be considered for the handling of inbound
@@ -127,20 +131,10 @@ class Space(object):
                           ears=my_engine.ears)
 
         """
-        # prevent Manager() process to be interrupted
-        handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-        self.values = Manager().dict()
-
-        # restore current handler for the rest of the program
-        signal.signal(signal.SIGINT, handler)
-
         self.context = context
         self.ears = ears
 
         self.on_init(**kwargs)
-
-        self.reset()
 
     def on_init(self, prefix='space', **kwargs):
         """
@@ -217,31 +211,6 @@ class Space(object):
         """
         self.context.set(self.prefix+'.'+key, value)
 
-    def reset(self):
-        """
-        Resets a space
-
-        After a call to this function, ``bond()`` has to be invoked to
-        return to normal mode of operation.
-        """
-        self.values.clear()
-
-        self.on_reset()
-
-    def on_reset(self):
-        """
-        Adds processing to space reset
-
-        This function should be expanded in sub-class, where necessary.
-
-        Example::
-
-            def on_reset(self):
-                self._last_message_id = 0
-
-        """
-        pass
-
     def configure(self, settings={}):
         """
         Changes settings of the space
@@ -254,7 +223,6 @@ class Space(object):
         """
         self.context.apply(settings)
         self.check()
-        self.reset()
 
     def check(self):
         """
@@ -287,7 +255,7 @@ class Space(object):
         """
         Connects to the back-end API
 
-        This function should be expanded in sub-class, where necessary.
+        This function should be expanded in sub-class, where required.
 
         Example::
 
@@ -297,163 +265,128 @@ class Space(object):
         """
         pass
 
-    def bond(self,
-             title=None,
-             moderators=None,
-             participants=None,
-             **kwargs):
+    def create(self, title, **kwargs):
         """
-        Creates or binds to a named space
+        Creates a channel
 
-        :param title: the title of the target space (optional)
+        :param title: title of the new channel
         :type title: str
 
-        :param moderators: the list of initial moderators (optional)
-        :type moderators: list of str
+        :return: Channel
 
-        :param participants: the list of initial participants (optional)
-        :type participants: list of str
-
-        Example::
-
-            space = Space(...)
-            space.connect()
-            space.bond()
-
-        This function either bonds to an existing space, or creates a new space
-        if necessary. In later case it also adds moderators and participants.
-
-        """
-        if title in (None, ''):
-            title = self.configured_title()
-
-        assert title not in (None, '')
-
-        if not self.lookup_space(title=title, **kwargs):
-
-            self.create_space(title=title, **kwargs)
-
-            if moderators is None:
-                moderators = self.get('moderators', [])
-            self.add_moderators(moderators)
-
-            if participants is None:
-                participants = self.get('participants', [])
-            self.add_participants(participants)
-
-        self.on_bond()
-
-    def on_bond(self):
-        """
-        Adds processing to space bond
-
-        This function should be expanded in sub-class, where necessary.
-
-        Example::
-
-            def on_bond(self):
-                self.post_message('I am alive!')
-
-        """
-        pass
-
-    @property
-    def is_ready(self):
-        """
-        Checks if this space is ready for interactions
-
-        :return: True or False
-        """
-        if self.id is None:
-            return False
-
-        return True
-
-    @property
-    def id(self):
-        """
-        Retrieves id of this space
-        """
-        return self.values.get('id')
-
-    @property
-    def title(self):
-        """
-        Retrieves title of this space
-        """
-        return self.values.get('title')
-
-    def use_space(self, id, **kwargs):
-        """
-        Uses an existing space
-
-        :param id: id of the target space
-        :type id: str
-
-        :return: True on success, False otherwise
-
-        If a space already exists with this id, this object is
-        configured to use it and the function returns True.
-
-        Else the function returns False.
+        This function returns a representation of the new channel on success,
+        else it should raise an exception.
 
         This function should be implemented in sub-class.
 
         Example::
 
-            def use_space(self, id, **kwargs):
-                return self.api.rooms.lookup(id=id)
-
-        """
-        return False
-
-    def lookup_space(self, title=None, **kwargs):
-        """
-        Looks for an existing space by name
-
-        :param title: title of the target space
-        :type title: str
-
-        :return: True on successful lookup, False otherwise
-
-        If a space already exists with this title, this object is
-        configured to use it and the function returns True.
-
-        Else the function returns False.
-
-        This function should be implemented in sub-class.
-
-        Example::
-
-            def lookup_space(self, title, **kwargs):
-                return self.api.rooms.lookup(title=title)
-
-        """
-        return False
-
-    def create_space(self, title, **kwargs):
-        """
-        Creates a space
-
-        :param title: title of the target space
-        :type title: str
-
-        On successful space creation, this object should be configured
-        to use it.
-
-        This function should be implemented in sub-class.
-
-        Example::
-
-            def create_space(self, title=None, **kwargs):
-                self.api.rooms.create(title=title)
+            def create(self, title=None, **kwargs):
+                handle = self.api.rooms.create(title=title)
+                return Channel(handle.attributes)
 
         """
         raise NotImplementedError()
 
-    def add_moderators(self, persons=[]):
+    def get_by_title(self, title=None, **kwargs):
+        """
+        Looks for an existing space by title
+
+        :param title: title of the target channel
+        :type title: str
+
+        :return: Channel instance or None
+
+        If a channel already exists with this id, a representation of it is
+        returned. Else the value ``None``is returned.
+
+        This function should be implemented in sub-class.
+
+        Example::
+
+            def get_by_title(self, title, **kwargs):
+                for handle in self.api.rooms.list()
+                if handle.title == title:
+                    return Channel(handle.attributes)
+
+        """
+        assert title not in (None, '')
+        return None
+
+    def get_by_id(self, id, **kwargs):
+        """
+        Looks for an existing channel by id
+
+        :param id: id of the target channel
+        :type id: str
+
+        :return: Channel instance or None
+
+        If a channel already exists with this id, a representation of it is
+        returned. Else the value ``None``is returned.
+
+        This function should be implemented in sub-class.
+
+        Example::
+
+            def get_by_id(self, id, **kwargs):
+                handle = self.api.rooms.lookup(id=id)
+                if handle:
+                    return Channel(handle.attributes)
+
+        """
+        assert id not in (None, '')
+        return None
+
+    def update(self, channel, **kwargs):
+        """
+        Updates an existing channel
+
+        :param channel: a representation of the updated channel
+        :type channel: Channel
+
+        This function should raise an exception when the update is not
+        successful.
+
+        This function should be implemented in sub-class.
+
+        Example::
+
+            def update(self, channel):
+                self.api.rooms.update(channel.attributes)
+
+        """
+        raise NotImplementedError
+
+    def delete(self, id, **kwargs):
+        """
+        Deletes a channel
+
+        :param id: the unique id of an existing channel
+        :type id: str
+
+        After a call to this function the related channel does not appear
+        anymore in the list of available resources in the chat space.
+        This can be implemented in the back-end either by actual deletion of
+        resources, or by archiving the channel. In the second scenario, the
+        channel could be restored at a later stage if needed.
+
+        This function should be implemented in sub-class.
+
+        Example::
+
+            def delete(self, id=id, **kwargs):
+                self.api.rooms.delete(id)
+
+        """
+        raise NotImplementedError()
+
+    def add_moderators(self, id, persons=[]):
         """
         Adds multiple moderators
+
+        :param id: the unique id of an existing channel
+        :type id: str
 
         :param persons: e-mail addresses of persons to add
         :type persons: list of str
@@ -462,11 +395,14 @@ class Space(object):
         logging.info(u"Adding moderators")
         for person in persons:
             logging.info(u"- {}".format(person))
-            self.add_moderator(person)
+            self.add_moderator(id=id, person=person)
 
-    def add_moderator(self, person):
+    def add_moderator(self, id, person):
         """
         Adds one moderator
+
+        :param id: the unique id of an existing channel
+        :type id: str
 
         :param person: e-mail address of the person to add
         :type person: str
@@ -475,17 +411,20 @@ class Space(object):
 
         Example::
 
-            def add_moderator(self, person):
-                self.api.memberships.create(id=self.id,
+            def add_moderator(self, id, person):
+                self.api.memberships.create(id=id,
                                             person=person,
                                             is_moderator=True)
 
         """
         raise NotImplementedError()
 
-    def add_participants(self, persons=[]):
+    def add_participants(self, id, persons=[]):
         """
         Adds multiple participants
+
+        :param id: the unique id of an existing channel
+        :type id: str
 
         :param persons: e-mail addresses of persons to add
         :type persons: list of str
@@ -494,11 +433,14 @@ class Space(object):
         logging.info(u"Adding participants")
         for person in persons:
             logging.info(u"- {}".format(person))
-            self.add_participant(person)
+            self.add_participant(id=id, person=person)
 
-    def add_participant(self, person):
+    def add_participant(self, id, person):
         """
         Adds one participant
+
+        :param id: the unique id of an existing channel
+        :type id: str
 
         :param person: e-mail address of the person to add
         :type person: str
@@ -507,15 +449,18 @@ class Space(object):
 
         Example::
 
-            def add_participant(self, person):
-                self.api.memberships.create(id=self.id, person=person)
+            def add_participant(self, id, person):
+                self.api.memberships.create(id=id, person=person)
 
         """
         raise NotImplementedError()
 
-    def remove_participants(self, persons=[]):
+    def remove_participants(self, id, persons=[]):
         """
         Removes multiple participants
+
+        :param id: the unique id of an existing channel
+        :type id: str
 
         :param persons: e-mail addresses of persons to delete
         :type persons: list of str
@@ -524,11 +469,14 @@ class Space(object):
         logging.info(u"Removing participants")
         for person in persons:
             logging.info(u"- {}".format(person))
-            self.remove_participant(person)
+            self.remove_participant(id=id, person=person)
 
-    def remove_participant(self, person):
+    def remove_participant(self, id, person):
         """
         Removes one participant
+
+        :param id: the unique id of an existing channel
+        :type id: str
 
         :param person: e-mail address of the person to delete
         :type person: str
@@ -537,68 +485,23 @@ class Space(object):
 
         Example::
 
-            def remove_participant(self, person):
-                self.api.memberships.delete(id=self.id, person=person)
-
-        """
-        raise NotImplementedError()
-
-    def dispose(self, **kwargs):
-        """
-        Disposes all resources
-
-        This function deletes the underlying space in the cloud and reset
-        this instance. It is useful to restart a clean environment.
-
-        >>>space.bond(title="Working Space")
-        ...
-        >>>space.dispose()
-
-        After a call to this function, ``bond()`` has to be invoked to
-        return to normal mode of operation.
-        """
-
-        if self.title in (None, '', self.DEFAULT_SPACE_TITLE):
-            title = self.configured_title()
-        else:
-            title = self.values.get('title')
-
-        self.delete_space(title=title, **kwargs)
-        self.reset()
-
-    def delete_space(self, title=None, **kwargs):
-        """
-        Deletes a space
-
-        :param title: title of the space to be deleted (optional)
-        :type title: str
-
-        After a call to this function the underlying space does not appear
-        anymore in the list of available resources. This can be implemented in
-        the back-end either by actual deletion of resources, or by archiving
-        the space. In the second scenario, the space could be restored at a
-        later stage if needed.
-
-        >>>space.delete_space("Obsolete Space")
-
-        This function should be implemented in sub-class.
-
-        Example::
-
-            def delete_space(self, title=None, **kwargs):
-                self.api.rooms.delete(title=title)
+            def remove_participant(self, id, person):
+                self.api.memberships.delete(id=id, person=person)
 
         """
         raise NotImplementedError()
 
     def post_message(self,
+                     id,
                      text=None,
                      content=None,
                      file=None,
-                     space_id=None,
                      **kwargs):
         """
         Posts a message
+
+        :param id: the unique id of an existing channel
+        :type id: str
 
         :param text: message in plain text
         :type text: str
@@ -609,23 +512,16 @@ class Space(object):
         :param file: URL or local path for an attachment
         :type file: str
 
-        :param space_id: unique id of the target space
-        :type space_id: str
-
         Example message out of plain text::
 
-        >>>space.post_message(text='hello world')
-
-        If no space id is provided, then the function can use the unique id
-        of this space, if one has been defined. Or an exception may be raised
-        if no id has been made available.
+        >>>space.post_message(id=id, text='hello world')
 
         This function should be implemented in sub-class.
 
         Example::
 
-            def post_message(self, text=None, **kwargs):
-                self.api.messages.create(text=text)
+            def post_message(self, id, text=None, **kwargs):
+                self.api.messages.create(id=id, text=text)
 
         """
         raise NotImplementedError()
@@ -697,7 +593,7 @@ class Space(object):
 
     def on_start(self):
         """
-        Adds processing just before first update reception
+        Adds processing on start
 
         This function should be expanded in sub-class, where necessary.
 
