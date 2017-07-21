@@ -913,7 +913,7 @@ class SparkSpace(Space):
         message.from_id = message.get('personId')
         message.from_label = message.get('personEmail')
         message.mentioned_ids = message.get('mentionedPeople', [])
-        message.space_id = message.get('roomId')
+        message.channel_id = message.get('roomId')
 
         logging.debug(u"- putting message to ears")
         queue.put(str(message))
@@ -923,7 +923,7 @@ class SparkSpace(Space):
             attachment.url = url
             attachment.from_id = item.get('personId', None)
             attachment.from_label = item.get('personEmail', None)
-            attachment.space_id = item.get('roomId', None)
+            attachment.channel_id = item.get('roomId', None)
 
             logging.debug(u"- putting attachment to ears")
             queue.put(str(attachment))
@@ -1029,7 +1029,7 @@ class SparkSpace(Space):
         join.actor_id = join.get('personId')
         join.actor_address = join.get('personEmail')
         join.actor_label = join.get('personDisplayName')
-        join.space_id = join.get('roomId')
+        join.channel_id = join.get('roomId')
 
         queue.put(str(join))
 
@@ -1069,7 +1069,7 @@ class SparkSpace(Space):
         leave.actor_id = leave.get('personId')
         leave.actor_address = leave.get('personEmail')
         leave.actor_label = leave.get('personDisplayName')
-        leave.space_id = leave.get('roomId')
+        leave.channel_id = leave.get('roomId')
 
         queue.put(str(leave))
 

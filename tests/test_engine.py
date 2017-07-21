@@ -15,9 +15,9 @@ from shellbot.spaces import Space, LocalSpace, SparkSpace
 
 
 class FakeBot(object):
-    def __init__(self, engine=None,space_id=None):
+    def __init__(self, engine=None,channel_id=None):
         self.engine = engine
-        self.id = space_id if space_id else '*bot'
+        self.id = channel_id if channel_id else '*bot'
         self.store = self.engine.build_store(id)
 
 

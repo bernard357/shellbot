@@ -152,13 +152,13 @@ class EventsTests(unittest.TestCase):
         self.assertEqual(event.from_id, None)
         self.assertEqual(event.from_label, None)
         self.assertEqual(event.mentioned_ids, [])
-        self.assertEqual(event.space_id, None)
+        self.assertEqual(event.channel_id, None)
 
     def test_message(self):
 
         item = {
               "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-              "space_id" : "Y2lzY29zcGFyazovNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+              "channel_id" : "Y2lzY29zcGFyazovNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
               "text" : "/plumby use containers/docker",
               "content" : "<p>/plumby use containers/docker</p>",
               "created" : "2015-10-18T14:26:16+00:00",
@@ -179,7 +179,7 @@ class EventsTests(unittest.TestCase):
                          "Masked Cucumber")
         self.assertEqual(event.mentioned_ids,
                          ["Y2lzYDMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"])
-        self.assertEqual(event.space_id,
+        self.assertEqual(event.channel_id,
                          "Y2lzY29zcGFyazovNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0")
 
         item.update({'type': 'message'})
@@ -188,7 +188,7 @@ class EventsTests(unittest.TestCase):
 
         item = {
               "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-              "space_id" : "Y2lzY29zcGFyazovNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+              "channel_id" : "Y2lzY29zcGFyazovNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
               "text" : "/plumby use containers/docker",
               "created" : "2015-10-18T14:26:16+00:00",
               "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
@@ -203,7 +203,7 @@ class EventsTests(unittest.TestCase):
 
         item = {
               "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-              "space_id" : "Y2lzY29zcGFyazovNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+              "channel_id" : "Y2lzY29zcGFyazovNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
               "text" : "/plumby use containers/docker",
               "created" : "2015-10-18T14:26:16+00:00",
               "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
@@ -225,7 +225,7 @@ class EventsTests(unittest.TestCase):
             url = event.url
         self.assertEqual(event.from_id, None)
         self.assertEqual(event.from_label, None)
-        self.assertEqual(event.space_id, None)
+        self.assertEqual(event.channel_id, None)
 
     def test_join_init(self):
 
@@ -236,7 +236,7 @@ class EventsTests(unittest.TestCase):
         with self.assertRaises(AttributeError):
             value = event.actor_label
         with self.assertRaises(AttributeError):
-            value = event.space_id
+            value = event.channel_id
 
     def test_leave_init(self):
 
@@ -247,7 +247,7 @@ class EventsTests(unittest.TestCase):
         with self.assertRaises(AttributeError):
             value = event.actor_label
         with self.assertRaises(AttributeError):
-            value = event.space_id
+            value = event.channel_id
 
 
 if __name__ == '__main__':

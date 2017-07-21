@@ -335,7 +335,7 @@ class LocalSpace(Space):
         message = Message(item)
         message.from_id = '*user'
         message.mentioned_ids = [self.context.get('bot.id')]
-        message.space_id = '*local'
+        message.channel_id = '*local'
 
         logging.debug(u"- putting message to ears")
         queue.put(str(message))

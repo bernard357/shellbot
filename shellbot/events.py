@@ -254,14 +254,14 @@ class Message(Event):
         return self.attributes.get('mentioned_ids', [])
 
     @property
-    def space_id(self):
+    def channel_id(self):
         """
         Returns the id of the chat space
 
         :rtype: str or None
 
         """
-        return self.attributes.get('space_id')
+        return self.attributes.get('channel_id')
 
 
 class Attachment(Event):
@@ -305,14 +305,14 @@ class Attachment(Event):
         return self.attributes.get('from_label')
 
     @property
-    def space_id(self):
+    def channel_id(self):
         """
         Returns the id of the chat space
 
         :rtype: str or None
 
         """
-        return self.attributes.get('space_id')
+        return self.attributes.get('channel_id')
 
 
 class Join(Event):
@@ -356,14 +356,14 @@ class Join(Event):
         return self.__getattr__('actor_label')
 
     @property
-    def space_id(self):
+    def channel_id(self):
         """
         Returns the id of the joined space
 
         :rtype: str or None
 
         """
-        return self.__getattr__('space_id')
+        return self.__getattr__('channel_id')
 
 
 class Leave(Event):
@@ -407,11 +407,11 @@ class Leave(Event):
         return self.__getattr__('actor_label')
 
     @property
-    def space_id(self):
+    def channel_id(self):
         """
         Returns the id of the left space
 
         :rtype: str or None
 
         """
-        return self.__getattr__('space_id')
+        return self.__getattr__('channel_id')

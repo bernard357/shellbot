@@ -46,7 +46,7 @@ class ShellBot(object):
 
     1. A bot is commonly created from the engine, or directly::
 
-            bot = ShellBot(engine, space_id='123')
+            bot = ShellBot(engine, channel_id='123')
 
     2. The space is connected to some back-end API::
 
@@ -86,7 +86,7 @@ class ShellBot(object):
 
     def __init__(self,
                  engine,
-                 space_id=None,
+                 channel_id=None,
                  space=None,
                  store=None,
                  fan=None,
@@ -97,8 +97,8 @@ class ShellBot(object):
         :param engine: Engine instance for acces of the infrastructure
         :type engine: Engine
 
-        :param space_id: Unique id of the related chat space
-        :type space_id: str
+        :param channel_id: Unique id of the related chat space
+        :type channel_id: str
 
         :param space: Chat space related to this bot
         :type space: Space
@@ -120,15 +120,15 @@ class ShellBot(object):
         else:
             self.space = engine.space
 
-        if space_id:
-            self.channel = self.space.get_by_id(space_id)
+        if channel_id:
+            self.channel = self.space.get_by_id(channel_id)
         else:
             self.channel = None
 
         if store:
             self.store = store
         else:
-            self.store = self.engine.build_store(space_id)
+            self.store = self.engine.build_store(channel_id)
 
         self.fan = fan if fan else Queue()
 

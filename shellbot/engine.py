@@ -90,9 +90,8 @@ class Engine(object):
 
     Example of invitation to a chat space::
 
-        def on_enter(self, space_id):
-            bot = ShellBot(engine=my_engine)
-            bot.use_space(id=space_id)
+        def on_enter(self, channel_id):
+            bot = engine.get_bot(channel_id=channel_id)
             return bot
 
     The engine is configured by setting values in the context that is attached
@@ -730,24 +729,24 @@ class Engine(object):
         for id in self.bots.keys():
             yield self.bots[id]
 
-    def get_bot(self, space_id=None):
+    def get_bot(self, channel_id=None):
         """
         Gets a bot by id
 
-        :param space_id: The unique id of the target chat space
-        :type space_id: str
+        :param channel_id: The unique id of the target chat space
+        :type channel_id: str
 
         :return: a bot instance, or None
 
         This function receives the id of a chat space, and returns
         the related bot.
         """
-        logging.debug(u"Getting bot {}".format(space_id))
-        if space_id and space_id in self.bots.keys():
+        logging.debug(u"Getting bot {}".format(channel_id))
+        if channel_id and channel_id in self.bots.keys():
             logging.debug(u"- found matching bot instance")
-            return self.bots[space_id]
+            return self.bots[channel_id]
 
-        bot = self.build_bot(id=space_id, driver=self.driver)
+        bot = self.build_bot(id=channel_id, driver=self.driver)
 
         if bot and bot.id:
             logging.debug(u"- remembering bot {}".format(bot.id))
@@ -768,7 +767,7 @@ class Engine(object):
         the related bot.
         """
         logging.debug(u"- building bot instance")
-        bot = driver(engine=self, space_id=id)
+        bot = driver(engine=self, channel_id=id)
 
         self.initialize_store(bot=bot)
 
@@ -778,12 +777,12 @@ class Engine(object):
 
         return bot
 
-    def build_store(self, space_id=None):
+    def build_store(self, channel_id=None):
         """
         Builds a store for this bot
 
-        :param space_id: Identifier of the target chat space
-        :type space_id: str
+        :param channel_id: Identifier of the target chat space
+        :type channel_id: str
 
         :return: a Store instance, or None
 

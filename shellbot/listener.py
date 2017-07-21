@@ -230,10 +230,10 @@ class Listener(object):
 
         * Check the ``bot.fan`` queue frequently
 
-        * On each check, update the string ``fan.<space_id>`` in the context
+        * On each check, update the string ``fan.<channel_id>`` in the context
           with the value of ``time.time()``. This will say that you are around.
 
-        The value of ``fan.<space_id>`` is checked on every message that is not
+        The value of ``fan.<channel_id>`` is checked on every message that is not
         for the bot itself. If this is fresh enough, then data is put to the
         ``bot.fan`` queue. Else message is just thrown away.
         """
@@ -254,13 +254,13 @@ class Listener(object):
         if len(input) > 0 and input[0] in ['@', '/', '!']:
             input = input[1:]
 
-        label = 'fan.' + received.space_id
+        label = 'fan.' + received.channel_id
         logging.debug(u"- sensing fan listener on '{}'".format(label))
 
         elapsed = time.time() - self.engine.get(label, 0)
         if elapsed < self.FRESH_DURATION:
             logging.debug(u"- putting input to fan queue")
-            bot = self.engine.get_bot(received.space_id)
+            bot = self.engine.get_bot(received.channel_id)
             bot.fan.put(input)  # forward downstream
             return
 
@@ -277,7 +277,7 @@ class Listener(object):
             return
 
         logging.debug(u"- submitting command to the shell")
-        self.engine.shell.do(input, space_id=received.space_id)
+        self.engine.shell.do(input, channel_id=received.channel_id)
 
     def on_attachment(self, received):
         """
@@ -314,7 +314,7 @@ class Listener(object):
             if received.get('hook') != 'shellbot-participants':
                 self.engine.on_enter(received)
                 self.engine.dispatch('enter', received=received)
-                bot = self.engine.get_bot(received.space_id)
+                bot = self.engine.get_bot(received.channel_id)
                 bot.say(self.engine.get('bot.enter'))
         else:
             if received.get('hook') != 'shellbot-rooms':

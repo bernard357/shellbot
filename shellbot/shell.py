@@ -208,15 +208,15 @@ class Shell(object):
 
         self._commands[command.keyword] = command
 
-    def do(self, line, space_id=None):
+    def do(self, line, channel_id=None):
         """
         Handles one line of text
 
         :param line: a line of text to parse and to handle
         :type line: str
 
-        :param space_id: the unique id of the target chat context
-        :type space_id: str
+        :param channel_id: the unique id of the target chat context
+        :type channel_id: str
 
         This function uses the first token as a verb, and looks for a command
         of the same name in the shell.
@@ -248,7 +248,7 @@ class Shell(object):
         else:
             arguments = ''
 
-        bot = self.engine.get_bot(space_id)
+        bot = self.engine.get_bot(channel_id)
 
         try:
             if verb in self._commands.keys():

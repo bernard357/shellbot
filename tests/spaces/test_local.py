@@ -260,7 +260,7 @@ class LocalSpaceTests(unittest.TestCase):
                           'from_id': '*user',
                           'type': 'message',
                           'mentioned_ids': ['*bot'],
-                          'space_id': '*local'})
+                          'channel_id': '*local'})
 
         original_stdin = sys.stdin
         sys.stdin = io.StringIO(u'hello world')
@@ -273,7 +273,7 @@ class LocalSpaceTests(unittest.TestCase):
                           'from_id': '*user',
                           'type': 'message',
                           'mentioned_ids': ['*bot'],
-                          'space_id': '*local'})
+                          'channel_id': '*local'})
 
         sys.stdin = original_stdin
 
@@ -288,7 +288,7 @@ class LocalSpaceTests(unittest.TestCase):
                           'mentioned_ids': ['*bot'],
                           'text': 'hello world',
                           'type': 'message',
-                          'space_id': '*local'})
+                          'channel_id': '*local'})
 
 
 if __name__ == '__main__':

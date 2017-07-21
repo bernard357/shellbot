@@ -82,19 +82,19 @@ class Handler(object):
         self.engine = engine
 
     def on_enter(self, received):
-        bot = self.engine.get_bot(received.space_id)
+        bot = self.engine.get_bot(received.channel_id)
         bot.say(u"Happy to enter '{}'".format(bot.space.title))
 
     def on_exit(self, received):
         logging.info(u"Sad to exit '{}'".format(received.space_title))
 
     def on_join(self, received):
-        bot = self.engine.get_bot(received.space_id)
+        bot = self.engine.get_bot(received.channel_id)
         bot.say(u"Welcome to '{}' in '{}'".format(
             received.actor_label, received.space_title))
 
     def on_leave(self, received):
-        bot = self.engine.get_bot(received.space_id)
+        bot = self.engine.get_bot(received.channel_id)
         bot.say(u"Bye bye '{}', we will miss you in '{}'".format(
             received.actor_label, received.space_title))
 

@@ -574,7 +574,7 @@ class SparkSpaceTests(unittest.TestCase):
                           'from_id': None,
                           'from_label': None,
                           'hook': 'injection',
-                          'space_id': None,
+                          'channel_id': None,
                           'type': 'message',
                           'mentioned_ids': []})
         with self.assertRaises(Exception):
@@ -607,7 +607,7 @@ class SparkSpaceTests(unittest.TestCase):
                           'from_id': None,
                           'from_label': None,
                           'hook': 'pull',
-                          'space_id': None,
+                          'channel_id': None,
                           'type': 'message',
                           'mentioned_ids': []})
         with self.assertRaises(Exception):
@@ -625,7 +625,7 @@ class SparkSpaceTests(unittest.TestCase):
         message.update({"from_label": 'matt@example.com'})
         message.update({"mentioned_ids": ['Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM',
                        'Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg']})
-        message.update({"space_id": 'Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0'})
+        message.update({"channel_id": 'Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0'})
         self.maxDiff = None
         self.assertEqual(yaml.safe_load(self.ears.get()), message)
 
@@ -634,7 +634,7 @@ class SparkSpaceTests(unittest.TestCase):
         attachment.update({"url": "http://www.example.com/images/media.png"})
         attachment.update({"from_id": 'Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY'})
         attachment.update({"from_label": 'matt@example.com'})
-        attachment.update({"space_id": 'Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0'})
+        attachment.update({"channel_id": 'Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0'})
         self.assertEqual(yaml.safe_load(self.ears.get()), attachment)
 
         with self.assertRaises(Exception):

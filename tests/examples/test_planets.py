@@ -23,7 +23,7 @@ class RocketTests(unittest.TestCase):
 
     def setUp(self):
         self.engine = Engine(mouth=Queue())
-        self.bot = ShellBot(engine=self.engine, space_id='*id')
+        self.bot = ShellBot(engine=self.engine, channel_id='*id')
         self.rocket = MyRocket(bot=self.bot)
 
     def tearDown(self):

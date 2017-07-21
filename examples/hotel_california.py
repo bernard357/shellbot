@@ -129,7 +129,7 @@ class Magic(object):
 
     def on_join(self, received):
 
-        bot = self.engine.get_bot(received.space_id)
+        bot = self.engine.get_bot(received.channel_id)
         addresses = bot.recall('visitors', [])
 
         if received.actor_address not in addresses:
@@ -139,7 +139,7 @@ class Magic(object):
 
     def on_leave(self, received):
 
-        bot = self.engine.get_bot(received.space_id)
+        bot = self.engine.get_bot(received.channel_id)
         addresses = bot.recall('visitors', [])
 
         if bot.recall('hotel_california.state', 'off') == 'off':

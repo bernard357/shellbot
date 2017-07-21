@@ -399,7 +399,7 @@ class Input(Machine):
 
                 try:
                     if self.bot.fan.empty():
-                        label = 'fan.' + self.bot.space_id
+                        label = 'fan.' + self.bot.channel_id
                         self.bot.engine.set(label, time.time())
                         time.sleep(self.TICK_DURATION)
                         continue

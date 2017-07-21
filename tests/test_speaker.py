@@ -163,7 +163,7 @@ class SpeakerTests(unittest.TestCase):
                 text='',
                 content='me **too**',
                 file=None,
-                space_id='123')
+                channel_id='123')
             speaker.process(item)
             mocked.assert_called_with(content='me **too**', file=None, id='123', text='')
 
@@ -171,7 +171,7 @@ class SpeakerTests(unittest.TestCase):
                 text='*with*attachment',
                 content=None,
                 file='http://a.server/with/file',
-                space_id='456')
+                channel_id='456')
             speaker.process(item)
             mocked.assert_called_with(content=None, file='http://a.server/with/file', id='456', text='*with*attachment')
 
@@ -179,7 +179,7 @@ class SpeakerTests(unittest.TestCase):
                 text='hello world',
                 content='hello **world**',
                 file='http://a.server/with/file',
-                space_id='789')
+                channel_id='789')
             speaker.process(item)
             mocked.assert_called_with(content='hello **world**', file='http://a.server/with/file', id='789', text='hello world')
 
@@ -187,7 +187,7 @@ class SpeakerTests(unittest.TestCase):
                 text='hello world',
                 content='hello **world**',
                 file='http://a.server/with/file',
-                space_id='007')
+                channel_id='007')
             speaker.process(item)
             mocked.assert_called_with(content='hello **world**', file='http://a.server/with/file', id='007', text='hello world')
 

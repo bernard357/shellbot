@@ -24,7 +24,7 @@ class MyEngine(Engine):
 my_engine = MyEngine()
 
 class FakeBot(object):
-    space_id = '234'
+    channel_id = '234'
     fan = Queue()
 
     def __init__(self, engine, store=None):
@@ -32,7 +32,7 @@ class FakeBot(object):
         self.store = store
 
     def say(self, text, content=None, file=None):
-        self.engine.mouth.put(Vibes(text, content, file, self.space_id))
+        self.engine.mouth.put(Vibes(text, content, file, self.channel_id))
 
     def update(self, key, label, item):
         self.store.update(key, label, item)

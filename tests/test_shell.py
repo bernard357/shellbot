@@ -139,7 +139,7 @@ class ShellTests(unittest.TestCase):
         self.assertEqual(shell.line, None)
         self.assertEqual(shell.count, 0)
 
-        shell.do('*unknown*', space_id='*id')
+        shell.do('*unknown*', channel_id='*id')
         self.assertEqual(shell.line, '*unknown*')
         self.assertEqual(shell.count, 1)
         self.assertEqual(shell.engine.mouth.get().text,
@@ -147,14 +147,14 @@ class ShellTests(unittest.TestCase):
         with self.assertRaises(Exception):
             shell.engine.mouth.get_nowait()
 
-        shell.do('echo hello world', space_id='*id')
+        shell.do('echo hello world', channel_id='*id')
         self.assertEqual(shell.line, 'echo hello world')
         self.assertEqual(shell.count, 2)
         self.assertEqual(shell.engine.mouth.get().text, 'hello world')
         with self.assertRaises(Exception):
             shell.engine.mouth.get_nowait()
 
-        shell.do('help help', space_id='*id')
+        shell.do('help help', channel_id='*id')
         self.assertEqual(shell.line, 'help help')
         self.assertEqual(shell.count, 3)
         self.assertEqual(shell.engine.mouth.get().text,
@@ -163,31 +163,31 @@ class ShellTests(unittest.TestCase):
         with self.assertRaises(Exception):
             print(shell.engine.mouth.get_nowait())
 
-        shell.do('pass', space_id='*id')
+        shell.do('pass', channel_id='*id')
         self.assertEqual(shell.line, 'pass')
         self.assertEqual(shell.count, 4)
         with self.assertRaises(Exception):
             shell.engine.mouth.get_nowait()
 
-        shell.do('sleep .0103', space_id='*id')
+        shell.do('sleep .0103', channel_id='*id')
         self.assertEqual(shell.line, 'sleep .0103')
         self.assertEqual(shell.count, 5)
         my_engine.set('worker.busy', True)
-        shell.do('sleep .0201', space_id='*id')
+        shell.do('sleep .0201', channel_id='*id')
         self.assertEqual(shell.line, 'sleep .0201')
         self.assertEqual(shell.count, 6)
         my_engine.set('worker.busy', False)
         with self.assertRaises(Exception):
             print(shell.engine.mouth.get_nowait())
 
-        shell.do('version', space_id='*id')
+        shell.do('version', channel_id='*id')
         self.assertEqual(shell.line, 'version')
         self.assertEqual(shell.count, 7)
         self.assertEqual(shell.engine.mouth.get().text, u'Shelly version *unknown*')
         with self.assertRaises(Exception):
             shell.engine.mouth.get_nowait()
 
-        shell.do('', space_id='*id')
+        shell.do('', channel_id='*id')
         self.assertEqual(shell.line, '')
         self.assertEqual(shell.count, 8)
         self.assertEqual(
@@ -212,14 +212,14 @@ class ShellTests(unittest.TestCase):
         doc = Doc(my_engine)
         shell.load_command(doc)
 
-        shell.do('', space_id='*id')
+        shell.do('', channel_id='*id')
         self.assertEqual(shell.line, '')
         self.assertEqual(shell.count, 1)
         self.assertEqual(shell.engine.mouth.get().text, "What'up Doc?")
         with self.assertRaises(Exception):
             print(shell.engine.mouth.get_nowait())
 
-        shell.do(None, space_id='*id')
+        shell.do(None, channel_id='*id')
         self.assertEqual(shell.line, '')
         self.assertEqual(shell.count, 2)
         self.assertEqual(shell.engine.mouth.get().text, "What'up Doc?")
@@ -232,7 +232,7 @@ class ShellTests(unittest.TestCase):
 
         shell = Shell(engine=my_engine)
 
-        shell.do(12345, space_id='*id')
+        shell.do(12345, channel_id='*id')
         logging.debug('*ouch')
         self.assertEqual(shell.line, '12345')
         self.assertEqual(shell.count, 1)
@@ -249,14 +249,14 @@ class ShellTests(unittest.TestCase):
 
         shell.load_command(Custom(my_engine))
 
-        shell.do(12345, space_id='*id')
+        shell.do(12345, channel_id='*id')
         self.assertEqual(shell.line, '12345')
         self.assertEqual(shell.count, 2)
         self.assertEqual(shell.engine.mouth.get().text, '12345, really?')
         with self.assertRaises(Exception):
             print(shell.engine.mouth.get_nowait())
 
-        shell.do('azerty', space_id='*id')
+        shell.do('azerty', channel_id='*id')
         self.assertEqual(shell.line, 'azerty')
         self.assertEqual(shell.count, 3)
         self.assertEqual(shell.engine.mouth.get().text, 'azerty, really?')
@@ -275,7 +275,7 @@ class ShellTests(unittest.TestCase):
         shell._commands = Intruder()
 
         with self.assertRaises(Exception):
-            shell.do(12345, space_id='*id')
+            shell.do(12345, channel_id='*id')
 
         self.assertEqual(shell.engine.mouth.get().text,
                          u"Sorry, I do not know how to handle '12345'")
