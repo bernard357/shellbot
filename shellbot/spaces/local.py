@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from bottle import request
 import logging
 from multiprocessing import Process, Queue
 import os
@@ -23,6 +22,7 @@ from six import string_types
 import sys
 import time
 
+from shellbot.channel import Channel
 from shellbot.events import Message
 from .base import Space
 
@@ -52,27 +52,11 @@ class LocalSpace(Space):
 
     """
 
-    DEFAULT_SETTINGS = {
-
-        'local': {
-            'title': '$CHAT_ROOM_TITLE',
-            'moderators': '$CHAT_ROOM_MODERATORS',
-        },
-
-        'server': {
-            'url': '$SERVER_URL',
-            'hook': '/hook',
-            'binding': None,
-            'port': 8080,
-        },
-
-    }
-
     DEFAULT_PROMPT = u'> '
 
     def on_init(self, prefix='local', input=None, **kwargs):
         """
-        Adds processing to space initialisation
+        Handles extended initialisation parameters
 
         :param prefix: the main keyword for configuration of this space
         :type prefix: str
@@ -89,7 +73,7 @@ class LocalSpace(Space):
 
         Example::
 
-            space = LocalSpace(bot=bot, input='hello world')
+            space = LocalSpace(engine=engine, input='hello world')
 
         Here we create a new local space, and simulate a user
         typing 'hello world' in the chat space.
@@ -121,13 +105,20 @@ class LocalSpace(Space):
             input = [input]
         self.input += input
 
-    def on_reset(self):
+    def check(self):
         """
-        Selects the right input for this local space
+        Check settings
 
-        If this space got some content on its initialisation, this is used
+        This function also selects the right input for this local space.
+        If some content has been provided during initialisation, it is used
         to simulate user input. Else stdin is read one line at a time.
         """
+        self.context.check(self.prefix+'.title', 'Local space', filter=True)
+        self.context.check(self.prefix+'.moderators', [], filter=True)
+        self.context.check(self.prefix+'.participants', [], filter=True)
+
+        self.context.set('server.binding', None)  # no web server at all
+
         if self.input:
 
             def read_list():
@@ -148,81 +139,82 @@ class LocalSpace(Space):
 
             self._lines = read_stdin()  #  yield creates an iterator
 
-    def check(self):
+    def create(self, title, **kwargs):
         """
-        Checks that valid settings are available
-        """
-        self.context.check(self.prefix+'.title', 'Local space', filter=True)
-        self.context.check(self.prefix+'.moderators', [], filter=True)
-        self.context.check(self.prefix+'.participants', [], filter=True)
+        Creates a channel
 
-        self.context.set('server.binding', None)  # no web server at all
+        :param title: title of the new channel
+        :type title: str
 
-    def on_bond(self):
-        """
-        Adds processing to space bond
-        """
-        self.context.set('bot.id', '*bot')
+        :return: Channel
 
-    def use_space(self, id, **kwargs):
-        """
-        Uses an existing space
+        This function returns a representation of the local channel.
 
-        :param id: title of the target space
+        """
+        return self.get_by_title(title, **kwargs)
+
+    def get_by_title(self, title, **kwargs):
+        """
+        Looks for an existing channel by title
+
+        :param title: title of the target channel
+        :type title: str
+
+        :return: Channel instance or None
+
+        """
+        assert title not in (None, '')
+        attributes = {
+            'id': '*local',
+            'title': title,
+
+        }
+        return Channel(attributes)
+
+    def get_by_id(self, id, **kwargs):
+        """
+        Looks for an existing channel by id
+
+        :param id: identifier of the target channel
         :type id: str
 
-        :return: True on success, False otherwise
+        :return: Channel instance or None
 
-        If a space already exists with this id, this object is
-        configured to use it and the function returns True.
-
-        Else the function returns False.
-
-        This function should be
         """
         assert id not in (None, '')
+        attributes = {
+            'id': id,
+            'title': self.configured_title(),
 
-        self.values['id'] = id
-        self.values['title'] = self.configured_title()
+        }
+        return Channel(attributes)
 
-        return True
-
-    def lookup_space(self, title, **kwargs):
+    def update(self, channel, **kwargs):
         """
-        Looks for an existing space by name
+        Updates an existing channel
 
-        :param title: title of the target space
-        :type title: str
-
-        :return: True on successful lookup, False otherwise
-
-        """
-        assert title not in (None, '')
-
-        self.values['id'] = '*local'
-        self.values['title'] = title
-
-        return True
-
-    def create_space(self, title, **kwargs):
-        """
-        Creates a space
-
-        :param title: title of the target space
-        :type title: str
-
-        On successful space creation, this object is configured
-        to use it.
+        :param channel: a representation of the updated channel
+        :type channel: Channel
 
         """
-        assert title not in (None, '')
+        pass
 
-        self.values['id'] = '*local'
-        self.values['title'] = title
+    def delete(self, id, **kwargs):
+        """
+        Deletes a channel
 
-    def add_moderator(self, person):
+        :param id: the unique id of an existing channel
+        :type id: str
+
+        """
+        pass
+
+    def add_moderator(self, id, person):
         """
         Adds one moderator
+
+        :param id: the unique id of an existing channel
+        :type id: str
 
         :param person: e-mail address of the person to add
         :type person: str
@@ -230,9 +222,12 @@ class LocalSpace(Space):
         """
         self.moderators.append(person)
 
-    def add_participant(self, person):
+    def add_participant(self, id, person):
         """
         Adds one participant
+
+        :param id: the unique id of an existing channel
+        :type id: str
 
         :param person: e-mail address of the person to add
         :type person: str
@@ -240,9 +235,12 @@ class LocalSpace(Space):
         """
         self.participants.append(person)
 
-    def remove_participant(self, person):
+    def remove_participant(self, id, person):
         """
         Removes one participant
+
+        :param id: the unique id of an existing channel
+        :type id: str
 
         :param person: e-mail address of the person to remove
         :type person: str
@@ -250,26 +248,17 @@ class LocalSpace(Space):
         """
         self.participants.remove(person)
 
-    def delete_space(self, title, **kwargs):
-        """
-        Deletes a space
-
-        :param title: title of the space to be deleted
-        :type title: str
-
-        >>>space.delete_space("Obsolete Space")
-
-        """
-        pass
-
     def post_message(self,
+                     id,
                      text=None,
                      content=None,
                      file=None,
-                     space_id=None,
                      **kwargs):
         """
         Posts a message
+
+        :param id: the unique id of an existing channel
+        :type id: str
 
         :param text: message in plain text
         :type text: str
@@ -280,16 +269,9 @@ class LocalSpace(Space):
         :param file: URL or local path for an attachment
         :type file: str
 
-        :param space_id: unique id of the target space
-        :type space_id: str
-
         Example message out of plain text::
 
-        >>>space.post_message(text='hello world')
-
-        If no space id is provided, then the function can use the unique id
-        of this space, if one has been defined. Or an exception may be raised
-        if no id has been made available.
+        >>>space.post_message(id=id, text='hello world')
 
         """
         if content:
@@ -343,6 +325,6 @@ class LocalSpace(Space):
         message = Message(item)
         message.from_id = '*user'
         message.mentioned_ids = [self.context.get('bot.id')]
-        message.space_id = self.id
+        message.space_id = '*local'
 
         queue.put(str(message))
