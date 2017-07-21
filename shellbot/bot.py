@@ -385,7 +385,10 @@ class ShellBot(object):
 
         logging.info(u"Bot says: {}".format(line))
 
-        if self.engine.mouth:
+        if not self.is_ready:
+            logging.debug(u"- not ready to speak")
+
+        elif self.engine.mouth:
             logging.debug(u"- pushing message to mouth queue")
             self.engine.mouth.put(
                 Vibes(text, content, file, self.id))

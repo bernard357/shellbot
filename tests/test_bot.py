@@ -285,6 +285,10 @@ class BotTests(unittest.TestCase):
 
         logging.info('*** say ***')
 
+        self.bot.say('*not*said*because*not*ready')
+
+        self.bot.channel = self.channel
+
         self.bot.say('')
         self.bot.say(None)
 
