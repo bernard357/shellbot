@@ -67,11 +67,6 @@ class Channel(object):
         else:
             self.__dict__['attributes'] = attributes
 
-        try:
-            del self.__dict__['attributes']['type']
-        except:
-            pass
-
     def __getattr__(self, key):
         """
         Provides access to any native attribute
