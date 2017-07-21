@@ -330,12 +330,6 @@ class InputTests(unittest.TestCase):
         machine.receive()
         self.assertEqual(machine.get('answer'), 'ping')
 
-        logging.debug("- exit on cancellation time out")
-        machine.CANCEL_DELAY = 0.001
-        machine.receive()
-        self.assertEqual(machine.get('answer'), None)
-        machine.CANCEL_DELAY = 40.0
-
         logging.debug("- exit on poison pill")
         my_bot.fan.put(None)
         machine.receive()
