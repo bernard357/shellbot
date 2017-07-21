@@ -115,15 +115,15 @@ class ShellBot(object):
         """
         self.engine = engine
 
-        assert space_id is None or space is None  # use only one
-        if space_id:
-            self.space = self.engine.build_space(space_id)
-        elif space:
+        if space:
             self.space = space
         else:
             self.space = engine.space
 
-        self.channel = None
+        if space_id:
+            self.channel = self.space.get_by_id(space_id)
+        else:
+            self.channel = None
 
         if store:
             self.store = store

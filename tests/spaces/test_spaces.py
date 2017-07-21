@@ -52,7 +52,7 @@ class SpaceFactoryTests(unittest.TestCase):
         logging.info("***** build local space from settings")
 
         self.context.apply(settings={  # from settings to member attributes
-            'local': {
+            'space': {
                 'title': 'My preferred room',
                 'moderators':
                     ['foo.bar@acme.com', 'joe.bar@corporation.com'],
@@ -63,7 +63,7 @@ class SpaceFactoryTests(unittest.TestCase):
         })
 
         space = SpaceFactory.build(context=self.context)
-        self.assertEqual(self.context.get('local.title'), 'My preferred room')
+        self.assertEqual(self.context.get('space.title'), 'My preferred room')
         self.assertEqual(space.configured_title(), 'My preferred room')
 
     def test_build_spark(self):
@@ -117,8 +117,8 @@ class SpaceFactoryTests(unittest.TestCase):
         logging.info("***** sense local space")
 
         self.context.apply(settings={  # sense='local'
-            'local': {
-                'room': 'My preferred room',
+            'space': {
+                'title': 'My preferred room',
                 'moderators':
                     ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
@@ -127,7 +127,7 @@ class SpaceFactoryTests(unittest.TestCase):
             }
         })
 
-        self.assertEqual(SpaceFactory.sense(self.context), 'local')
+        self.assertEqual(SpaceFactory.sense(self.context), 'space')
 
     def test_sense_spark(self):
 
@@ -267,7 +267,7 @@ class SpaceFactoryTests(unittest.TestCase):
         logging.info("***** get local space")
 
         space = SpaceFactory.get(type='local', input=['hello', 'world'])
-        self.assertEqual(space.prefix, 'local')
+        self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.moderators, [])
         self.assertEqual(space.participants, [])
 

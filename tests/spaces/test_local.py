@@ -43,7 +43,7 @@ class LocalSpaceTests(unittest.TestCase):
 
         logging.info("***** init")
 
-        self.assertEqual(self.space.prefix, 'local')
+        self.assertEqual(self.space.prefix, 'space')
         self.assertEqual(self.space.moderators, [])
         self.assertEqual(self.space.participants, [])
         self.assertEqual(self.space.input, [])
@@ -74,23 +74,23 @@ class LocalSpaceTests(unittest.TestCase):
 
         logging.info("***** configure")
 
-        settings = {'local.key': 'my value',}
+        settings = {'space.key': 'my value',}
         self.space.configure(settings=settings)
-        self.assertEqual(self.space.context.get('local.title'), 'Local space')
-        self.assertEqual(self.space.context.get('local.key'), 'my value')
-        self.assertEqual(self.space.context.get('local.moderators'), [])
-        self.assertEqual(self.space.context.get('local.participants'), [])
+        self.assertEqual(self.space.context.get('space.title'), 'Local space')
+        self.assertEqual(self.space.context.get('space.key'), 'my value')
+        self.assertEqual(self.space.context.get('space.moderators'), [])
+        self.assertEqual(self.space.context.get('space.participants'), [])
 
         self.assertEqual(self.space.context.get('server.binding'), None)
 
         self.space.context.clear()
-        settings = {'local.title': 'a title',
-                    'local.key': 'my value',}
+        settings = {'space.title': 'a title',
+                    'space.key': 'my value',}
         self.space.configure(settings=settings)
-        self.assertEqual(self.space.context.get('local.title'), 'a title')
-        self.assertEqual(self.space.context.get('local.key'), 'my value')
-        self.assertEqual(self.space.context.get('local.moderators'), [])
-        self.assertEqual(self.space.context.get('local.participants'), [])
+        self.assertEqual(self.space.context.get('space.title'), 'a title')
+        self.assertEqual(self.space.context.get('space.key'), 'my value')
+        self.assertEqual(self.space.context.get('space.moderators'), [])
+        self.assertEqual(self.space.context.get('space.participants'), [])
 
     def test_check(self):
 

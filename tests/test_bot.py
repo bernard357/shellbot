@@ -133,7 +133,7 @@ class BotTests(unittest.TestCase):
             self.bot.on_bond.assert_called_with()
 
         self.space.configure(settings={
-            'local': {
+            'space': {
                 'title': 'Another title',
                 'moderators':
                     ['foo.bar@acme.com', 'joe.bar@corporation.com'],

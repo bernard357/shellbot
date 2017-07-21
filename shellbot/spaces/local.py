@@ -54,7 +54,7 @@ class LocalSpace(Space):
 
     DEFAULT_PROMPT = u'> '
 
-    def on_init(self, prefix='local', input=None, **kwargs):
+    def on_init(self, prefix='space', input=None, **kwargs):
         """
         Handles extended initialisation parameters
 
@@ -116,6 +116,7 @@ class LocalSpace(Space):
         If some content has been provided during initialisation, it is used
         to simulate user input. Else stdin is read one line at a time.
         """
+        logging.debug(u"Context: {}".format(self.context.values))
         self.context.check(self.prefix+'.title', 'Local space', filter=True)
         self.context.check(self.prefix+'.moderators', [], filter=True)
         self.context.check(self.prefix+'.participants', [], filter=True)
@@ -155,7 +156,12 @@ class LocalSpace(Space):
 
         """
         assert title not in (None, '')
-        return self.get_by_title(title, **kwargs)
+        attributes = {
+            'id': '*local',
+            'title': title,
+
+        }
+        return Channel(attributes)
 
     def get_by_title(self, title, **kwargs):
         """

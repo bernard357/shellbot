@@ -15,10 +15,10 @@ from shellbot.spaces import Space, LocalSpace, SparkSpace
 
 
 class FakeBot(object):
-    def __init__(self, engine=None, space_id=None):
+    def __init__(self, engine=None,space_id=None):
         self.engine = engine
-        self.space_id = space_id if space_id else '*bot'
-        self.store = self.engine.build_store(space_id)
+        self.id = space_id if space_id else '*bot'
+        self.store = self.engine.build_store(id)
 
 
 class MyCounter(object):
@@ -154,7 +154,7 @@ class EngineTests(unittest.TestCase):
                 'on_exit': 'Bye!',
             },
 
-            'local': {
+            'space': {
                 'title': 'space name',
                 'moderators': ['foo.bar@acme.com'],
                 'participants': ['joe.bar@acme.com'],
@@ -171,10 +171,10 @@ class EngineTests(unittest.TestCase):
         self.engine.configure(settings)
         self.assertEqual(self.engine.get('bot.on_enter'), 'Hello!')
         self.assertEqual(self.engine.get('bot.on_exit'), 'Bye!')
-        self.assertEqual(self.engine.get('local.title'), 'space name')
-        self.assertEqual(self.engine.get('local.moderators'),
+        self.assertEqual(self.engine.get('space.title'), 'space name')
+        self.assertEqual(self.engine.get('space.moderators'),
                          ['foo.bar@acme.com'])
-        self.assertEqual(self.engine.get('local.participants'),
+        self.assertEqual(self.engine.get('space.participants'),
                          ['joe.bar@acme.com'])
         self.assertEqual(self.engine.get('server.url'), 'http://to.no.where')
         self.assertEqual(self.engine.get('server.hook'), '/hook')
@@ -205,7 +205,7 @@ class EngineTests(unittest.TestCase):
                 'on_exit': 'Bye!',
             },
 
-            'local': {
+            'space': {
                 'title': 'Support room',
                 'moderators': ['foo.bar@acme.com'],
             },
@@ -224,10 +224,10 @@ class EngineTests(unittest.TestCase):
         engine = Engine(context=context, configure=True)
         self.assertEqual(engine.get('bot.on_enter'), 'Hello!')
         self.assertEqual(engine.get('bot.on_exit'), 'Bye!')
-        self.assertEqual(engine.get('local.title'), 'Support room')
-        self.assertEqual(engine.get('local.moderators'),
+        self.assertEqual(engine.get('space.title'), 'Support room')
+        self.assertEqual(engine.get('space.moderators'),
                          ['foo.bar@acme.com'])
-        self.assertEqual(engine.get('local.participants'), [])
+        self.assertEqual(engine.get('space.participants'), [])
         self.assertEqual(engine.get('server.url'), 'http://to.nowhere/')
         self.assertEqual(engine.get('server.hook'), '/hook')
         self.assertEqual(engine.get('server.trigger'), '/trigger')
@@ -248,13 +248,15 @@ class EngineTests(unittest.TestCase):
         os.environ["SERVER_URL"] = 'http://to.nowhere/'
         self.engine.configure()
 
+        logging.debug(self.engine.context.values)
+
         self.assertEqual(self.engine.get('bot.on_enter'), 'Hello!')
         self.assertEqual(self.engine.get('bot.on_exit'), 'Bye!')
 
-        self.assertEqual(self.engine.get('local.title'), 'Support room')
-        self.assertEqual(self.engine.get('local.moderators'), 'foo.bar@acme.com')
-        self.assertEqual(self.engine.get('local.participants'), [])
-        self.assertEqual(self.engine.get('local.token'), None)
+        self.assertEqual(self.engine.get('space.title'), 'Support room')
+        self.assertEqual(self.engine.get('space.moderators'), 'foo.bar@acme.com')
+        self.assertEqual(self.engine.get('space.participants'), [])
+        self.assertEqual(self.engine.get('space.unknown'), None)
 
         self.assertEqual(self.engine.get('server.url'), '$SERVER_URL')
         self.assertEqual(self.engine.get('server.hook'), '/hook')
@@ -284,7 +286,7 @@ class EngineTests(unittest.TestCase):
                 'on_exit': 'Bye!',
             },
 
-            'local': {
+            'space': {
                 'title': '$CHAT_ROOM_TITLE',
                 'moderators': '$CHAT_ROOM_MODERATORS',
             },
@@ -302,12 +304,12 @@ class EngineTests(unittest.TestCase):
 
         self.assertEqual(self.engine.get('bot.on_enter'), 'Hello!')
         self.assertEqual(self.engine.get('bot.on_exit'), 'Bye!')
-        self.assertEqual(self.engine.get('local.title'), 'Support room')
-        self.assertEqual(self.engine.get('local.moderators'),
+        self.assertEqual(self.engine.get('space.title'), 'Support room')
+        self.assertEqual(self.engine.get('space.moderators'),
                          'foo.bar@acme.com')
-        self.assertEqual(self.engine.get('local.participants'), [])
+        self.assertEqual(self.engine.get('space.participants'), [])
 
-        self.assertEqual(self.engine.get('local.token'), None)
+        self.assertEqual(self.engine.get('space.unknown'), None)
 
         self.assertEqual(self.engine.get('server.url'), 'http://to.nowhere/')
         self.assertEqual(self.engine.get('server.hook'), '/hook')
@@ -604,7 +606,7 @@ class EngineTests(unittest.TestCase):
         }
 
         for bot in self.engine.enumerate_bots():
-            self.assertTrue(bot.space_id in ['123', '456', '789'])
+            self.assertTrue(bot.id in ['123', '456', '789'])
 
     def test_get_bot(self):
 
@@ -617,15 +619,15 @@ class EngineTests(unittest.TestCase):
         }
 
         bot = self.engine.get_bot('123')
-        self.assertEqual(bot.space_id, '123')
+        self.assertEqual(bot.id, '123')
         self.assertEqual(bot, self.engine.bots['123'])
 
         bot = self.engine.get_bot('456')
-        self.assertEqual(bot.space_id, '456')
+        self.assertEqual(bot.id, '456')
         self.assertEqual(bot, self.engine.bots['456'])
 
         bot = self.engine.get_bot('789')
-        self.assertEqual(bot.space_id, '789')
+        self.assertEqual(bot.id, '789')
         self.assertEqual(bot, self.engine.bots['789'])
 
         with mock.patch.object(self.engine,
@@ -633,7 +635,7 @@ class EngineTests(unittest.TestCase):
                                return_value=FakeBot(self.engine, '*bot')) as mocked:
 
             bot = self.engine.get_bot()
-            self.assertEqual(bot.space_id, '*bot')
+            self.assertEqual(bot.id, '*bot')
             self.assertTrue('*bot' in self.engine.bots.keys())
 
     def test_build_bot(self):
@@ -644,30 +646,22 @@ class EngineTests(unittest.TestCase):
         self.engine.bots = {}
 
         bot = self.engine.build_bot('123', FakeBot)
-        self.assertEqual(bot.space_id, '123')
+        self.assertEqual(bot.id, '123')
         bot.store.remember('a', 'b')
         self.assertEqual(bot.store.recall('a'), 'b')
 
         bot = self.engine.build_bot('456', FakeBot)
-        self.assertEqual(bot.space_id, '456')
+        self.assertEqual(bot.id, '456')
         bot.store.remember('c', 'd')
         self.assertEqual(bot.store.recall('a'), None)
         self.assertEqual(bot.store.recall('c'), 'd')
 
         bot = self.engine.build_bot('789', FakeBot)
-        self.assertEqual(bot.space_id, '789')
+        self.assertEqual(bot.id, '789')
         bot.store.remember('e', 'f')
         self.assertEqual(bot.store.recall('a'), None)
         self.assertEqual(bot.store.recall('c'), None)
         self.assertEqual(bot.store.recall('e'), 'f')
-
-    def test_build_space(self):
-
-        logging.info('*** build_space ***')
-
-        self.engine.context.apply(self.engine.DEFAULT_SETTINGS)
-        self.engine.context.apply(self.engine.space.DEFAULT_SETTINGS)
-        space = self.engine.build_space('123')
 
     def test_build_store(self):
 
