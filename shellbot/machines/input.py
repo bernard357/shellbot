@@ -252,7 +252,7 @@ class Input(Machine):
             {'source': 'waiting',
              'target': 'delayed',
              'condition': lambda **z : self.elapsed > self.RETRY_DELAY,
-             'action': lambda: self.say_retry,
+             'action': self.say_retry,
             },
 
             {'source': 'delayed',
