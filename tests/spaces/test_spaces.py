@@ -31,7 +31,7 @@ class SpaceFactoryTests(unittest.TestCase):
 
         self.context.apply(settings={  # from settings to member attributes
             'space': {
-                'room': 'My preferred room',
+                'title': 'My preferred room',
                 'moderators':
                     ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
@@ -44,8 +44,8 @@ class SpaceFactoryTests(unittest.TestCase):
         })
 
         space = SpaceFactory.build(context=self.context)
-        self.assertEqual(space.id, None)   #  set after bond()
-        self.assertEqual(space.title, None)
+        self.assertEqual(self.context.get('space.title'), 'My preferred room')
+        self.assertEqual(space.configured_title(), 'My preferred room')
 
     def test_build_local(self):
 
@@ -53,7 +53,7 @@ class SpaceFactoryTests(unittest.TestCase):
 
         self.context.apply(settings={  # from settings to member attributes
             'local': {
-                'room': 'My preferred room',
+                'title': 'My preferred room',
                 'moderators':
                     ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
@@ -63,8 +63,8 @@ class SpaceFactoryTests(unittest.TestCase):
         })
 
         space = SpaceFactory.build(context=self.context)
-        self.assertEqual(space.id, None)   #  set after bond()
-        self.assertEqual(space.title, None)
+        self.assertEqual(self.context.get('local.title'), 'My preferred room')
+        self.assertEqual(space.configured_title(), 'My preferred room')
 
     def test_build_spark(self):
 
@@ -87,8 +87,8 @@ class SpaceFactoryTests(unittest.TestCase):
         space = SpaceFactory.build(context=self.context)
         self.assertEqual(space.get('token'), 'hkNWEtMJNkODVGlZWU1NmYtyY')
         self.assertEqual(space.get('personal_token'), '*personal*secret*token')
-        self.assertEqual(space.id, None)   #  set after bond()
-        self.assertEqual(space.title, None)
+        self.assertEqual(self.context.get('spark.room'), 'My preferred room')
+        self.assertEqual(space.configured_title(), 'My preferred room')
         self.assertEqual(space.teamId, None)
 
     def test_sense_space(self):
@@ -255,16 +255,12 @@ class SpaceFactoryTests(unittest.TestCase):
 
         space = SpaceFactory.get(type='space')
         self.assertEqual(space.prefix, 'space')
-        self.assertEqual(space.id, None)
-        self.assertEqual(space.title, None)
 
         space = SpaceFactory.get(type='space', context='c', weird='w')
         self.assertEqual(space.context, 'c')
         with self.assertRaises(AttributeError):
             self.assertEqual(space.weird, 'w')
         self.assertEqual(space.prefix, 'space')
-        self.assertEqual(space.id, None)
-        self.assertEqual(space.title, None)
 
     def test_get_local(self):
 
@@ -272,8 +268,6 @@ class SpaceFactoryTests(unittest.TestCase):
 
         space = SpaceFactory.get(type='local', input=['hello', 'world'])
         self.assertEqual(space.prefix, 'local')
-        self.assertEqual(space.id, None)
-        self.assertEqual(space.title, None)
         self.assertEqual(space.moderators, [])
         self.assertEqual(space.participants, [])
 
@@ -283,8 +277,6 @@ class SpaceFactoryTests(unittest.TestCase):
 
         space = SpaceFactory.get(type='spark', context=self.context, token='b')
         self.assertEqual(space.get('token'), 'b')
-        self.assertEqual(space.id, None)
-        self.assertEqual(space.title, None)
         self.assertEqual(space.teamId, None)
 
     def test_get_unknown(self):
@@ -293,6 +285,7 @@ class SpaceFactoryTests(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             space = SpaceFactory.get(type='*unknown', ex_token='b', ex_ears='c')
+
 
 if __name__ == '__main__':
 
