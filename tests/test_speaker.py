@@ -26,8 +26,8 @@ class Bot(object):
     def __init__(self, engine):
         self.engine = engine
 
-    def say(self, text, content=None, file=None, space_id=None):
-        self.engine.mouth.put(Vibes(text, content, file, space_id))
+    def say(self, text, content=None, file=None):
+        self.engine.mouth.put(Vibes(text, content, file))
 
 
 my_bot = Bot(engine=my_engine)
@@ -63,7 +63,6 @@ class SpeakerTests(unittest.TestCase):
         logging.info('*** Dynamic test ***')
 
         my_engine.space = SpaceFactory.get('local', engine=my_engine)
-        my_engine.space.values['id'] = '123'
 
         items = ['hello', 'world']
         for item in items:
@@ -77,8 +76,8 @@ class SpeakerTests(unittest.TestCase):
                                return_value=None) as mocked:
 
             speaker.run()
-            mocked.assert_any_call('hello')
-            mocked.assert_called_with('world')
+            mocked.assert_any_call(id=None, text='hello')
+            mocked.assert_called_with(id=None, text='world')
 
             with self.assertRaises(Exception):
                 engine.mouth.get_nowait()
@@ -88,14 +87,9 @@ class SpeakerTests(unittest.TestCase):
         logging.info("*** start")
 
         my_engine.space = SpaceFactory.get('local', engine=my_engine)
-        my_engine.space.values['id'] = '123'
         my_engine.mouth.put('ping')
 
-        def my_post(item):
-            logging.info("- speaking")
-            my_engine.set('speaker.last', item)
-
-        my_engine.space.post_message = my_post
+        my_engine.space.post_message = mock.Mock()
         my_engine.set('general.switch', 'on')
         my_engine.set('speaker.counter', 0) # do not wait for run()
 
@@ -110,14 +104,12 @@ class SpeakerTests(unittest.TestCase):
         speaker_process.join()
 
         self.assertTrue(my_engine.get('speaker.counter') > 0)
-        self.assertEqual(my_engine.get('speaker.last'), 'ping')
 
     def test_run(self):
 
         logging.info("*** run")
 
         my_engine.space = SpaceFactory.get('local', engine=my_engine)
-        my_engine.space.values['id'] = '123'
 
         my_engine.speaker.process = mock.Mock(side_effect=Exception('TEST'))
         my_engine.mouth.put(('dummy'))
@@ -133,7 +125,7 @@ class SpeakerTests(unittest.TestCase):
 
     def test_run_wait(self):
 
-        logging.info("*** run/wait while empty and not ready")
+        logging.info("*** run/wait while empty")
 
         my_engine.space = SpaceFactory.get('local', engine=my_engine)
 
@@ -142,12 +134,6 @@ class SpeakerTests(unittest.TestCase):
         speaker_process = my_engine.speaker.start()
 
         t = Timer(0.1, my_engine.mouth.put, ['ping'])
-        t.start()
-
-        def set_ready(space, *args, **kwargs):
-            space.values['id'] = '123'
-
-        t = Timer(0.15, set_ready, [my_engine.space])
         t.start()
 
         time.sleep(0.2)
@@ -163,7 +149,6 @@ class SpeakerTests(unittest.TestCase):
         speaker.process('hello world')  # sent to stdout
 
         my_engine.space = SpaceFactory.get('local', engine=my_engine)
-        my_engine.space.values['id'] = '123'
 
         speaker = Speaker(engine=my_engine)
 
@@ -172,7 +157,7 @@ class SpeakerTests(unittest.TestCase):
                                return_value=None) as mocked:
 
             speaker.process('hello world')
-            mocked.assert_called_with('hello world')
+            mocked.assert_called_with(id=None, text='hello world')
 
             item = Vibes(
                 text='',
@@ -180,10 +165,7 @@ class SpeakerTests(unittest.TestCase):
                 file=None,
                 space_id='123')
             speaker.process(item)
-            mocked.assert_called_with('',
-                                      content='me **too**',
-                                      file=None,
-                                      space_id='123')
+            mocked.assert_called_with(content='me **too**', file=None, id='123', text='')
 
             item = Vibes(
                 text='*with*attachment',
@@ -191,10 +173,7 @@ class SpeakerTests(unittest.TestCase):
                 file='http://a.server/with/file',
                 space_id='456')
             speaker.process(item)
-            mocked.assert_called_with('*with*attachment',
-                                      content=None,
-                                      file='http://a.server/with/file',
-                                      space_id='456')
+            mocked.assert_called_with(content=None, file='http://a.server/with/file', id='456', text='*with*attachment')
 
             item = Vibes(
                 text='hello world',
@@ -202,10 +181,7 @@ class SpeakerTests(unittest.TestCase):
                 file='http://a.server/with/file',
                 space_id='789')
             speaker.process(item)
-            mocked.assert_called_with('hello world',
-                                      content='hello **world**',
-                                      file='http://a.server/with/file',
-                                      space_id='789')
+            mocked.assert_called_with(content='hello **world**', file='http://a.server/with/file', id='789', text='hello world')
 
             item = Vibes(
                 text='hello world',
@@ -213,10 +189,7 @@ class SpeakerTests(unittest.TestCase):
                 file='http://a.server/with/file',
                 space_id='007')
             speaker.process(item)
-            mocked.assert_called_with('hello world',
-                                      content='hello **world**',
-                                      file='http://a.server/with/file',
-                                      space_id='007')
+            mocked.assert_called_with(content='hello **world**', file='http://a.server/with/file', id='007', text='hello world')
 
 
 if __name__ == '__main__':

@@ -42,7 +42,6 @@ class Speaker(object):
     """
 
     EMPTY_DELAY = 0.005   # time to wait if queue is empty
-    NOT_READY_DELAY = 5   # time to wait if space is not ready
 
     def __init__(self, engine=None):
         """
@@ -89,7 +88,7 @@ class Speaker(object):
         Alternatively, the loop is also broken when an exception is pushed
         to the queue. For example::
 
-            engine.mouth.put(Exception('EOQ'))
+            engine.mouth.put(None)
 
         Note that items are not picked up from the queue until the underlying
         space is ready for handling messages.
@@ -98,7 +97,6 @@ class Speaker(object):
 
         try:
             self.engine.set('speaker.counter', 0)
-            not_ready_flag = True
             while self.engine.get('general.switch', 'on') == 'on':
 
                 if self.engine.mouth.empty():
@@ -134,11 +132,11 @@ class Speaker(object):
 
         if self.engine.space is not None:
             if isinstance(item, string_types):
-                self.engine.space.post_message(item)
+                self.engine.space.post_message(id=None, text=item)
             else:
-                self.engine.space.post_message(item.text,
+                self.engine.space.post_message(id=item.space_id,
+                                               text=item.text,
                                                content=item.content,
-                                               file=item.file,
-                                               space_id=item.space_id)
+                                               file=item.file)
         else:
             logging.info(item)
