@@ -30,16 +30,58 @@ class ShellBot(object):
     """
     Manages interactions with one space, one store, one state machine
 
-    A bot consists of multiple components devoted to one chat space:
+    A bot consists of multiple components devoted to one chat channel:
     - a space
     - a store
     - a state machine
+    - ... other optional components that may prove useful
 
-    It is designated by a unique id, that is also the unique id of the space
+    It is designated by a unique id, that is also the unique id of the channel
     itself.
 
     A bot relies on an underlying engine instance for actual access
     to the infrastructure, including configuration settings.
+
+    The life cycle of a bot can be described as follows::
+
+    1. A bot is commonly created from the engine, or directly::
+
+            bot = ShellBot(engine, space_id='123')
+
+    2. The space is connected to some back-end API::
+
+            >>>space.connect()
+
+    3. Multiple channels can be handled by a single space::
+
+            channel = space.create(title)
+
+            channel = space.get_by_title(title)
+            channel = space.get_by_id(id)
+
+            channel.title = 'A new title'
+            space.update(channel)
+
+            space.delete(id)
+
+       Channels feature common attributes, yet can be extended to
+       convey specificities of some platforms.
+
+    4. Messages can be posted::
+
+           >>>space.post_message(id, 'Hello, World!')
+
+    5. The interface distinguishes between space participants and
+       moderators::
+
+            space.add_participants(id, persons)
+            space.add_participant(id, person)
+            space.add_moderators(id, persons)
+            space.add_moderator(id, person)
+            space.remove_participants(id, persons)
+            space.remove_participant(id, person)
+
+
     """
 
     def __init__(self,
@@ -81,6 +123,8 @@ class ShellBot(object):
         else:
             self.space = engine.space
 
+        self.channel = None
+
         if store:
             self.store = store
         else:
@@ -100,96 +144,223 @@ class ShellBot(object):
         """
         pass
 
-    @property
-    def space_id(self):
+    def bond(self,
+             title=None,
+             reset=False,
+             moderators=None,
+             participants=None,
+             **kwargs):
         """
-        Gets unique id of the related chat space
+        Bonds to a channel
 
-        :return: the id of the underlying space, or None
-        """
-        if self.space:
-            return self.space.id
-
-        return None
-
-    def bond(self, reset=False):
-        """
-        Bonds to a room
+        :param title: title of the target channel
+        :type: title: str
 
         :param reset: if True, delete previous room and re-create one
         :type reset: bool
 
-        This function creates a room, or connect to an existing one.
+        :param moderators: the list of initial moderators (optional)
+        :type moderators: list of str
+
+        :param participants: the list of initial participants (optional)
+        :type participants: list of str
+
+        This function creates a channel, or connect to an existing one.
+        If no title is provided, then the generic title configured for the
+        underlying space is used instead.
         """
-        if reset:
-            self.space.delete_space(title=self.engine.get('spark.room'))
+        if title in (None, ''):
+            title=self.space.configured_title()
+        logging.debug(u"Bonding to channel '{}'".format(title))
 
-        self.space.bond(
-            title=self.engine.get('spark.room', 'Bot under test'),
-            ex_team=self.engine.get('spark.team'),
-            moderators=self.engine.get('spark.moderators', []),
-            participants=self.engine.get('spark.participants', []),
-        )
+        self.channel = self.space.get_by_title(title=title)
+        if self.channel and not reset:
+            logging.debug(u"- found existing channel")
 
-        self.store.bond(id=self.space.id)
+        else:
+            if self.channel and reset:
+                logging.debug(u"- deleting existing channel")
+                self.space.delete(id=self.channel.id)
+
+            logging.debug(u"- creating channel '{}''".format(title))
+            self.channel = self.space.create(title=title, **kwargs)
+            logging.debug(u"- id: {}".format(self.id))
+
+            if not moderators:
+                moderators = self.space.get('moderators', []),
+            self.add_moderators(persons=moderators)
+
+            if not participants:
+                participants = self.space.get('participants', []),
+            self.add_participants(persons=participants)
+
+        self.store.bond(id=self.id)
 
         self.engine.dispatch('bond')
 
-        if self.machine:
-            self.machine.start()
+        self.on_bond()
 
-    def add_moderators(self, *args, **kwargs):
+    def on_bond(self):
         """
-        Adds moderators to the room
+        Adds processing to space bond
 
-        This function is a proxy for the underlying space.
+        This function should be expanded in sub-class, where necessary.
+
+        Example::
+
+            def on_bond(self):
+                self.say('I am alive!')
+
         """
-        if self.space:
-            self.space.add_moderators(*args, **kwargs)
+        pass
 
-    def add_participants(self, *args, **kwargs):
+    @property
+    def is_ready(self):
         """
-        Adds participants to the room
+        Checks if this bot is ready for interactions
 
-        This function is a proxy for the underlying space.
+        :return: True or False
         """
-        if self.space:
-            self.space.add_participants(*args, **kwargs)
+        if self.id is None:
+            return False
 
-    def add_participant(self, *args, **kwargs):
+        return True
+
+    @property
+    def id(self):
         """
-        Adds one participant to the room
+        Gets unique id of the related chat channel
 
-        This function is a proxy for the underlying space.
+        :return: the id of the underlying channel, or None
         """
-        if self.space:
-            self.space.add_participant(*args, **kwargs)
+        if self.channel:
+            return self.channel.id
 
-    def remove_participants(self, *args, **kwargs):
+        return None
+
+    @property
+    def title(self):
         """
-        Removes participants to the room
+        Gets titleof the related chat channel
 
-        This function is a proxy for the underlying space.
+        :return: the title of the underlying channel, or None
         """
-        if self.space:
-            self.space.remove_participants(*args, **kwargs)
+        if self.channel:
+            return self.channel.title
 
-    def remove_participant(self, *args, **kwargs):
+        return None
+
+    def reset(self):
         """
-        Removes one participant from the room
+        Resets a space
 
-        This function is a proxy for the underlying space.
+        After a call to this function, ``bond()`` has to be invoked to
+        return to normal mode of operation.
         """
-        if self.space:
-            self.space.remove_participant(*args, **kwargs)
+        if self.channel:
+            self.channel = None
 
-    def dispose(self, *args, **kwargs):
+        self.on_reset()
+
+    def on_reset(self):
+        """
+        Adds processing to space reset
+
+        This function should be expanded in sub-class, where necessary.
+
+        Example::
+
+            def on_reset(self):
+                self._last_message_id = 0
+
+        """
+        pass
+
+    def dispose(self, **kwargs):
         """
         Disposes all resources
 
+        This function deletes the underlying channel in the cloud and resets
+        this instance. It is useful to restart a clean environment.
+
+        >>>bot.bond(title="Working Space")
+        ...
+        >>>bot.dispose()
+
+        After a call to this function, ``bond()`` has to be invoked to
+        return to normal mode of operation.
         """
-        self.engine.dispatch('dispose')
-        self.space.dispose(*args, **kwargs)
+
+        if self.id:
+            self.engine.dispatch('dispose', bot=self)
+            self.space.delete(id=self.id, **kwargs)
+            self.reset()
+
+    def add_moderators(self, persons=[]):
+        """
+        Adds multiple moderators
+
+        :param persons: e-mail addresses of persons to add
+        :type persons: list of str
+
+        """
+        if self.id:
+            self.space.add_moderators(id=self.id, persons=persons)
+
+    def add_moderator(self, person):
+        """
+        Adds one moderator
+
+        :param person: e-mail addresses of person to add
+        :type person: str
+
+        """
+        if self.id:
+            self.space.add_moderator(id=self.id, person=person)
+
+    def add_participants(self, persons=[]):
+        """
+        Adds multiple participants
+
+        :param persons: e-mail addresses of persons to add
+        :type persons: list of str
+
+        """
+        if self.id:
+            self.space.add_participants(id=self.id, persons=persons)
+
+    def add_participant(self, person):
+        """
+        Adds one participant
+
+        :param person: e-mail addresses of person to add
+        :type person: str
+
+        """
+        if self.id:
+            self.space.add_participant(id=self.id, person=person)
+
+    def remove_participants(self, persons=[]):
+        """
+        Removes multiple participants
+
+        :param persons: e-mail addresses of persons to remove
+        :type persons: list of str
+
+        """
+        if self.id:
+            self.space.remove_participants(id=self.id, persons=persons)
+
+    def remove_participant(self, person):
+        """
+        Removes one participant
+
+        :param person: e-mail addresses of person to add
+        :type person: str
+
+        """
+        if self.id:
+            self.space.remove_participant(id=self.id, person=person)
 
     def say(self, text=None, content=None, file=None):
         """
@@ -217,12 +388,12 @@ class ShellBot(object):
         if self.engine.mouth:
             logging.debug(u"- pushing message to mouth queue")
             self.engine.mouth.put(
-                Vibes(text, content, file, self.space_id))
+                Vibes(text, content, file, self.id))
 
         else:
             logging.debug(u"- calling speaker directly")
             self.engine.speaker.process(
-                Vibes(text, content, file, self.space_id))
+                Vibes(text, content, file, self.id))
 
     def remember(self, key, value):
         """

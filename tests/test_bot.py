@@ -11,6 +11,7 @@ import sys
 import time
 
 from shellbot import Context, Engine, ShellBot
+from shellbot.channel import Channel
 from shellbot.spaces import Space, LocalSpace, SparkSpace
 from shellbot.stores import MemoryStore
 
@@ -37,11 +38,14 @@ class BotTests(unittest.TestCase):
                              ears=Queue(),
                              mouth=Queue())
         self.space = LocalSpace(context=self.context, ears=self.engine.ears)
-        self.space.values['id'] = '*id'
         self.store = MemoryStore(context=self.context)
-        self.bot = ShellBot(engine=self.engine, space=self.space, store=self.store)
+        self.bot = ShellBot(engine=self.engine,
+                            space=self.space,
+                            store=self.store)
+        self.channel = Channel({'id': '*id', 'title': '*title'})
 
     def tearDown(self):
+        del self.channel
         del self.bot
         del self.store
         del self.space
@@ -59,8 +63,9 @@ class BotTests(unittest.TestCase):
 
         self.assertEqual(bot.engine, self.engine)
         self.assertTrue(bot.space is not None)
-        self.assertTrue(bot.store is not None)
-        self.assertTrue(bot.fan is not None)
+        self.assertTrue(bot.channel is None)
+        self.assertFalse(bot.store is None)
+        self.assertFalse(bot.fan is None)
         self.assertTrue(bot.machine is None)
 
         bot = ShellBot(engine=self.engine,
@@ -80,86 +85,201 @@ class BotTests(unittest.TestCase):
         bot = ShellBot(engine=self.engine, fan='f')
         bot.on_init()
 
-    def test_space_id(self):
-
-        logging.info('*** space_id ***')
-
-        bot = ShellBot(engine=self.engine, fan='f')
-
-        self.assertEqual(bot.space_id, None)
-
-        class MySpace(object):
-            id = '123'
-
-        bot.space = MySpace()
-        self.assertEqual(bot.space_id, '123')
-
     def test_bond(self):
 
-        logging.info('*** bond ***')
+        logging.info("*** bond")
 
-        bot = ShellBot(engine=self.engine, fan='f')
-        bot.space = mock.Mock()
-        bot.store = mock.Mock()
+        self.space.delete = mock.Mock()
 
-        with mock.patch.object(self.engine,
-                               'dispatch',
+        self.assertFalse(self.bot.is_ready)
+
+        self.bot.bond(title=None)
+        self.assertTrue(self.bot.is_ready)
+        self.assertEqual(self.bot.id, '*local')
+        self.assertEqual(self.bot.title, 'Collaboration space')
+
+        self.bot.bond(title='')
+        self.assertTrue(self.bot.is_ready)
+        self.assertEqual(self.bot.id, '*local')
+        self.assertEqual(self.bot.title, 'Collaboration space')
+
+        self.bot.bond(title='hello world')
+        self.assertTrue(self.bot.is_ready)
+        self.assertEqual(self.bot.id, '*local')
+        self.assertEqual(self.bot.title, 'hello world')
+
+        self.assertFalse(self.space.delete.called)
+        self.bot.bond(reset=True)
+        self.assertTrue(self.space.delete.called)
+
+        self.space.add_moderators = mock.Mock()
+        self.space.add_participants = mock.Mock()
+        self.store.bond = mock.Mock()
+        self.engine.dispatch = mock.Mock()
+        self.bot.on_bond = mock.Mock()
+
+        with mock.patch.object(self.space,
+                               'get_by_title',
                                return_value=None) as mocked:
+            self.bot.bond(
+                title='my title',
+                moderators=['a', 'b'],
+                participants=['c', 'd'],
+            )
+            mocked.assert_called_with(title='my title')
+            self.space.add_moderators.assert_called_with(id='*local', persons=['a', 'b'])
+            self.space.add_participants.assert_called_with(id='*local', persons=['c', 'd'])
+            self.engine.dispatch.assert_called_with('bond')
+            self.bot.on_bond.assert_called_with()
 
-            bot.bond(reset=True)
-            self.assertTrue(bot.space.delete_space.called)
-            self.assertTrue(bot.space.bond.called)
-            self.assertTrue(bot.store.bond.called)
-            self.assertTrue(self.engine.dispatch.called)
+        self.space.configure(settings={
+            'local': {
+                'title': 'Another title',
+                'moderators':
+                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+                'participants':
+                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+            }
+        })
+        with mock.patch.object(self.space,
+                               'get_by_title',
+                               return_value=None) as mocked:
+            self.bot.bond()
+            mocked.assert_called_with(title='Another title')
+            self.space.add_moderators.assert_called_with(id='*local', persons=(['foo.bar@acme.com', 'joe.bar@corporation.com'],))
+
+            self.space.add_participants.assert_called_with(id='*local', persons=(['alan.droit@azerty.org', 'bob.nard@support.tv'],))
+
+            self.engine.dispatch.assert_called_with('bond')
+            self.bot.on_bond.assert_called_with()
+
+
+    def test_is_ready(self):
+
+        logging.info("*** is_ready")
+
+        self.bot.channel = None
+        self.assertFalse(self.bot.is_ready)
+
+        self.bot.channel = self.channel
+        self.assertTrue(self.bot.is_ready)
+
+    def test_id(self):
+
+        logging.info("*** id")
+
+        self.bot.channel = None
+        self.assertEqual(self.bot.id, None)
+
+        self.bot.channel = self.channel
+        self.assertEqual(self.bot.id, '*id')
+
+    def test_title(self):
+
+        logging.info("*** title")
+
+        self.bot.channel = None
+        self.assertEqual(self.bot.title, None)
+
+        self.bot.channel = self.channel
+        self.assertEqual(self.bot.title, '*title')
+
+    def test_reset(self):
+
+        logging.info("*** reset")
+
+        self.bot.channel = self.channel
+        self.bot.reset()
+        self.assertEqual(self.bot.channel, None)
+
+    def test_on_reset(self):
+
+        logging.info("*** on_reset")
+
+        self.bot.on_reset()
+
+    def test_dispose(self):
+
+        logging.info("*** dispose")
+
+        self.engine.dispatch = mock.Mock()
+        self.space.delete = mock.Mock()
+
+        self.bot.dispose()
+        self.assertFalse(self.engine.dispatch.called)
+        self.assertFalse(self.space.delete.called)
+
+        self.bot.channel = self.channel
+        self.bot.dispose()
+        self.assertTrue(self.engine.dispatch.called)
+        self.assertTrue(self.space.delete.called)
+        self.assertEqual(self.bot.channel, None)
 
     def test_add_moderators(self):
 
         logging.info('*** add_moderators ***')
 
+        self.bot.channel = self.channel
         with mock.patch.object(self.bot.space,
                                'add_moderators',
                                return_value=None) as mocked:
             self.bot.add_moderators(['a', 'b', 'c', 'd'])
-            mocked.assert_called_with(['a', 'b', 'c', 'd'])
+            mocked.assert_called_with(id='*id', persons=['a', 'b', 'c', 'd'])
+
+    def test_add_moderator(self):
+
+        logging.info('*** add_moderator ***')
+
+        self.bot.channel = self.channel
+        with mock.patch.object(self.bot.space,
+                               'add_moderator',
+                               return_value=None) as mocked:
+            self.bot.add_moderator('foo.bar@acme.com')
+            mocked.assert_called_with(id='*id', person='foo.bar@acme.com')
 
     def test_add_participants(self):
 
         logging.info('*** add_participants ***')
 
+        self.bot.channel = self.channel
         with mock.patch.object(self.bot.space,
                                'add_participants',
                                return_value=None) as mocked:
             self.bot.add_participants(['a', 'b', 'c', 'd'])
-            mocked.assert_called_with(['a', 'b', 'c', 'd'])
+            mocked.assert_called_with(id='*id', persons=['a', 'b', 'c', 'd'])
+
+    def test_add_participant(self):
+
+        logging.info('*** add_participant ***')
+
+        self.bot.channel = self.channel
+        with mock.patch.object(self.bot.space,
+                               'add_participant',
+                               return_value=None) as mocked:
+            self.bot.add_participant('foo.bar@acme.com')
+            mocked.assert_called_with(id='*id', person='foo.bar@acme.com')
 
     def test_remove_participants(self):
 
         logging.info('*** remove_participants ***')
 
+        self.bot.channel = self.channel
         with mock.patch.object(self.bot.space,
                                'remove_participants',
                                return_value=None) as mocked:
             self.bot.remove_participants(['a', 'b', 'c', 'd'])
-            mocked.assert_called_with(['a', 'b', 'c', 'd'])
+            mocked.assert_called_with(id='*id', persons=['a', 'b', 'c', 'd'])
 
-    def test_dispose(self):
+    def test_remove_participant(self):
 
-        logging.info('*** dispose ***')
+        logging.info('*** remove_participant ***')
 
+        self.bot.channel = self.channel
         with mock.patch.object(self.bot.space,
-                               'dispose',
+                               'remove_participant',
                                return_value=None) as mocked:
-
-            self.bot.dispose(['a', 'b', 'c', 'd'])
-            mocked.assert_called_with(['a', 'b', 'c', 'd'])
-
-        self.context.clear()
-        with mock.patch.object(self.bot.space,
-                               'delete_space',
-                               return_value=None) as mocked:
-
-            self.bot.dispose()
-            mocked.assert_called_with(title='Collaboration space')
+            self.bot.remove_participant('foo.bar@acme.com')
+            mocked.assert_called_with(id='*id', person='foo.bar@acme.com')
 
     def test_say(self):
 
