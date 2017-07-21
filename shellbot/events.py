@@ -37,7 +37,7 @@ class Event(object):
     Example::
 
         item = self.api.messages.get(messageId=message_id)
-        self.bot.ears.put(Message(item._json))
+        my_engine.ears.put(Message(item._json))
 
     """
     type = 'event'
@@ -50,7 +50,7 @@ class Event(object):
         :param attributes: the set of atributes of this event
         :type attributes: dict or json-encoded string
 
-        This function may raise AttributeError if some manadatory
+        This function may raise AttributeError if some mandatory
         attribute is missing.
 
         """
@@ -415,4 +415,3 @@ class Leave(Event):
 
         """
         return self.__getattr__('space_id')
-

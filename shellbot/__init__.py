@@ -20,9 +20,8 @@ from .listener import Listener
 from .machines import MachinesFactory
 from .server import Server
 from .shell import Shell
-from .speaker import Speaker, Vibes
-
 from .spaces import SpaceFactory
+from .speaker import Speaker, Vibes
 
 from .commands.base import Command
 
@@ -34,17 +33,17 @@ __version__ = '17.6.6'
 
 __all__ = [
     '__version__',
-    'ShellBot',
+    'Command',
     'Context',
     'Engine',
     'Listener',
     'MachinesFactory',
+    'Notifier',
+    'Route',
     'Server',
     'Shell',
-    'Speaker',
+    'ShellBot',
     'SpaceFactory',
-    'Command',
-    'Route',
-    'Notifier',
+    'Speaker',
     'Wrapper',
 ]

@@ -69,7 +69,10 @@ class SpaceFactory(object):
         :return: a ready-to-use space
         :rtype: Space
 
-        A ``ValueError`` is raised if no type could be identified.
+        This function "senses" for a type in the context itself, then
+        provides with an instantiated object of this type.
+
+        A ``ValueError`` is raised when no type can be identified.
         """
         assert context is not None
 

@@ -360,7 +360,7 @@ class Step(object):
 
         """
         bot.say(
-            u"New state: {} - {}".format(self.label,self.message))
+            u"New state: {} - {}".format(self.label, self.message))
 
         if self.content or self.file:
             bot.say(' ',
@@ -381,4 +381,3 @@ class Step(object):
         """
         if self.machine:
             self.machine.stop()
-
