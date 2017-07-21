@@ -25,6 +25,7 @@ from six import string_types
 import tempfile
 import time
 
+from shellbot.channel import Channel
 from shellbot.events import Event, Message, Attachment, Join, Leave
 from .base import Space
 
@@ -106,7 +107,7 @@ class SparkSpace(Space):
 
         Example::
 
-            space = SparkSpace(bot=bot, prefix='spark.audit')
+            space = SparkSpace(context=context, prefix='spark.audit')
 
         Here we create a new space powered by Cisco Spark service, and use
         settings under the key ``spark`` in the context of this bot.
@@ -123,14 +124,7 @@ class SparkSpace(Space):
         self.api = None
         self.personal_api = None
 
-    def on_reset(self):
-        """
-        Resets extended internal variables
-        """
-        logging.debug(u"- Cisco Spark reset")
-
         self.teamId = None
-
         self._last_message_id = 0
 
     def check(self):
@@ -355,78 +349,11 @@ class SparkSpace(Space):
                 else:
                     logging.warning(u"Retrying to retrieve moderator id")
 
-    def use_space(self, id, **kwargs):
+    def create(self, title, ex_team=None, **kwargs):
         """
-        Uses an existing space
+        Creates a room
 
-        :param id: title of the target space
-        :type id: str
-
-        :return: True on success, False otherwise
-
-        If a space already exists with this id, this object is
-        configured to use it and the function returns True.
-
-        Else the function returns False.
-
-        """
-        assert id not in (None, '')
-        logging.info(u"Using Cisco Spark room '{}'".format(id))
-
-        assert self.personal_api is not None  # connect() is prerequisite
-        try:
-            for room in self.personal_api.rooms.list():
-                if id == room.id:
-                    logging.info(u"- found it")
-                    self.use_room(room)
-                    return True
-
-            logging.info(u"- not found")
-
-        except Exception as feedback:
-            logging.error(u"Unable to list rooms")
-            logging.exception(feedback)
-
-        return False
-
-    def lookup_space(self, title, **kwargs):
-        """
-        Looks for an existing space by name
-
-        :param title: title of the target space
-        :type title: str
-
-        :return: True on successful lookup, False otherwise
-
-        If a space already exists with this title, the object is configured
-        to use it and the function returns True.
-
-        Else the function returns False.
-        """
-        assert title not in (None, '')
-        logging.info(u"Looking for Cisco Spark room '{}'".format(title))
-
-        assert self.personal_api is not None  # connect() is prerequisite
-        try:
-            for room in self.personal_api.rooms.list():
-                if title == room.title:
-                    logging.info(u"- found it")
-                    self.use_room(room)
-                    return True
-
-            logging.info(u"- not found")
-
-        except Exception as feedback:
-            logging.error(u"Unable to list rooms")
-            logging.exception(feedback)
-
-        return False
-
-    def create_space(self, title, ex_team=None, **kwargs):
-        """
-        Creates a space
-
-        :param title: title of the target space
+        :param title: title of the new room
         :type title: str
 
         :param ex_team: the team attached to this room (optional)
@@ -435,9 +362,13 @@ class SparkSpace(Space):
         If the parameter ``ex_team`` is provided, then it can be either a
         simple name, or a team object featuring an id.
 
-        On successful space creation, this object is configured
-        to use it.
+        :return: Channel
+
+        This function returns a representation of the local channel.
+
         """
+        assert title not in (None, '')
+
         teamId = None
         if ex_team:
             try:
@@ -454,8 +385,7 @@ class SparkSpace(Space):
                                                       teamId=teamId)
                 logging.info(u"- done")
 
-                self.use_room(room)
-                break
+                return self._to_channel(room)
 
             except Exception as feedback:
                 if str(feedback).startswith('Response Code [503]'):
@@ -467,68 +397,86 @@ class SparkSpace(Space):
                 logging.exception(feedback)
                 break
 
-    def use_room(self, room):
+    def get_by_title(self, title, **kwargs):
         """
-        Uses this room for this space
+        Looks for an existing room by name
 
-        :param room: the representation to use
-
-        """
-        logging.info(u"Bonding to room '{}'".format(room.title))
-
-        self.values['id'] = room.id
-        logging.debug(u"- id: {}".format(self.id))
-
-        self.values['title'] = room.title
-        logging.debug(u"- title: {}".format(self.title))
-
-        logging.debug(u"- type: {}".format(room.type))
-        self.is_direct = True if room.type == "direct" else False
-        self.is_group = True if room.type in ("group", "team") else False
-        self.is_team = True if room.type == "team" else False
-
-        self.is_locked = True if room.isLocked else False
-        logging.debug(u"- is_locked: {}".format(self.is_locked))
-
-        self.team_id = room.teamId
-
-        bot_email = self.context.get('bot.email')
-        administrator_email = self.context.get('administrator.email')
-        if bot_email != administrator_email:
-            logging.debug(u"- adding bot: {}".format(bot_email))
-            self.add_moderator(bot_email)
-
-    def delete_space(self, title=None, **kwargs):
-        """
-        Deletes a Cisco Spark room
-
-        :param title: title of the room to be deleted (optional)
+        :param title: title of the target room
         :type title: str
 
-        >>>space.delete_space("Obsolete Space")
+        :return: Channel instance or None
 
         """
-        if title:
-            if not self.lookup_space(title=title):  # set self.id & self.title
-                logging.debug(u"No room to delete")
-                return
+        assert title not in (None, '')
 
-        elif self.id and self.title:
-            pass
-
-        elif self.lookup_space(title=self.configured_title()):
-            pass
-
-        else:
-            logging.debug(u"No room to delete")
-            return
-
-        logging.info(u"Deleting Cisco Spark room '{}'".format(self.title))
-        logging.debug(u"- id: {}".format(self.id))
+        logging.info(u"Looking for Cisco Spark room '{}'".format(title))
 
         assert self.personal_api is not None  # connect() is prerequisite
         try:
-            self.personal_api.rooms.delete(roomId=self.id)
+            for room in self.personal_api.rooms.list():
+                if title == room.title:
+                    logging.info(u"- found it")
+                    return self._to_channel(room)
+
+            logging.info(u"- not found")
+
+        except Exception as feedback:
+            logging.error(u"Unable to list rooms")
+            logging.exception(feedback)
+
+    def get_by_id(self, id, **kwargs):
+        """
+        Looks for an existing rooms by id
+
+        :param id: identifier of the target room
+        :type id: str
+
+        :return: Channel instance or None
+
+        """
+        assert id not in (None, '')
+
+        logging.info(u"Using Cisco Spark room '{}'".format(id))
+
+        assert self.personal_api is not None  # connect() is prerequisite
+        try:
+            for room in self.personal_api.rooms.list():
+                if id == room.id:
+                    logging.info(u"- found it")
+                    return self._to_channel(room)
+
+            logging.info(u"- not found")
+
+        except Exception as feedback:
+            logging.error(u"Unable to list rooms")
+            logging.exception(feedback)
+
+    def update(self, channel, **kwargs):
+        """
+        Updates an existing room
+
+        :param channel: a representation of the updated room
+        :type channel: Channel
+
+        This function can change the title of a room.
+        """
+        self.api.rooms.update(channel.id, channel.title)
+
+    def delete(self, id, **kwargs):
+        """
+        Deletes a room
+
+        :param id: the unique id of an existing room
+        :type id: str
+
+        """
+        assert id not in (None, '')
+
+        logging.info(u"Deleting Cisco Spark room '{}'".format(id))
+
+        assert self.personal_api is not None  # connect() is prerequisite
+        try:
+            self.personal_api.rooms.delete(roomId=id)
 
         except Exception as feedback:
             logging.warning(u"Unable to delete room")
@@ -552,6 +500,7 @@ class SparkSpace(Space):
         })
 
         """
+        assert name not in (None, '')
         logging.info(u"Looking for Cisco Spark team '{}'".format(name))
 
         assert self.personal_api is not None  # connect() is prerequisite
@@ -563,19 +512,23 @@ class SparkSpace(Space):
         logging.warning(u"- not found")
         return None
 
-    def add_moderator(self, person):
+    def add_moderator(self, id, person):
         """
-        Adds a moderator
+        Adds one moderator
+
+        :param id: the unique id of an existing room
+        :type id: str
 
         :param person: e-mail address of the person to add
         :type person: str
 
         """
+        assert id not in (None, '')
+
         try:
             assert self.personal_api is not None  # connect() is prerequisite
-            assert self.id is not None  # bond() is prerequisite
 
-            self.personal_api.memberships.create(roomId=self.id,
+            self.personal_api.memberships.create(roomId=id,
                                                  personEmail=person,
                                                  isModerator=True)
 
@@ -583,38 +536,46 @@ class SparkSpace(Space):
             logging.warning(u"Unable to add moderator '{}'".format(person))
             logging.exception(feedback)
 
-    def add_participant(self, person):
+    def add_participant(self, id, person):
         """
-        Adds a participant
+        Adds one participant
+
+        :param id: the unique id of an existing room
+        :type id: str
 
         :param person: e-mail address of the person to add
         :type person: str
 
         """
+        assert id not in (None, '')
+
         try:
             assert self.personal_api is not None  # connect() is prerequisite
-            assert self.id is not None  # bond() is prerequisite
 
-            self.personal_api.memberships.create(roomId=self.id,
+            self.personal_api.memberships.create(roomId=id,
                                                  personEmail=person)
 
         except Exception as feedback:
             logging.warning(u"Unable to add participant '{}'".format(person))
             logging.exception(feedback)
 
-    def remove_participant(self, person):
+    def remove_participant(self, id, person):
         """
         Removes a participant
+
+        :param id: the unique id of an existing room
+        :type id: str
 
         :param person: e-mail address of the person to remove
         :type person: str
 
         """
+        assert id not in (None, '')
+
         try:
             assert self.personal_api is not None  # connect() is prerequisite
-            assert self.id is not None  # bond() is prerequisite
 
-            self.personal_api.memberships.delete(roomId=self.id,
+            self.personal_api.memberships.delete(roomId=id,
                                                  personEmail=person)
 
         except Exception as feedback:
@@ -622,13 +583,16 @@ class SparkSpace(Space):
             logging.exception(feedback)
 
     def post_message(self,
+                     id,
                      text=None,
                      content=None,
                      file=None,
-                     space_id=None,
                      **kwargs):
         """
         Posts a message to a Cisco Spark room
+
+        :param id: the unique id of an existing room
+        :type id: str
 
         :param text: message in plain text
         :type text: str
@@ -639,25 +603,23 @@ class SparkSpace(Space):
         :param file: URL or local path for an attachment
         :type file: str
 
-        :param space_id: unique id of the target space
-        :type space_id: str
-
         Example message out of plain text::
 
-           space.post_message(text='hello world')
+           space.post_message(id=id, text='hello world')
 
         Example message with Markdown::
 
-           space.post_message(content='this is a **bold** statement')
+           space.post_message(id, content='this is a **bold** statement')
 
         Example file upload::
 
-           space.post_message(file='./my_file.pdf')
+           space.post_message(id, file='./my_file.pdf')
 
         Of course, you can combine text with the upload of a file::
 
            text = 'This is the presentation that was used for our meeting'
-           space.post_message(text=text,
+           space.post_message(id=id,
+                              text=text,
                               file='./my_file.pdf')
 
         If no space id is provided, then the function can use the unique id
@@ -665,7 +627,6 @@ class SparkSpace(Space):
         if no id has been made available.
 
         """
-
         logging.info(u"Posting message")
         if text not in (None, ''):
             logging.debug(u"- text: {}".format(
@@ -682,7 +643,6 @@ class SparkSpace(Space):
         count = 2
         while count:
             try:
-                id = space_id if space_id else self.id
                 files = [file] if file else None
                 self.api.messages.create(roomId=id,
                                          text=text,
@@ -800,7 +760,7 @@ class SparkSpace(Space):
               "roomType" : "group",
               "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
               "toPersonEmail" : "julie@example.com",
-              "text" : "PROJECT UPDATE - A new project plan has been published on Box: http://box.com/s/lf5vj. The PM for this project is Mike C. and the Engineering Manager is Jane W.",
+              "text" : "PROJECT UPDATE - A new project lan has been published on Box: http://box.com/s/lf5vj. The PM for this project is Mike C. and the Engineering Manager is Jane W.",
               "markdown" : "**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>.",
               "files" : [ "http://www.example.com/images/media.png" ],
               "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
@@ -810,8 +770,9 @@ class SparkSpace(Space):
             }
 
         This function is called from far far away, over the Internet,
-        when message_id` is None. Or it is called locally, from test environment,
+        when `message_id` is None. Or it is called locally, from test environment,
         when `message_id` has a value.
+
         """
 
         try:
@@ -889,13 +850,11 @@ class SparkSpace(Space):
 
     def pull(self):
         """
-        Fetches events from one Cisco Spark room
+        Fetches events from Cisco Spark
 
         This function senses most recent items, and pushes them
         to a processing queue.
         """
-
-        assert self.is_ready
 
         logging.info(u'Pulling messages')
         self.context.increment(u'puller.counter')
@@ -903,8 +862,7 @@ class SparkSpace(Space):
         assert self.api is not None  # connect() is prerequisite
         new_items = []
         try:
-            items = self.api.messages.list(roomId=self.id,
-                                           mentionedPeople=['me'],
+            items = self.api.messages.list(mentionedPeople=['me'],
                                            max=10)
 
             for item in items:
@@ -1115,14 +1073,34 @@ class SparkSpace(Space):
 
         queue.put(str(leave))
 
-    def update_title(self, title):
+    def _to_channel(self, room):
         """
-        Update the title of the space as requested
+        Turns a Cisco Spark room to a shellbot channel
 
-        :return: the configured title, or ``Collaboration space``
-        :rtype: str
+        :param room: the representation to use
 
-        This function should be rewritten in sub-classes if
-        space title does not come from ``space.room`` parameter.
+        :return: Channel
         """
-        return self.api.room.update(self.id, title)
+        channel = Channel()
+
+        channel.title = room.title
+        logging.debug(u"Bonding to room '{}'".format(channel.title))
+
+        channel.id = room.id
+        logging.debug(u"- id: {}".format(channel.id))
+
+        channel.type = room.type
+        logging.debug(u"- type: {}".format(channel.type))
+
+        channel.is_group = True if room.type in ("group", "team") else False
+        channel.is_team = True if room.type == "team" else False
+
+        channel.is_direct = True if room.type == "direct" else False
+        logging.debug(u"- is_direct: {}".format(channel.is_direct))
+
+        channel.is_moderated = True if room.isLocked else False
+        logging.debug(u"- is_moderated: {}".format(channel.is_moderated))
+
+        channel.team_id = room.teamId
+
+        return channel
