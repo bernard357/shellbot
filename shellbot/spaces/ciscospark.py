@@ -26,7 +26,6 @@ from six import string_types
 import tempfile
 import time
 
-from ciscosparkapi import CiscoSparkAPI, SparkApiError
 from shellbot.channel import Channel
 from shellbot.events import Event, Message, Attachment, Join, Leave
 from .base import Space
@@ -66,6 +65,8 @@ def retry(give_up="Unable to request Cisco Spark API",
     """
     def wrapper(function):
         def wrapped(*args, **kwargs):
+
+            from ciscosparkapi import SparkApiError
 
             for delay in itertools.chain(delays, [ None ]):
 
@@ -262,7 +263,7 @@ class SparkSpace(Space):
             ['bobby@jah.com']
 
         """
-        self.context.check(self.prefix+'.room', filter=True)
+        self.context.check(self.prefix+'.room', is_mandatory=True, filter=True)
         self.context.check(self.prefix+'.moderators', [], filter=True)
         self.context.check(self.prefix+'.participants', [])
         self.context.check(self.prefix+'.team')
@@ -312,6 +313,7 @@ class SparkSpace(Space):
                 personal_token not in (None, '')) # some token is needed
 
         if not factory:
+            from ciscosparkapi import CiscoSparkAPI
             factory = CiscoSparkAPI
 
         logging.debug(u"Loading Cisco Spark API as bot")

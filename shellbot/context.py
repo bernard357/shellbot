@@ -174,7 +174,7 @@ class Context(object):
                     self.values[key] = default
                     value = default
 
-            elif (is_mandatory or validate or filter):
+            elif (is_mandatory or validate):
                 try:
                     value = self.values[key]
                 except KeyError:

@@ -158,57 +158,112 @@ class ContextTests(unittest.TestCase):
 
         # is_mandatory is useless if default is set
         self.context.check('spark.*not*present',
-                         default='*born',
-                         is_mandatory=True)
+                           default='*born',
+                           is_mandatory=True)
         self.assertEqual(self.context.get('spark.*not*present'), '*born')
 
         # missing key
+        self.assertEqual(self.context.get('spark.*unknown*key*'), None)
+
+        # we need the missing key
         with self.assertRaises(KeyError):
             self.context.check('spark.*unknown*key*',
-                             is_mandatory=True)
+                               is_mandatory=True)
 
         # validate implies is_mandatory
         with self.assertRaises(KeyError):
             self.context.check('spark.*unknown*key*',
-                             validate=lambda line: True)
+                               validate=lambda line: True)
 
-        # filter does imply is_mandatory
+        # exception when is_mandatory is explicit
         with self.assertRaises(KeyError):
             self.context.check('spark.*unknown*key*',
-                             filter=True)
+                               is_mandatory=True,
+                               filter=True)
 
-        self.context.check('spark.webhook',
-                         validate=lambda line: line.startswith('http'))
+        # yet filter does not imply is_mandatory by itself
+        self.context.check('spark.*unknown*key*',
+                           filter=True)  # warning in log
+
+        # a web link has been set
         self.assertEqual(self.context.get('spark.webhook'),
                          "http://73a1e282.ngrok.io")
 
+        # validate http
+        self.context.check('spark.webhook',
+                           validate=lambda line: line.startswith('http'))
+
+        # validate https
         with self.assertRaises(ValueError):
-            self.context.check('spark.token',
-                             validate=lambda line: len(line) == 32)
+            self.context.check('spark.webhook',
+                               validate=lambda line: line.startswith('https'))
+
+        # a token has been set
         self.assertEqual(self.context.get('spark.token'),
                          'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY')
 
-        self.context.check('spark.personal_token')
+        # validate length of token
+        with self.assertRaises(ValueError):
+            self.context.check('spark.token',
+                             validate=lambda line: len(line) == 32)
+
+        # we rely on the environment for this key
         self.assertEqual(self.context.get('spark.personal_token'),
                          '$MY_FUZZY_SPARK_TOKEN')
 
+        # no change to the value
+        self.context.check('spark.personal_token')
+
+        # lookup the environment and change the value to None
         self.context.check('spark.personal_token', filter=True)  # warning in log
-        self.assertEqual(self.context.get('spark.personal_token'),
-                         None)
+        self.assertEqual(self.context.get('spark.personal_token'), None)
 
-        self.context.apply(settings)
-
-        os.environ['MY_FUZZY_SPARK_TOKEN'] = ''
-        self.context.check('spark.personal_token', filter=True)
-        self.assertEqual(self.context.get('spark.personal_token'), '')
-
+        # another value based on the environment
+        self.context.set('spark.fuzzy_token', '$MY_FUZZY_SPARK_TOKEN')
         self.context.check('spark.fuzzy_token')
         self.assertEqual(self.context.get('spark.fuzzy_token'),
                          '$MY_FUZZY_SPARK_TOKEN')
 
+        # default has no effect, mandatory is ok
+        self.context.set('spark.fuzzy_token', '$MY_FUZZY_SPARK_TOKEN')
+        self.context.check('spark.fuzzy_token', default='hello there')
+        self.context.check('spark.fuzzy_token', is_mandatory=True)
+        self.assertEqual(self.context.get('spark.fuzzy_token'),
+                         '$MY_FUZZY_SPARK_TOKEN')
+
+        # default value is used if key is absnet from the environment
+        self.context.set('spark.fuzzy_token', '$MY_FUZZY_SPARK_TOKEN')
+        self.context.check('spark.fuzzy_token', default='hello there', filter=True)
+        self.assertEqual(self.context.get('spark.fuzzy_token'), 'hello there')
+
+        # is_mandatory is useless in that case
+        self.context.set('spark.fuzzy_token', '$MY_FUZZY_SPARK_TOKEN')
+        self.context.check('spark.fuzzy_token', is_mandatory=True, filter=True)
+        self.assertEqual(self.context.get('spark.fuzzy_token'), None)
+
+        # set the value to ''
+        self.context.set('spark.fuzzy_token', '$MY_FUZZY_SPARK_TOKEN')
+        os.environ['MY_FUZZY_SPARK_TOKEN'] = ''
+        self.context.check('spark.fuzzy_token', filter=True)
+        self.assertEqual(self.context.get('spark.fuzzy_token'), '')
+
+        # set the value to '' -- default value is useless in that case
+        self.context.set('spark.fuzzy_token', '$MY_FUZZY_SPARK_TOKEN')
+        os.environ['MY_FUZZY_SPARK_TOKEN'] = ''
+        self.context.check('spark.fuzzy_token', default='ok?', filter=True)
+        self.assertEqual(self.context.get('spark.fuzzy_token'), '')
+
+        # set the value to 'hello'
+        self.context.set('spark.fuzzy_token', '$MY_FUZZY_SPARK_TOKEN')
         os.environ['MY_FUZZY_SPARK_TOKEN'] = 'hello'
         self.context.check('spark.fuzzy_token', filter=True)
         self.assertEqual(self.context.get('spark.fuzzy_token'), 'hello')
+
+        # set the value to 'hello' -- default value is useless in that case
+        self.context.set('spark.fuzzy_token', '$MY_FUZZY_SPARK_TOKEN')
+        os.environ['MY_FUZZY_SPARK_TOKEN'] = 'hello again'
+        self.context.check('spark.fuzzy_token', default='ok?', filter=True)
+        self.assertEqual(self.context.get('spark.fuzzy_token'), 'hello again')
 
     def test__filter(self):
 
