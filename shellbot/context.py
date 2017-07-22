@@ -191,6 +191,10 @@ class Context(object):
                     u"Invalid value for '{}' in context".format(key))
 
             if filter:
+
+                if value == default:
+                    default = None  # else kills filtering of empty variables
+
                 self.values[key] = self.filter(value, default)
 
     @classmethod

@@ -218,7 +218,16 @@ class ContextTests(unittest.TestCase):
         self.context.check('spark.personal_token', filter=True)  # warning in log
         self.assertEqual(self.context.get('spark.personal_token'), None)
 
-        # another value based on the environment
+        # ensure the environment is clean
+        def clear_env(name):
+            try:
+                os.environ.pop(name)
+            except:
+                pass
+
+        clear_env('MY_FUZZY_SPARK_TOKEN')
+
+        # a value based on the environment
         self.context.set('spark.fuzzy_token', '$MY_FUZZY_SPARK_TOKEN')
         self.context.check('spark.fuzzy_token')
         self.assertEqual(self.context.get('spark.fuzzy_token'),
@@ -231,7 +240,7 @@ class ContextTests(unittest.TestCase):
         self.assertEqual(self.context.get('spark.fuzzy_token'),
                          '$MY_FUZZY_SPARK_TOKEN')
 
-        # default value is used if key is absnet from the environment
+        # default value is used if key is absent from the environment
         self.context.set('spark.fuzzy_token', '$MY_FUZZY_SPARK_TOKEN')
         self.context.check('spark.fuzzy_token', default='hello there', filter=True)
         self.assertEqual(self.context.get('spark.fuzzy_token'), 'hello there')
@@ -264,6 +273,24 @@ class ContextTests(unittest.TestCase):
         os.environ['MY_FUZZY_SPARK_TOKEN'] = 'hello again'
         self.context.check('spark.fuzzy_token', default='ok?', filter=True)
         self.assertEqual(self.context.get('spark.fuzzy_token'), 'hello again')
+
+        # pass the variable name as default value
+        self.context.set('spark.fuzzy_token', None)
+        os.environ['MY_FUZZY_SPARK_TOKEN'] = 'hello'
+        self.context.check('spark.fuzzy_token', default='$MY_FUZZY_SPARK_TOKEN', filter=True)
+        self.assertEqual(self.context.get('spark.fuzzy_token'), 'hello')
+
+        # pass the variable name as default value -- no effect
+        self.context.set('spark.fuzzy_token', '$MY_FUZZY_SPARK_TOKEN')
+        os.environ['MY_FUZZY_SPARK_TOKEN'] = 'hello'
+        self.context.check('spark.fuzzy_token', default='$MY_FUZZY_SPARK_TOKEN', filter=True)
+        self.assertEqual(self.context.get('spark.fuzzy_token'), 'hello')
+
+        # pass as default the name of an empty variable -- tricky case
+        self.context.set('spark.fuzzy_token', '$MY_FUZZY_SPARK_TOKEN')
+        clear_env('MY_FUZZY_SPARK_TOKEN')
+        self.context.check('spark.fuzzy_token', default='$MY_FUZZY_SPARK_TOKEN', filter=True)
+        self.assertEqual(self.context.get('spark.fuzzy_token'), None)
 
     def test__filter(self):
 
