@@ -73,8 +73,8 @@ def retry(give_up="Unable to request Cisco Spark API",
                 try:
                     return function(*args, **kwargs)
 
-                except SparkApiError as feedback:
-                    if feedback.response_code in skipped:
+                except Exception as feedback:
+                    if isinstance(feedback, SparkApiError) and feedback.response_code in skipped:
                         delay = None
 
                     if delay is None:
@@ -90,14 +90,6 @@ def retry(give_up="Unable to request Cisco Spark API",
                     else:
                         logging.warning(u"Retrying the API request...")
                         time.sleep(delay)
-
-                except Exception as feedback:
-                    logging.warning(give_up)
-                    if silent:
-                        logging.exception(feedback)
-                        return
-                    else:
-                        raise
 
         return wrapped
     return wrapper
