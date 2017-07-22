@@ -102,14 +102,13 @@ engine.factory = factory
 
 # load configuration
 #
-os.environ['BOT_ON_START'] = 'What do you want to do today?'
-os.environ['BOT_ON_STOP'] = 'Bot is now quitting the room, bye'
+os.environ['BOT_ON_ENTER'] = 'What do you want to do today?'
 os.environ['CHAT_ROOM_TITLE'] = 'Manage todos'
 engine.configure()
 
 # initialise a chat room
 #
-bot = engine.bond(reset=True)
+bot = engine.get_bot(reset=True)
 
 # run the bot
 #
