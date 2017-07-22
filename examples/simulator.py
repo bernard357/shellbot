@@ -67,5 +67,4 @@ engine = Engine(command=Hello(), type='local')
 engine.space.push(['help', 'hello', 'help help'])
 
 engine.configure()
-engine.bond()
 engine.run()
