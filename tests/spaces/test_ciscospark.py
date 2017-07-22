@@ -530,6 +530,17 @@ class SparkSpaceTests(unittest.TestCase):
         self.space.register('*hook')
         self.assertTrue(self.space.personal_api.webhooks.create.called)
 
+    def test_deregister(self):
+
+        logging.info("*** deregister")
+
+        self.space.api = FakeApi(rooms=[FakeRoom()])
+        self.space.personal_api = FakeApi(rooms=[FakeRoom()])
+        self.context.set('bot.id', '*id')
+        self.space.deregister()
+        self.assertTrue(self.space.api.webhooks.list.called)
+        self.assertTrue(self.space.personal_api.webhooks.list.called)
+
     def test_run(self):
 
         logging.info("*** run")

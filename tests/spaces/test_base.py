@@ -83,6 +83,18 @@ class SpaceTests(unittest.TestCase):
         self.assertEqual(space.prefix, 'my.space')
         self.assertEqual(space.configured_title(), 'Another title')
 
+    def test_on_start(self):
+
+        logging.info("*** on_start")
+
+        self.space.on_start()
+
+    def test_on_stop(self):
+
+        logging.info("*** on_stop")
+
+        self.space.on_stop()
+
     def test_get(self):
 
         logging.info("*** get")
@@ -327,6 +339,12 @@ class SpaceTests(unittest.TestCase):
 
         with self.assertRaises(NotImplementedError):
             self.space.register(hook_url='http://no.where/')
+
+    def test_deregister(self):
+
+        logging.info("*** deregister")
+
+        self.space.deregister()
 
     def test_start(self):
 

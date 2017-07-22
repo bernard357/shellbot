@@ -356,6 +356,8 @@ class Engine(object):
         self.space.ears = self.ears
         self.space.configure()
         self.space.connect()
+        self.subscribe('start', self.space)
+        self.subscribe('stop', self.space)
 
         self.shell.configure()
 
@@ -640,8 +642,6 @@ class Engine(object):
 
         self.hook(server=server)
 
-        self.space.on_start()
-
         if server is None:
             self.space.run()
 
@@ -711,7 +711,6 @@ class Engine(object):
         logging.debug(u"- dispatching 'stop' event")
         self.dispatch('stop')
 
-        logging.debug(u"- running on_stop()")
         self.on_stop()
 
         logging.debug(u"- switching off")

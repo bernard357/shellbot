@@ -154,6 +154,30 @@ class Space(object):
         assert prefix not in (None, '')
         self.prefix = prefix
 
+    def on_start(self):
+        """
+        Reacts when engine is started
+
+        This function should be expanded in sub-class, where necessary.
+
+        Example::
+
+            def on_start(self):
+                self.load_cache_from_db()
+
+        """
+        pass
+
+    def on_stop(self):
+        """
+        reacts when engine is stopped
+
+        This function attempts to deregister webhooks, if any. This behaviour
+        can be expanded in sub-class, where necessary.
+
+        """
+        self.deregister()
+
     def get(self, key, default=None):
         """
         Retrieves the value of one configuration key
@@ -564,6 +588,15 @@ class Space(object):
         """
         raise NotImplementedError()
 
+    def deregister(self):
+        """
+        Stops updates from the cloud back-end
+
+        This function should be implemented in sub-class.
+
+        """
+        pass
+
     def start(self, hook_url=None):
         """
         Starts the update process
@@ -590,20 +623,6 @@ class Space(object):
             p.daemon = True
             p.start()
             return p
-
-    def on_start(self):
-        """
-        Adds processing on start
-
-        This function should be expanded in sub-class, where necessary.
-
-        Example::
-
-            def on_start(self):
-                self.find_my_bot_id()
-
-        """
-        pass
 
     def run(self):
         """

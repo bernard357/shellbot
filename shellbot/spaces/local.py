@@ -90,6 +90,13 @@ class LocalSpace(Space):
         self.moderators = []
         self.participants = []
 
+    def on_start(self):
+        """
+        Adds processing on engine start
+        """
+        sys.stdout.write(u"Type 'help' for guidance, or Ctl-C to exit.\n")
+        sys.stdout.flush()
+
     def push(self, input):
         """
         Adds more input to this space
@@ -291,13 +298,6 @@ class LocalSpace(Space):
             logging.debug(u"- file attachment is not supported")
 
         sys.stdout.write(text+'\n')
-        sys.stdout.flush()
-
-    def on_start(self):
-        """
-        Adds processing on start
-        """
-        sys.stdout.write(u"Type 'help' for guidance, or Ctl-C to exit.\n")
         sys.stdout.flush()
 
     def pull(self):

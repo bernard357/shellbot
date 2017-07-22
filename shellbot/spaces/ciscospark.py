@@ -34,7 +34,7 @@ from .base import Space
 def retry(give_up="Unable to request Cisco Spark API",
           silent=False,
           delays=(0.1, 1, 5),
-          skipped=(409,)):
+          skipped=(401, 409)):
     """
     Improves a call to Cisco Spark API
 
@@ -737,30 +737,7 @@ class SparkSpace(Space):
         assert self.api is not None  # connect() is prerequisite
         assert self.personal_api is not None  # connect() is prerequisite
 
-        @retry(u"Unable to list webhooks", silent=True)
-        def list_webhooks(api):
-            return api.webhooks.list()
-
-        @retry(u"Unable to delete webhook", silent=True)
-        def delete_webhook(api, id):
-            api.webhooks.delete(webhookId=id)
-
-        logging.debug(u"Purging bot webhooks")
-        for webhook in list_webhooks(self.api):
-#           logging.debug(u"- {}".format(str(webhook)))
-            logging.debug(u"- deleting '{}'".format(webhook.name))
-            delete_webhook(self.api, webhook.id)
-
-        purged = ('shellbot-webhook',
-                  'shellbot-messages',
-                  'shellbot-participants')
-
-        logging.debug(u"Purging personal webhooks")
-        for webhook in list_webhooks(self.personal_api):
-#           logging.debug(u"- {}".format(str(webhook)))
-            if webhook.name in purged:
-                logging.debug(u"- deleting '{}'".format(webhook.name))
-                delete_webhook(self.personal_api, webhook.id)
+        self.deregister()
 
         @retry(u"Unable to create webhook", silent=True)
         def create_webhook(api, name, resource, event, filter):
@@ -793,6 +770,45 @@ class SparkSpace(Space):
                        resource='memberships',
                        event='all',
                        filter=None)
+
+    def deregister(self):
+        """
+        Stops inbound flow from Cisco Spark
+
+        This function deregisters hooks that it may have created.
+
+        Previous webhooks registered with the bot token are all removed before
+        registration. This means that only the most recent instance of the bot
+        will be notified of new invitations.
+
+        """
+        assert self.api is not None  # connect() is prerequisite
+        assert self.personal_api is not None  # connect() is prerequisite
+
+        @retry(u"Unable to list webhooks", silent=True)
+        def list_webhooks(api):
+            return api.webhooks.list()
+
+        @retry(u"Unable to delete webhook", silent=True)
+        def delete_webhook(api, id):
+            api.webhooks.delete(webhookId=id)
+
+        logging.debug(u"Purging bot webhooks")
+        for webhook in list_webhooks(self.api):
+#           logging.debug(u"- {}".format(str(webhook)))
+            logging.debug(u"- deleting '{}'".format(webhook.name))
+            delete_webhook(self.api, webhook.id)
+
+        purged = ('shellbot-webhook',
+                  'shellbot-messages',
+                  'shellbot-participants')
+
+        logging.debug(u"Purging personal webhooks")
+        for webhook in list_webhooks(self.personal_api):
+#           logging.debug(u"- {}".format(str(webhook)))
+            if webhook.name in purged:
+                logging.debug(u"- deleting '{}'".format(webhook.name))
+                delete_webhook(self.personal_api, webhook.id)
 
     def webhook(self, message_id=None):
         """
