@@ -1120,7 +1120,7 @@ class SparkSpace(Space):
         channel = Channel()
 
         channel.title = room.title
-        logging.debug(u"Bonding to room '{}'".format(channel.title))
+        logging.debug(u"Binding to room '{}'".format(channel.title))
 
         channel.id = room.id
         logging.debug(u"- id: {}".format(channel.id))
