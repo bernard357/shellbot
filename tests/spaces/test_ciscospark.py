@@ -143,37 +143,27 @@ my_message = {
 }
 
 my_join = {
-    "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-    "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
-    "roomType" : "group",
-    "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
-    "toPersonEmail" : "julie@example.com",
-    "text" : "The PM for this project is Mike C. and the Engineering Manager is Jane W.",
-    "markdown" : "**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>.",
-    "files" : [ "http://www.example.com/images/media.png" ],
-    "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
-    "personEmail" : "matt@example.com",
-    "created" : "2015-10-18T14:26:16+00:00",
-    "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
-    "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
-    "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
+    'isMonitor': False,
+    'created': '2017-05-31T21:25:30.424Z',
+    'personId': 'Y2lzY29zcGFyazovL3VRiMTAtODZkYy02YzU0Yjg5ODA5N2U',
+    'isModerator': False,
+    'personOrgId': 'Y2lzY29zcGFyazovL3V0FOSVpBVElPTi9jb25zdW1lcg',
+    'personDisplayName': 'Foo Bar',
+    'personEmail': 'foo.bar@acme.com',
+    'roomId': 'Y2lzY29zcGFyazovL3VzL1JP3LTk5MDAtMDU5MDI2YjBiNDUz',
+    'id': 'Y2lzY29zcGFyazovL3VzDctMTFlNy05OTAwLTA1OTAyNmIwYjQ1Mw'
 }
 
 my_leave = {
-    "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-    "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
-    "roomType" : "group",
-    "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
-    "toPersonEmail" : "julie@example.com",
-    "text" : "The PM for this project is Mike C. and the Engineering Manager is Jane W.",
-    "markdown" : "**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>.",
-    "files" : [ "http://www.example.com/images/media.png" ],
-    "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
-    "personEmail" : "matt@example.com",
-    "created" : "2015-10-18T14:26:16+00:00",
-    "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
-    "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
-    "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
+    'isMonitor': False,
+    'created': '2017-05-31T21:25:30.424Z',
+    'personId': 'Y2lzY29zcGFyazovL3VRiMTAtODZkYy02YzU0Yjg5ODA5N2U',
+    'isModerator': False,
+    'personOrgId': 'Y2lzY29zcGFyazovL3V0FOSVpBVElPTi9jb25zdW1lcg',
+    'personDisplayName': 'Foo Bar',
+    'personEmail': 'foo.bar@acme.com',
+    'roomId': 'Y2lzY29zcGFyazovL3VzL1JP3LTk5MDAtMDU5MDI2YjBiNDUz',
+    'id': 'Y2lzY29zcGFyazovL3VzDctMTFlNy05OTAwLTA1OTAyNmIwYjQ1Mw'
 }
 
 
@@ -717,6 +707,34 @@ class SparkSpaceTests(unittest.TestCase):
         response = MyResponse(status_code=400, headers={})
         with self.assertRaises(Exception):
             name = self.space.get_attachment(url='/dummy', response=response)
+
+    def test_on_join(self):
+
+        logging.info("*** on_join")
+
+        self.space.on_join(my_join, self.ears)
+        item = my_join.copy()
+        item.update({"type": "join"})
+        item.update({"actor_id": 'Y2lzY29zcGFyazovL3VRiMTAtODZkYy02YzU0Yjg5ODA5N2U'})
+        item.update({"actor_address": 'foo.bar@acme.com'})
+        item.update({"actor_label": 'Foo Bar'})
+        item.update({"channel_id": 'Y2lzY29zcGFyazovL3VzL1JP3LTk5MDAtMDU5MDI2YjBiNDUz'})
+        self.maxDiff = None
+        self.assertEqual(yaml.safe_load(self.ears.get()), item)
+
+    def test_on_leave(self):
+
+        logging.info("*** on_leave")
+
+        self.space.on_leave(my_leave, self.ears)
+        item = my_leave.copy()
+        item.update({"type": "leave"})
+        item.update({"actor_id": 'Y2lzY29zcGFyazovL3VRiMTAtODZkYy02YzU0Yjg5ODA5N2U'})
+        item.update({"actor_address": 'foo.bar@acme.com'})
+        item.update({"actor_label": 'Foo Bar'})
+        item.update({"channel_id": 'Y2lzY29zcGFyazovL3VzL1JP3LTk5MDAtMDU5MDI2YjBiNDUz'})
+        self.maxDiff = None
+        self.assertEqual(yaml.safe_load(self.ears.get()), item)
 
     def test__to_channel(self):
 
