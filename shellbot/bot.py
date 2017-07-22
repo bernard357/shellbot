@@ -171,6 +171,7 @@ class ShellBot(object):
         """
         if title in (None, ''):
             title=self.space.configured_title()
+
         logging.debug(u"Bonding to channel '{}'".format(title))
 
         self.channel = self.space.get_by_title(title=title)
@@ -184,14 +185,17 @@ class ShellBot(object):
 
             logging.debug(u"- creating channel '{}''".format(title))
             self.channel = self.space.create(title=title, **kwargs)
-            logging.debug(u"- id: {}".format(self.id))
+
+            bot = self.engine.context.get('bot.email')
+            logging.debug(u"- adding bot {}".format(bot))
+            self.add_participant(bot)
 
             if not moderators:
-                moderators = self.space.get('moderators', []),
+                moderators = self.space.get('moderators', [])
             self.add_moderators(persons=moderators)
 
             if not participants:
-                participants = self.space.get('participants', []),
+                participants = self.space.get('participants', [])
             self.add_participants(persons=participants)
 
         self.store.bond(id=self.id)
