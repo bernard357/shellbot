@@ -107,7 +107,7 @@ engine = Engine(type='spark', configure=True)
 
 # create a chat room
 #
-bot = engine.bond(reset=True)
+bot = engine.get_bot(reset=True)
 
 # send notifications to the room
 #
