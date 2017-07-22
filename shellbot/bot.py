@@ -204,16 +204,18 @@ class ShellBot(object):
 
         self.on_bond()
 
+        self.say_banner()
+
     def on_bond(self):
         """
         Adds processing to space bond
 
-        This function should be expanded in sub-class, where necessary.
+        This function should be changed in sub-class, where necessary.
 
         Example::
 
             def on_bond(self):
-                self.say('I am alive!')
+                do_something_important_on_bond()
 
         """
         pass
@@ -401,6 +403,60 @@ class ShellBot(object):
             logging.debug(u"- calling speaker directly")
             self.engine.speaker.process(
                 Vibes(text, content, file, self.id))
+
+    def say_banner(self):
+        """
+        Sends banner to the channel
+
+        This function uses following settings from the context:
+
+        - ``bot.banner.text`` - a textual message
+
+        - ``bot.banner.content`` - some rich content, e.g., Markdown or HTML
+
+        - ``bot.banner.file`` - a document to be uploaded
+
+        Also, text and content are formatted with the name of bot, so you could
+        do the following for a smart banner::
+
+            settings = {
+                'bot': {
+                    'banner': {
+                        'text': u"Type '@{} help' for more information",
+                        'content': u"Type ``@{} help`` for more information",
+                        'file': "http://on.line.doc/guide.pdf"
+                    }
+                }
+            }
+
+            engine.configure(settings)
+
+        When bonding to a channel, the bot will send an update similar to the
+        following one::
+
+            Type '@Shelly help' for more information
+
+        Default settings for the banner rely on the environment, so it is
+        easy to inject strings from the outside. Use following variables:
+
+        - ``$BOT_BANNER_TEXT`` - the textual message
+
+        - ``$BOT_BANNER_CONTENT`` - some rich content, e.g., Markdown or HTML
+
+        - ``$BOT_BANNER_FILE`` - a document to be uploaded
+
+        """
+        text = self.engine.get('bot.banner.text')
+        if text:
+            text = text.format(self.engine.name)
+
+        content = self.engine.get('bot.banner.content')
+        if content:
+            content = content.format(self.engine.name)
+
+        file = self.engine.get('bot.banner.file')
+
+        self.say(text=text, content=content, file=file)
 
     def remember(self, key, value):
         """

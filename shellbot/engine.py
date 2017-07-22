@@ -160,6 +160,9 @@ class Engine(object):
     DEFAULT_SETTINGS = {
 
         'bot': {
+            'banner.text': '$BOT_BANNER_TEXT',
+            'banner.content': '$BOT_BANNER_CONTENT',
+            'banner.file': '$BOT_BANNER_FILE',
             'on_enter': '$BOT_ON_ENTER',
             'on_exit': '$BOT_ON_EXIT',
         },
@@ -385,8 +388,12 @@ class Engine(object):
             engine.check()
 
         """
-        self.context.check('bot.on_enter', '', filter=True)
-        self.context.check('bot.on_exit', '', filter=True)
+        self.context.check('bot.banner.text', filter=True)
+        self.context.check('bot.banner.content', filter=True)
+        self.context.check('bot.banner.file', filter=True)
+
+        self.context.check('bot.on_enter', filter=True)
+        self.context.check('bot.on_exit', filter=True)
 
     def get(self, key, default=None):
         """

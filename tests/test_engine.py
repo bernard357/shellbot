@@ -236,10 +236,51 @@ class EngineTests(unittest.TestCase):
 
     def test_configure_default(self):
 
-        logging.info('*** configure/default configuration ***')
+        logging.info('*** configure with default values ***')
 
-        logging.debug("- default configuration is not interpreted")
+        def clear_env(name):
+            try:
+                os.environ.pop(name)
+            except KeyError:
+                pass
 
+        clear_env("BOT_BANNER_TEXT")
+        clear_env("BOT_BANNER_CONTENT")
+        clear_env("BOT_BANNER_FILE")
+        clear_env("BOT_ON_ENTER")
+        clear_env("BOT_ON_EXIT")
+        clear_env("CHAT_ROOM_TITLE")
+        clear_env("CHAT_ROOM_MODERATORS")
+        clear_env("CISCO_SPARK_BOT_TOKEN")
+        clear_env("SERVER_URL")
+        self.engine.configure()
+
+#        logging.debug(self.engine.context.values)
+
+        self.assertEqual(self.engine.get('bot.banner.text'), None)
+        self.assertEqual(self.engine.get('bot.banner.content'), None)
+        self.assertEqual(self.engine.get('bot.banner.file'), None)
+
+        self.assertEqual(self.engine.get('bot.on_enter'), None)
+        self.assertEqual(self.engine.get('bot.on_exit'), None)
+
+        self.assertEqual(self.engine.get('space.title'), 'Collaboration space')
+        self.assertEqual(self.engine.get('space.moderators'), [])
+        self.assertEqual(self.engine.get('space.participants'), [])
+        self.assertEqual(self.engine.get('space.unknown'), None)
+
+        self.assertEqual(self.engine.get('server.url'), '$SERVER_URL')
+        self.assertEqual(self.engine.get('server.hook'), '/hook')
+        self.assertEqual(self.engine.get('server.binding'), None)
+        self.assertEqual(self.engine.get('server.port'), 8080)
+
+    def test_configure_environment(self):
+
+        logging.info('*** configure from the environment ***')
+
+        os.environ["BOT_BANNER_TEXT"] = 'some text'
+        os.environ["BOT_BANNER_CONTENT"] = 'some content'
+        os.environ["BOT_BANNER_FILE"] = 'some link'
         os.environ["BOT_ON_ENTER"] = 'Hello!'
         os.environ["BOT_ON_EXIT"] = 'Bye!'
         os.environ["CHAT_ROOM_TITLE"] = 'Support room'
@@ -248,7 +289,11 @@ class EngineTests(unittest.TestCase):
         os.environ["SERVER_URL"] = 'http://to.nowhere/'
         self.engine.configure()
 
-        logging.debug(self.engine.context.values)
+#        logging.debug(self.engine.context.values)
+
+        self.assertEqual(self.engine.get('bot.banner.text'), 'some text')
+        self.assertEqual(self.engine.get('bot.banner.content'), 'some content')
+        self.assertEqual(self.engine.get('bot.banner.file'), 'some link')
 
         self.assertEqual(self.engine.get('bot.on_enter'), 'Hello!')
         self.assertEqual(self.engine.get('bot.on_exit'), 'Bye!')
@@ -262,11 +307,6 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(self.engine.get('server.hook'), '/hook')
         self.assertEqual(self.engine.get('server.binding'), None)
         self.assertEqual(self.engine.get('server.port'), 8080)
-
-#        self.engine.context.clear()
-#        os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
-#        engine = Engine(context=self.context, settings=None, configure=True)
-#        self.assertEqual(engine.get('spark.room'), 'Notifications')
 
     def test_get(self):
 
