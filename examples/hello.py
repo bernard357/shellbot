@@ -81,7 +81,7 @@ engine.configure()
 
 # create a chat room
 #
-bot = engine.bond(reset=True)
+bot = engine.get_bot(reset=True)
 
 # run the bot
 #
