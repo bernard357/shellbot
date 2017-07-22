@@ -85,56 +85,6 @@ class BotTests(unittest.TestCase):
         bot = ShellBot(engine=self.engine, fan='f')
         bot.on_init()
 
-    def test_bond(self):
-
-        logging.info("*** bond")
-
-        self.bot.channel = self.channel
-        self.bot.bond()
-
-    def test_on_bond(self):
-
-        logging.info("*** on_bond")
-
-        self.bot.on_bond()
-
-    def test_say_banner(self):
-
-        logging.info("*** say_banner")
-
-        self.bot.channel = self.channel
-
-        # banner settings have not been defined at all
-        self.context.set('bot.banner.text', None)
-        self.context.set('bot.banner.content', None)
-        self.context.set('bot.banner.file', None)
-        self.bot.say_banner()
-        with self.assertRaises(Exception):
-            self.engine.mouth.get_nowait()
-
-        # banner settings are empty strings
-        self.context.set('bot.banner.text', '')
-        self.context.set('bot.banner.content', '')
-        self.context.set('bot.banner.file', '')
-        self.bot.say_banner()
-        with self.assertRaises(Exception):
-            self.engine.mouth.get_nowait()
-
-        # plain banner with text, rich content, and some document upload
-        self.context.set('bot.banner.text', u"Type '@{} help' for more information")
-        self.context.set('bot.banner.content', u"Type ``@{} help`` for more information")
-        self.context.set('bot.banner.file', "http://on.line.doc/guide.pdf")
-        self.bot.say_banner()
-        item = self.engine.mouth.get()
-        self.assertEqual(item.text,
-                         "Type '@Shelly help' for more information")
-        self.assertEqual(item.content,
-                         'Type ``@Shelly help`` for more information')
-        self.assertEqual(item.file,
-                         'http://on.line.doc/guide.pdf')
-        with self.assertRaises(Exception):
-            self.engine.mouth.get_nowait()
-
     def test_is_ready(self):
 
         logging.info("*** is_ready")
@@ -179,6 +129,25 @@ class BotTests(unittest.TestCase):
 
         self.bot.on_reset()
 
+    def test_bond(self):
+
+        logging.info("*** bond")
+
+        self.bot.channel = self.channel
+        self.bot.bond()
+
+    def test_on_bond(self):
+
+        logging.info("*** on_bond")
+
+        self.bot.on_bond()
+
+    def test_on_enter(self):
+
+        logging.info("*** on_enter")
+
+        self.bot.on_enter()
+
     def test_dispose(self):
 
         logging.info("*** dispose")
@@ -195,6 +164,12 @@ class BotTests(unittest.TestCase):
         self.assertTrue(self.engine.dispatch.called)
         self.assertTrue(self.space.delete.called)
         self.assertEqual(self.bot.channel, None)
+
+    def test_on_exit(self):
+
+        logging.info("*** on_exit")
+
+        self.bot.on_exit()
 
     def test_add_moderators(self):
 
@@ -338,6 +313,43 @@ class BotTests(unittest.TestCase):
         self.assertEqual(item.text, None)
         self.assertEqual(item.content, content_7)
         self.assertEqual(item.file, None)
+
+    def test_say_banner(self):
+
+        logging.info("*** say_banner")
+
+        self.bot.channel = self.channel
+
+        # banner settings have not been defined at all
+        self.context.set('bot.banner.text', None)
+        self.context.set('bot.banner.content', None)
+        self.context.set('bot.banner.file', None)
+        self.bot.say_banner()
+        with self.assertRaises(Exception):
+            self.engine.mouth.get_nowait()
+
+        # banner settings are empty strings
+        self.context.set('bot.banner.text', '')
+        self.context.set('bot.banner.content', '')
+        self.context.set('bot.banner.file', '')
+        self.bot.say_banner()
+        with self.assertRaises(Exception):
+            self.engine.mouth.get_nowait()
+
+        # plain banner with text, rich content, and some document upload
+        self.context.set('bot.banner.text', u"Type '@{} help' for more information")
+        self.context.set('bot.banner.content', u"Type ``@{} help`` for more information")
+        self.context.set('bot.banner.file', "http://on.line.doc/guide.pdf")
+        self.bot.say_banner()
+        item = self.engine.mouth.get()
+        self.assertEqual(item.text,
+                         "Type '@Shelly help' for more information")
+        self.assertEqual(item.content,
+                         'Type ``@Shelly help`` for more information')
+        self.assertEqual(item.file,
+                         'http://on.line.doc/guide.pdf')
+        with self.assertRaises(Exception):
+            self.engine.mouth.get_nowait()
 
     def test_remember(self):
 

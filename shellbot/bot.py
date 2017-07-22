@@ -264,9 +264,18 @@ class ShellBot(object):
         """
 
         if self.id:
+            self.on_exit()
             self.engine.dispatch('dispose', bot=self)
+            time.sleep(2)
             self.space.delete(id=self.id, **kwargs)
             self.reset()
+
+    def on_exit(self):
+        """
+        Exits a channel
+        """
+        text = self.engine.get('bot.on_exit', u"Bot is leaving this channel")
+        self.say(text)
 
     def add_moderators(self, persons=[]):
         """
@@ -376,14 +385,22 @@ class ShellBot(object):
 
         This function uses following settings from the context:
 
-        - ``bot.banner.text`` - a textual message
+        - ``bot.banner.text`` or ``bot.on_enter`` - a textual message
 
         - ``bot.banner.content`` - some rich content, e.g., Markdown or HTML
 
         - ``bot.banner.file`` - a document to be uploaded
 
-        Also, text and content are formatted with the name of bot, so you could
-        do the following for a smart banner::
+        The quickest setup is to change ``bot.on_enter`` in settings, or the
+        environment variable ``$BOT_ON_ENTER``.
+
+        Example::
+
+            os.environ['BOT_ON_ENTER'] = 'You can now chat with Batman'
+            engine.configure()
+
+        Then there are situtations where you want a lot more flexibility, and
+        rely on a smart banner. For example you could do the following::
 
             settings = {
                 'bot': {
@@ -398,21 +415,26 @@ class ShellBot(object):
             engine.configure(settings)
 
         When bonding to a channel, the bot will send an update similar to the
-        following one::
+        following one, with a nice looking message and image::
 
             Type '@Shelly help' for more information
 
         Default settings for the banner rely on the environment, so it is
         easy to inject strings from the outside. Use following variables:
 
-        - ``$BOT_BANNER_TEXT`` - the textual message
+        - ``$BOT_BANNER_TEXT`` or ``$BOT.ON_ENTER`` - the textual message
 
         - ``$BOT_BANNER_CONTENT`` - some rich content, e.g., Markdown or HTML
 
         - ``$BOT_BANNER_FILE`` - a document to be uploaded
 
+
         """
         text = self.engine.get('bot.banner.text')
+
+        if not text:
+            text = self.engine.get('bot.on_enter')
+
         if text:
             text = text.format(self.engine.name)
 
