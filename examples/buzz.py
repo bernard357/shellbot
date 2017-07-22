@@ -113,8 +113,8 @@ engine = Engine(type='spark',
 
 # load configuration
 #
-os.environ['BOT_ON_START'] = 'Hello Buzz, welcome to Cape Canaveral'
-os.environ['BOT_ON_STOP'] = 'Batman is now quitting the room, bye'
+os.environ['BOT_ON_ENTER'] = 'Hello Buzz, welcome to Cape Canaveral'
+os.environ['BOT_ON_EXIT'] = 'Batman is now quitting the room, bye'
 os.environ['CHAT_ROOM_TITLE'] = 'Buzz flights'
 engine.configure()
 engine.set('bot.store.planets', ['Mercury',
@@ -129,7 +129,7 @@ engine.set('bot.store.planets', ['Mercury',
 
 # initialise a chat room
 #
-bot = engine.bond(reset=True)
+bot = engine.get_bot(reset=True)
 
 # run the bot
 #
