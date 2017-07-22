@@ -111,13 +111,13 @@ engine = Engine(type='spark', commands=[Open(), Close(), Hotel()])
 
 # load configuration
 #
-os.environ['BOT_ON_START'] = 'On a dark desert highway, cool wind in my hair...'
+os.environ['BOT_ON_ENTER'] = 'On a dark desert highway, cool wind in my hair...'
 os.environ['CHAT_ROOM_TITLE'] = 'Hotel California'
 engine.configure()
 
 # initialise a chat room
 #
-bot = engine.bond(reset=True)
+bot = engine.get_bot(reset=True)
 
 # add stickiness to the hotel
 #
