@@ -76,7 +76,7 @@ class LocalSpaceTests(unittest.TestCase):
 
         settings = {'space.key': 'my value',}
         self.space.configure(settings=settings)
-        self.assertEqual(self.space.context.get('space.title'), 'Local space')
+        self.assertEqual(self.space.context.get('space.title'), 'Collaboration space')
         self.assertEqual(self.space.context.get('space.key'), 'my value')
         self.assertEqual(self.space.context.get('space.moderators'), [])
         self.assertEqual(self.space.context.get('space.participants'), [])

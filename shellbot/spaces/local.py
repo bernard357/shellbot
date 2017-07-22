@@ -117,7 +117,7 @@ class LocalSpace(Space):
         to simulate user input. Else stdin is read one line at a time.
         """
         logging.debug(u"Context: {}".format(self.context.values))
-        self.context.check(self.prefix+'.title', 'Local space', filter=True)
+        self.context.check(self.prefix+'.title', 'Collaboration space', filter=True)
         self.context.check(self.prefix+'.moderators', [], filter=True)
         self.context.check(self.prefix+'.participants', [], filter=True)
 
