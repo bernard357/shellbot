@@ -34,7 +34,7 @@ from .base import Space
 def retry(give_up="Unable to request Cisco Spark API",
           silent=False,
           delays=(0.1, 1, 5),
-          skipped=(401, 404, 409)):
+          skipped=(401, 403, 404, 409)):
     """
     Improves a call to Cisco Spark API
 
@@ -753,13 +753,12 @@ class SparkSpace(Space):
                            event='all',
                            filter='personId='+self.context.get('bot.id'))
 
-        if self.get('personal_token'):
-            logging.debug(u"- registering 'shellbot-messages'")
-            create_webhook(api=self.personal_api,
-                           name='shellbot-messages',
-                           resource='messages',
-                           event='created',
-                           filter=None)
+        logging.debug(u"- registering 'shellbot-messages'")
+        create_webhook(api=self.personal_api,
+                       name='shellbot-messages',
+                       resource='messages',
+                       event='created',
+                       filter=None)
 
         if self.get('personal_token'):
             logging.debug(u"- registering 'shellbot-participants'")
