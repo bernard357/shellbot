@@ -34,7 +34,8 @@ from .base import Space
 
 def retry(give_up="Unable to request Cisco Spark API",
           silent=False,
-          delays=(0.1, 1, 5)):
+          delays=(0.1, 1, 5),
+          skipped=(409,)):
     """
     Improves a call to Cisco Spark API
 
@@ -46,6 +47,9 @@ def retry(give_up="Unable to request Cisco Spark API",
 
     :param delays: time to wait between repetitions
     :type delays: a list of positive numbers
+
+    :param skipped: do not retry for these status codes
+    :type skipped: a list of web status codes
 
     This decorator compensates for common transient communication issues
     with the Cisco Spark platform in the cloud.
@@ -69,11 +73,14 @@ def retry(give_up="Unable to request Cisco Spark API",
                     return function(*args, **kwargs)
 
                 except SparkApiError as feedback:
+                    if feedback.response_code in skipped:
+                        delay = None
+
                     if delay is None:
                         logging.warning(give_up)
 
                         if silent:
-                            logging.exception(feedback)
+                            logging.debug(feedback)
                             return
 
                         else:

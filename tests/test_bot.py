@@ -146,9 +146,13 @@ class BotTests(unittest.TestCase):
                                return_value=None) as mocked:
             self.bot.bond()
             mocked.assert_called_with(title='Another title')
-            self.space.add_moderators.assert_called_with(id='*local', persons=(['foo.bar@acme.com', 'joe.bar@corporation.com'],))
+            self.space.add_moderators.assert_called_with(
+                id='*local',
+                persons=['foo.bar@acme.com', 'joe.bar@corporation.com'])
 
-            self.space.add_participants.assert_called_with(id='*local', persons=(['alan.droit@azerty.org', 'bob.nard@support.tv'],))
+            self.space.add_participants.assert_called_with(
+                id='*local',
+                persons=['alan.droit@azerty.org', 'bob.nard@support.tv'])
 
             self.engine.dispatch.assert_called_with('bond')
             self.bot.on_bond.assert_called_with()
