@@ -34,7 +34,7 @@ from .base import Space
 def retry(give_up="Unable to request Cisco Spark API",
           silent=False,
           delays=(0.1, 1, 5),
-          skipped=(401, 409)):
+          skipped=(401, 404, 409)):
     """
     Improves a call to Cisco Spark API
 
@@ -75,6 +75,9 @@ def retry(give_up="Unable to request Cisco Spark API",
 
                 except Exception as feedback:
                     if isinstance(feedback, SparkApiError) and feedback.response_code in skipped:
+                        delay = None
+
+                    if str(feedback).startswith("TEST"):
                         delay = None
 
                     if delay is None:
@@ -742,26 +745,29 @@ class SparkSpace(Space):
         logging.info(u"Registering webhook to Cisco Spark")
         logging.debug(u"- url: {}".format(hook_url))
 
-        logging.debug(u"- registering 'shellbot-rooms'")
-        create_webhook(api=self.api,
-                       name='shellbot-rooms',
-                       resource='memberships',
-                       event='all',
-                       filter='personId='+self.context.get('bot.id'))
+        if self.get('token'):
+            logging.debug(u"- registering 'shellbot-rooms'")
+            create_webhook(api=self.api,
+                           name='shellbot-rooms',
+                           resource='memberships',
+                           event='all',
+                           filter='personId='+self.context.get('bot.id'))
 
-        logging.debug(u"- registering 'shellbot-messages'")
-        create_webhook(api=self.personal_api,
-                       name='shellbot-messages',
-                       resource='messages',
-                       event='created',
-                       filter=None)
+        if self.get('personal_token'):
+            logging.debug(u"- registering 'shellbot-messages'")
+            create_webhook(api=self.personal_api,
+                           name='shellbot-messages',
+                           resource='messages',
+                           event='created',
+                           filter=None)
 
-        logging.debug(u"- registering 'shellbot-participants'")
-        create_webhook(api=self.personal_api,
-                       name='shellbot-participants',
-                       resource='memberships',
-                       event='all',
-                       filter=None)
+        if self.get('personal_token'):
+            logging.debug(u"- registering 'shellbot-participants'")
+            create_webhook(api=self.personal_api,
+                           name='shellbot-participants',
+                           resource='memberships',
+                           event='all',
+                           filter=None)
 
     def deregister(self):
         """
@@ -831,78 +837,48 @@ class SparkSpace(Space):
 
         """
 
-        try:
+        logging.debug(u'Receiving data from webhook')
 
-            logging.debug(u'Receiving data from webhook')
+        if message_id:
+            resource = 'messages'
+            event = 'created'
+            hook = 'injection'
 
-            if message_id:
-                resource = 'messages'
-                event = 'created'
-                hook = 'injection'
+        else:
+#           logging.debug(u"- {}".format(request.json))
+            resource = request.json['resource']
+            event = request.json['event']
+            data = request.json['data']
+            hook = request.json['name']
 
-            else:
-#                logging.debug(u"- {}".format(request.json))
-                resource = request.json['resource']
-                event = request.json['event']
-                data = request.json['data']
-                hook = request.json['name']
+        if resource == 'messages' and event == 'created':
+            logging.debug(u"- handling '{}:{}'".format(resource, event))
 
-            if resource == 'messages' and event == 'created':
-                logging.debug(u"- handling '{}:{}'".format(resource, event))
+            if not message_id:
+                message_id = data['id']
 
-                if not message_id:
-                    message_id = data['id']
+            @retry(u"Unable to retrieve new message")
+            def fetch_message():
 
-                retries = 2
-                while retries:
-                    try:
-                        item = self.personal_api.messages.get(messageId=message_id)
-                        item._json['hook'] = hook
-                        self.on_message(item._json, self.ears)
-                        break
-                    except Exception:
-                        if retries:
-                            retries -= 1
-                            time.sleep(0.1)
-                            continue
-                        raise
+                item = self.personal_api.messages.get(messageId=message_id)
+                item._json['hook'] = hook
+                return item._json
 
-            elif resource == 'memberships' and event == 'created':
-                logging.debug(u"- handling '{}:{}'".format(resource, event))
+            self.on_message(fetch_message(), self.ears)
 
-                item = self.personal_api.rooms.get(roomId=data['roomId'])
-#                logging.debug(u"- {}".format(item._json))
+        elif resource == 'memberships' and event == 'created':
+            logging.debug(u"- handling '{}:{}'".format(resource, event))
+            self.on_join(data, self.ears)
 
-                data['space_title'] = item._json['title']
-                data['space_type'] = item._json['type']
-                data['hook'] = hook
-#                logging.debug(u"- {}".format(data))
+        elif resource == 'memberships' and event == 'deleted':
+            logging.debug(u"- handling '{}:{}'".format(resource, event))
+            self.on_leave(data, self.ears)
 
-                self.on_join(data, self.ears)
+        else:
+            logging.debug(u"- throwing away {}:{}".format(resource, event))
+            logging.debug(u"- {}".format(data))
 
-            elif resource == 'memberships' and event == 'deleted':
-                logging.debug(u"- handling '{}:{}'".format(resource, event))
-
-                item = self.personal_api.rooms.get(roomId=data['roomId'])
-#                logging.debug(u"- {}".format(item._json))
-
-                data['space_title'] = item._json['title']
-                data['space_type'] = item._json['type']
-                data['hook'] = hook
-#                logging.debug(u"- {}".format(data))
-
-                self.on_leave(data, self.ears)
-
-            else:
-                logging.debug(u"- throwing away {}:{}".format(resource, event))
-                logging.debug(u"- {}".format(data))
-
-            return "OK"
-
-        except Exception as feedback:
-            logging.error(u"Unable to process webhook event")
-            logging.error(feedback)
-            raise
+        return "OK"
 
     def pull(self):
         """
