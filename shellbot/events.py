@@ -242,6 +242,18 @@ class Message(Event):
         return self.attributes.get('from_label')
 
     @property
+    def is_direct(self):
+        """
+        Determines if this is a private message
+
+        :rtype: True or False
+
+        This attribute allows the listener to determine if the input is
+        explicitly for this bot or not.
+        """
+        return self.attributes.get('is_direct', False)
+
+    @property
     def mentioned_ids(self):
         """
         Returns the list of mentioned persons

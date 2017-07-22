@@ -37,6 +37,9 @@ class MyBot(object):
     def say(self, text, content=None, file=None):
         self.engine.mouth.put(Vibes(text, content, file, self.channel_id))
 
+    def on_enter(self):
+        pass
+
 
 my_bot = MyBot(engine=my_engine)
 
@@ -56,6 +59,23 @@ my_message = Message({
     "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
     "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
     "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
+})
+
+my_private_message = Message({
+    "id": "Y2lzY29zcGFyazovL3VzL01FU1NB0xMWU3LTljODctNTljZjJjNDRhYmIy",
+    "roomId": "Y2lzY29zcGFyazovL3VzL1JP0zY2VmLWJiNDctOTZlZjA1NmJhYzFl",
+    "roomType": "direct",
+    "text": "test",
+    "created": "2017-07-22T16:49:22.008Z",
+    "hook": "shellbot-messages",
+    "personEmail": "foo.bar@again.org",
+    "personId": "Y2lzY29zcGFyazovL3VzL1LTQ5YzQtYTIyYi1mYWYwZWQwMjkyMzU",
+    "content": "test",
+    "from_id": 'Y2lzY29zcGFyazovL3VzL1LTQ5YzQtYTIyYi1mYWYwZWQwMjkyMzU',
+    "from_label": 'foo.bar@again.org',
+    'is_direct': True,
+    "mentioned_ids": [],
+    "channel_id": 'Y2lzY29zcGFyazovL3VzL1JP0zY2VmLWJiNDctOTZlZjA1NmJhYzFl',
 })
 
 my_attachment = Attachment({
@@ -220,24 +240,29 @@ class ListenerTests(unittest.TestCase):
         self.assertEqual(my_engine.get('listener.counter'), 24)
         self.assertTrue(listener.on_message.called)
 
+        listener.on_message = mock.Mock()
+        listener.process(str(my_private_message))
+        self.assertEqual(my_engine.get('listener.counter'), 25)
+        self.assertTrue(listener.on_message.called)
+
         listener.on_attachment = mock.Mock()
         listener.process(str(my_attachment))
-        self.assertEqual(my_engine.get('listener.counter'), 25)
+        self.assertEqual(my_engine.get('listener.counter'), 26)
         self.assertTrue(listener.on_attachment.called)
 
         listener.on_join = mock.Mock()
         listener.process(str(my_join))
-        self.assertEqual(my_engine.get('listener.counter'), 26)
+        self.assertEqual(my_engine.get('listener.counter'), 27)
         self.assertTrue(listener.on_join.called)
 
         listener.on_leave = mock.Mock()
         listener.process(str(my_leave))
-        self.assertEqual(my_engine.get('listener.counter'), 27)
+        self.assertEqual(my_engine.get('listener.counter'), 28)
         self.assertTrue(listener.on_leave.called)
 
         listener.on_inbound = mock.Mock()
         listener.process(str(my_event))
-        self.assertEqual(my_engine.get('listener.counter'), 28)
+        self.assertEqual(my_engine.get('listener.counter'), 29)
         self.assertTrue(listener.on_inbound.called)
 
     def test_process_filter(self):
@@ -266,24 +291,29 @@ class ListenerTests(unittest.TestCase):
                          'The Pm For This Project Is Mike C. And The Engineering Manager Is Jane W.')
         self.assertTrue(mocked.event.flag)
 
-        mocked.event = None
-        listener.process(str(my_attachment))
+        listener.process(str(my_private_message))
         self.assertEqual(my_engine.get('listener.counter'), 24)
+        self.assertEqual(mocked.event.text, 'Test')
         self.assertTrue(mocked.event.flag)
 
         mocked.event = None
-        listener.process(str(my_join))
+        listener.process(str(my_attachment))
         self.assertEqual(my_engine.get('listener.counter'), 25)
         self.assertTrue(mocked.event.flag)
 
         mocked.event = None
-        listener.process(str(my_leave))
+        listener.process(str(my_join))
         self.assertEqual(my_engine.get('listener.counter'), 26)
         self.assertTrue(mocked.event.flag)
 
         mocked.event = None
-        listener.process(str(my_event))
+        listener.process(str(my_leave))
         self.assertEqual(my_engine.get('listener.counter'), 27)
+        self.assertTrue(mocked.event.flag)
+
+        mocked.event = None
+        listener.process(str(my_event))
+        self.assertEqual(my_engine.get('listener.counter'), 28)
         self.assertTrue(mocked.event.flag)
 
     def test_on_message(self):
@@ -292,6 +322,7 @@ class ListenerTests(unittest.TestCase):
 
         listener = Listener(engine=my_engine)
         listener.on_message(my_message)
+        listener.on_message(my_private_message)
         with self.assertRaises(AssertionError):
             listener.on_message(my_attachment)
         with self.assertRaises(AssertionError):
@@ -339,6 +370,8 @@ class ListenerTests(unittest.TestCase):
         listener = Listener(engine=my_engine)
         with self.assertRaises(AssertionError):
             listener.on_attachment(my_message)
+        with self.assertRaises(AssertionError):
+            listener.on_attachment(my_private_message)
         listener.on_attachment(my_attachment)
         with self.assertRaises(AssertionError):
             listener.on_attachment(my_join)
@@ -376,6 +409,8 @@ class ListenerTests(unittest.TestCase):
         listener = Listener(engine=my_engine)
         with self.assertRaises(AssertionError):
             listener.on_join(my_message)
+        with self.assertRaises(AssertionError):
+            listener.on_join(my_private_message)
         with self.assertRaises(AssertionError):
             listener.on_join(my_attachment)
 
@@ -427,6 +462,8 @@ class ListenerTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             listener.on_leave(my_message)
         with self.assertRaises(AssertionError):
+            listener.on_leave(my_private_message)
+        with self.assertRaises(AssertionError):
             listener.on_leave(my_attachment)
         with self.assertRaises(AssertionError):
             listener.on_leave(my_join)
@@ -460,6 +497,8 @@ class ListenerTests(unittest.TestCase):
         listener = Listener(engine=my_engine)
         with self.assertRaises(AssertionError):
             listener.on_inbound(my_message)
+        with self.assertRaises(AssertionError):
+            listener.on_inbound(my_private_message)
         with self.assertRaises(AssertionError):
             listener.on_inbound(my_attachment)
         with self.assertRaises(AssertionError):
@@ -590,6 +629,22 @@ class ListenerTests(unittest.TestCase):
               "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM" ],
             },
 
+            {
+                "id": "Y2lzY29zcGFyazovL3VzL01FU1NB0xMWU3LTljODctNTljZjJjNDRhYmIy",
+                "roomId": "Y2lzY29zcGFyazovL3VzL1JP0zY2VmLWJiNDctOTZlZjA1NmJhYzFl",
+                "roomType": "direct",
+                "text": "test",
+                "created": "2017-07-22T16:49:22.008Z",
+                "hook": "shellbot-messages",
+                "personEmail": "foo.bar@again.org",
+                "personId": "Y2lzY29zcGFyazovL3VzL1LTQ5YzQtYTIyYi1mYWYwZWQwMjkyMzU",
+                "content": "test",
+                "from_id": 'Y2lzY29zcGFyazovL3VzL1LTQ5YzQtYTIyYi1mYWYwZWQwMjkyMzU',
+                "from_label": 'foo.bar@again.org',
+                'is_direct': True,
+                "mentioned_ids": [],
+                "channel_id": 'Y2lzY29zcGFyazovL3VzL1JP0zY2VmLWJiNDctOTZlZjA1NmJhYzFl',
+            },
         ]
 
         for item in items:
@@ -607,7 +662,7 @@ class ListenerTests(unittest.TestCase):
 
         listener.run()
 
-        self.assertEqual(my_engine.get('listener.counter'), 6)
+        self.assertEqual(my_engine.get('listener.counter'), 7)
         with self.assertRaises(Exception):
             my_engine.ears.get_nowait()
         with self.assertRaises(Exception):
@@ -626,6 +681,9 @@ class ListenerTests(unittest.TestCase):
         self.assertEqual(
             my_engine.mouth.get_nowait().text,
             u'help - Show commands and usage\nusage: help <command>')
+        self.assertEqual(
+            my_engine.mouth.get_nowait().text,
+            u"Sorry, I do not know how to handle 'test'")
         with self.assertRaises(Exception):
             print(my_engine.mouth.get_nowait())
 

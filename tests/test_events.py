@@ -151,6 +151,7 @@ class EventsTests(unittest.TestCase):
             message = event.text
         self.assertEqual(event.from_id, None)
         self.assertEqual(event.from_label, None)
+        self.assertEqual(event.is_direct, False)
         self.assertEqual(event.mentioned_ids, [])
         self.assertEqual(event.channel_id, None)
 
@@ -164,6 +165,7 @@ class EventsTests(unittest.TestCase):
               "created" : "2015-10-18T14:26:16+00:00",
               "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
               "from_label" : "Masked Cucumber",
+              "is_direct" : True,
               "mentioned_ids" : ["Y2lzYDMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"],
             }
 
@@ -177,6 +179,7 @@ class EventsTests(unittest.TestCase):
                          "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY")
         self.assertEqual(event.from_label,
                          "Masked Cucumber")
+        self.assertEqual(event.is_direct, True)
         self.assertEqual(event.mentioned_ids,
                          ["Y2lzYDMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"])
         self.assertEqual(event.channel_id,
@@ -208,6 +211,7 @@ class EventsTests(unittest.TestCase):
               "created" : "2015-10-18T14:26:16+00:00",
               "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
               "from_label" : "Masked Cucumber",
+              "is_direct" : True,
               "mentioned_ids" : ["Y2lzYDMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"],
             }
 

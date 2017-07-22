@@ -793,7 +793,7 @@ class SparkSpace(Space):
         def delete_webhook(api, id):
             api.webhooks.delete(webhookId=id)
 
-        logging.debug(u"Purging bot webhooks")
+        logging.info(u"Purging bot webhooks")
         for webhook in list_webhooks(self.api):
 #           logging.debug(u"- {}".format(str(webhook)))
             logging.debug(u"- deleting '{}'".format(webhook.name))
@@ -966,13 +966,16 @@ class SparkSpace(Space):
         * ``content`` is a copy of ``html``
         * ``from_id`` is a copy of ``personId``
         * ``from_label`` is a copy of ``personEmail``
+        * ``is_direct`` if the message is coming from 1:1 room
         * ``mentioned_ids`` is a copy of ``mentionedPeople``
+        * ``channel_id`` is a copy of ``roomId``
 
         """
         message = Message(item.copy())
         message.content = message.get('html', message.text)
         message.from_id = message.get('personId')
         message.from_label = message.get('personEmail')
+        message.is_direct = True if message.get('roomType') == 'direct' else False
         message.mentioned_ids = message.get('mentionedPeople', [])
         message.channel_id = message.get('roomId')
 

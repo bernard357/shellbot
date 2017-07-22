@@ -142,6 +142,17 @@ my_message = {
     "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
 }
 
+my_private_message = {
+    "id": "Y2lzY29zcGFyazovL3VzL01FU1NB0xMWU3LTljODctNTljZjJjNDRhYmIy",
+    "roomId": "Y2lzY29zcGFyazovL3VzL1JP0zY2VmLWJiNDctOTZlZjA1NmJhYzFl",
+    "roomType": "direct",
+    "text": "test",
+    "created": "2017-07-22T16:49:22.008Z",
+    "hook": "shellbot-messages",
+    "personEmail": "foo.bar@again.org",
+    "personId": "Y2lzY29zcGFyazovL3VzL1LTQ5YzQtYTIyYi1mYWYwZWQwMjkyMzU",
+}
+
 my_join = {
     'isMonitor': False,
     'created': '2017-05-31T21:25:30.424Z',
@@ -577,6 +588,7 @@ class SparkSpaceTests(unittest.TestCase):
                           'hook': 'injection',
                           'channel_id': None,
                           'type': 'message',
+                          'is_direct': False,
                           'mentioned_ids': []})
         with self.assertRaises(Exception):
             print(self.ears.get_nowait())
@@ -610,6 +622,7 @@ class SparkSpaceTests(unittest.TestCase):
                           'hook': 'pull',
                           'channel_id': None,
                           'type': 'message',
+                          'is_direct': False,
                           'mentioned_ids': []})
         with self.assertRaises(Exception):
             print(self.ears.get_nowait())
@@ -624,6 +637,7 @@ class SparkSpaceTests(unittest.TestCase):
         message.update({"content": message['text']})
         message.update({"from_id": 'Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY'})
         message.update({"from_label": 'matt@example.com'})
+        message.update({'is_direct': False})
         message.update({"mentioned_ids": ['Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM',
                        'Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg']})
         message.update({"channel_id": 'Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0'})
@@ -637,6 +651,18 @@ class SparkSpaceTests(unittest.TestCase):
         attachment.update({"from_label": 'matt@example.com'})
         attachment.update({"channel_id": 'Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0'})
         self.assertEqual(yaml.safe_load(self.ears.get()), attachment)
+
+        self.space.on_message(my_private_message, self.ears)
+        message = my_private_message.copy()
+        message.update({"type": "message"})
+        message.update({"content": message['text']})
+        message.update({"from_id": 'Y2lzY29zcGFyazovL3VzL1LTQ5YzQtYTIyYi1mYWYwZWQwMjkyMzU'})
+        message.update({"from_label": 'foo.bar@again.org'})
+        message.update({'is_direct': True})
+        message.update({"mentioned_ids": []})
+        message.update({"channel_id": 'Y2lzY29zcGFyazovL3VzL1JP0zY2VmLWJiNDctOTZlZjA1NmJhYzFl'})
+        self.maxDiff = None
+        self.assertEqual(yaml.safe_load(self.ears.get()), message)
 
         with self.assertRaises(Exception):
             print(self.ears.get_nowait())
