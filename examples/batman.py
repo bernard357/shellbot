@@ -133,14 +133,14 @@ engine = Engine(
 
 # load configuration
 #
-os.environ['BOT_ON_START'] = 'You can now chat with Batman'
-os.environ['BOT_ON_STOP'] = 'Batman is now quitting the room, bye'
+os.environ['BOT_ON_ENTER'] = 'You can now chat with Batman'
+os.environ['BOT_ON_EXIT'] = 'Batman is now quitting the room, bye'
 os.environ['CHAT_ROOM_TITLE'] = 'Chat with Batman'
 engine.configure()
 
 # initialise a chat room
 #
-bot = engine.bond(reset=True)
+bot = engine.get_bot(reset=True)
 
 # run the bot
 #
