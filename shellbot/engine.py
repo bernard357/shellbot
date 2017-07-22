@@ -708,12 +708,11 @@ class Engine(object):
 
         logging.warning(u'Stopping the bot')
 
-        logging.debug(u"- dispatching 'stop' event")
         self.dispatch('stop')
 
         self.on_stop()
 
-        logging.debug(u"- switching off")
+        logging.debug(u"Switching off")
         self.context.set('general.switch', 'off')
         time.sleep(1)
 
@@ -735,7 +734,7 @@ class Engine(object):
         for id in self.bots.keys():
             yield self.bots[id]
 
-    def get_bot(self, channel_id=None):
+    def get_bot(self, channel_id=None, **kwargs):
         """
         Gets a bot by id
 
@@ -746,7 +745,15 @@ class Engine(object):
 
         This function receives the id of a chat space, and returns
         the related bot.
+
+        If no id is provided, then the underlying space is asked to provide
+        with a default channel, as set in overall configuration.
         """
+        channel = None
+        if not channel_id:
+            channel = self.bond(**kwargs)
+            channel_id = channel.id
+
         logging.debug(u"Getting bot {}".format(channel_id))
         if channel_id and channel_id in self.bots.keys():
             logging.debug(u"- found matching bot instance")
@@ -758,7 +765,77 @@ class Engine(object):
             logging.debug(u"- remembering bot {}".format(bot.id))
             self.bots[bot.id] = bot
 
+        bot.bond()
+
+        if channel:
+            bot.on_enter()
+
         return bot
+
+    def bond(self,
+             title=None,
+             reset=False,
+             moderators=None,
+             participants=None,
+             **kwargs):
+        """
+        Bonds to a channel
+
+        :param title: title of the target channel
+        :type: title: str
+
+        :param reset: if True, delete previous room and re-create one
+        :type reset: bool
+
+        :param moderators: the list of initial moderators (optional)
+        :type moderators: list of str
+
+        :param participants: the list of initial participants (optional)
+        :type participants: list of str
+
+        :return: Channel
+
+        This function creates a channel, or connect to an existing one.
+        If no title is provided, then the generic title configured for the
+        underlying space is used instead.
+
+        Once you have a channel, it becomes easy to get a related bot.
+        For example::
+
+            channel = engine.bond('My crazy channel')
+            bot = engine.get_bot(channel.id)
+
+        """
+        if title in (None, ''):
+            title=self.space.configured_title()
+
+        logging.debug(u"Bonding to channel '{}'".format(title))
+
+        channel = self.space.get_by_title(title=title)
+        if channel and not reset:
+            logging.debug(u"- found existing channel")
+
+        else:
+            if channel and reset:
+                logging.debug(u"- deleting existing channel")
+                self.space.delete(id=channel.id)
+
+            logging.debug(u"- creating channel '{}''".format(title))
+            channel = self.space.create(title=title, **kwargs)
+
+            bot = self.get('bot.email')
+            logging.debug(u"- adding bot {}".format(bot))
+            self.space.add_participant(id=channel.id, person=bot)
+
+            if not moderators:
+                moderators = self.space.get('moderators', [])
+            self.space.add_moderators(id=channel.id, persons=moderators)
+
+            if not participants:
+                participants = self.space.get('participants', [])
+            self.space.add_participants(id=channel.id, persons=participants)
+
+        return channel
 
     def build_bot(self, id=None, driver=ShellBot):
         """
@@ -823,9 +900,6 @@ class Engine(object):
         if self.machine_factory:
             logging.debug(u"- building state machine")
             machine = self.machine_factory.get_machine(bot=bot)
-            if machine:
-                logging.debug(u"- starting state machine")
-                machine.start()
             return machine
 
         return None
@@ -845,18 +919,6 @@ class Engine(object):
                 bot.secondary_machine = Input(...)
         """
         pass
-
-    def bond(self, reset=False):
-        """
-        Bonds this engine to a single space
-        """
-        bot = self.get_bot()
-        bot.bond(reset=reset)
-
-        logging.debug(u"- remembering bot {}".format(bot.id))
-        self.bots[bot.id] = bot
-
-        return bot
 
     def on_enter(self, join):
         """

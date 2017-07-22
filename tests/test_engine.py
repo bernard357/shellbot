@@ -20,6 +20,12 @@ class FakeBot(object):
         self.id = channel_id if channel_id else '*bot'
         self.store = self.engine.build_store(id)
 
+    def bond(self):
+        pass
+
+    def on_enter(self):
+        pass
+
 
 class MyCounter(object):
     def __init__(self, name='counter'):
@@ -677,6 +683,66 @@ class EngineTests(unittest.TestCase):
             bot = self.engine.get_bot()
             self.assertEqual(bot.id, '*bot')
             self.assertTrue('*bot' in self.engine.bots.keys())
+
+    def test_bond(self):
+
+        logging.info("*** bond")
+
+        self.space.delete = mock.Mock()
+
+        channel = self.engine.bond(title=None)
+        self.assertEqual(channel.id, '*local')
+        self.assertEqual(channel.title, 'Collaboration space')
+
+        channel = self.engine.bond(title='')
+        self.assertEqual(channel.id, '*local')
+        self.assertEqual(channel.title, 'Collaboration space')
+
+        channel = self.engine.bond(title='hello world')
+        self.assertEqual(channel.id, '*local')
+        self.assertEqual(channel.title, 'hello world')
+
+        self.assertFalse(self.space.delete.called)
+        channel = self.engine.bond(reset=True)
+        self.assertTrue(self.space.delete.called)
+
+        self.space.add_moderators = mock.Mock()
+        self.space.add_participants = mock.Mock()
+        self.engine.dispatch = mock.Mock()
+
+        with mock.patch.object(self.space,
+                               'get_by_title',
+                               return_value=None) as mocked:
+            self.engine.bond(
+                title='my title',
+                moderators=['a', 'b'],
+                participants=['c', 'd'],
+            )
+            mocked.assert_called_with(title='my title')
+            self.space.add_moderators.assert_called_with(id='*local', persons=['a', 'b'])
+            self.space.add_participants.assert_called_with(id='*local', persons=['c', 'd'])
+
+        self.space.configure(settings={
+            'space': {
+                'title': 'Another title',
+                'moderators':
+                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
+                'participants':
+                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
+            }
+        })
+        with mock.patch.object(self.space,
+                               'get_by_title',
+                               return_value=None) as mocked:
+            self.engine.bond()
+            mocked.assert_called_with(title='Another title')
+            self.space.add_moderators.assert_called_with(
+                id='*local',
+                persons=['foo.bar@acme.com', 'joe.bar@corporation.com'])
+
+            self.space.add_participants.assert_called_with(
+                id='*local',
+                persons=['alan.droit@azerty.org', 'bob.nard@support.tv'])
 
     def test_build_bot(self):
 

@@ -144,82 +144,6 @@ class ShellBot(object):
         """
         pass
 
-    def bond(self,
-             title=None,
-             reset=False,
-             moderators=None,
-             participants=None,
-             **kwargs):
-        """
-        Bonds to a channel
-
-        :param title: title of the target channel
-        :type: title: str
-
-        :param reset: if True, delete previous room and re-create one
-        :type reset: bool
-
-        :param moderators: the list of initial moderators (optional)
-        :type moderators: list of str
-
-        :param participants: the list of initial participants (optional)
-        :type participants: list of str
-
-        This function creates a channel, or connect to an existing one.
-        If no title is provided, then the generic title configured for the
-        underlying space is used instead.
-        """
-        if title in (None, ''):
-            title=self.space.configured_title()
-
-        logging.debug(u"Bonding to channel '{}'".format(title))
-
-        self.channel = self.space.get_by_title(title=title)
-        if self.channel and not reset:
-            logging.debug(u"- found existing channel")
-
-        else:
-            if self.channel and reset:
-                logging.debug(u"- deleting existing channel")
-                self.space.delete(id=self.channel.id)
-
-            logging.debug(u"- creating channel '{}''".format(title))
-            self.channel = self.space.create(title=title, **kwargs)
-
-            bot = self.engine.context.get('bot.email')
-            logging.debug(u"- adding bot {}".format(bot))
-            self.add_participant(bot)
-
-            if not moderators:
-                moderators = self.space.get('moderators', [])
-            self.add_moderators(persons=moderators)
-
-            if not participants:
-                participants = self.space.get('participants', [])
-            self.add_participants(persons=participants)
-
-        self.store.bond(id=self.id)
-
-        self.engine.dispatch('bond')
-
-        self.on_bond()
-
-        self.say_banner()
-
-    def on_bond(self):
-        """
-        Adds processing to space bond
-
-        This function should be changed in sub-class, where necessary.
-
-        Example::
-
-            def on_bond(self):
-                do_something_important_on_bond()
-
-        """
-        pass
-
     @property
     def is_ready(self):
         """
@@ -281,6 +205,48 @@ class ShellBot(object):
 
         """
         pass
+
+    def bond(self):
+        """
+        Bonds to a channel
+
+        This function is called either after the creation of a new channel,
+        or when the bot has been invited to an existing channel. In such
+        situations the banner should be displayed as well.
+
+        There are also situations where the engine has been completely
+        restarted. The bot bonds to a channel where it has been before.
+        In that case the banner should be avoided.
+        """
+        assert self.is_ready
+
+        self.store.bond(id=self.id)
+
+        self.on_bond()
+
+        if self.machine:
+            logging.debug(u"- starting state machine")
+            self.machine.start()
+
+    def on_bond(self):
+        """
+        Adds processing to channel bonding
+
+        This function should be changed in sub-class, where necessary.
+
+        Example::
+
+            def on_bond(self):
+                do_something_important_on_bond()
+
+        """
+        pass
+
+    def on_enter(self):
+        """
+        Enters a channel
+        """
+        self.say_banner()
 
     def dispose(self, **kwargs):
         """

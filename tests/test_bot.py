@@ -89,73 +89,8 @@ class BotTests(unittest.TestCase):
 
         logging.info("*** bond")
 
-        self.space.delete = mock.Mock()
-
-        self.assertFalse(self.bot.is_ready)
-
-        self.bot.bond(title=None)
-        self.assertTrue(self.bot.is_ready)
-        self.assertEqual(self.bot.id, '*local')
-        self.assertEqual(self.bot.title, 'Collaboration space')
-
-        self.bot.bond(title='')
-        self.assertTrue(self.bot.is_ready)
-        self.assertEqual(self.bot.id, '*local')
-        self.assertEqual(self.bot.title, 'Collaboration space')
-
-        self.bot.bond(title='hello world')
-        self.assertTrue(self.bot.is_ready)
-        self.assertEqual(self.bot.id, '*local')
-        self.assertEqual(self.bot.title, 'hello world')
-
-        self.assertFalse(self.space.delete.called)
-        self.bot.bond(reset=True)
-        self.assertTrue(self.space.delete.called)
-
-        self.space.add_moderators = mock.Mock()
-        self.space.add_participants = mock.Mock()
-        self.store.bond = mock.Mock()
-        self.engine.dispatch = mock.Mock()
-        self.bot.on_bond = mock.Mock()
-
-        with mock.patch.object(self.space,
-                               'get_by_title',
-                               return_value=None) as mocked:
-            self.bot.bond(
-                title='my title',
-                moderators=['a', 'b'],
-                participants=['c', 'd'],
-            )
-            mocked.assert_called_with(title='my title')
-            self.space.add_moderators.assert_called_with(id='*local', persons=['a', 'b'])
-            self.space.add_participants.assert_called_with(id='*local', persons=['c', 'd'])
-            self.engine.dispatch.assert_called_with('bond')
-            self.bot.on_bond.assert_called_with()
-
-        self.space.configure(settings={
-            'space': {
-                'title': 'Another title',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
-                'participants':
-                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
-            }
-        })
-        with mock.patch.object(self.space,
-                               'get_by_title',
-                               return_value=None) as mocked:
-            self.bot.bond()
-            mocked.assert_called_with(title='Another title')
-            self.space.add_moderators.assert_called_with(
-                id='*local',
-                persons=['foo.bar@acme.com', 'joe.bar@corporation.com'])
-
-            self.space.add_participants.assert_called_with(
-                id='*local',
-                persons=['alan.droit@azerty.org', 'bob.nard@support.tv'])
-
-            self.engine.dispatch.assert_called_with('bond')
-            self.bot.on_bond.assert_called_with()
+        self.bot.channel = self.channel
+        self.bot.bond()
 
     def test_on_bond(self):
 

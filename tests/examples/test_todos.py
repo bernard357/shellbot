@@ -31,7 +31,7 @@ class TodosTests(unittest.TestCase):
         self.context = Context(settings=my_settings)
         self.engine = Engine(context=self.context, mouth=Queue())
         self.engine.factory = TodoFactory(self.engine.get('todos.items', []))
-        self.bot = self.engine.bond()
+        self.bot = self.engine.get_bot()
 
     def tearDown(self):
         del self.bot
