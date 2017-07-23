@@ -45,7 +45,7 @@ Multiple questions are adressed in this example:
 To run this script you have to provide a custom configuration, or set
 environment variables instead::
 
-- ``CHAT_ROOM_MODERATORS`` - Mention at least your e-mail address
+- ``CHANNEL_DEFAULT_PARTICIPANTS`` - Mention at least your e-mail address
 - ``CISCO_SPARK_BOT_TOKEN`` - Received from Cisco Spark on bot registration
 - ``SERVER_URL`` - Public link used by Cisco Spark to reach your server
 
@@ -57,7 +57,7 @@ Developers to get more details:
 For example, if you run this script under Linux or macOs with support from
 ngrok for exposing services to the Internet::
 
-    export CHAT_ROOM_MODERATORS="alice@acme.com"
+    export CHANNEL_DEFAULT_PARTICIPANTS="alice@acme.com"
     export CISCO_SPARK_BOT_TOKEN="<token id from Cisco Spark for Developers>"
     export SERVER_URL="http://1a107f21.ngrok.io"
     python notify.py

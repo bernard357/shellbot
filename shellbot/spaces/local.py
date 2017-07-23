@@ -87,7 +87,6 @@ class LocalSpace(Space):
 
         self.prompt = self.DEFAULT_PROMPT
 
-        self.moderators = []
         self.participants = []
 
     def on_start(self):
@@ -124,9 +123,10 @@ class LocalSpace(Space):
         to simulate user input. Else stdin is read one line at a time.
         """
         logging.debug(u"Context: {}".format(self.context.values))
-        self.context.check(self.prefix+'.title', 'Collaboration space', filter=True)
-        self.context.check(self.prefix+'.moderators', [], filter=True)
-        self.context.check(self.prefix+'.participants', [], filter=True)
+        self.context.check(self.prefix+'.title',
+                            'Collaboration space', filter=True)
+        self.context.check(self.prefix+'.participants',
+                           '$CHANNEL_DEFAULT_PARTICIPANTS', filter=True)
 
         self.context.set('server.binding', None)  # no web server at all
 
@@ -226,20 +226,7 @@ class LocalSpace(Space):
         """
         pass
 
-    def add_moderator(self, id, person):
-        """
-        Adds one moderator
-
-        :param id: the unique id of an existing channel
-        :type id: str
-
-        :param person: e-mail address of the person to add
-        :type person: str
-
-        """
-        self.moderators.append(person)
-
-    def add_participant(self, id, person):
+    def add_participant(self, id, person, is_moderator=False):
         """
         Adds one participant
 
@@ -249,7 +236,13 @@ class LocalSpace(Space):
         :param person: e-mail address of the person to add
         :type person: str
 
+        :param is_moderator: if this person has special powers on this channel
+        :type is_moderator: True or False
+
         """
+        assert id not in (None, '')  # target channel is required
+        assert person not in (None, '')
+        assert is_moderator in (True, False)
         self.participants.append(person)
 
     def remove_participant(self, id, person):
@@ -263,6 +256,8 @@ class LocalSpace(Space):
         :type person: str
 
         """
+        assert id not in (None, '')  # target channel is required
+        assert person not in (None, '')
         self.participants.remove(person)
 
     def post_message(self,

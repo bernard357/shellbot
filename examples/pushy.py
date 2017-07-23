@@ -40,7 +40,7 @@ Multiple questions are adressed in this example:
   triggered over the internet. This can done directly from the command line
   with CURL, from a web browser, or from a button connected to the internet, or
   from an application on a mobile device. When this occurs, a room is created,
-  moderators and participants are added, and people can interact immediately.
+  participants are added, and people can interact immediately.
   Look at the class ``Trigger`` below, and at the bottom of the script, to see
   how this is implemented.
 
@@ -73,7 +73,7 @@ A typical dialog could be like the following::
 To run this script you have to provide a custom configuration, or set
 environment variables instead::
 
-- ``CHAT_ROOM_MODERATORS`` - Mention at least your e-mail address
+- ``CHANNEL_DEFAULT_PARTICIPANTS`` - Mention at least your e-mail address
 - ``CISCO_SPARK_BOT_TOKEN`` - Received from Cisco Spark on bot registration
 - ``CISCO_SPARK_TOKEN`` - Your personal Cisco Spark token
 - ``SERVER_URL`` - Public link used by Cisco Spark to reach your server
@@ -86,7 +86,7 @@ Developers to get more details:
 For example, if you run this script under Linux or macOs with support from
 ngrok for exposing services to the Internet::
 
-    export CHAT_ROOM_MODERATORS="alice@acme.com"
+    export CHANNEL_DEFAULT_PARTICIPANTS="alice@acme.com"
     export CISCO_SPARK_BOT_TOKEN="<token id from Cisco Spark for Developers>"
     export CISCO_SPARK_TOKEN="<personal token id from Cisco Spark>"
     export SERVER_URL="http://1a107f21.ngrok.io"
@@ -117,7 +117,6 @@ settings = {
 
     'spark': {
         'room': 'On-demand collaboration',
-        'moderators': '$CHAT_ROOM_MODERATORS',
     },
 
     'server': {
@@ -144,7 +143,7 @@ settings = {
         {
             'label': u'Level 2',
             'message': u'Escalation to technical experts',
-            'moderators': 'guillain@gmail.com',
+            'participants': 'guillain@gmail.com',
         },
 
         {

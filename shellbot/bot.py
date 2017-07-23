@@ -71,13 +71,11 @@ class ShellBot(object):
 
            >>>space.post_message(id, 'Hello, World!')
 
-    5. The interface distinguishes between space participants and
-       moderators::
+    5. The interface allows for the addition or removal of channel
+       participants::
 
             space.add_participants(id, persons)
-            space.add_participant(id, person)
-            space.add_moderators(id, persons)
-            space.add_moderator(id, person)
+            space.add_participant(id, person, is_moderator)
             space.remove_participants(id, persons)
             space.remove_participant(id, person)
 
@@ -277,28 +275,6 @@ class ShellBot(object):
         text = self.engine.get('bot.on_exit', u"Bot is leaving this channel")
         self.say(text)
 
-    def add_moderators(self, persons=[]):
-        """
-        Adds multiple moderators
-
-        :param persons: e-mail addresses of persons to add
-        :type persons: list of str
-
-        """
-        if self.id:
-            self.space.add_moderators(id=self.id, persons=persons)
-
-    def add_moderator(self, person):
-        """
-        Adds one moderator
-
-        :param person: e-mail addresses of person to add
-        :type person: str
-
-        """
-        if self.id:
-            self.space.add_moderator(id=self.id, person=person)
-
     def add_participants(self, persons=[]):
         """
         Adds multiple participants
@@ -310,16 +286,24 @@ class ShellBot(object):
         if self.id:
             self.space.add_participants(id=self.id, persons=persons)
 
-    def add_participant(self, person):
+    def add_participant(self, person, is_moderator=False):
         """
         Adds one participant
 
         :param person: e-mail addresses of person to add
         :type person: str
 
+        The underlying platform may, or not, take the optional
+        parameter ``is_moderator`` into account. The default bahaviour is to
+        discard it, as if the parameter had the value ``False``.
+
         """
+        assert person not in (None, '')
+        assert is_moderator in (True, False)
         if self.id:
-            self.space.add_participant(id=self.id, person=person)
+            self.space.add_participant(id=self.id,
+                                       person=person,
+                                       is_moderator=is_moderator)
 
     def remove_participants(self, persons=[]):
         """
@@ -340,6 +324,7 @@ class ShellBot(object):
         :type person: str
 
         """
+        assert person not in (None, '')
         if self.id:
             self.space.remove_participant(id=self.id, person=person)
 

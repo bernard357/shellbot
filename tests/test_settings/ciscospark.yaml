@@ -36,10 +36,6 @@ spark:
     #
     team: Support service
 
-    # pre-defined moderators
-    #
-    moderators: foo.bar@acme.com
-
     # pre-defined participants
     #
     participants:
@@ -77,5 +73,3 @@ server:
     # the port from which this bot is getting requests from the internet
     #
     port: 8080
-
-

@@ -24,7 +24,7 @@ my_settings = {
         {
             'label': u'Level 2',
             'message': u'Escalation to technical experts',
-            'moderators': 'alice@acme.com',
+            'participants': 'alice@acme.com',
         },
 
         {
@@ -78,7 +78,6 @@ class StepsTests(unittest.TestCase):
         self.assertEqual(step.label, steps.step.label)
         self.assertEqual(step.message, u'Initial capture of information')
         self.assertEqual(step.markdown, None)
-        self.assertEqual(step.moderators, [])
         self.assertEqual(step.participants, [])
 
         step = steps.next()
@@ -86,8 +85,7 @@ class StepsTests(unittest.TestCase):
         self.assertEqual(step.label, steps.step.label)
         self.assertEqual(step.message, u'Escalation to technical experts')
         self.assertEqual(step.markdown, None)
-        self.assertEqual(step.moderators, ['alice@acme.com'])
-        self.assertEqual(step.participants, [])
+        self.assertEqual(step.participants, ['alice@acme.com'])
 
         step = steps.next()
         self.assertEqual(step.label, 'Level 3')

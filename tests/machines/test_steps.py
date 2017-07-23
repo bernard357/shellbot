@@ -61,7 +61,7 @@ class StepsTests(unittest.TestCase):
             {
                 'label': u'Level 2',
                 'message': u'Escalation to technical experts',
-                'moderators': 'alice@acme.com',
+                'participants': 'alice@acme.com',
             },
 
             {
@@ -89,7 +89,7 @@ class StepsTests(unittest.TestCase):
             Step({
                 'label': u'Level 2',
                 'message': u'Escalation to technical experts',
-                'moderators': 'alice@acme.com',
+                'participants': 'alice@acme.com',
                 'machine': FakeMachine(running=False),
             }, 2),
 
@@ -120,7 +120,7 @@ class StepsTests(unittest.TestCase):
             Step({
                 'label': u'Level 2',
                 'message': u'Escalation to technical experts',
-                'moderators': 'alice@acme.com',
+                'participants': 'alice@acme.com',
                 'machine': FakeMachine(running=True),
             }, 2),
 
@@ -615,7 +615,6 @@ class StepsTests(unittest.TestCase):
         self.assertEqual(step.message, 'Initial capture of information')
         self.assertEqual(step.content, '**Initial** `capture` of _information_')
         self.assertEqual(step.file, 'https://upload.wikimedia.org/wikipedia/en/c/c6/Bat-signal_1989_film.jpg')
-        self.assertEqual(step.moderators, [])
         self.assertEqual(step.participants, [])
         self.assertEqual(step.machine, None)
 
@@ -624,8 +623,7 @@ class StepsTests(unittest.TestCase):
         self.assertEqual(step.message, 'Escalation to technical experts')
         self.assertEqual(step.content, None)
         self.assertEqual(step.file, None)
-        self.assertEqual(step.moderators, ['alice@acme.com'])
-        self.assertEqual(step.participants, [])
+        self.assertEqual(step.participants, ['alice@acme.com'])
         self.assertTrue(step.machine is not None)
 
         step = self.steps[2]
@@ -633,7 +631,6 @@ class StepsTests(unittest.TestCase):
         self.assertEqual(step.message, 'Escalation to decision stakeholders')
         self.assertEqual(step.content, None)
         self.assertEqual(step.file, None)
-        self.assertEqual(step.moderators, [])
         self.assertEqual(step.participants, ['bob@acme.com'])
         self.assertTrue(step.machine is not None)
 
@@ -642,7 +639,6 @@ class StepsTests(unittest.TestCase):
         self.assertEqual(step.message, 'Process is closed, yet conversation can continue')
         self.assertEqual(step.content, None)
         self.assertEqual(step.file, None)
-        self.assertEqual(step.moderators, [])
         self.assertEqual(step.participants, [])
         self.assertTrue(step.machine is not None)
 

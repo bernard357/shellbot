@@ -124,8 +124,6 @@ class ContextTests(unittest.TestCase):
         settings = {
             'spark': {
                 'room': 'My preferred room',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -311,8 +309,6 @@ class ContextTests(unittest.TestCase):
         self.context.apply({
             'spark': {
                 'room': 'My preferred room',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',

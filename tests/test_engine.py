@@ -162,7 +162,6 @@ class EngineTests(unittest.TestCase):
 
             'space': {
                 'title': 'space name',
-                'moderators': ['foo.bar@acme.com'],
                 'participants': ['joe.bar@acme.com'],
             },
 
@@ -178,8 +177,6 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(self.engine.get('bot.on_enter'), 'Hello!')
         self.assertEqual(self.engine.get('bot.on_exit'), 'Bye!')
         self.assertEqual(self.engine.get('space.title'), 'space name')
-        self.assertEqual(self.engine.get('space.moderators'),
-                         ['foo.bar@acme.com'])
         self.assertEqual(self.engine.get('space.participants'),
                          ['joe.bar@acme.com'])
         self.assertEqual(self.engine.get('server.url'), 'http://to.no.where')
@@ -191,8 +188,6 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(self.engine.get('bot.on_enter'), 'How can I help you?')
         self.assertEqual(self.engine.get('bot.on_exit'), 'Bye for now')
         self.assertEqual(self.engine.get('local.title'), 'Support room')
-        self.assertEqual(self.engine.get('local.moderators'),
-                         ['foo.bar@acme.com'])
         self.assertEqual(self.engine.get('local.participants'),
                          ['joe.bar@acme.com', 'super.support@help.org'])
         self.assertEqual(self.engine.get('server.url'), None)
@@ -213,7 +208,6 @@ class EngineTests(unittest.TestCase):
 
             'space': {
                 'title': 'Support room',
-                'moderators': ['foo.bar@acme.com'],
             },
 
             'server': {
@@ -231,8 +225,6 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(engine.get('bot.on_enter'), 'Hello!')
         self.assertEqual(engine.get('bot.on_exit'), 'Bye!')
         self.assertEqual(engine.get('space.title'), 'Support room')
-        self.assertEqual(engine.get('space.moderators'),
-                         ['foo.bar@acme.com'])
         self.assertEqual(engine.get('space.participants'), [])
         self.assertEqual(engine.get('server.url'), 'http://to.nowhere/')
         self.assertEqual(engine.get('server.hook'), '/hook')
@@ -256,7 +248,7 @@ class EngineTests(unittest.TestCase):
         clear_env("BOT_ON_ENTER")
         clear_env("BOT_ON_EXIT")
         clear_env("CHAT_ROOM_TITLE")
-        clear_env("CHAT_ROOM_MODERATORS")
+        clear_env("CHANNEL_DEFAULT_PARTICIPANTS")
         clear_env("CISCO_SPARK_BOT_TOKEN")
         clear_env("SERVER_URL")
         self.engine.configure()
@@ -271,7 +263,6 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(self.engine.get('bot.on_exit'), None)
 
         self.assertEqual(self.engine.get('space.title'), 'Collaboration space')
-        self.assertEqual(self.engine.get('space.moderators'), [])
         self.assertEqual(self.engine.get('space.participants'), [])
         self.assertEqual(self.engine.get('space.unknown'), None)
 
@@ -290,7 +281,7 @@ class EngineTests(unittest.TestCase):
         os.environ["BOT_ON_ENTER"] = 'Hello!'
         os.environ["BOT_ON_EXIT"] = 'Bye!'
         os.environ["CHAT_ROOM_TITLE"] = 'Support room'
-        os.environ["CHAT_ROOM_MODERATORS"] = 'foo.bar@acme.com'
+        os.environ["CHANNEL_DEFAULT_PARTICIPANTS"] = 'foo.bar@acme.com'
         os.environ["CISCO_SPARK_BOT_TOKEN"] = '*token'
         os.environ["SERVER_URL"] = 'http://to.nowhere/'
         self.engine.configure()
@@ -305,7 +296,6 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(self.engine.get('bot.on_exit'), 'Bye!')
 
         self.assertEqual(self.engine.get('space.title'), 'Support room')
-        self.assertEqual(self.engine.get('space.moderators'), 'foo.bar@acme.com')
         self.assertEqual(self.engine.get('space.participants'), [])
         self.assertEqual(self.engine.get('space.unknown'), None)
 
@@ -321,7 +311,7 @@ class EngineTests(unittest.TestCase):
         os.environ["BOT_ON_ENTER"] = 'Hello!'
         os.environ["BOT_ON_EXIT"] = 'Bye!'
         os.environ["CHAT_ROOM_TITLE"] = 'Support room'
-        os.environ["CHAT_ROOM_MODERATORS"] = 'foo.bar@acme.com'
+        os.environ["CHANNEL_DEFAULT_PARTICIPANTS"] = 'foo.bar@acme.com'
         os.environ["CISCO_SPARK_BOT_TOKEN"] = '*token'
         os.environ["SERVER_URL"] = 'http://to.nowhere/'
 
@@ -334,7 +324,6 @@ class EngineTests(unittest.TestCase):
 
             'space': {
                 'title': '$CHAT_ROOM_TITLE',
-                'moderators': '$CHAT_ROOM_MODERATORS',
             },
 
             'server': {
@@ -351,8 +340,6 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(self.engine.get('bot.on_enter'), 'Hello!')
         self.assertEqual(self.engine.get('bot.on_exit'), 'Bye!')
         self.assertEqual(self.engine.get('space.title'), 'Support room')
-        self.assertEqual(self.engine.get('space.moderators'),
-                         'foo.bar@acme.com')
         self.assertEqual(self.engine.get('space.participants'), [])
 
         self.assertEqual(self.engine.get('space.unknown'), None)
@@ -706,7 +693,6 @@ class EngineTests(unittest.TestCase):
         channel = self.engine.bond(reset=True)
         self.assertTrue(self.space.delete.called)
 
-        self.space.add_moderators = mock.Mock()
         self.space.add_participants = mock.Mock()
         self.engine.dispatch = mock.Mock()
 
@@ -715,18 +701,14 @@ class EngineTests(unittest.TestCase):
                                return_value=None) as mocked:
             self.engine.bond(
                 title='my title',
-                moderators=['a', 'b'],
                 participants=['c', 'd'],
             )
             mocked.assert_called_with(title='my title')
-            self.space.add_moderators.assert_called_with(id='*local', persons=['a', 'b'])
             self.space.add_participants.assert_called_with(id='*local', persons=['c', 'd'])
 
         self.space.configure(settings={
             'space': {
                 'title': 'Another title',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
             }
@@ -736,10 +718,6 @@ class EngineTests(unittest.TestCase):
                                return_value=None) as mocked:
             self.engine.bond()
             mocked.assert_called_with(title='Another title')
-            self.space.add_moderators.assert_called_with(
-                id='*local',
-                persons=['foo.bar@acme.com', 'joe.bar@corporation.com'])
-
             self.space.add_participants.assert_called_with(
                 id='*local',
                 persons=['alan.droit@azerty.org', 'bob.nard@support.tv'])

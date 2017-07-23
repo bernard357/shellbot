@@ -171,28 +171,6 @@ class BotTests(unittest.TestCase):
 
         self.bot.on_exit()
 
-    def test_add_moderators(self):
-
-        logging.info('*** add_moderators ***')
-
-        self.bot.channel = self.channel
-        with mock.patch.object(self.bot.space,
-                               'add_moderators',
-                               return_value=None) as mocked:
-            self.bot.add_moderators(['a', 'b', 'c', 'd'])
-            mocked.assert_called_with(id='*id', persons=['a', 'b', 'c', 'd'])
-
-    def test_add_moderator(self):
-
-        logging.info('*** add_moderator ***')
-
-        self.bot.channel = self.channel
-        with mock.patch.object(self.bot.space,
-                               'add_moderator',
-                               return_value=None) as mocked:
-            self.bot.add_moderator('foo.bar@acme.com')
-            mocked.assert_called_with(id='*id', person='foo.bar@acme.com')
-
     def test_add_participants(self):
 
         logging.info('*** add_participants ***')
@@ -213,7 +191,9 @@ class BotTests(unittest.TestCase):
                                'add_participant',
                                return_value=None) as mocked:
             self.bot.add_participant('foo.bar@acme.com')
-            mocked.assert_called_with(id='*id', person='foo.bar@acme.com')
+            mocked.assert_called_with(id='*id',
+                                      is_moderator=False,
+                                      person='foo.bar@acme.com')
 
     def test_remove_participants(self):
 

@@ -776,7 +776,6 @@ class Engine(object):
     def bond(self,
              title=None,
              reset=False,
-             moderators=None,
              participants=None,
              **kwargs):
         """
@@ -787,9 +786,6 @@ class Engine(object):
 
         :param reset: if True, delete previous room and re-create one
         :type reset: bool
-
-        :param moderators: the list of initial moderators (optional)
-        :type moderators: list of str
 
         :param participants: the list of initial participants (optional)
         :type participants: list of str
@@ -824,13 +820,9 @@ class Engine(object):
             logging.debug(u"- creating channel '{}''".format(title))
             channel = self.space.create(title=title, **kwargs)
 
-            bot = self.get('bot.email')
+            bot = self.get('bot.email', 'shelly@sparkbot.io')
             logging.debug(u"- adding bot {}".format(bot))
             self.space.add_participant(id=channel.id, person=bot)
-
-            if not moderators:
-                moderators = self.space.get('moderators', [])
-            self.space.add_moderators(id=channel.id, persons=moderators)
 
             if not participants:
                 participants = self.space.get('participants', [])

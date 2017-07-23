@@ -62,8 +62,8 @@ blueprints:
                       env CISCO_SPARK_TOKEN="{{ environment.CISCO_SPARK_TOKEN }}"
                       export CISCO_SPARK_TOKEN
 
-                      env CHAT_ROOM_MODERATORS="{{ environment.CHAT_ROOM_MODERATORS }}"
-                      export CHAT_ROOM_MODERATORS
+                      env CHANNEL_DEFAULT_PARTICIPANTS="{{ environment.CHANNEL_DEFAULT_PARTICIPANTS }}"
+                      export CHANNEL_DEFAULT_PARTICIPANTS
 
                       env SERVER_URL="http://{{ node.public }}:8080"
                       export SERVER_URL
@@ -79,7 +79,7 @@ blueprints:
                     #!/bin/sh
                     export CHAT_TOKEN="{{ environment.CHAT_TOKEN }}"
                     export CISCO_SPARK_TOKEN="{{ environment.CISCO_SPARK_TOKEN }}"
-                    export CHAT_ROOM_MODERATORS="{{ environment.CHAT_ROOM_MODERATORS }}"
+                    export CHANNEL_DEFAULT_PARTICIPANTS="{{ environment.CHANNEL_DEFAULT_PARTICIPANTS }}"
                     export SERVER_URL="http://{{ node.public }}:8080"
 
                 - path: /root/hosts.awk

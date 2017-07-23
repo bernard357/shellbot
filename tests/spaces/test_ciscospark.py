@@ -225,8 +225,6 @@ class SparkSpaceTests(unittest.TestCase):
         settings={  # from settings to member attributes
             'spark': {
                 'room': 'My preferred room',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'token': 'hkNWEtMJNkODVGlZWU1NmYtyY',
@@ -236,8 +234,6 @@ class SparkSpaceTests(unittest.TestCase):
         self.space.configure(settings=settings)
         self.assertEqual(self.space.get('room'), 'My preferred room')
         self.assertEqual(self.space.configured_title(), 'My preferred room')
-        self.assertEqual(self.space.get('moderators'),
-            ['foo.bar@acme.com', 'joe.bar@corporation.com'])
         self.assertEqual(self.space.get('participants'),
             ['alan.droit@azerty.org', 'bob.nard@support.tv'])
         self.assertEqual(self.space.get('token'), 'hkNWEtMJNkODVGlZWU1NmYtyY')
@@ -247,13 +243,10 @@ class SparkSpaceTests(unittest.TestCase):
         self.space.configure({
             'spark': {
                 'room': 'My preferred room',
-                'moderators': 'foo.bar@acme.com',
                 'participants': 'alan.droit@azerty.org',
             }
         })
         self.assertEqual(self.space.get('room'), 'My preferred room')
-        self.assertEqual(self.space.get('moderators'),
-            ['foo.bar@acme.com'])
         self.assertEqual(self.space.get('participants'),
             ['alan.droit@azerty.org'])
 
@@ -261,8 +254,6 @@ class SparkSpaceTests(unittest.TestCase):
             self.space.context.clear()
             self.space.configure({
                 'spark': {
-                    'moderators':
-                        ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                     'participants':
                         ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                     'team': 'Anchor team',
@@ -491,24 +482,6 @@ class SparkSpaceTests(unittest.TestCase):
         team = self.space.get_team(name='*unknown')
         self.assertTrue(self.space.personal_api.teams.list.called)
         self.assertEqual(team, None)
-
-    def test_add_moderators(self):
-
-        logging.info("*** add_moderators")
-
-        with mock.patch.object(self.space,
-                               'add_moderator') as mocked:
-
-            self.space.add_moderators(id='*id', persons=['foo.bar@acme.com'])
-            mocked.assert_called_with(id='*id', person='foo.bar@acme.com')
-
-    def test_add_moderator(self):
-
-        logging.info("*** add_moderator")
-
-        self.space.personal_api = FakeApi()
-        self.space.add_moderator(id='*i', person='foo.bar@acme.com')
-        self.assertTrue(self.space.personal_api.memberships.create.called)
 
     def test_add_participants(self):
 

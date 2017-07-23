@@ -44,7 +44,6 @@ class LocalSpaceTests(unittest.TestCase):
         logging.info("***** init")
 
         self.assertEqual(self.space.prefix, 'space')
-        self.assertEqual(self.space.moderators, [])
         self.assertEqual(self.space.participants, [])
         self.assertEqual(self.space.input, [])
 
@@ -78,7 +77,6 @@ class LocalSpaceTests(unittest.TestCase):
         self.space.configure(settings=settings)
         self.assertEqual(self.space.context.get('space.title'), 'Collaboration space')
         self.assertEqual(self.space.context.get('space.key'), 'my value')
-        self.assertEqual(self.space.context.get('space.moderators'), [])
         self.assertEqual(self.space.context.get('space.participants'), [])
 
         self.assertEqual(self.space.context.get('server.binding'), None)
@@ -89,7 +87,6 @@ class LocalSpaceTests(unittest.TestCase):
         self.space.configure(settings=settings)
         self.assertEqual(self.space.context.get('space.title'), 'a title')
         self.assertEqual(self.space.context.get('space.key'), 'my value')
-        self.assertEqual(self.space.context.get('space.moderators'), [])
         self.assertEqual(self.space.context.get('space.participants'), [])
 
     def test_check(self):
@@ -172,23 +169,6 @@ class LocalSpaceTests(unittest.TestCase):
         logging.info("*** delete")
 
         self.space.delete(id='*id')
-
-    def test_add_moderators(self):
-
-        logging.info("*** add_moderators")
-
-        with mock.patch.object(self.space,
-                               'add_moderator') as mocked:
-
-            self.space.add_moderators(id='*id', persons=['foo.bar@acme.com'])
-            mocked.assert_called_with(id='*id', person='foo.bar@acme.com')
-
-    def test_add_moderator(self):
-
-        logging.info("***** add_moderator")
-
-        self.space.add_moderator(id='*id', person='bob@acme.com')
-        self.assertEqual(self.space.moderators, ['bob@acme.com'])
 
     def test_add_participants(self):
 

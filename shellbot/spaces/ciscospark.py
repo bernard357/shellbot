@@ -128,7 +128,6 @@ class SparkSpace(Space):
     - list rooms - personal token - for lookup before room creation/deletion
     - create room - personal token - similar to what a regular user would do
     - delete room - personal token - rather handled by a human being
-    - add moderator - personal token - because bot cannot do it
     - add participant - bot token - explicit bot action
     - remove participant - personal token - because bot cannot always do it
     - post message - bot token - explicit bot action
@@ -144,7 +143,6 @@ class SparkSpace(Space):
 
         'spark': {
             'room': '$CHAT_ROOM_TITLE',
-            'moderators': '$CHAT_ROOM_MODERATORS',
         },
 
         'server': {
@@ -204,8 +202,6 @@ class SparkSpace(Space):
 
            space.configure({'spark': {
                'room': 'My preferred room',
-               'moderators':
-                  ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                'participants':
                   ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                'team': 'Anchor team',
@@ -226,11 +222,9 @@ class SparkSpace(Space):
           This can refer to an environment variable if it starts
           with ``$``, e.g., ``$ROOM_TITLE``.
 
-        * ``spark.moderators`` - list of persons assigned as room moderators
-          This can refer to an environment variable if it starts
-          with ``$``, e.g., ``$ROOM_MODERATORS``.
-
-        * ``spark.participants`` - list of initial participants
+        * ``spark.participants`` - list of initial participants. This can
+          be taken from ``$CHANNEL_DEFAULT_PARTICIPANTS`` from the
+          environment.
 
         * ``spark.team`` - title of a team associated with this room
 
@@ -248,28 +242,25 @@ class SparkSpace(Space):
           If ``spark.personal_token`` is not provided, then the function looks
           for an environment variable ``CISCO_SPARK_TOKEN`` instead.
 
-        If a single value is provided for ``moderators`` or for
-        ``participants`` then it is turned automatically to a list.
+        If a single value is provided for ``participants`` then it is turned
+        automatically to a list.
 
         Example::
 
-            >>>space.configure({'spark.moderators': 'bobby@jah.com'})
-            >>>space.context.get('spark.moderators')
+            >>>space.configure({'spark.participants': 'bobby@jah.com'})
+            >>>space.context.get('spark.participants')
             ['bobby@jah.com']
 
         """
-        self.context.check(self.prefix+'.room', is_mandatory=True, filter=True)
-        self.context.check(self.prefix+'.moderators', [], filter=True)
-        self.context.check(self.prefix+'.participants', [])
+        self.context.check(self.prefix+'.room', 
+                           is_mandatory=True, filter=True)
+        self.context.check(self.prefix+'.participants',
+                           '$CHANNEL_DEFAULT_PARTICIPANTS', filter=True)
         self.context.check(self.prefix+'.team')
         self.context.check(self.prefix+'.token',
                            '$CISCO_SPARK_BOT_TOKEN', filter=True)
         self.context.check(self.prefix+'.personal_token',
                            '$CISCO_SPARK_TOKEN', filter=True)
-
-        values = self.context.get(self.prefix+'.moderators')
-        if isinstance(values, string_types):
-            self.context.set(self.prefix+'.moderators', [values])
 
         values = self.context.get(self.prefix+'.participants')
         if isinstance(values, string_types):
@@ -594,29 +585,7 @@ class SparkSpace(Space):
         logging.warning(u"- not found")
         return None
 
-    def add_moderator(self, id, person):
-        """
-        Adds one moderator
-
-        :param id: the unique id of an existing room
-        :type id: str
-
-        :param person: e-mail address of the person to add
-        :type person: str
-
-        """
-        assert id not in (None, '')
-        assert self.personal_api is not None  # connect() is prerequisite
-
-        @retry(u"Unable to add moderator '{}'".format(person), silent=True)
-        def do_it():
-            self.personal_api.memberships.create(roomId=id,
-                                                 personEmail=person,
-                                                 isModerator=True)
-
-        do_it()
-
-    def add_participant(self, id, person):
+    def add_participant(self, id, person, is_moderator=False):
         """
         Adds one participant
 
@@ -626,14 +595,20 @@ class SparkSpace(Space):
         :param person: e-mail address of the person to add
         :type person: str
 
+        :param is_moderator: if this person has special powers on this channel
+        :type is_moderator: True or False
+
         """
-        assert id not in (None, '')
+        assert id not in (None, '')  # target channel is required
+        assert person not in (None, '')
+        assert is_moderator in (True, False)
         assert self.personal_api is not None  # connect() is prerequisite
 
         @retry(u"Unable to add participant '{}'".format(person), silent=True)
         def do_it():
             self.personal_api.memberships.create(roomId=id,
-                                                 personEmail=person)
+                                                 personEmail=person,
+                                                 isModerator=is_moderator)
 
         do_it()
 
@@ -648,7 +623,8 @@ class SparkSpace(Space):
         :type person: str
 
         """
-        assert id not in (None, '')
+        assert id not in (None, '')  # target channel is required
+        assert person not in (None, '')  # target person
         assert self.personal_api is not None  # connect() is prerequisite
 
         @retry(u"Unable to remove participant '{}'".format(person), silent=True)

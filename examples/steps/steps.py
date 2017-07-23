@@ -44,9 +44,6 @@ class Step(object):
         self.message = attributes.get('message',
                                       u'(no description is available)')
         self.markdown = attributes.get('markdown', None)
-        self.moderators = attributes.get('moderators', [])
-        if isinstance(self.moderators, string_types):
-            self.moderators = [self.moderators]
         self.participants = attributes.get('participants', [])
         if isinstance(self.participants, string_types):
             self.participants = [self.participants]
@@ -100,7 +97,7 @@ class Steps(object):
                     {
                         'label': u'Level 2',
                         'message': u'Escalation to technical experts',
-                        'moderators': 'alice@acme.com',
+                        'participants': 'alice@acme.com',
                     },
 
                     {

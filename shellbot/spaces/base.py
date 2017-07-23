@@ -46,6 +46,7 @@ class Space(object):
 
             channel = space.get_by_title(title)
             channel = space.get_by_id(id)
+            channel = space.get_by_person(label)
 
             channel.title = 'A new title'
             space.update(channel)
@@ -59,13 +60,10 @@ class Space(object):
 
            >>>space.post_message(id, 'Hello, World!')
 
-    5. The interface distinguishes between space participants and
-       moderators::
+    5. You can add and remove participants to channels::
 
             space.add_participants(id, persons)
             space.add_participant(id, person)
-            space.add_moderators(id, persons)
-            space.add_moderator(id, person)
             space.remove_participants(id, persons)
             space.remove_participant(id, person)
 
@@ -96,7 +94,6 @@ class Space(object):
 
         'space': {
             'title': '$CHAT_ROOM_TITLE',
-            'moderators': '$CHAT_ROOM_MODERATORS',
         },
 
         'server': {
@@ -430,44 +427,6 @@ class Space(object):
         """
         raise NotImplementedError()
 
-    def add_moderators(self, id, persons=[]):
-        """
-        Adds multiple moderators
-
-        :param id: the unique id of an existing channel
-        :type id: str
-
-        :param persons: e-mail addresses of persons to add
-        :type persons: list of str
-
-        """
-        logging.info(u"Adding moderators")
-        for person in persons:
-            logging.info(u"- {}".format(person))
-            self.add_moderator(id=id, person=person)
-
-    def add_moderator(self, id, person):
-        """
-        Adds one moderator
-
-        :param id: the unique id of an existing channel
-        :type id: str
-
-        :param person: e-mail address of the person to add
-        :type person: str
-
-        This function should be implemented in sub-class.
-
-        Example::
-
-            def add_moderator(self, id, person):
-                self.api.memberships.create(id=id,
-                                            person=person,
-                                            is_moderator=True)
-
-        """
-        raise NotImplementedError()
-
     def add_participants(self, id, persons=[]):
         """
         Adds multiple participants
@@ -484,7 +443,7 @@ class Space(object):
             logging.info(u"- {}".format(person))
             self.add_participant(id=id, person=person)
 
-    def add_participant(self, id, person):
+    def add_participant(self, id, person, is_moderator=False):
         """
         Adds one participant
 
@@ -494,6 +453,13 @@ class Space(object):
         :param person: e-mail address of the person to add
         :type person: str
 
+        :param is_moderator: if this person has special powers on this channel
+        :type is_moderator: True or False
+
+        The underlying platform may, or not, take the optional
+        parameter ``is_moderator`` into account. The default bahaviour is to
+        discard it, as if the parameter had the value ``False``.
+
         This function should be implemented in sub-class.
 
         Example::
@@ -502,6 +468,9 @@ class Space(object):
                 self.api.memberships.create(id=id, person=person)
 
         """
+        assert id not in (None, '')  # target channel is required
+        assert person not in (None, '')
+        assert is_moderator in (True, False)
         raise NotImplementedError()
 
     def remove_participants(self, id, persons=[]):
@@ -538,6 +507,8 @@ class Space(object):
                 self.api.memberships.delete(id=id, person=person)
 
         """
+        assert id not in (None, '')  # target channel is required
+        assert person not in (None, '')
         raise NotImplementedError()
 
     def post_message(self,

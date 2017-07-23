@@ -51,5 +51,4 @@ class Next(Command):
                                                   new.message),
                      content=new.markdown)
 
-        self.bot.add_moderators(new.moderators)
         self.bot.add_participants(new.participants)

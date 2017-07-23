@@ -36,10 +36,6 @@ local:
     #
     team: Support service
 
-    # pre-defined moderators
-    #
-    moderators: [foo.bar@acme.com]
-
     # pre-defined participants
     #
     participants:

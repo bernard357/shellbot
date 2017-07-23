@@ -26,7 +26,7 @@ class Steps(Machine):
     Implements a linear process with multiple steps
 
     This implements a state machine that appears as a phased process to chat
-    participants. On each, it can add new participants or moderators, display
+    participants. On each, it can add new participants, display
     some information, and run a child state machine..
 
     For example, to run an escalation process::
@@ -47,7 +47,6 @@ class Steps(Machine):
             {
                 'label': u'Level 2',
                 'message': u'Escalation to technical experts',
-                'moderators': 'alice@acme.com',
             },
 
             {
@@ -307,10 +306,6 @@ class Step(object):
 
         self.file = attributes.get('file', None)
 
-        self.moderators = attributes.get('moderators', [])
-        if isinstance(self.moderators, string_types):
-            self.moderators = [self.moderators]
-
         self.participants = attributes.get('participants', [])
         if isinstance(self.participants, string_types):
             self.participants = [self.participants]
@@ -351,7 +346,7 @@ class Step(object):
         - send a message to the chat space,
         - maybe in MarkDown or HTML,
         - maybe with some attachment,
-        - add participants and/or moderators to the space,
+        - add participants to the channel,
         - reset and start a state machine
 
         Example::
@@ -367,7 +362,6 @@ class Step(object):
                     content=self.content,
                     file=self.file)
 
-        bot.add_moderators(self.moderators)
         bot.add_participants(self.participants)
 
         if self.machine:

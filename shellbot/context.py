@@ -122,8 +122,6 @@ class Context(object):
             context = Context({
                 'spark': {
                     'room': 'My preferred room',
-                    'moderators':
-                        ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                     'participants':
                         ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                     'team': 'Anchor team',

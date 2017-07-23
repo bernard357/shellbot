@@ -32,8 +32,6 @@ class SpaceFactoryTests(unittest.TestCase):
         self.context.apply(settings={  # from settings to member attributes
             'space': {
                 'title': 'My preferred room',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -54,8 +52,6 @@ class SpaceFactoryTests(unittest.TestCase):
         self.context.apply(settings={  # from settings to member attributes
             'space': {
                 'title': 'My preferred room',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'input': ['help', 'version'],
@@ -73,8 +69,6 @@ class SpaceFactoryTests(unittest.TestCase):
         self.context.apply(settings={  # from settings to member attributes
             'spark': {
                 'room': 'My preferred room',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -98,8 +92,6 @@ class SpaceFactoryTests(unittest.TestCase):
         self.context.apply(settings={  # sense='space'
             'space': {
                 'room': 'My preferred room',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -119,8 +111,6 @@ class SpaceFactoryTests(unittest.TestCase):
         self.context.apply(settings={  # sense='local'
             'space': {
                 'title': 'My preferred room',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'input': ['help', 'version'],
@@ -136,8 +126,6 @@ class SpaceFactoryTests(unittest.TestCase):
         self.context.apply(settings={  # sense='spark'
             'spark': {
                 'room': 'My preferred room',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -157,8 +145,6 @@ class SpaceFactoryTests(unittest.TestCase):
         self.context.apply(settings={  # 'space' is coming before 'spark'
             'spark': {
                 'room': 'My preferred room',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -170,8 +156,6 @@ class SpaceFactoryTests(unittest.TestCase):
 
             'space': {
                 'room': 'My preferred room',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -187,8 +171,6 @@ class SpaceFactoryTests(unittest.TestCase):
         self.context.apply(settings={  # 'space' is coming before 'spark'
             'space': {
                 'room': 'My preferred room',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -200,8 +182,6 @@ class SpaceFactoryTests(unittest.TestCase):
 
             'spark': {
                 'room': 'My preferred room',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -221,8 +201,6 @@ class SpaceFactoryTests(unittest.TestCase):
         self.context.apply(settings={  # no recognizable space type
             'not_a_space_type': {
                 'room': 'My preferred room',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -234,8 +212,6 @@ class SpaceFactoryTests(unittest.TestCase):
 
             'neither_me': {
                 'room': 'My preferred room',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -268,7 +244,6 @@ class SpaceFactoryTests(unittest.TestCase):
 
         space = SpaceFactory.get(type='local', input=['hello', 'world'])
         self.assertEqual(space.prefix, 'space')
-        self.assertEqual(space.moderators, [])
         self.assertEqual(space.participants, [])
 
     def test_get_spark(self):

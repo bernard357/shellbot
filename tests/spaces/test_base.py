@@ -74,8 +74,6 @@ class SpaceTests(unittest.TestCase):
         space.configure({
             'my.space': {
                 'title': 'Another title',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
             }
@@ -103,16 +101,11 @@ class SpaceTests(unittest.TestCase):
         space.configure({
             'my.space': {
                 'title': 'Another title',
-                'moderators':
-                    ['foo.bar@acme.com', 'joe.bar@corporation.com'],
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
             }
         })
         self.assertEqual(space.get('title'), 'Another title')
-        self.assertEqual(
-            space.get('moderators'),
-            ['foo.bar@acme.com', 'joe.bar@corporation.com'])
         self.assertEqual(
             space.get('participants'),
             ['alan.droit@azerty.org', 'bob.nard@support.tv'])
@@ -233,39 +226,6 @@ class SpaceTests(unittest.TestCase):
 
         with self.assertRaises(NotImplementedError):
             self.space.delete(id='*id')
-
-    def test_add_moderators(self):
-
-        logging.info("*** add_moderators")
-
-        with mock.patch.object(self.space,
-                               'add_moderator') as mocked:
-
-            self.space.add_moderators(id='*id', persons=[])
-            self.assertFalse(mocked.called)
-
-        class MySpace(Space):
-            def on_init(self):
-                self._persons = []
-
-            def add_moderator(self, id, person):
-                self._persons.append(person)
-
-        space = MySpace(context=self.context)
-        space.add_moderators(
-            id='*id',
-            persons=['alice@acme.com', 'bob@acme.com'])
-
-        self.assertEqual(
-            space._persons,
-            ['alice@acme.com', 'bob@acme.com'])
-
-    def test_add_moderator(self):
-
-        logging.info("*** add_moderator")
-
-        with self.assertRaises(NotImplementedError):
-            self.space.add_moderator(id='*id', person='alice@acme.com')
 
     def test_add_participants(self):
 
