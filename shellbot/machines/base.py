@@ -494,10 +494,10 @@ class Machine(object):
             engine.set('general.switch', 'off')
 
         """
-        time.sleep(self.DEFER_DURATION)
-
         logging.info(u"Starting machine")
         self.set('is_running', True)
+
+        time.sleep(self.DEFER_DURATION)
 
         try:
             while self.bot.engine.get('general.switch', 'on') == 'on':
