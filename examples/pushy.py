@@ -24,7 +24,7 @@ a collaborative place where multiple persons can participate.
 
 Then following commands are available from the bot:
 
-- command: next
+- command: step
 - response describes the name and characteristics of new state
 
 - command: state
@@ -173,7 +173,8 @@ class MyFactory(object):
     def __init__(self, steps):
         self.steps = steps
     def get_machine(self, bot):
-        return Steps(bot=bot, steps=self.steps)
+        if bot.channel.is_group:
+            return Steps(bot=bot, steps=self.steps)
 
 #
 # create a bot and load commands
