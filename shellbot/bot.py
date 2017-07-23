@@ -225,6 +225,7 @@ class ShellBot(object):
         self.on_bond()
 
         if self.machine:
+            self.machine.reset()
             self.machine.start(defer=5.0)
 
     def on_bond(self):
@@ -342,7 +343,7 @@ class ShellBot(object):
         if self.id:
             self.space.remove_participant(id=self.id, person=person)
 
-    def say(self, text=None, content=None, file=None):
+    def say(self, text=None, content=None, file=None, person=None):
         """
         Sends a message to the chat space
 
@@ -355,6 +356,9 @@ class ShellBot(object):
         :param file: path or URL to a file to attach
         :type file: str or None
 
+        :param person: for direct message to someone
+        :type person: str
+
         """
         if text:
             line = text[:50] + (text[50:] and '..')
@@ -365,18 +369,22 @@ class ShellBot(object):
 
         logging.info(u"Bot says: {}".format(line))
 
+        vibes = Vibes(text=text,
+                      content=content,
+                      file=file,
+                      channel_id=None if person else self.id,
+                      person=person)
+
         if not self.is_ready:
             logging.debug(u"- not ready to speak")
 
         elif self.engine.mouth:
             logging.debug(u"- pushing message to mouth queue")
-            self.engine.mouth.put(
-                Vibes(text, content, file, self.id))
+            self.engine.mouth.put(vibes)
 
         else:
             logging.debug(u"- calling speaker directly")
-            self.engine.speaker.process(
-                Vibes(text, content, file, self.id))
+            self.engine.speaker.process(vibes)
 
     def say_banner(self):
         """

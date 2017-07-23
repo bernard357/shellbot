@@ -165,7 +165,15 @@ class SpeakerTests(unittest.TestCase):
                 file=None,
                 channel_id='123')
             speaker.process(item)
-            mocked.assert_called_with(content='me **too**', file=None, id='123', text='')
+            mocked.assert_called_with(content='me **too**', file=None, id='123', person=None, text='')
+
+            item = Vibes(
+                text='',
+                content='me **too**',
+                file=None,
+                person='a@b.com')
+            speaker.process(item)
+            mocked.assert_called_with(content='me **too**', file=None, id=None, person='a@b.com', text='')
 
             item = Vibes(
                 text='*with*attachment',
@@ -173,7 +181,7 @@ class SpeakerTests(unittest.TestCase):
                 file='http://a.server/with/file',
                 channel_id='456')
             speaker.process(item)
-            mocked.assert_called_with(content=None, file='http://a.server/with/file', id='456', text='*with*attachment')
+            mocked.assert_called_with(content=None, file='http://a.server/with/file', id='456', person=None, text='*with*attachment')
 
             item = Vibes(
                 text='hello world',
@@ -181,7 +189,7 @@ class SpeakerTests(unittest.TestCase):
                 file='http://a.server/with/file',
                 channel_id='789')
             speaker.process(item)
-            mocked.assert_called_with(content='hello **world**', file='http://a.server/with/file', id='789', text='hello world')
+            mocked.assert_called_with(content='hello **world**', file='http://a.server/with/file', id='789', person=None, text='hello world')
 
             item = Vibes(
                 text='hello world',
@@ -189,7 +197,7 @@ class SpeakerTests(unittest.TestCase):
                 file='http://a.server/with/file',
                 channel_id='007')
             speaker.process(item)
-            mocked.assert_called_with(content='hello **world**', file='http://a.server/with/file', id='007', text='hello world')
+            mocked.assert_called_with(content='hello **world**', file='http://a.server/with/file', id='007', person=None, text='hello world')
 
 
 if __name__ == '__main__':

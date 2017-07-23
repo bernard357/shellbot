@@ -22,18 +22,24 @@ import time
 
 
 class Vibes(object):
-    def __init__(self, text=None, content=None, file=None, channel_id=None):
+    def __init__(self,
+                 text=None,
+                 content=None,
+                 file=None,
+                 channel_id=None,
+                 person=None):
         self.text = text
         self.content = content
         self.file = file
-        self.channel_id=channel_id
+        self.channel_id = channel_id
+        self.person = person
 
     def __str__(self):
         """
         Returns a human-readable string representation of this object.
         """
-        return u"text={}, content={}, file={}, channel_id={}".format(
-            self.text, self.content, self.file, self.channel_id)
+        return u"text={}, content={}, file={}, channel_id={}, person={}".format(
+            self.text, self.content, self.file, self.channel_id, self.person)
 
 
 class Speaker(object):
@@ -137,6 +143,7 @@ class Speaker(object):
                 self.engine.space.post_message(id=item.channel_id,
                                                text=item.text,
                                                content=item.content,
-                                               file=item.file)
+                                               file=item.file,
+                                               person=item.person)
         else:
             logging.info(item)

@@ -256,6 +256,10 @@ class BotTests(unittest.TestCase):
             self.bot.say('test', content='test')
             self.bot.say('test', file='test.yaml')
 
+            self.bot.say('test', person='a@b.com')
+            self.bot.say('test', content='test', person='a@b.com')
+            self.bot.say('test', file='test.yaml', person='a@b.com')
+
         message_0 = None
         self.bot.say(message_0)
         with self.assertRaises(Exception):
@@ -268,7 +272,16 @@ class BotTests(unittest.TestCase):
 
         message_1 = 'hello'
         self.bot.say(message_1)
-        self.assertEqual(self.engine.mouth.get().text, message_1)
+        item = self.engine.mouth.get()
+        self.assertEqual(item.text, message_1)
+        self.assertEqual(item.channel_id, self.bot.id)
+        self.assertEqual(item.person, None)
+
+        self.bot.say(message_1, person='a@b.com')
+        item = self.engine.mouth.get()
+        self.assertEqual(item.text, message_1)
+        self.assertEqual(item.channel_id, None)
+        self.assertEqual(item.person, 'a@b.com')
 
         message_2 = 'world'
         self.bot.say(message_2)
