@@ -1000,24 +1000,13 @@ class SparkSpace(Space):
         :return: Channel
         """
         channel = Channel()
-
         channel.title = room.title
-        logging.debug(u"Binding to room '{}'".format(channel.title))
-
         channel.id = room.id
-        logging.debug(u"- id: {}".format(channel.id))
-
         channel.type = room.type
-        logging.debug(u"- type: {}".format(channel.type))
-
         channel.is_group = True if room.type in ("group", "team") else False
         channel.is_team = True if room.type == "team" else False
-
         channel.is_direct = True if room.type == "direct" else False
-        logging.debug(u"- is_direct: {}".format(channel.is_direct))
-
         channel.is_moderated = True if room.isLocked else False
-        logging.debug(u"- is_moderated: {}".format(channel.is_moderated))
 
         try:
             channel.team_id = room.teamId
