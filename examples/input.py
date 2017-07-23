@@ -39,7 +39,7 @@ Multiple questions are adressed in this example:
 
 For example, if you run this script under Linux or macOs::
 
-    python input_local.py
+    python input.py
 
 
 """
@@ -56,7 +56,7 @@ Context.set_logger()
 #
 engine = Engine(type='local', command='shellbot.commands.input')
 engine.configure()
-bot = engine.bond()
+bot = engine.get_bot()
 
 # ask some information
 #
