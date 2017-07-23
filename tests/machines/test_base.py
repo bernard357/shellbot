@@ -561,6 +561,44 @@ class MachineTests(unittest.TestCase):
 
         self.assertTrue(machine.current_state.name != 'one')
 
+    def test_restart(self):
+
+        logging.info("***** machine/restart")
+
+        states = ['one', 'two']
+        transitions = [
+            {'source': 'one', 'target': 'two'},
+            {'source': 'two', 'target': 'one'},
+        ]
+
+        machine = Machine(bot=self.bot,
+                            states=states,
+                            transitions=transitions,
+                            initial='one')
+
+        self.engine.set('general.switch', 'on')
+        machine.start(tick=0.001)
+
+        while not machine.is_running:  # ensure it is running
+            time.sleep(0.001)
+
+        self.assertFalse(machine.restart())
+
+        machine.mixer.put(None)
+
+        while machine.is_running:  # ensure it is stopped
+            time.sleep(0.001)
+
+        self.assertTrue(machine.restart())
+
+        while not machine.is_running:  # ensure it is running
+            time.sleep(0.001)
+
+        machine.mixer.put(None)
+
+        while machine.is_running:  # ensure it is stopped
+            time.sleep(0.001)
+
     def test_stop(self):
         """Machine is stopped after a while"""
 

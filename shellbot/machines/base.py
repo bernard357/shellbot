@@ -465,6 +465,23 @@ class Machine(object):
 
         return process
 
+    def restart(self, **kwargs):
+        """
+        Restarts the machine
+
+        This function is very similar to reset(), except that it also
+        starts the machine on successful reset. Parameters given to
+        it are those that are expected by start().
+
+        Note: this function has no effect on a running machine. It can
+        be used only against machines that have terminated their cycle.
+        """
+        if not self.reset():
+            return False
+
+        self.start(**kwargs)
+        return True
+
     def stop(self):
         """
         Stops the machine
