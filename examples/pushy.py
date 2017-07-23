@@ -138,7 +138,7 @@ settings = {
                 + u'* Describe the issue in the chat box\n'
                 + u'\n'
                 + u'As a Stress engineer, engage with shop floor and ask questions.'
-                + u' To engage with the design team, type **next** in the chat box.'
+                + u' To engage with the design team, type **step** in the chat box.'
         },
 
         {
@@ -254,9 +254,7 @@ class Trigger(object):
         logging.info(u'Trigger {} {}'.format(item, counter))
 
         if counter == 1:
-            self.bot = self.engine.bond()
-#            self.bot.bond(reset=True)
-#            self.bot.space.on_start()
+            self.bot = self.engine.get_bot()
 
         else:
             self.bot.say(u'{} {}'.format(item, counter))
@@ -265,9 +263,7 @@ class Trigger(object):
 # launch multiple processes to do the job
 #
 
-engine.start()
-
 trigger = Trigger(engine, queue)
 trigger.start()
 
-server.run()
+engine.run(server=server)
