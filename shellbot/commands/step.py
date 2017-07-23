@@ -49,4 +49,7 @@ class Step(Command):
         This function raises AttributeError when the bot has
         not been initialised with a suitable Machine.
         """
-        bot.machine.step(event='next')
+        if bot.machine:
+            bot.machine.step(event='next')
+        else:
+            bot.say(u"No state machine is available")
