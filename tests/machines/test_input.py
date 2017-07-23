@@ -44,7 +44,6 @@ class FakeBot(object):
 my_bot = FakeBot(engine=my_engine)
 
 
-
 class InputTests(unittest.TestCase):
 
     def tearDown(self):

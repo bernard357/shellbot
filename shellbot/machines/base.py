@@ -55,6 +55,7 @@ class Machine(object):
     credit: Alex Bertsch <abertsch@dropbox.com>   securitybot/state_machine.py
     """
 
+    DEFER_DURATION = 0.0  # time to pause before working, in seconds
     TICK_DURATION = 0.2  # time to wait between ticks, in seconds
 
     def __init__(self,
@@ -433,12 +434,15 @@ class Machine(object):
                 self.current_state.on_enter()
                 break
 
-    def start(self, tick=None):
+    def start(self, tick=None, defer=None):
         """
         Starts the machine
 
         :param tick: The duration set for each tick (optional)
-        :type tick: float
+        :type tick: positive number
+
+        :param defer: wait some seconds before the actual work (optional)
+        :type defer: positive number
 
         :return: either the process that has been started, or None
 
@@ -446,8 +450,12 @@ class Machine(object):
         in the background.
         """
         if tick:
-            assert tick > 0.0
+            assert tick > 0.0  # number of seconds
             self.TICK_DURATION = tick
+
+        if defer is not None:
+            assert defer >= 0.0  # number of seconds
+            self.DEFER_DURATION = defer
 
         process = Process(target=self.run)  # do not daemonize
         process.start()
@@ -486,6 +494,8 @@ class Machine(object):
             engine.set('general.switch', 'off')
 
         """
+        time.sleep(self.DEFER_DURATION)
+
         logging.info(u"Starting machine")
         self.set('is_running', True)
 
@@ -680,4 +690,3 @@ class Transition(object):
         """
         if self._action is not None:
             self._action()
-

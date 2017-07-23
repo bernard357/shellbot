@@ -722,8 +722,9 @@ class Engine(object):
 
         Provide your own implementation in a sub-class where required.
 
-        Note that this function is called before the actual stop, so
-        you can access the shell or any other resource at will.
+        Note that some processes may have been killed at the moment of this
+        function call. This is likely to happen when end-user hits Ctl-C on
+        the keyboard for example.
         """
         pass
 

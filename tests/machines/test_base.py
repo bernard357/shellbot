@@ -631,23 +631,33 @@ class MachineTests(unittest.TestCase):
                             initial='one')
 
         self.engine.set('general.switch', 'off')
-        machine.run()  # general switch is off
+
+        logging.debug(u"- general switch is off")
+        machine.run()
 
         self.engine.set('general.switch', 'on')
 
         machine.TICK_DURATION = 0.003
         t = Timer(0.004, machine.stop)
         t.start()
-        machine.run()  # poison pill on delay
+
+        logging.debug(u"- poison pill on delay")
+        machine.run()
 
         machine.mixer.put(None)
-        machine.run()  # exit on poison pill
+
+        logging.debug(u"- exit on poison pill")
+        machine.run()
 
         machine.mixer.put('exception')
-        machine.run()  # break on Exception
+
+        logging.debug(u"- break on exception")
+        machine.run()
 
         machine.mixer.put('ctl-c')
-        machine.run()  # break on KeyboardInterrupt
+
+        logging.debug(u"- break on KeyboardInterrupt")
+        machine.run()
 
     def test_execute(self):
 

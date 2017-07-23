@@ -225,8 +225,7 @@ class ShellBot(object):
         self.on_bond()
 
         if self.machine:
-            logging.debug(u"- starting state machine")
-            self.machine.start()
+            self.machine.start(defer=5.0)
 
     def on_bond(self):
         """
