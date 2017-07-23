@@ -201,6 +201,7 @@ class ListenerTests(unittest.TestCase):
         listener.process = mock.Mock(side_effect=Exception('TEST'))
         my_engine.ears.put(('dummy'))
         my_engine.ears.put(None)
+        listener.DEFER_DURATION = 0.0
         listener.run()
         self.assertEqual(my_engine.get('listener.counter'), 0)
 
@@ -214,6 +215,7 @@ class ListenerTests(unittest.TestCase):
 
         logging.info("*** run/wait while empty and not ready")
 
+        my_engine.listener.DEFER_DURATION = 0.0
         my_engine.set('general.switch', 'on')
         listener_process = my_engine.listener.start()
 
@@ -518,6 +520,7 @@ class ListenerTests(unittest.TestCase):
         logging.info('*** Static test ***')
 
         listener = Listener(engine=my_engine)
+        listener.DEFER_DURATION = 0.0
 
         listener_process = listener.start()
 
@@ -659,6 +662,7 @@ class ListenerTests(unittest.TestCase):
             return item
 
         listener = Listener(engine=my_engine, filter=filter)
+        listener.DEFER_DURATION = 0.0
 
         listener.run()
 

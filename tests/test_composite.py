@@ -30,6 +30,8 @@ my_engine.shell.load_default_commands()
 my_engine.space = Space(my_engine.context)
 my_engine.space.post_message = MagicMock()
 
+my_engine.listener.DEFER_DURATION = 0.0
+
 
 class Bot(object):
     id = '123'

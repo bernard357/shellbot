@@ -30,6 +30,7 @@ class Listener(object):
     Handles messages received from chat space
     """
 
+    DEFER_DURATION = 1.0  # let SSL stabilize before pumping from the queue
     EMPTY_DELAY = 0.005   # time to wait if queue is empty
 
     FRESH_DURATION = 0.5  # maximum amount of time for listener detection
@@ -104,6 +105,8 @@ class Listener(object):
         """
         logging.info(u"Starting listener")
 
+        time.sleep(self.DEFER_DURATION)  # let SSL stabilize first
+
         try:
             self.engine.set('listener.counter', 0)
             while self.engine.get('general.switch', 'on') == 'on':
@@ -153,56 +156,69 @@ class Listener(object):
           The function ``on_leave()`` is called with details on the
           leaving person or bot.
 
+        * ``load_bot`` -- This is a special event to load the cache in the
+          process that is running the listener. The identifier of the channel
+          to load is provided as well.
+
+        * ``dispose_bot`` -- This is a special event submitted to the listener
+          because of attached resources such as store, state machine, etc.
+          The identifier of the channel to dispose is provided as well.
+
         * on any other case, the function ``on_inbound()`` is
           called.
         """
         counter = self.engine.context.increment('listener.counter')
         logging.debug(u'Listener is working on {}'.format(counter))
 
-        try:
-            if isinstance(item, string_types):
-                item = yaml.safe_load(item)  # better unicode than json.loads()
+        if isinstance(item, string_types):
+            item = yaml.safe_load(item)  # better unicode than json.loads()
 
-            assert isinstance(item, dict)  # low-level event representation
+        assert isinstance(item, dict)  # low-level event representation
 
-            if item['type'] == 'message':
-                logging.debug(u"- processing a 'message' event")
-                event = Message(item)
-                if self.filter:
-                    event = self.filter(event)
-                self.on_message(event)
+        if item['type'] == 'message':
+            logging.debug(u"- processing a 'message' event")
+            event = Message(item)
+            if self.filter:
+                event = self.filter(event)
+            self.on_message(event)
 
-            elif item['type'] == 'attachment':
-                logging.debug(u"- processing an 'attachment' event")
-                event = Attachment(item)
-                if self.filter:
-                    event = self.filter(event)
-                self.on_attachment(event)
+        elif item['type'] == 'attachment':
+            logging.debug(u"- processing an 'attachment' event")
+            event = Attachment(item)
+            if self.filter:
+                event = self.filter(event)
+            self.on_attachment(event)
 
-            elif item['type'] == 'join':
-                logging.debug(u"- processing a 'join' event")
-                event = Join(item)
-                if self.filter:
-                    event = self.filter(event)
-                self.on_join(event)
+        elif item['type'] == 'join':
+            logging.debug(u"- processing a 'join' event")
+            event = Join(item)
+            if self.filter:
+                event = self.filter(event)
+            self.on_join(event)
 
-            elif item['type'] == 'leave':
-                logging.debug(u"- processing a 'leave' event")
-                event = Leave(item)
-                if self.filter:
-                    event = self.filter(event)
-                self.on_leave(event)
+        elif item['type'] == 'leave':
+            logging.debug(u"- processing a 'leave' event")
+            event = Leave(item)
+            if self.filter:
+                event = self.filter(event)
+            self.on_leave(event)
 
-            else:
-                logging.debug(u"- processing an inbound event")
-                event = Event(item)
-                if self.filter:
-                    event = self.filter(event)
-                self.on_inbound(event)
+        elif item['type'] == 'load_bot':
+            logging.debug(u"- processing a 'load_bot' event")
+            bot = self.engine.get_bot(channel_id=item['id'])
+            bot.on_enter()
 
-        except AssertionError as feedback:
-            logging.debug(u"- invalid format, thrown away")
-            raise
+        elif item['type'] == 'dispose_bot':
+            logging.debug(u"- processing a 'load_bot' event")
+            bot = self.engine.get_bot(channel_id=item['id'])
+            bot.dispose()
+
+        else:
+            logging.debug(u"- processing an inbound event")
+            event = Event(item)
+            if self.filter:
+                event = self.filter(event)
+            self.on_inbound(event)
 
     def on_message(self, received):
         """
@@ -315,13 +331,11 @@ class Listener(object):
         bot = self.engine.get_bot(received.channel_id)
 
         if received.actor_id == self.engine.get('bot.id'):
-            if received.get('hook') != 'shellbot-participants':
-                self.engine.on_enter(received)
-                bot.on_enter()
-                self.engine.dispatch('enter', received=received)
+            self.engine.on_enter(received)
+            bot.on_enter()
+            self.engine.dispatch('enter', received=received)
         else:
-            if received.get('hook') != 'shellbot-rooms':
-                self.engine.dispatch('join', received=received)
+            self.engine.dispatch('join', received=received)
 
     def on_leave(self, received):
         """
@@ -340,12 +354,10 @@ class Listener(object):
         assert received.type == 'leave'
 
         if received.actor_id == self.engine.get('bot.id'):
-            if received.get('hook') != 'shellbot-participants':
-                self.engine.on_exit(received)
-                self.engine.dispatch('exit', received=received)
+            self.engine.on_exit(received)
+            self.engine.dispatch('exit', received=received)
         else:
-            if received.get('hook') != 'shellbot-rooms':
-                self.engine.dispatch('leave', received=received)
+            self.engine.dispatch('leave', received=received)
 
     def on_inbound(self, received):
         """

@@ -728,51 +728,6 @@ class Engine(object):
         """
         pass
 
-    def enumerate_bots(self):
-        """
-        Enumerates all bots
-        """
-        for id in self.bots.keys():
-            yield self.bots[id]
-
-    def get_bot(self, channel_id=None, **kwargs):
-        """
-        Gets a bot by id
-
-        :param channel_id: The unique id of the target chat space
-        :type channel_id: str
-
-        :return: a bot instance, or None
-
-        This function receives the id of a chat space, and returns
-        the related bot.
-
-        If no id is provided, then the underlying space is asked to provide
-        with a default channel, as set in overall configuration.
-        """
-        channel = None
-        if not channel_id:
-            channel = self.bond(**kwargs)
-            channel_id = channel.id
-
-        logging.debug(u"Getting bot {}".format(channel_id))
-        if channel_id and channel_id in self.bots.keys():
-            logging.debug(u"- found matching bot instance")
-            return self.bots[channel_id]
-
-        bot = self.build_bot(id=channel_id, driver=self.driver)
-
-        if bot and bot.id:
-            logging.debug(u"- remembering bot {}".format(bot.id))
-            self.bots[bot.id] = bot
-
-        bot.bond()
-
-        if channel:
-            bot.on_enter()
-
-        return bot
-
     def bond(self,
              title=None,
              reset=False,
@@ -796,12 +751,13 @@ class Engine(object):
         If no title is provided, then the generic title configured for the
         underlying space is used instead.
 
-        Once you have a channel, it becomes easy to get a related bot.
         For example::
 
-            channel = engine.bond('My crazy channel')
-            bot = engine.get_bot(channel.id)
+            engine.bond('My crazy channel')
 
+        Note: this function asks the listener to load a new bot in its cache
+        on successful channel creation or lookup. In other terms, this function
+        can be called safely from any process for the creation of a channel.
         """
         if title in (None, ''):
             title=self.space.configured_title()
@@ -824,7 +780,84 @@ class Engine(object):
                 participants = self.space.get('participants', [])
             self.space.add_participants(id=channel.id, persons=participants)
 
+        # because of multi-processing, we ask the listener to do the rest
+        if channel:
+
+            if self.ears is None:
+                self.ears = Queue()
+                self.space.ears = self.ears
+
+            self.ears.put({'type': 'load_bot', 'id': channel.id})
+
         return channel
+
+    def dispose(self,
+                title=None,
+                **kwargs):
+        """
+        Destroys a named channel
+
+        :param title: title of the target channel
+        :type: title: str
+
+        """
+        if title in (None, ''):
+            title=self.space.configured_title()
+
+        logging.debug(u"Disposing channel '{}'".format(title))
+
+        channel = self.space.get_by_title(title=title)
+        if channel:
+            self.space.delete(id=channel.id, **kwargs)
+
+    def enumerate_bots(self):
+        """
+        Enumerates all bots
+        """
+        for id in self.bots.keys():
+            yield self.bots[id]
+
+    def get_bot(self, channel_id=None, **kwargs):
+        """
+        Gets a bot by id
+
+        :param channel_id: The unique id of the target chat space
+        :type channel_id: str
+
+        :return: a bot instance, or None
+
+        This function receives the id of a chat space, and returns
+        the related bot.
+
+        If no id is provided, then the underlying space is asked to provide
+        with a default channel, as set in overall configuration.
+
+        Note: this function should not be called from multiple processes,
+        because this would create one bot per process. Use the function
+        ``engine.bond()`` for the creation of a new channel.
+        """
+        channel = None
+        if not channel_id:
+            channel = self.bond(**kwargs)
+            channel_id = channel.id
+
+        logging.debug(u"Getting bot {}".format(channel_id))
+        if channel_id and channel_id in self.bots.keys():
+            logging.debug(u"- found matching bot instance")
+            return self.bots[channel_id]
+
+        bot = self.build_bot(id=channel_id, driver=self.driver)
+
+        if bot and bot.id:
+            logging.debug(u"- remembering bot {}".format(bot.id))
+            self.bots[bot.id] = bot
+
+        bot.bond()
+
+        if channel:
+            bot.on_enter()
+
+        return bot
 
     def build_bot(self, id=None, driver=ShellBot):
         """
