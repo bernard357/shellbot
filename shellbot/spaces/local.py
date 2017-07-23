@@ -315,6 +315,7 @@ class LocalSpace(Space):
         except StopIteration:
             sys.stdout.write(u'^C\n')
             sys.stdout.flush()
+            time.sleep(1.0)
             self.context.set('general.switch', 'off')
 
     def on_message(self, item, queue):
