@@ -128,7 +128,7 @@ class ContextTests(unittest.TestCase):
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
                 'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
-                'personal_token': '$MY_FUZZY_SPARK_TOKEN',
+                'weird_token': '$MY_FUZZY_SPARK_TOKEN',
                 'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
                 'webhook': "http://73a1e282.ngrok.io",
             }
@@ -206,15 +206,15 @@ class ContextTests(unittest.TestCase):
                              validate=lambda line: len(line) == 32)
 
         # we rely on the environment for this key
-        self.assertEqual(self.context.get('spark.personal_token'),
+        self.assertEqual(self.context.get('spark.weird_token'),
                          '$MY_FUZZY_SPARK_TOKEN')
 
         # no change to the value
-        self.context.check('spark.personal_token')
+        self.context.check('spark.weird_token')
 
         # lookup the environment and change the value to None
-        self.context.check('spark.personal_token', filter=True)  # warning in log
-        self.assertEqual(self.context.get('spark.personal_token'), None)
+        self.context.check('spark.weird_token', filter=True)  # warning in log
+        self.assertEqual(self.context.get('spark.weird_token'), None)
 
         # ensure the environment is clean
         def clear_env(name):
@@ -313,7 +313,6 @@ class ContextTests(unittest.TestCase):
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
                 'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
-                'personal_token': '$MY_FUZZY_SPARK_TOKEN',
                 'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
                 'webhook': "http://73a1e282.ngrok.io",
             }

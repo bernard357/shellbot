@@ -225,7 +225,7 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(engine.get('bot.on_enter'), 'Hello!')
         self.assertEqual(engine.get('bot.on_exit'), 'Bye!')
         self.assertEqual(engine.get('space.title'), 'Support room')
-        self.assertEqual(engine.get('space.participants'), [])
+        self.assertEqual(engine.get('space.participants'), None)
         self.assertEqual(engine.get('server.url'), 'http://to.nowhere/')
         self.assertEqual(engine.get('server.hook'), '/hook')
         self.assertEqual(engine.get('server.trigger'), '/trigger')
@@ -263,7 +263,7 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(self.engine.get('bot.on_exit'), None)
 
         self.assertEqual(self.engine.get('space.title'), 'Collaboration space')
-        self.assertEqual(self.engine.get('space.participants'), [])
+        self.assertEqual(self.engine.get('space.participants'), None)
         self.assertEqual(self.engine.get('space.unknown'), None)
 
         self.assertEqual(self.engine.get('server.url'), '$SERVER_URL')
@@ -296,7 +296,7 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(self.engine.get('bot.on_exit'), 'Bye!')
 
         self.assertEqual(self.engine.get('space.title'), 'Support room')
-        self.assertEqual(self.engine.get('space.participants'), [])
+        self.assertEqual(self.engine.get('space.participants'), 'foo.bar@acme.com')
         self.assertEqual(self.engine.get('space.unknown'), None)
 
         self.assertEqual(self.engine.get('server.url'), '$SERVER_URL')
@@ -340,7 +340,7 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(self.engine.get('bot.on_enter'), 'Hello!')
         self.assertEqual(self.engine.get('bot.on_exit'), 'Bye!')
         self.assertEqual(self.engine.get('space.title'), 'Support room')
-        self.assertEqual(self.engine.get('space.participants'), [])
+        self.assertEqual(self.engine.get('space.participants'), 'foo.bar@acme.com')
 
         self.assertEqual(self.engine.get('space.unknown'), None)
 

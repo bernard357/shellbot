@@ -47,13 +47,6 @@ spark:
     #
     token: "<token here hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY>"
 
-    # the token of a human being, that allow the bot to get all messages
-    # and not only those mentioning the bot itself
-    # this should normally be set in the environment
-    # but you can override the configuration below
-    #
-    personal_token: "<token here hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY>"
-
 # server settings
 #
 server:

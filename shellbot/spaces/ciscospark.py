@@ -104,39 +104,6 @@ class SparkSpace(Space):
 
     This is a representation of a chat space hosted at Cisco Spark.
 
-    In normal mode of usage, two tokens whould be provided, one for
-    the Cisco Spark bot, and one for a regular Cisco Spark account. This
-    allows shellbot to see all the traffic coming from the chat room, even
-    messages sent to other chat participants.
-
-    If only the Cisco Spark bot token is provided, then shellbot will get
-    visibility and rights limited to what Cisco Spark exposes to bots.
-    For example, the audit command will see only messages sent to the bot, or
-    those where the bot is mentioned. Other messages will not been seen.
-
-    If no Cisco Spark bot token is provided, but only a personal token,
-    then shellbot will act entirely on behalf of this account. This is
-    equivalent to a full Cisco Spark integration, through direct
-    configuration of shellbot.
-
-    The space maintains two separate API instances internally. One
-    is bound to the bot token, and another one is bound to the personal token.
-
-    Cisco Spark API is invoked with one or the other, depending on the role
-    played by shellbot:
-
-    - list rooms - personal token - for lookup before room creation/deletion
-    - create room - personal token - similar to what a regular user would do
-    - delete room - personal token - rather handled by a human being
-    - add participant - bot token - explicit bot action
-    - remove participant - personal token - because bot cannot always do it
-    - post message - bot token - explicit bot action
-    - create webhook - personal token - required to receive all messages
-    - people me - bot token - retrieve bot information
-    - people me - personal token - retrieve administrator information
-
-    If one token is missing, then the other one is used for everything.
-
     """
 
     DEFAULT_SETTINGS = {
@@ -157,7 +124,6 @@ class SparkSpace(Space):
     def on_init(self,
                 prefix='spark',
                 token=None,
-                personal_token=None,
                 **kwargs):
         """
         Handles extended initialisation parameters
@@ -166,9 +132,6 @@ class SparkSpace(Space):
         :type prefix: str
 
         :param token: bot authentication token for the Cisco Spark API
-        :type token: str
-
-        :param personal_token: person authentication token for the Cisco Spark API
         :type token: str
 
         Example::
@@ -184,11 +147,8 @@ class SparkSpace(Space):
         if token not in (None, ''):
             self.set('token', token)
 
-        if personal_token not in (None, ''):
-            self.set('personal_token', personal_token)
-
         self.api = None
-        self.personal_api = None
+        self.api = None
 
         self.teamId = None
         self._last_message_id = 0
@@ -206,14 +166,12 @@ class SparkSpace(Space):
                   ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                'team': 'Anchor team',
                'token': '$MY_BOT_TOKEN',
-               'personal_token': '$MY_PERSONAL_TOKEN',
                }})
 
         This can also be written in a more compact form::
 
            space.configure({'spark.room': 'My preferred room',
                'spark.token': '$MY_BOT_TOKEN',
-               'spark.personal_token': '$MY_PERSONAL_TOKEN',
                })
 
         This function handles following parameters:
@@ -235,13 +193,6 @@ class SparkSpace(Space):
           If ``spark.token`` is not provided, then the function looks for an
           environment variable ``CISCO_SPARK_BOT_TOKEN`` instead.
 
-        * ``spark.personal_token`` - private token of a human being
-          Instead of putting the real value of the token you are encouraged
-          to use an environment variable instead,
-          e.g., ``$MY_PERSONAL_TOKEN``.
-          If ``spark.personal_token`` is not provided, then the function looks
-          for an environment variable ``CISCO_SPARK_TOKEN`` instead.
-
         If a single value is provided for ``participants`` then it is turned
         automatically to a list.
 
@@ -252,15 +203,13 @@ class SparkSpace(Space):
             ['bobby@jah.com']
 
         """
-        self.context.check(self.prefix+'.room', 
+        self.context.check(self.prefix+'.room',
                            is_mandatory=True, filter=True)
         self.context.check(self.prefix+'.participants',
                            '$CHANNEL_DEFAULT_PARTICIPANTS', filter=True)
         self.context.check(self.prefix+'.team')
         self.context.check(self.prefix+'.token',
                            '$CISCO_SPARK_BOT_TOKEN', filter=True)
-        self.context.check(self.prefix+'.personal_token',
-                           '$CISCO_SPARK_TOKEN', filter=True)
 
         values = self.context.get(self.prefix+'.participants')
         if isinstance(values, string_types):
@@ -294,39 +243,17 @@ class SparkSpace(Space):
 
         """
         bot_token = self.get('token')
-        personal_token = self.get('personal_token')
-        assert (bot_token not in (None, '') or
-                personal_token not in (None, '')) # some token is needed
+        assert bot_token not in (None, '')  # some token is needed
 
         if not factory:
             from ciscosparkapi import CiscoSparkAPI
             factory = CiscoSparkAPI
 
-        logging.debug(u"Loading Cisco Spark API as bot")
+        logging.debug(u"Loading Cisco Spark API")
         self.api = None
         try:
-            if bot_token:
-                logging.debug(u"- token: {}".format(bot_token))
-                self.api = factory(access_token=bot_token)
-
-            else:
-                logging.debug(u"- token: {}".format(personal_token))
-                self.api = factory(access_token=personal_token)
-
-        except Exception as feedback:
-            logging.error(u"Unable to load Cisco Spark API")
-            logging.exception(feedback)
-
-        logging.debug(u"Loading Cisco Spark API as person")
-        self.personal_api = None
-        try:
-            if personal_token:
-                logging.debug(u"- token: {}".format(personal_token))
-                self.personal_api = factory(access_token=personal_token)
-
-            else:
-                logging.debug(u"- token: {}".format(bot_token))
-                self.personal_api = factory(access_token=bot_token)
+            logging.debug(u"- token: {}".format(bot_token))
+            self.api = factory(access_token=bot_token)
 
         except Exception as feedback:
             logging.error(u"Unable to load Cisco Spark API")
@@ -365,28 +292,6 @@ class SparkSpace(Space):
         logging.debug(u"- bot id: {}".format(
             self.context.get('bot.id')))
 
-        assert self.personal_api is not None  # connect() is prerequisite
-
-        @retry(u"Unable to retrieve administrator information")
-        def admin_identity():
-            return self.personal_api.people.me()
-
-        logging.debug(u"Retrieving administrator information")
-        me = admin_identity()
-#       logging.debug(u"- {}".format(str(me)))
-
-        self.context.set('administrator.email', str(me.emails[0]))
-        logging.debug(u"- administrator email: {}".format(
-            self.context.get('administrator.email')))
-
-        self.context.set('administrator.name', str(me.displayName))
-        logging.debug(u"- administrator name: {}".format(
-            self.context.get('administrator.name')))
-
-        self.context.set('administrator.id', me.id)
-        logging.debug(u"- administrator id: {}".format(
-            self.context.get('administrator.id')))
-
     def create(self, title, ex_team=None, **kwargs):
         """
         Creates a room
@@ -406,7 +311,7 @@ class SparkSpace(Space):
 
         """
         assert title not in (None, '')
-        assert self.personal_api is not None  # connect() is prerequisite
+        assert self.api is not None  # connect() is prerequisite
 
         teamId = None
         if ex_team:
@@ -420,8 +325,8 @@ class SparkSpace(Space):
         @retry(u"Unable to create room", silent=True)
         def do_it():
 
-            room = self.personal_api.rooms.create(title=title,
-                                                  teamId=teamId)
+            room = self.api.rooms.create(title=title,
+                                         teamId=teamId)
             logging.info(u"- done")
 
             return self._to_channel(room)
@@ -441,14 +346,14 @@ class SparkSpace(Space):
         use ``get_by_person()`` instead.
         """
         assert title not in (None, '')
-        assert self.personal_api is not None  # connect() is prerequisite
+        assert self.api is not None  # connect() is prerequisite
 
         logging.info(u"Looking for Cisco Spark room '{}'".format(title))
 
         @retry(u"Unable to list rooms", silent=True)
         def do_it():
 
-            for room in self.personal_api.rooms.list(type='group'):
+            for room in self.api.rooms.list(type='group'):
 
                 if title == room.title:
                     logging.info(u"- found it")
@@ -469,14 +374,14 @@ class SparkSpace(Space):
 
         """
         assert id not in (None, '')
-        assert self.personal_api is not None  # connect() is prerequisite
+        assert self.api is not None  # connect() is prerequisite
 
         logging.info(u"Using Cisco Spark room '{}'".format(id))
 
         @retry(u"Unable to list rooms", silent=True)
         def do_it():
 
-            room = self.personal_api.rooms.get(id)
+            room = self.api.rooms.get(id)
             if room:
                 logging.info(u"- found it")
                 return self._to_channel(room)
@@ -544,13 +449,13 @@ class SparkSpace(Space):
 
         """
         assert id not in (None, '')
-        assert self.personal_api is not None  # connect() is prerequisite
+        assert self.api is not None  # connect() is prerequisite
 
         logging.info(u"Deleting Cisco Spark room '{}'".format(id))
 
         @retry(u"Unable to delete room", silent=True)
         def do_it():
-            self.personal_api.rooms.delete(roomId=id)
+            self.api.rooms.delete(roomId=id)
 
         do_it()
 
@@ -573,11 +478,11 @@ class SparkSpace(Space):
 
         """
         assert name not in (None, '')
-        assert self.personal_api is not None  # connect() is prerequisite
+        assert self.api is not None  # connect() is prerequisite
 
         logging.info(u"Looking for Cisco Spark team '{}'".format(name))
 
-        for team in self.personal_api.teams.list():
+        for team in self.api.teams.list():
             if name == team.name:
                 logging.info(u"- found it")
                 return team
@@ -602,13 +507,13 @@ class SparkSpace(Space):
         assert id not in (None, '')  # target channel is required
         assert person not in (None, '')
         assert is_moderator in (True, False)
-        assert self.personal_api is not None  # connect() is prerequisite
+        assert self.api is not None  # connect() is prerequisite
 
         @retry(u"Unable to add participant '{}'".format(person), silent=True)
         def do_it():
-            self.personal_api.memberships.create(roomId=id,
-                                                 personEmail=person,
-                                                 isModerator=is_moderator)
+            self.api.memberships.create(roomId=id,
+                                        personEmail=person,
+                                        isModerator=is_moderator)
 
         do_it()
 
@@ -625,12 +530,12 @@ class SparkSpace(Space):
         """
         assert id not in (None, '')  # target channel is required
         assert person not in (None, '')  # target person
-        assert self.personal_api is not None  # connect() is prerequisite
+        assert self.api is not None  # connect() is prerequisite
 
         @retry(u"Unable to remove participant '{}'".format(person), silent=True)
         def do_it():
-            self.personal_api.memberships.delete(roomId=id,
-                                                 personEmail=person)
+            self.api.memberships.delete(roomId=id,
+                                        personEmail=person)
 
         do_it()
 
@@ -741,7 +646,6 @@ class SparkSpace(Space):
         """
         assert hook_url not in (None, '')
         assert self.api is not None  # connect() is prerequisite
-        assert self.personal_api is not None  # connect() is prerequisite
 
         self.deregister()
 
@@ -764,7 +668,7 @@ class SparkSpace(Space):
                        filter=None)
 
         logging.debug(u"- registering 'shellbot-messages'")
-        create_webhook(api=self.personal_api,
+        create_webhook(api=self.api,
                        name='shellbot-messages',
                        resource='messages',
                        event='created',
@@ -782,7 +686,6 @@ class SparkSpace(Space):
 
         """
         assert self.api is not None  # connect() is prerequisite
-        assert self.personal_api is not None  # connect() is prerequisite
 
         @retry(u"Unable to list webhooks", silent=True)
         def list_webhooks(api):
@@ -796,14 +699,6 @@ class SparkSpace(Space):
         for webhook in list_webhooks(self.api):
             logging.debug(u"- deleting '{}'".format(webhook.name))
             delete_webhook(self.api, webhook.id)
-
-        purged = ('shellbot-memberships',
-                  'shellbot-messages')
-
-        for webhook in list_webhooks(self.personal_api):
-            if webhook.name in purged:
-                logging.debug(u"- deleting '{}'".format(webhook.name))
-                delete_webhook(self.personal_api, webhook.id)
 
     def webhook(self, message_id=None):
         """
@@ -857,7 +752,7 @@ class SparkSpace(Space):
             @retry(u"Unable to retrieve new message")
             def fetch_message():
 
-                item = self.personal_api.messages.get(messageId=message_id)
+                item = self.api.messages.get(messageId=message_id)
                 item._json['hook'] = hook
                 return item._json
 
@@ -975,10 +870,7 @@ class SparkSpace(Space):
         logging.debug(u"- sensing {}".format(url))
 
         headers = {}
-        if self.personal_token:
-            headers['Authorization'] = 'Bearer '+self.personal_token
-        elif self.token:
-            headers['Authorization'] = 'Bearer '+self.token
+        headers['Authorization'] = 'Bearer '+self.get('token', '*no*token')
 
         if not response:
             response = requests.head(url=url, headers=headers)
@@ -1005,10 +897,7 @@ class SparkSpace(Space):
         logging.debug(u"- fetching {}".format(url))
 
         headers = {}
-        if self.personal_token:
-            headers['Authorization'] = 'Bearer '+self.personal_token
-        elif self.token:
-            headers['Authorization'] = 'Bearer '+self.token
+        headers['Authorization'] = 'Bearer '+self.get('token', '*no*token')
 
         if not response:
             response = requests.get(url=url, headers=headers)

@@ -40,9 +40,7 @@ class SpaceFactory(object):
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
                 'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
-                'personal_token': '$MY_FUZZY_SPARK_TOKEN',
                 'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
-                'webhook': "http://73a1e282.ngrok.io",
             }
         })
 

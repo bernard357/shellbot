@@ -77,7 +77,7 @@ class LocalSpaceTests(unittest.TestCase):
         self.space.configure(settings=settings)
         self.assertEqual(self.space.context.get('space.title'), 'Collaboration space')
         self.assertEqual(self.space.context.get('space.key'), 'my value')
-        self.assertEqual(self.space.context.get('space.participants'), [])
+        self.assertEqual(self.space.context.get('space.participants'), None)
 
         self.assertEqual(self.space.context.get('server.binding'), None)
 
@@ -87,7 +87,7 @@ class LocalSpaceTests(unittest.TestCase):
         self.space.configure(settings=settings)
         self.assertEqual(self.space.context.get('space.title'), 'a title')
         self.assertEqual(self.space.context.get('space.key'), 'my value')
-        self.assertEqual(self.space.context.get('space.participants'), [])
+        self.assertEqual(self.space.context.get('space.participants'), None)
 
     def test_check(self):
 

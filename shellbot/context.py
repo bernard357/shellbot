@@ -127,13 +127,13 @@ class Context(object):
                     'team': 'Anchor team',
                     'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY>',
                     'webhook': "http://73a1e282.ngrok.io",
-                    'personal_token', '$CISCO_SPARK_TOKEN',
+                    'weird_token', '$WEIRD_TOKEN',
                 }
             })
 
             context.check('spark.room', is_mandatory=True)
             context.check('spark.team')
-            context.check('spark.personal_token', filter=True)
+            context.check('spark.weird_token', filter=True)
 
         When a default value is provided, it is used to initialize
         properly a missing key::
@@ -152,8 +152,8 @@ class Context(object):
         When filter is True, if the value is a string starting with '$',
         then a variable with the same name is loaded from the environment::
 
-            >>>token=context.check('spark.personal_token', filter=True)
-            >>>assert token == os.environ.get('CISCO_SPARK_TOKEN')
+            >>>token=context.check('spark.weird_token', filter=True)
+            >>>assert token == os.environ.get('WEIRD_TOKEN')
             True
 
         The default filter can be changed at the creation of a context::
@@ -225,12 +225,12 @@ class Context(object):
             context = Context({
                 'spark': {
                     'token': '$MY_BOT_TOKEN',
-                    'personal_token', '$CISCO_SPARK_TOKEN',
+                    'weird_token', '$WEIRD_TOKEN',
                 }
             })
 
             context.check('spark.token', filter=True)
-            context.check('spark.personal_token', filter=True)
+            context.check('spark.weird_token', filter=True)
 
         """
 

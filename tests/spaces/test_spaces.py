@@ -36,7 +36,6 @@ class SpaceFactoryTests(unittest.TestCase):
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
                 'token': 'hkNWEtMJNkODVGlZWU1NmYtyY',
-                'personal_token': '*personal*secret*token',
                 'webhook': "http://73a1e282.ngrok.io",
             }
         })
@@ -73,14 +72,11 @@ class SpaceFactoryTests(unittest.TestCase):
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
                 'token': 'hkNWEtMJNkODVGlZWU1NmYtyY',
-                'personal_token': '*personal*secret*token',
-                'webhook': "http://73a1e282.ngrok.io",
             }
         })
 
         space = SpaceFactory.build(context=self.context)
         self.assertEqual(space.get('token'), 'hkNWEtMJNkODVGlZWU1NmYtyY')
-        self.assertEqual(space.get('personal_token'), '*personal*secret*token')
         self.assertEqual(self.context.get('spark.room'), 'My preferred room')
         self.assertEqual(space.configured_title(), 'My preferred room')
         self.assertEqual(space.teamId, None)
@@ -96,9 +92,7 @@ class SpaceFactoryTests(unittest.TestCase):
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
                 'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
-                'personal_token': '$MY_FUZZY_SPARK_TOKEN',
                 'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
-                'webhook': "http://73a1e282.ngrok.io",
             }
         })
 
@@ -130,9 +124,7 @@ class SpaceFactoryTests(unittest.TestCase):
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
                 'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
-                'personal_token': '$MY_FUZZY_SPARK_TOKEN',
                 'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
-                'webhook': "http://73a1e282.ngrok.io",
             }
         })
 
@@ -149,9 +141,7 @@ class SpaceFactoryTests(unittest.TestCase):
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
                 'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
-                'personal_token': '$MY_FUZZY_SPARK_TOKEN',
                 'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
-                'webhook': "http://73a1e282.ngrok.io",
             },
 
             'space': {
@@ -160,9 +150,7 @@ class SpaceFactoryTests(unittest.TestCase):
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
                 'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
-                'personal_token': '$MY_FUZZY_SPARK_TOKEN',
                 'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
-                'webhook': "http://73a1e282.ngrok.io",
             },
         })
 
@@ -175,9 +163,7 @@ class SpaceFactoryTests(unittest.TestCase):
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
                 'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
-                'personal_token': '$MY_FUZZY_SPARK_TOKEN',
                 'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
-                'webhook': "http://73a1e282.ngrok.io",
             },
 
             'spark': {
@@ -186,9 +172,7 @@ class SpaceFactoryTests(unittest.TestCase):
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
                 'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
-                'personal_token': '$MY_FUZZY_SPARK_TOKEN',
                 'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
-                'webhook': "http://73a1e282.ngrok.io",
             },
         })
 
@@ -205,9 +189,7 @@ class SpaceFactoryTests(unittest.TestCase):
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
                 'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
-                'personal_token': '$MY_FUZZY_SPARK_TOKEN',
                 'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
-                'webhook': "http://73a1e282.ngrok.io",
             },
 
             'neither_me': {
@@ -216,9 +198,7 @@ class SpaceFactoryTests(unittest.TestCase):
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
                 'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
-                'personal_token': '$MY_FUZZY_SPARK_TOKEN',
                 'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
-                'webhook': "http://73a1e282.ngrok.io",
             },
         })
 
