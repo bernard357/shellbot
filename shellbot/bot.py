@@ -223,8 +223,7 @@ class ShellBot(object):
         self.on_bond()
 
         if self.machine:
-            self.machine.reset()
-            self.machine.start(defer=5.0)
+            self.machine.restart(defer=5.0)
 
     def on_bond(self):
         """
@@ -245,6 +244,9 @@ class ShellBot(object):
         Enters a channel
         """
         self.say_banner()
+
+        if self.machine:
+            self.machine.restart(defer=5.0)  # no effect if machine is running
 
     def dispose(self, **kwargs):
         """
