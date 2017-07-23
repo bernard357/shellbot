@@ -206,7 +206,6 @@ class Listener(object):
         elif item['type'] == 'load_bot':
             logging.debug(u"- processing a 'load_bot' event")
             bot = self.engine.get_bot(channel_id=item['id'])
-            bot.on_enter()
 
         elif item['type'] == 'dispose_bot':
             logging.debug(u"- processing a 'load_bot' event")
@@ -332,7 +331,6 @@ class Listener(object):
 
         if received.actor_id == self.engine.get('bot.id'):
             self.engine.on_enter(received)
-            bot.on_enter()
             self.engine.dispatch('enter', received=received)
         else:
             self.engine.dispatch('join', received=received)

@@ -836,7 +836,6 @@ class Engine(object):
         because this would create one bot per process. Use the function
         ``engine.bond()`` for the creation of a new channel.
         """
-        channel = None
         if not channel_id:
             channel = self.bond(**kwargs)
             channel_id = channel.id
@@ -854,9 +853,8 @@ class Engine(object):
 
         bot.bond()
 
-        if channel:
-            bot.on_enter()
-
+        bot.on_enter()
+        
         return bot
 
     def build_bot(self, id=None, driver=ShellBot):

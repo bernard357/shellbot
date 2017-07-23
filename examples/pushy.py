@@ -53,7 +53,7 @@ Multiple questions are adressed in this example:
 
 A typical dialog could be like the following::
 
-    > shelly next
+    > shelly step
 
     New state: Level 1 - Initial capture of information
     If you are on the shop floor:
@@ -63,7 +63,7 @@ A typical dialog could be like the following::
     As a Stress engineer, engage with shop floor and ask questions. To engage
     with the design team, type next in the chat box.
 
-    > shelly next
+    > shelly step
 
     New state: Level 2 - Escalation to technical experts
 
@@ -75,7 +75,6 @@ environment variables instead::
 
 - ``CHANNEL_DEFAULT_PARTICIPANTS`` - Mention at least your e-mail address
 - ``CISCO_SPARK_BOT_TOKEN`` - Received from Cisco Spark on bot registration
-- ``CISCO_SPARK_TOKEN`` - Your personal Cisco Spark token
 - ``SERVER_URL`` - Public link used by Cisco Spark to reach your server
 
 The token is specific to your run-time, please visit Cisco Spark for
@@ -88,7 +87,6 @@ ngrok for exposing services to the Internet::
 
     export CHANNEL_DEFAULT_PARTICIPANTS="alice@acme.com"
     export CISCO_SPARK_BOT_TOKEN="<token id from Cisco Spark for Developers>"
-    export CISCO_SPARK_TOKEN="<personal token id from Cisco Spark>"
     export SERVER_URL="http://1a107f21.ngrok.io"
     python pushy.py
 
@@ -185,13 +183,8 @@ engine = Engine(
     context=context,
     configure=True,
     commands=['shellbot.commands.step', 'shellbot.commands.close'],
-    machine_factory=MyFactory(steps=context.get('process.steps')),)
-
-#
-# a queue of events between the web server and the bot
-#
-
-queue = Queue()
+    machine_factory=MyFactory(steps=context.get('process.steps')),
+    ears=Queue(),)
 
 #
 # create a web server to receive trigger
@@ -199,71 +192,36 @@ queue = Queue()
 
 server = Server(context=context, check=True)
 
-server.add_route(Notifier(queue=queue,
-                          notification='click',
+server.add_route(Notifier(queue=engine.ears,
+                          notification={'type': 'event', 'trigger': 'click'},
                           route=context.get('server.trigger')))
 
 server.add_route(Wrapper(callable=engine.get_hook(),
                          route=context.get('server.hook')))
 
+# add some event handler
 #
-# delay the creation of a room until we receive some trigger
-#
+class Handler(object):
 
-class Trigger(object):
-
-    EMPTY_DELAY = 0.005   # time to wait if queue is empty
-
-    def __init__(self, engine, queue):
+    def __init__(self, engine):
         self.engine = engine
-        self.queue = queue if queue else Queue()
 
-    def start(self):
-        p = Process(target=self.run)
-        p.start()
-        return p
+    def on_inbound(self, received):
 
-    def run(self):
+        if received.trigger == 'click':
+            counter = self.engine.context.increment('pushy.counter')
+            logging.info(u'Trigger {}'.format(counter))
 
-        logging.info(u"Waiting for trigger")
+            if counter == 1:
+                self.bot = self.engine.get_bot()
 
-        try:
-            self.engine.set('trigger.counter', 0)
-            while self.engine.get('general.switch', 'on') == 'on':
+            else:
+                self.bot.say(u'Click {}'.format(counter))
 
-                if self.queue.empty():
-                    time.sleep(self.EMPTY_DELAY)
-                    continue
 
-                try:
-                    item = self.queue.get(True, self.EMPTY_DELAY)
-                    if item is None:
-                        break
+handler = Handler(engine)
+engine.subscribe('inbound', handler)  # receive clicks via listener
 
-                    self.process(item)
-
-                except Exception as feedback:
-                    logging.exception(feedback)
-
-        except KeyboardInterrupt:
-            pass
-
-    def process(self, item):
-
-        counter = self.engine.context.increment('trigger.counter')
-        logging.info(u'Trigger {} {}'.format(item, counter))
-
-        if counter == 1:
-            self.bot = self.engine.get_bot()
-
-        else:
-            self.bot.say(u'{} {}'.format(item, counter))
-
-#
 # launch multiple processes to do the job
 #
-
-trigger = Trigger(engine, queue)
-trigger.start()
-
 engine.run(server=server)
