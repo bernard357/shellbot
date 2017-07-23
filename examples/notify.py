@@ -30,11 +30,11 @@ Multiple questions are adressed in this example:
   as the Cisco Spark token (see below). Or variables can be set directly
   from within the script itself, as ``CHAT_ROOM_TITLE`` in this example.
 
-- How to create or to delete a room? This is done with ``engine.bond()`` and
+- How to create or to delete a room? This is done with ``engine.get_bot()`` and
   with ``bot.dispose()`` respectively.
 
 - How to post a notification? Use ``bot.say()`` right after a call
-  to ``engine.bond()``.
+  to ``engine.get_bot()``.
 
 - Why do we not start the bot? There is no call to ``bot.run()`` below
   because there is no need for an active shell. The program updates a room,

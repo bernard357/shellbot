@@ -74,7 +74,7 @@ class Engine(object):
         # settings of the chat space are provided
         # in the engine configuration itself
         #
-        bot = engine.bond(reset=True)
+        bot = engine.get_bot(reset=True)
 
         # run the engine
         #
