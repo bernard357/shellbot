@@ -446,6 +446,8 @@ class SparkSpace(Space):
 
         :return: Channel instance or None
 
+        Note: This function looks only into group rooms. To get a direct room
+        use ``get_by_person()`` instead.
         """
         assert title not in (None, '')
         assert self.personal_api is not None  # connect() is prerequisite
@@ -455,7 +457,7 @@ class SparkSpace(Space):
         @retry(u"Unable to list rooms", silent=True)
         def do_it():
 
-            for room in self.personal_api.rooms.list():
+            for room in self.personal_api.rooms.list(type='group'):
 
                 if title == room.title:
                     logging.info(u"- found it")
@@ -467,7 +469,7 @@ class SparkSpace(Space):
 
     def get_by_id(self, id, **kwargs):
         """
-        Looks for an existing rooms by id
+        Looks for an existing room by id
 
         :param id: identifier of the target room
         :type id: str
@@ -483,9 +485,40 @@ class SparkSpace(Space):
         @retry(u"Unable to list rooms", silent=True)
         def do_it():
 
-            for room in self.personal_api.rooms.list():
+            room = self.personal_api.rooms.get(id)
+            if room:
+                logging.info(u"- found it")
+                return self._to_channel(room)
 
-                if id == room.id:
+            logging.info(u"- not found")
+
+        return do_it()
+
+    def get_by_person(self, label, **kwargs):
+        """
+        Looks for an existing private room with a person
+
+        :param label: the display name of the person's account
+        :type label: str
+
+        :return: Channel instance or None
+
+        If a channel already exists for this person, a representation of it is
+        returned. Else the value ``None``is returned.
+
+        """
+        assert label not in (None, '')
+        assert self.api is not None  # connect() is prerequisite
+
+        logging.info(
+            u"Looking for Cisco Spark private room with '{}'".format(label))
+
+        @retry(u"Unable to list rooms", silent=True)
+        def do_it():
+
+            for room in self.api.rooms.list(type='direct'):
+
+                if room.title.startswith(label):
                     logging.info(u"- found it")
                     return self._to_channel(room)
 
@@ -1121,6 +1154,9 @@ class SparkSpace(Space):
         channel.is_moderated = True if room.isLocked else False
         logging.debug(u"- is_moderated: {}".format(channel.is_moderated))
 
-        channel.team_id = room.teamId
+        try:
+            channel.team_id = room.teamId
+        except:
+            channel.team_id = None
 
         return channel

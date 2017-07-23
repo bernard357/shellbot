@@ -362,6 +362,31 @@ class Space(object):
         assert id not in (None, '')
         return None
 
+    def get_by_person(self, label, **kwargs):
+        """
+        Looks for an existing private channel with a person
+
+        :param label: the display name of the person's account
+        :type label: str
+
+        :return: Channel instance or None
+
+        If a channel already exists for this person, a representation of it is
+        returned. Else the value ``None``is returned.
+
+        This function should be implemented in sub-class.
+
+        Example::
+
+            def get_by_id(self, id, **kwargs):
+                handle = self.api.rooms.lookup(id=id)
+                if handle:
+                    return Channel(handle.attributes)
+
+        """
+        assert label not in (None, '')
+        return None
+
     def update(self, channel, **kwargs):
         """
         Updates an existing channel

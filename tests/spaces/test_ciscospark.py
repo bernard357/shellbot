@@ -39,6 +39,16 @@ class FakeRoom(Fake):
     teamId = '*team'
 
 
+class FakeDirectRoom(Fake):
+    id = '*direct_id'
+    isLocked = False
+    title = 'Marcel Jones'
+    type = 'direct'
+    lastActivity = "2017-07-22T22:34:22.969Z"
+    creatorId = "Y2lzY29zcGFyazovL3VzL1BFT1zQtYTIyYi1mYWYwZWQwMjkyMzU"
+    created = "2017-07-19T05:29:23.962Z"
+
+
 class FakeTeamRoom(Fake):
     id = '*team_id'
     isLocked = True
@@ -90,18 +100,17 @@ class FakeApi(object):
     def __init__(self,
                  access_token=None,
                  rooms=[],
-                 new_room=None,
+                 room=FakeRoom(),
                  teams=[],
                  messages=[],
                  me=FakePerson()):
 
         self.token = access_token
 
-        new_room = new_room if new_room else FakeRoom()
-
         self.rooms = Fake()
-        self.rooms.list = mock.Mock(return_value=rooms)
-        self.rooms.create = mock.Mock(return_value=new_room)
+        self.rooms.list = mock.Mock(return_value=rooms if rooms else [room])
+        self.rooms.get = mock.Mock(return_value=room)
+        self.rooms.create = mock.Mock(return_value=room)
         self.rooms.update = mock.Mock()
         self.rooms.delete = mock.Mock()
 
@@ -339,7 +348,7 @@ class SparkSpaceTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             channel = self.space.get_by_title('*no*api*anyway')
 
-        self.space.personal_api = FakeApi(rooms=[FakeRoom()])
+        self.space.personal_api = FakeApi()
         channel = self.space.get_by_title('*does*not*exist')
         self.assertEqual(channel, None)
         self.assertTrue(self.space.personal_api.rooms.list.called)
@@ -359,7 +368,7 @@ class SparkSpaceTests(unittest.TestCase):
             }))
 
         class Intruder(object):
-            def list(self):
+            def list(self, **kwargs):
                 raise Exception('TEST')
 
         self.space.personal_api.rooms = Intruder()
@@ -379,11 +388,7 @@ class SparkSpaceTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             channel = self.space.get_by_id('*no*api*anyway')
 
-        self.space.personal_api = FakeApi(rooms=[FakeRoom()])
-
-        channel = self.space.get_by_id('*does*not*exist')
-        self.assertEqual(channel, None)
-        self.assertTrue(self.space.personal_api.rooms.list.called)
+        self.space.personal_api = FakeApi()
 
         channel = self.space.get_by_id('*id')
         self.assertEqual(
@@ -400,18 +405,55 @@ class SparkSpaceTests(unittest.TestCase):
             }))
 
         class Intruder(object):
-            def list(self):
+            def get(self, label, **kwargs):
                 raise Exception('TEST')
 
         self.space.personal_api.rooms = Intruder()
         channel = self.space.get_by_id('*id')
         self.assertEqual(channel, None)
 
+    def test_get_by_person(self):
+
+        logging.info("*** get_by_person")
+
+        with self.assertRaises(AssertionError):
+            channel = self.space.get_by_person(None)
+
+        with self.assertRaises(AssertionError):
+            channel = self.space.get_by_person('')
+
+        with self.assertRaises(AssertionError):
+            channel = self.space.get_by_person('*no*api*anyway')
+
+        self.space.api = FakeApi(room=FakeDirectRoom())
+
+        channel = self.space.get_by_person('Marcel Jones')
+        self.assertEqual(
+            channel,
+            Channel({
+                "id": "*direct_id",
+                "is_direct": True,
+                "is_group": False,
+                "is_moderated": False,
+                "is_team": False,
+                "team_id": None,
+                "title": "Marcel Jones",
+                "type": "direct",
+            }))
+
+        class Intruder(object):
+            def list(self, **kwargs):
+                raise Exception('TEST')
+
+        self.space.api.rooms = Intruder()
+        channel = self.space.get_by_person('Marcel Jones')
+        self.assertEqual(channel, None)
+
     def test_update(self):
 
         logging.info("*** update")
 
-        self.space.api = FakeApi(rooms=[FakeRoom()])
+        self.space.api = FakeApi()
         self.space.update(channel=FakeChannel())
 
     def test_delete(self):
@@ -420,14 +462,14 @@ class SparkSpaceTests(unittest.TestCase):
 
 
         # explicit id, room exists
-        self.space.api = FakeApi(rooms=[FakeRoom()])
-        self.space.personal_api = FakeApi(rooms=[FakeRoom()])
+        self.space.api = FakeApi()
+        self.space.personal_api = FakeApi()
         self.space.delete(id='*id')
         self.assertTrue(self.space.personal_api.rooms.delete.called)
 
         # explicit id, room does not exists
-        self.space.api = FakeApi(rooms=[FakeRoom()])
-        self.space.personal_api = FakeApi(rooms=[FakeRoom()])
+        self.space.api = FakeApi()
+        self.space.personal_api = FakeApi()
         self.space.delete(id='*ghost*room')
         self.assertTrue(self.space.personal_api.rooms.delete.called)
 
@@ -560,8 +602,8 @@ class SparkSpaceTests(unittest.TestCase):
 
         logging.info("*** register")
 
-        self.space.api = FakeApi(rooms=[FakeRoom()])
-        self.space.personal_api = FakeApi(rooms=[FakeRoom()])
+        self.space.api = FakeApi()
+        self.space.personal_api = FakeApi()
         self.context.set('bot.id', '*id')
         self.context.set('spark.token', '*token')
         self.context.set('spark.personal_token', '*token')
@@ -573,8 +615,8 @@ class SparkSpaceTests(unittest.TestCase):
 
         logging.info("*** deregister")
 
-        self.space.api = FakeApi(rooms=[FakeRoom()])
-        self.space.personal_api = FakeApi(rooms=[FakeRoom()])
+        self.space.api = FakeApi()
+        self.space.personal_api = FakeApi()
         self.context.set('bot.id', '*id')
         self.space.deregister()
         self.assertTrue(self.space.api.webhooks.list.called)
@@ -584,8 +626,8 @@ class SparkSpaceTests(unittest.TestCase):
 
         logging.info("*** run")
 
-        self.space.api = FakeApi(rooms=[FakeRoom()])
-        self.space.personal_api = FakeApi(rooms=[FakeRoom()])
+        self.space.api = FakeApi()
+        self.space.personal_api = FakeApi()
 
         self.space.PULL_INTERVAL = 0.001
         mocked = mock.Mock(return_value=[])

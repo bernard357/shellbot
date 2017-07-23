@@ -208,6 +208,18 @@ class SpaceTests(unittest.TestCase):
 
         self.assertEqual(self.space.get_by_id(id='*unknown'), None)
 
+    def test_get_by_person(self):
+
+        logging.info("*** get_by_person")
+
+        with self.assertRaises(AssertionError):
+            self.space.get_by_person(None)
+
+        with self.assertRaises(AssertionError):
+            self.space.get_by_person('')
+
+        self.assertEqual(self.space.get_by_person('*unknown'), None)
+
     def test_update(self):
 
         logging.info("*** update")
