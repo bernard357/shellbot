@@ -56,7 +56,7 @@ Context.set_logger()
 #
 engine = Engine(type='local', command='shellbot.commands.input')
 engine.configure()
-bot = engine.get_bot()
+bot = engine.get_bot()  # safe from process perspective
 
 # ask some information
 #

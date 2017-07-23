@@ -121,10 +121,6 @@ os.environ['BOT_ON_ENTER'] = 'On a dark desert highway, cool wind in my hair...'
 os.environ['CHAT_ROOM_TITLE'] = 'Hotel California'
 engine.configure()
 
-# initialise a chat room
-#
-bot = engine.get_bot(reset=True)
-
 # add stickiness to the hotel
 #
 
@@ -133,7 +129,7 @@ class Magic(object):
     def __init__(self, engine):
         self.engine = engine
 
-    def on_join(self, received):
+    def on_join(self, received):  # called from listenr process
 
         bot = self.engine.get_bot(received.channel_id)
         addresses = bot.recall('visitors', [])
@@ -143,7 +139,7 @@ class Magic(object):
             bot.remember('visitors', addresses)
             bot.say(u"Welcome to Hotel California, {}".format(received.actor_label))
 
-    def on_leave(self, received):
+    def on_leave(self, received):  # called from listener process
 
         bot = self.engine.get_bot(received.channel_id)
         addresses = bot.recall('visitors', [])
@@ -168,10 +164,14 @@ magic = Magic(engine=engine)
 engine.subscribe('join', magic)
 engine.subscribe('leave', magic)
 
+# create a chat room
+#
+engine.bond(reset=True)
+
 # run the bot
 #
 engine.run()
 
 # delete the chat room when the bot is stopped
 #
-bot.dispose()
+engine.dispose()

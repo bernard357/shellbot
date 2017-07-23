@@ -81,7 +81,7 @@ engine.configure()
 
 # create a chat room
 #
-bot = engine.get_bot(reset=True)
+engine.bond(reset=True)
 
 # run the bot
 #
@@ -89,4 +89,4 @@ engine.run()
 
 # delete the chat room when the bot is stopped
 #
-bot.dispose()
+engine.dispose()

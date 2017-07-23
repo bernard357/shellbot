@@ -138,9 +138,9 @@ os.environ['BOT_ON_EXIT'] = 'Batman is now quitting the room, bye'
 os.environ['CHAT_ROOM_TITLE'] = 'Chat with Batman'
 engine.configure()
 
-# initialise a chat room
+# create a chat room
 #
-bot = engine.get_bot(reset=True)
+engine.bond(reset=True)
 
 # run the bot
 #
@@ -148,4 +148,4 @@ engine.run()
 
 # delete the chat room when the bot is stopped
 #
-bot.dispose()
+engine.dispose()
