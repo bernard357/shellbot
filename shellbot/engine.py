@@ -820,10 +820,6 @@ class Engine(object):
             logging.debug(u"- creating channel '{}''".format(title))
             channel = self.space.create(title=title, **kwargs)
 
-            bot = self.get('bot.email', 'shelly@sparkbot.io')
-            logging.debug(u"- adding bot {}".format(bot))
-            self.space.add_participant(id=channel.id, person=bot)
-
             if not participants:
                 participants = self.space.get('participants', [])
             self.space.add_participants(id=channel.id, persons=participants)
