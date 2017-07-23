@@ -777,7 +777,6 @@ class SparkSpace(Space):
 
         logging.info(u"Purging webhooks")
         for webhook in list_webhooks(self.api):
-#           logging.debug(u"- {}".format(str(webhook)))
             logging.debug(u"- deleting '{}'".format(webhook.name))
             delete_webhook(self.api, webhook.id)
 
@@ -785,10 +784,9 @@ class SparkSpace(Space):
                   'shellbot-messages')
 
         for webhook in list_webhooks(self.personal_api):
-#           logging.debug(u"- {}".format(str(webhook)))
-#            if webhook.name in purged:
-            logging.debug(u"- deleting '{}'".format(webhook.name))
-            delete_webhook(self.personal_api, webhook.id)
+            if webhook.name in purged:
+                logging.debug(u"- deleting '{}'".format(webhook.name))
+                delete_webhook(self.personal_api, webhook.id)
 
     def webhook(self, message_id=None):
         """
