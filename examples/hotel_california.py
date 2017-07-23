@@ -77,7 +77,9 @@ class Open(Command):
     information_message = u"Open Hotel California"
 
     def execute(self, bot, arguments=None):
-        if bot.recall('hotel_california.state', 'off') == 'on':
+        if bot.channel.is_direct:
+            bot.say('This is a private place, not an hotel')
+        elif bot.recall('hotel_california.state', 'off') == 'on':
             bot.say('Hotel California mode is already activated!')
         else:
             bot.remember('hotel_california.state', 'on')
@@ -89,7 +91,9 @@ class Close(Command):
     information_message = u"Close Hotel California"
 
     def execute(self, bot, arguments=None):
-        if bot.recall('hotel_california.state', 'off') == 'off':
+        if bot.channel.is_direct:
+            bot.say('This is a private place, not an hotel')
+        elif bot.recall('hotel_california.state', 'off') == 'off':
             bot.say('Hotel California mode is already deactivated!')
         else:
             bot.remember('hotel_california.state', 'off')
@@ -101,7 +105,9 @@ class Hotel(Command):
     information_message = u"Get status of Hotel California"
 
     def execute(self, bot, arguments=None):
-        if bot.recall('hotel_california.state', 'off') == 'off':
+        if bot.channel.is_direct:
+            bot.say('This is a private place, not an hotel')
+        elif bot.recall('hotel_california.state', 'off') == 'off':
             bot.say('Hotel California will let you escape')
         else:
             bot.say('Hotel California will keep you here forever!')
