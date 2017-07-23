@@ -171,7 +171,7 @@ class ShellBot(object):
     @property
     def title(self):
         """
-        Gets titleof the related chat channel
+        Gets title of the related chat channel
 
         :return: the title of the underlying channel, or None
         """

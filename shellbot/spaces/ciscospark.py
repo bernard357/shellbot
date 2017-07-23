@@ -77,7 +77,7 @@ def retry(give_up="Unable to request Cisco Spark API",
                     if isinstance(feedback, SparkApiError) and feedback.response_code in skipped:
                         delay = None
 
-                    if str(feedback).startswith("TEST"):
+                    if str(feedback).startswith("TEST"):  # horrible hack, right?
                         delay = None
 
                     if delay is None:
@@ -704,23 +704,17 @@ class SparkSpace(Space):
         This function registers the provided hook multiple times, so as to
         receive mutiple kind of updates:
 
-        - The bot is invited to a room, or kicked out of it:
-          webhook name = shellbot-rooms
+        - The bot is invited to a room, or kicked out of it. People are
+          joining or leaving:
+          webhook name = shellbot-memberships
           resource = memberships,
           event = all,
-          personId = bot id,
           registered with bot token
 
         - Messages are sent, maybe with some files:
           webhook name = shellbot-messages
           resource = messages,
           event = created,
-          registered with personal token (for chat auditing)
-
-        - People are joining or leaving:
-          webhook name = shellbot-participants
-          resource = memberships,
-          event = all,
           registered with personal token (for chat auditing)
 
         Previous webhooks registered with the bot token are all removed before
@@ -745,13 +739,12 @@ class SparkSpace(Space):
         logging.info(u"Registering webhook to Cisco Spark")
         logging.debug(u"- url: {}".format(hook_url))
 
-        if self.get('token'):
-            logging.debug(u"- registering 'shellbot-rooms'")
-            create_webhook(api=self.api,
-                           name='shellbot-rooms',
-                           resource='memberships',
-                           event='all',
-                           filter='personId='+self.context.get('bot.id'))
+        logging.debug(u"- registering 'shellbot-memberships'")
+        create_webhook(api=self.api,
+                       name='shellbot-memberships',
+                       resource='memberships',
+                       event='all',
+                       filter=None)
 
         logging.debug(u"- registering 'shellbot-messages'")
         create_webhook(api=self.personal_api,
@@ -759,14 +752,6 @@ class SparkSpace(Space):
                        resource='messages',
                        event='created',
                        filter=None)
-
-        if self.get('personal_token'):
-            logging.debug(u"- registering 'shellbot-participants'")
-            create_webhook(api=self.personal_api,
-                           name='shellbot-participants',
-                           resource='memberships',
-                           event='all',
-                           filter=None)
 
     def deregister(self):
         """
@@ -790,22 +775,20 @@ class SparkSpace(Space):
         def delete_webhook(api, id):
             api.webhooks.delete(webhookId=id)
 
-        logging.info(u"Purging bot webhooks")
+        logging.info(u"Purging webhooks")
         for webhook in list_webhooks(self.api):
 #           logging.debug(u"- {}".format(str(webhook)))
             logging.debug(u"- deleting '{}'".format(webhook.name))
             delete_webhook(self.api, webhook.id)
 
-        purged = ('shellbot-webhook',
-                  'shellbot-messages',
-                  'shellbot-participants')
+        purged = ('shellbot-memberships',
+                  'shellbot-messages')
 
-        logging.debug(u"Purging personal webhooks")
         for webhook in list_webhooks(self.personal_api):
 #           logging.debug(u"- {}".format(str(webhook)))
-            if webhook.name in purged:
-                logging.debug(u"- deleting '{}'".format(webhook.name))
-                delete_webhook(self.personal_api, webhook.id)
+#            if webhook.name in purged:
+            logging.debug(u"- deleting '{}'".format(webhook.name))
+            delete_webhook(self.personal_api, webhook.id)
 
     def webhook(self, message_id=None):
         """
