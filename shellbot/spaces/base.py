@@ -516,16 +516,20 @@ class Space(object):
         raise NotImplementedError()
 
     def post_message(self,
-                     id,
+                     id=None,
                      text=None,
                      content=None,
                      file=None,
+                     person=None,
                      **kwargs):
         """
         Posts a message
 
         :param id: the unique id of an existing channel
         :type id: str
+
+        :param person: address for a direct message
+        :type person: str
 
         :param text: message in plain text
         :type text: str
@@ -538,7 +542,27 @@ class Space(object):
 
         Example message out of plain text::
 
-        >>>space.post_message(id=id, text='hello world')
+           space.post_message(id=id, text='hello world')
+
+        Example message with Markdown::
+
+           space.post_message(id, content='this is a **bold** statement')
+
+        Example file upload::
+
+           space.post_message(id, file='./my_file.pdf')
+
+        Of course, you can combine text with the upload of a file::
+
+           text = 'This is the presentation that was used for our meeting'
+           space.post_message(id=id,
+                              text=text,
+                              file='./my_file.pdf')
+
+        For direct messages, provide who you want to reach instead of
+        a channel id, like this::
+
+            space.post_message(person='foo.bar@acme.com', text='hello guy')
 
         This function should be implemented in sub-class.
 
@@ -548,6 +572,8 @@ class Space(object):
                 self.api.messages.create(id=id, text=text)
 
         """
+        assert id or person  # need a recipient
+        assert id is None or person is None  # only one recipient
         raise NotImplementedError()
 
     def webhook(self):

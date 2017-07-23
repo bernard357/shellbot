@@ -513,12 +513,29 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertTrue(self.space.api.messages.create.called)
 
         self.space.api = FakeApi()
+        self.space.post_message(person='a@b.com', text='hello world')
+        self.assertTrue(self.space.api.messages.create.called)
+
+        self.space.api = FakeApi()
         self.space.post_message(id='*id', content='hello world')
         self.assertTrue(self.space.api.messages.create.called)
 
         self.space.api = FakeApi()
-        with self.assertRaises(TypeError):
+        self.space.post_message(person='a@b.com', content='hello world')
+        self.assertTrue(self.space.api.messages.create.called)
+
+        self.space.api = FakeApi()
+        with self.assertRaises(AssertionError):
             self.space.post_message(
+                text='hello world',
+                content='hello world',
+                file='./test_messages/sample.png')
+
+        self.space.api = FakeApi()
+        with self.assertRaises(AssertionError):
+            self.space.post_message(
+                id='*id',
+                person='a@b.com',
                 text='hello world',
                 content='hello world',
                 file='./test_messages/sample.png')
@@ -526,6 +543,14 @@ class SparkSpaceTests(unittest.TestCase):
         self.space.api = FakeApi()
         self.space.post_message(
             id='*id',
+            text='hello world',
+            content='hello world',
+            file='./test_messages/sample.png')
+        self.assertTrue(self.space.api.messages.create.called)
+
+        self.space.api = FakeApi()
+        self.space.post_message(
+            person='a@b.com',
             text='hello world',
             content='hello world',
             file='./test_messages/sample.png')

@@ -132,7 +132,7 @@ class Speaker(object):
 
         if self.engine.space is not None:
             if isinstance(item, string_types):
-                self.engine.space.post_message(id=None, text=item)
+                self.engine.space.post_message(id='*default', text=item)
             else:
                 self.engine.space.post_message(id=item.channel_id,
                                                text=item.text,

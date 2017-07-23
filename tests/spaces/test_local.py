@@ -230,14 +230,28 @@ class LocalSpaceTests(unittest.TestCase):
 
         logging.info("***** post_message")
 
-        with self.assertRaises(TypeError):
+        with self.assertRaises(AssertionError):
             self.space.post_message(
+                text="What's up, Doc?",
+                content="*unsupported",
+                file="*unsupported")
+
+        with self.assertRaises(AssertionError):
+            self.space.post_message(
+                id='*id',
+                person='a@b.com',
                 text="What's up, Doc?",
                 content="*unsupported",
                 file="*unsupported")
 
         self.space.post_message(
             id='*id',
+            text="What's up, Doc?",
+            content="*unsupported",
+            file="*unsupported")
+
+        self.space.post_message(
+            person='a@b.com',
             text="What's up, Doc?",
             content="*unsupported",
             file="*unsupported")

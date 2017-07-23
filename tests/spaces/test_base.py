@@ -323,8 +323,17 @@ class SpaceTests(unittest.TestCase):
 
         logging.info("*** post_message")
 
+        with self.assertRaises(AssertionError):
+            self.space.post_message(text="What's up, Doc?")
+
+        with self.assertRaises(AssertionError):
+            self.space.post_message(id='1', person='2', text="What's up, Doc?")
+
         with self.assertRaises(NotImplementedError):
             self.space.post_message(id='*id', text="What's up, Doc?")
+
+        with self.assertRaises(NotImplementedError):
+            self.space.post_message(person='a@b.com', text="What's up, Doc?")
 
     def test_webhook(self):
 

@@ -266,16 +266,20 @@ class LocalSpace(Space):
         self.participants.remove(person)
 
     def post_message(self,
-                     id,
+                     id=None,
                      text=None,
                      content=None,
                      file=None,
+                     person=None,
                      **kwargs):
         """
         Posts a message
 
         :param id: the unique id of an existing channel
         :type id: str
+
+        :param person: address for a direct message
+        :type person: str
 
         :param text: message in plain text
         :type text: str
@@ -286,11 +290,10 @@ class LocalSpace(Space):
         :param file: URL or local path for an attachment
         :type file: str
 
-        Example message out of plain text::
-
-        >>>space.post_message(id=id, text='hello world')
-
         """
+        assert id or person  # need a recipient
+        assert id is None or person is None  # only one recipient
+
         if content:
             logging.debug(u"- rich content is not supported")
 

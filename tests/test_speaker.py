@@ -76,8 +76,8 @@ class SpeakerTests(unittest.TestCase):
                                return_value=None) as mocked:
 
             speaker.run()
-            mocked.assert_any_call(id=None, text='hello')
-            mocked.assert_called_with(id=None, text='world')
+            mocked.assert_any_call(id='*default', text='hello')
+            mocked.assert_called_with(id='*default', text='world')
 
             with self.assertRaises(Exception):
                 engine.mouth.get_nowait()
@@ -146,7 +146,7 @@ class SpeakerTests(unittest.TestCase):
 
         speaker = Speaker(engine=my_engine)
 
-        speaker.process('hello world')  # sent to stdout
+        speaker.process('hello world')
 
         my_engine.space = SpaceFactory.get('local', engine=my_engine)
 
@@ -157,7 +157,7 @@ class SpeakerTests(unittest.TestCase):
                                return_value=None) as mocked:
 
             speaker.process('hello world')
-            mocked.assert_called_with(id=None, text='hello world')
+            mocked.assert_called_with(id='*default', text='hello world')
 
             item = Vibes(
                 text='',

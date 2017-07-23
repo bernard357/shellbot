@@ -626,16 +626,20 @@ class SparkSpace(Space):
         do_it()
 
     def post_message(self,
-                     id,
+                     id=None,
                      text=None,
                      content=None,
                      file=None,
+                     person=None,
                      **kwargs):
         """
         Posts a message to a Cisco Spark room
 
         :param id: the unique id of an existing room
         :type id: str
+
+        :param person: address for a direct message
+        :type person: str
 
         :param text: message in plain text
         :type text: str
@@ -665,11 +669,14 @@ class SparkSpace(Space):
                               text=text,
                               file='./my_file.pdf')
 
-        If no space id is provided, then the function can use the unique id
-        of this space, if one has been defined. Or an exception may be raised
-        if no id has been made available.
+        For direct messages, provide who you want to reach instead of
+        a channel id, like this::
+
+            space.post_message(person='foo.bar@acme.com', text='hello guy')
 
         """
+        assert id or person  # need a recipient
+        assert id is None or person is None  # only one recipient
         assert self.api is not None  # connect() is prerequisite
 
         logging.info(u"Posting message")
@@ -687,6 +694,7 @@ class SparkSpace(Space):
         def do_it():
             files = [file] if file else None
             self.api.messages.create(roomId=id,
+                                     toPersonEmail=person,
                                      text=text,
                                      markdown=content,
                                      files=files)
