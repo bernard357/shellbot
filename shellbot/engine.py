@@ -74,7 +74,7 @@ class Engine(object):
         # settings of the chat space are provided
         # in the engine configuration itself
         #
-        bot = engine.get_bot(reset=True)
+        engine.bond(reset=True)
 
         # run the engine
         #
@@ -82,7 +82,7 @@ class Engine(object):
 
         # delete the chat room when the engine is stopped
         #
-        bot.dispose()
+        engine.dispose()
 
     A second interesting use case is when a bot is invited to an existing chat
     space. On such an event, a new bot instance can be created and bonded
@@ -92,7 +92,6 @@ class Engine(object):
 
         def on_enter(self, channel_id):
             bot = engine.get_bot(channel_id=channel_id)
-            return bot
 
     The engine is configured by setting values in the context that is attached
     to it. This is commonly done by loading the context with a dict before the
@@ -854,7 +853,7 @@ class Engine(object):
         bot.bond()
 
         bot.on_enter()
-        
+
         return bot
 
     def build_bot(self, id=None, driver=ShellBot):
