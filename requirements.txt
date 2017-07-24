@@ -4,3 +4,4 @@ colorlog
 elasticsearch
 paste
 PyYAML
+pyzmq
