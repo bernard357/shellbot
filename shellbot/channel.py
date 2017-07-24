@@ -45,6 +45,29 @@ class Channel(object):
         channel.title = 'An interesting place'
         space.update(channel)
 
+    Direct channels support one-to-one interactions between the bot and one
+    person. The creation of a direct channel can only be indirect, by sending
+    an invitation to the target person. For example::
+
+        bot.say(person='foo.bar@acme.com',
+                text='Do you want to deal with me?')
+
+    If the person receives and accepts the invitation, the engine will receive
+    a ``join`` event and load a new bot devoted to the direct channel. So, at
+    the end of the day, when multiple persons interact with a shellbot, this
+    involve both group and direct channels.
+
+    For example, if you create a shellbot named shelly, that interacts with
+    Alice and with Bob, then shelly will overlook multiple bots and channels:
+
+    * shelly main channel (bot + channel + store + state machine)
+
+    * direct channel with Alice (bot + channel + store + state machine)
+
+    * direct channel with Bob (bot + channel + store + state machine)
+
+    
+
     """
     def __init__(self,
                  attributes=None):
@@ -194,7 +217,7 @@ class Channel(object):
     @property
     def is_direct(self):
         """
-        Indicates if this channel is only for two actors
+        Indicates if this channel is only for one person and the bot
 
         :rtype: str
 

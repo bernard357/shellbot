@@ -58,7 +58,8 @@ class Space(object):
 
     4. Messages can be posted::
 
-           >>>space.post_message(id, 'Hello, World!')
+            space.post_message(id, 'Hello, World!')  # for group channels
+            space.post_message(person, 'Hello, World!')  # for direct messages
 
     5. You can add and remove participants to channels::
 
@@ -290,7 +291,7 @@ class Space(object):
         """
         Creates a channel
 
-        :param title: title of the new channel
+        :param title: title of a new channel
         :type title: str
 
         :return: Channel
@@ -307,6 +308,7 @@ class Space(object):
                 return Channel(handle.attributes)
 
         """
+        assert title not in (None, '')
         raise NotImplementedError()
 
     def get_by_title(self, title=None, **kwargs):

@@ -75,9 +75,9 @@ class Listener(object):
         This function starts a separate process to listen
         in the background.
         """
-        p = Process(target=self.run)  # do not daemonize
-        p.start()
-        return p
+        process = Process(target=self.run)  # do not daemonize
+        process.start()
+        return process
 
     def run(self):
         """
@@ -160,10 +160,6 @@ class Listener(object):
           process that is running the listener. The identifier of the channel
           to load is provided as well.
 
-        * ``dispose_bot`` -- This is a special event submitted to the listener
-          because of attached resources such as store, state machine, etc.
-          The identifier of the channel to dispose is provided as well.
-
         * on any other case, the function ``on_inbound()`` is
           called.
         """
@@ -206,11 +202,6 @@ class Listener(object):
         elif item['type'] == 'load_bot':
             logging.debug(u"- processing a 'load_bot' event")
             bot = self.engine.get_bot(channel_id=item['id'])
-
-        elif item['type'] == 'dispose_bot':
-            logging.debug(u"- processing a 'load_bot' event")
-            bot = self.engine.get_bot(channel_id=item['id'])
-            bot.dispose()
 
         else:
             logging.debug(u"- processing an inbound event")

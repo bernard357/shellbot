@@ -296,7 +296,7 @@ class SparkSpace(Space):
         """
         Creates a room
 
-        :param title: title of the new room
+        :param title: title of a new channel
         :type title: str
 
         :param ex_team: the team attached to this room (optional)
