@@ -16,6 +16,13 @@ from shellbot import Context
 from shellbot.spaces import LocalSpace
 
 
+def clear_env(name):
+    try:
+        os.environ.pop(name)
+    except KeyError:
+        pass
+
+
 class FakeChannel(object):
     id = '*123'
     title = '*title'
@@ -73,6 +80,7 @@ class LocalSpaceTests(unittest.TestCase):
 
         logging.info("***** configure")
 
+        clear_env('CHANNEL_DEFAULT_PARTICIPANTS')
         settings = {'space.key': 'my value',}
         self.space.configure(settings=settings)
         self.assertEqual(self.space.context.get('space.title'), 'Collaboration space')

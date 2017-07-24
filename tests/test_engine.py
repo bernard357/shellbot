@@ -14,6 +14,13 @@ from shellbot import Context, Engine, ShellBot, MachinesFactory
 from shellbot.spaces import Space, LocalSpace, SparkSpace
 
 
+def clear_env(name):
+    try:
+        os.environ.pop(name)
+    except KeyError:
+        pass
+
+
 class FakeBot(object):
     def __init__(self, engine=None,channel_id=None):
         self.engine = engine
@@ -220,6 +227,7 @@ class EngineTests(unittest.TestCase):
 
         }
 
+        clear_env('CHANNEL_DEFAULT_PARTICIPANTS')
         context = Context(settings)
         engine = Engine(context=context, configure=True)
         self.assertEqual(engine.get('bot.on_enter'), 'Hello!')
@@ -235,12 +243,6 @@ class EngineTests(unittest.TestCase):
     def test_configure_default(self):
 
         logging.info('*** configure with default values ***')
-
-        def clear_env(name):
-            try:
-                os.environ.pop(name)
-            except KeyError:
-                pass
 
         clear_env("BOT_BANNER_TEXT")
         clear_env("BOT_BANNER_CONTENT")

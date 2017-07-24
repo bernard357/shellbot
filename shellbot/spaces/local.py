@@ -154,7 +154,7 @@ class LocalSpace(Space):
         """
         Creates a channel
 
-        :param title: title of the new channel
+        :param title: title of a new channel
         :type title: str
 
         :return: Channel
@@ -163,6 +163,7 @@ class LocalSpace(Space):
 
         """
         assert title not in (None, '')
+
         attributes = {
             'id': '*local',
             'title': title,
