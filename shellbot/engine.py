@@ -25,6 +25,7 @@ import yaml
 import weakref
 
 from .bot import ShellBot
+from .bus import Bus
 from .context import Context
 from .listener import Listener
 from .routes.wrapper import Wrapper
@@ -360,6 +361,9 @@ class Engine(object):
 
         self.shell.configure()
 
+        self.bus = Bus(self.context)
+        self.bus.check()
+
     def check(self):
         """
         Checks settings of the engine
@@ -687,7 +691,7 @@ class Engine(object):
         self.context.set('general.switch', 'on')
 
         self._speaker_process = self.speaker.start()
-        self._listener_process = self.listener.start()
+        self.listener.start()
 
     def on_start(self):
         """
