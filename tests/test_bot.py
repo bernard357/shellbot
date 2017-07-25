@@ -10,8 +10,7 @@ from multiprocessing import Manager, Process, Queue
 import sys
 import time
 
-from shellbot import Context, Engine, ShellBot
-from shellbot.channel import Channel
+from shellbot import Context, Engine, ShellBot, Bus, Channel
 from shellbot.spaces import Space, LocalSpace, SparkSpace
 from shellbot.stores import MemoryStore
 
@@ -37,6 +36,9 @@ class BotTests(unittest.TestCase):
         self.engine = Engine(context=self.context,
                              ears=Queue(),
                              mouth=Queue())
+        self.engine.bus = Bus(self.context)
+        self.engine.bus.check()
+        self.engine.publisher = self.engine.bus.publish()
         self.space = LocalSpace(context=self.context, ears=self.engine.ears)
         self.store = MemoryStore(context=self.context)
         self.bot = ShellBot(engine=self.engine,
@@ -49,6 +51,8 @@ class BotTests(unittest.TestCase):
         del self.bot
         del self.store
         del self.space
+        del self.engine.publisher
+        del self.engine.bus
         del self.engine
         del self.context
         collected = gc.collect()

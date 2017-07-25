@@ -50,7 +50,7 @@ class ShellBot(object):
 
     2. The space is connected to some back-end API::
 
-            >>>space.connect()
+            space.connect()
 
     3. Multiple channels can be handled by a single space::
 
@@ -69,7 +69,7 @@ class ShellBot(object):
 
     4. Messages can be posted::
 
-           >>>space.post_message(id, 'Hello, World!')
+            space.post_message(id, 'Hello, World!')
 
     5. The interface allows for the addition or removal of channel
        participants::
@@ -219,6 +219,10 @@ class ShellBot(object):
         assert self.is_ready
 
         self.store.bond(id=self.id)
+
+        self.subscriber = self.engine.bus.subscribe('topic')
+        self.publisher = self.engine.publisher
+        self.publisher.put('topic', 'bot.bond()')
 
         self.on_bond()
 
