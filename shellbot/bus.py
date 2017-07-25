@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from builtins import str
 import json
 import logging
 from multiprocessing import Process, Queue
@@ -221,7 +222,7 @@ class Subscriber(object):
             self.socket.connect(address)
 
             for channel in self.channels:
-                self.socket.setsockopt(zmq.SUBSCRIBE, channel)
+                self.socket.setsockopt_string(zmq.SUBSCRIBE, str(channel))
 
         try:
             flags = zmq.NOBLOCK if not block else 0
