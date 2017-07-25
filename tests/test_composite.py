@@ -21,16 +21,7 @@ from shellbot.spaces import Space
 class MyEngine(Engine):
     def get_bot(self, id):
         logging.debug("Injecting test bot")
-        return my_bot
-
-
-my_engine = MyEngine(ears=Queue(), mouth=Queue())
-my_engine.set('bot.id', "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg")
-my_engine.shell.load_default_commands()
-my_engine.space = Space(my_engine.context)
-my_engine.space.post_message = MagicMock()
-
-my_engine.listener.DEFER_DURATION = 0.0
+        return Bot(engine=self)
 
 
 class Bot(object):
@@ -43,38 +34,47 @@ class Bot(object):
         self.engine.mouth.put(Vibes(text, content, file))
 
 
-my_bot = Bot(engine=my_engine)
-
-
 class CompositeTests(unittest.TestCase):
+
+    def setUp(self):
+        self.engine = MyEngine(ears=Queue(), mouth=Queue())
+        self.engine.set('bot.id', "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg")
+        self.engine.shell.load_default_commands()
+        self.engine.space = Space(self.engine.context)
+        self.engine.space.post_message = MagicMock()
+
+        self.engine.listener.DEFER_DURATION = 0.0
+
+        self.bot = Bot(engine=self.engine)
 
     def tearDown(self):
         collected = gc.collect()
-        logging.info("Garbage collector: collected %d objects." % (collected))
+        if collected:
+            logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_static(self):
 
         logging.info('*** Static test ***')
 
-        speaker_process = my_engine.speaker.start()
-        listener_process = my_engine.listener.start()
+        speaker_process = self.engine.speaker.start()
+        self.engine.listener.start()
 
-        listener_process.join(0.2)
-        if listener_process.is_alive():
+        self.engine.listener.join(0.2)
+        if self.engine.listener.is_alive():
             logging.info('Stopping all threads')
-            my_engine.set('general.switch', 'off')
-            listener_process.join()
+            self.engine.set('general.switch', 'off')
+            self.engine.listener.join()
             speaker_process.join()
 
-        self.assertEqual(my_engine.get('listener.counter', 0), 0)
-        self.assertEqual(my_engine.get('speaker.counter', 0), 0)
+        self.assertEqual(self.engine.get('listener.counter', 0), 0)
+        self.assertEqual(self.engine.get('speaker.counter', 0), 0)
 
     def test_dynamic(self):
 
         logging.info('*** Dynamic test ***')
 
-        speaker_process = my_engine.speaker.start()
-        listener_process = my_engine.listener.start()
+        speaker_process = self.engine.speaker.start()
+        self.engine.listener.start()
 
         items = [
 
@@ -164,17 +164,17 @@ class CompositeTests(unittest.TestCase):
         ]
 
         for item in items:
-            my_engine.ears.put(str(Message(item)))
+            self.engine.ears.put(str(Message(item)))
 
-        listener_process.join(1.0)
-        if listener_process.is_alive():
+        self.engine.listener.join(1.0)
+        if self.engine.listener.is_alive():
             logging.info('Stopping all threads')
-            my_engine.set('general.switch', 'off')
-            listener_process.join()
+            self.engine.set('general.switch', 'off')
+            self.engine.listener.join()
             speaker_process.join()
 
-        self.assertEqual(my_engine.get('listener.counter', 0), 5)
-        self.assertEqual(my_engine.get('speaker.counter', 0), 2)
+        self.assertEqual(self.engine.get('listener.counter', 0), 5)
+        self.assertEqual(self.engine.get('speaker.counter', 0), 2)
 
 
 if __name__ == '__main__':

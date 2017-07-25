@@ -217,14 +217,14 @@ class ListenerTests(unittest.TestCase):
 
         my_engine.listener.DEFER_DURATION = 0.0
         my_engine.set('general.switch', 'on')
-        listener_process = my_engine.listener.start()
+        my_engine.listener.start()
 
         t = Timer(0.1, my_engine.ears.put, [str(my_message)])
         t.start()
 
         time.sleep(0.2)
         my_engine.set('general.switch', 'off')
-        listener_process.join()
+        my_engine.listener.join()
 
     def test_process(self):
 
@@ -522,15 +522,15 @@ class ListenerTests(unittest.TestCase):
         listener = Listener(engine=my_engine)
         listener.DEFER_DURATION = 0.0
 
-        listener_process = listener.start()
+        listener.start()
 
-        listener_process.join(0.1)
-        if listener_process.is_alive():
+        listener.join(0.1)
+        if listener.is_alive():
             logging.info('Stopping listener')
             my_engine.set('general.switch', 'off')
-            listener_process.join()
+            listener.join()
 
-        self.assertFalse(listener_process.is_alive())
+        self.assertFalse(listener.is_alive())
         self.assertEqual(my_engine.get('listener.counter', 0), 0)
 
     def test_dynamic(self):

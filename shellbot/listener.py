@@ -25,7 +25,7 @@ import yaml
 from .events import Event, Message, Attachment, Join, Leave
 
 
-class Listener(object):
+class Listener(Process):
     """
     Handles messages received from chat space
     """
@@ -63,21 +63,9 @@ class Listener(object):
 
             listener = Listener(filter=filter)
         """
+        Process.__init__(self)
         self.engine = engine
         self.filter = filter
-
-    def start(self):
-        """
-        Starts the listening process
-
-        :return: either the process that has been started, or None
-
-        This function starts a separate process to listen
-        in the background.
-        """
-        process = Process(target=self.run)  # do not daemonize
-        process.start()
-        return process
 
     def run(self):
         """
