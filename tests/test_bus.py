@@ -18,6 +18,8 @@ class BusTests(unittest.TestCase):
 
     def setUp(self):
         self.context = Context()
+        self.context.set('general.switch', 'on')
+        self.context.set('bus.address', 'tcp://127.0.0.1:5555')
         self.bus = Bus(context=self.context)
 
     def tearDown(self):
@@ -33,21 +35,29 @@ class BusTests(unittest.TestCase):
 
         self.assertEqual(self.bus.DEFAULT_ADDRESS, 'tcp://127.0.0.1:5555')
         self.assertEqual(self.bus.context, self.context)
-        self.assertTrue(self.bus.zmq_context is not None)
 
     def test_bus_check(self):
 
         logging.info(u"***** bus/check")
 
+        self.context.set('bus.address', None)
         self.bus.check()
         self.assertEqual(self.context.get('bus.address'), self.bus.DEFAULT_ADDRESS)
-        self.assertTrue(self.bus.zmq_context is not None)
 
     def test_bus_subscribe(self):
 
         logging.info(u"***** bus/subscribe")
 
-        subscriber = self.bus.subscribe('topic')
+        with self.assertRaises(AssertionError):
+            subscriber = self.bus.subscribe(None)
+
+        with self.assertRaises(AssertionError):
+            subscriber = self.bus.subscribe([])
+
+        with self.assertRaises(AssertionError):
+            subscriber = self.bus.subscribe(())
+
+        subscriber = self.bus.subscribe('channel')
 
     def test_bus_publish(self):
 
@@ -59,17 +69,19 @@ class BusTests(unittest.TestCase):
 
         logging.info(u"***** subscriber/init")
 
-        subscriber =  Subscriber(socket='s')
-        self.assertEqual(subscriber.socket, 's')
+        subscriber =  Subscriber(context=self.context, channels='channel')
+        self.assertEqual(subscriber.context, self.context)
+        self.assertTrue(subscriber.socket is None)
 
     def test_subscriber_get(self):
 
         logging.info(u"***** subscriber/get")
 
         subscriber =  self.bus.subscribe('dummy')
+        subscriber.socket = mock.Mock()
         with mock.patch.object(subscriber.socket,
                                'recv',
-                               return_value='topic {"hello": "world"}') as mocked:
+                               return_value='dummy {"hello": "world"}') as mocked:
 
             message = subscriber.get()
             self.assertEqual(message, {u'hello': u'world'})
@@ -78,8 +90,65 @@ class BusTests(unittest.TestCase):
 
         logging.info(u"***** publisher/init")
 
-        publisher =  Publisher(socket='s')
-        self.assertEqual(publisher.socket, 's')
+        publisher =  Publisher(context=self.context)
+        self.assertEqual(publisher.context, self.context)
+        self.assertTrue(publisher.socket is None)
+
+    def test_publisher_run(self):
+
+        logging.info(u"***** publisher/run")
+
+        publisher =  Publisher(context=self.context)
+
+        self.context.set('general.switch', 'off')
+        publisher.run()
+
+        self.context.set('general.switch', 'on')
+        publisher.put('*weird', '*message')
+        publisher.fan.put(None)
+        publisher.run()
+
+    def test_publisher_static_test(self):
+
+        logging.info(u"***** publisher/static test")
+
+        publisher = Publisher(context=self.context)
+        publisher.DEFER_DURATION = 0.0
+        self.context.set('general.switch', 'on')
+        publisher.start()
+
+        publisher.join(0.1)
+        if publisher.is_alive():
+            logging.info('Stopping publisher')
+            self.context.set('general.switch', 'off')
+            publisher.join()
+
+        self.assertFalse(publisher.is_alive())
+        self.assertEqual(self.context.get('publisher.counter', 0), 0)
+
+    def test_publisher_dynamic_test(self):
+
+        logging.info(u"***** publisher/dynamic test")
+
+        publisher = Publisher(context=self.context)
+        self.context.set('general.switch', 'on')
+
+        items = [
+            ('channel_A', "hello"),
+            ('channel_B', "world"),
+            ('channel_C', {"hello": "world"}),
+        ]
+
+        for (channel, message) in items:
+            publisher.put(channel, message)
+
+        publisher.fan.put(None)
+
+        publisher.socket = mock.Mock()  # no output!
+        publisher.run()
+
+        self.assertEqual(self.context.get('publisher.counter', 0), 3)
+        publisher.socket.send.assert_called_with('channel_C {"hello": "world"}')
 
     def test_publisher_put(self):
 
@@ -100,21 +169,64 @@ class BusTests(unittest.TestCase):
             publisher.put((), 'message')
 
         with self.assertRaises(AssertionError):
-            publisher.put('topic', None)
+            publisher.put('channel', None)
 
         with self.assertRaises(AssertionError):
-            publisher.put('topic', '')
+            publisher.put('channel', '')
 
-        with mock.patch.object(publisher.socket,
-                               'send') as mocked:
+        with mock.patch.object(publisher.fan,
+                               'put') as mocked:
 
-            publisher.put('topic', 'message')
-            mocked.assert_called_with('topic "message"')
+            publisher.put('channel', 'message')
+            mocked.assert_called_with('channel "message"')
 
-            publisher.put(['topic'], 'message')
-            mocked.assert_called_with('topic "message"')
+            publisher.put(['channel'], 'message')
+            mocked.assert_called_with('channel "message"')
+
+    def test_life_cycle(self):
+
+        logging.info(u"***** life cycle")
+
+        class Listener(Process):
+            def __init__(self, bus):
+                Process.__init__(self)
+                self.daemon = True
+                self.bus = bus
+
+            def run(self):
+                subscriber =  self.bus.subscribe('')
+                logging.info(u"Starting subscriber")
+
+                while self.bus.context.get('general.switch', 'off') == 'on':
+
+                    message = subscriber.get()
+                    if not message:
+                        time.sleep(0.001)
+                        continue
+
+                    self.bus.context.set('received', message)
+                    logging.info(u"- {}".format(message))
+
+                logging.info(u"Stopping subscriber")
 
 
+        listener = Listener(self.bus)
+        listener.start()
+
+        publisher = self.bus.publish()
+        publisher.start()
+
+        for value in range(1, 10):
+            publisher.put('channel', {'counter': value})
+        publisher.fan.put(None)
+
+        publisher.join()
+        time.sleep(0.5)
+        self.bus.context.set('general.switch', 'off')
+        time.sleep(0.5)
+        listener.join()
+
+#        self.assertEqual(self.context.get('received'), {'counter': 9})
 
 if __name__ == '__main__':
 

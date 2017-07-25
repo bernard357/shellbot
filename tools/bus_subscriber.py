@@ -17,6 +17,8 @@ Context.set_logger()
 # done by ZeroMQ
 
 bus = Bus(context=Context())
+bus.check()
+
 subscriber = bus.subscribe(['topic_A', 'topic_B'])
 
 logging.info("Waiting for messages (non-blocking mode)")
@@ -25,6 +27,8 @@ while True:
     message = subscriber.get()
     if message:
         logging.info("- receiving: {}".format(message))
+        if isinstance(message, dict):
+            logging.info("- visible keys: {}".format(message.keys()))
         if str(message) == 'quit':
             logging.info("- stopping subscriber")
             break
@@ -33,6 +37,8 @@ logging.info("Waiting for messages (blocking mode)")
 while True:
     message = subscriber.get(block=True)
     logging.info("- receiving: {}".format(message))
+    if isinstance(message, dict):
+        logging.info("- visible keys: {}".format(message.keys()))
     if str(message) == 'quit':
         logging.info("- stopping subscriber")
         break

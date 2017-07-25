@@ -14,6 +14,7 @@ Context.set_logger()
 # this should be ran manually for test purpose
 
 bus = Bus(context=Context())
+bus.check()
 
 items = [
     ('topic_A', 'hello'),
@@ -33,15 +34,22 @@ items = [
 
 publisher = bus.publish()
 
-logging.info("Please run bus_subscriber one or more times")
-time.sleep(3.0)
-
 logging.info("Sending messages")
 
 for index in range(2):
     for topic, message in items:
         logging.info("- sending: {} {}".format(topic, message))
         publisher.put(topic, message)
-        time.sleep(0.3)
 
 logging.info("All messages have been sent")
+
+publisher.fan.put(None)
+
+logging.info("Assume you run bus_spy in a separate procees to see the outcome")
+time.sleep(1.0)
+
+publisher.start()
+publisher.join()
+
+bus.context.set('general.switch', 'off')
+time.sleep(0.5)

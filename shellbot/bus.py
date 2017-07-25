@@ -17,7 +17,9 @@
 
 import json
 import logging
+from multiprocessing import Process, Queue
 from six import string_types
+import time
 import zmq
 
 
@@ -25,7 +27,7 @@ class Bus(object):
     """
     Represents an information bus between publishers and subscribers
 
-    In the context of shellbot, topics are channel identifiers, and messages
+    In the context of shellbot, channels are channel identifiers, and messages
     are python objects serializable with json.
 
     A first pattern is the synchronization of direct channels from the group
@@ -41,7 +43,7 @@ class Bus(object):
     A second pattern is the observation by a group channel of what is
     happening in related direct channels:
 
-    - every direct channel is a publisher, and the topic used is their own
+    - every direct channel is a publisher, and the channel used is their own
       channel identifier
 
     - group channel is a subscriber, and observed messages received from all
@@ -69,7 +71,6 @@ class Bus(object):
 
         """
         self.context = context
-        self.zmq_context = zmq.Context()
 
     def check(self):
         """
@@ -85,12 +86,12 @@ class Bus(object):
         """
         self.context.check('bus.address', self.DEFAULT_ADDRESS)
 
-    def subscribe(self, topics):
+    def subscribe(self, channels):
         """
-        Subcribes to some topics
+        Subcribes to some channels
 
-        :param topics: one or multiple topics
-        :type topics: str or list of str
+        :param channels: one or multiple channels
+        :type channels: str or list of str
 
         :return: Subscriber
 
@@ -99,21 +100,13 @@ class Bus(object):
             # subscribe from all direct channels related to this group channel
             subscriber = bus.subscribe(bot.direct_channels)
 
+            ...
+
+            # get next message from these channels
+            message = subscriber.get()
+
         """
-        socket = self.zmq_context.socket(zmq.SUB)
-        address = self.context.get('bus.address', self.DEFAULT_ADDRESS)
-        logging.debug(u"Subscribing at {}".format(address))
-        socket.connect(address)
-
-        assert topics not in (None, '', [], ())
-        if isinstance(topics, string_types):
-            topics = [topics]
-
-        for topic in topics:
-            logging.debug(u"- {}".format(topic))
-            socket.setsockopt(zmq.SUBSCRIBE, topic)
-
-        return Subscriber(socket=socket)
+        return Subscriber(context=self.context, channels=channels)
 
     def publish(self):
         """
@@ -126,12 +119,16 @@ class Bus(object):
             # get a publisher for subsequent broadcasts
             publisher = bus.publish()
 
+            # start the publishing process
+            publisher.start()
+
+            ...
+
+            # broadcast information_message
+            publisher.put(channel, message)
+
         """
-        socket = self.zmq_context.socket(zmq.PUB)
-        address = self.context.get('bus.address', self.DEFAULT_ADDRESS)
-        logging.debug(u"Publishing at {}".format(address))
-        socket.bind(address)
-        return Publisher(socket=socket)
+        return Publisher(context=self.context)
 
 
 class Subscriber(object):
@@ -161,14 +158,33 @@ class Subscriber(object):
             ...
 
     """
-    def __init__(self, socket):
+    def __init__(self, context, channels):
         """
         Subscribes to asynchronous messages
 
-        :param socket: a ZeroMQ socket
+        :param context: general settings
+        :type context: Context
+
+        :param channels: one or multiple channels
+        :type channels: str or list of str
 
         """
-        self.socket = socket
+        self.context = context
+        address=self.context.get('bus.address')
+        logging.debug(u"Subscribing at {}".format(address))
+
+        assert channels not in (None, [], ())
+        if isinstance(channels, string_types):
+            channels = [channels]
+        self.channels = channels
+
+        for channel in self.channels:
+            if channel:
+                logging.debug(u"- {}".format(channel))
+            else:
+                logging.debug(u"- {}".format('<all channels>'))
+
+        self.socket = None  # defer binding to first get()
 
     def get(self, block=False):
         """
@@ -193,20 +209,30 @@ class Subscriber(object):
             message = subscriber.get(block=True)  # wait until available
 
         Note that this function does not preserve the enveloppe of the message.
-        In other terms, the topic used for the communication is lost
+        In other terms, the channel used for the communication is lost
         in translation. Therefore the need to put within messages all
         information that may be relevant for the receiver.
         """
+        if not self.socket:
+            zmq_context = zmq.Context.instance()
+            self.socket = zmq_context.socket(zmq.SUB)
+            self.socket.linger = 0
+            address=self.context.get('bus.address')
+            self.socket.connect(address)
+
+            for channel in self.channels:
+                self.socket.setsockopt(zmq.SUBSCRIBE, channel)
+
         try:
             flags = zmq.NOBLOCK if not block else 0
             snippet = self.socket.recv(flags=flags)
-            (topic, text) = snippet.split(' ', 1)
+            (channel, text) = snippet.split(' ', 1)
             return json.loads(text)
         except zmq.error.Again:
             return None
 
 
-class Publisher(object):
+class Publisher(Process):
     """
     Publishes asynchronous messages
 
@@ -228,21 +254,107 @@ class Publisher(object):
         publisher.put(bot.id, bit_of_information_here)
 
     """
-    def __init__(self, socket):
+
+    DEFER_DURATION = 0.3  # allow subscribers to connect
+    EMPTY_DELAY = 0.005   # time to wait if queue is empty
+
+    def __init__(self, context):
         """
         Publishes asynchronous messages
 
-        :param socket: a ZeroMQ socket
+        :param context: general settings
+        :type context: Context
 
         """
-        self.socket = socket
+        Process.__init__(self)
+        self.daemon = True
 
-    def put(self, topics, message):
+        self.context = context
+
+        self.fan = Queue()
+
+        self.socket = None  # allow socket injection for tests
+
+    def run(self):
+        """
+        Continuously broadcasts messages
+
+        This function is looping on items received from the queue, and
+        is handling them one by one in the background.
+
+        Processing should be handled in a separate background process, like
+        in the following example::
+
+            publisher = Publisher(address)
+            process = publisher.start()
+
+        The recommended way for stopping the process is to change the
+        parameter ``general.switch`` in the context. For example::
+
+            engine.set('general.switch', 'off')
+
+        Alternatively, the loop is also broken when a poison pill is pushed
+        to the queue. For example::
+
+            publisher.fan.put(None)
+
+        """
+        address=self.context.get('bus.address')
+        logging.debug(u"Publishing at {}".format(address))
+
+        if not self.socket:
+            zmq_context = zmq.Context.instance()
+            self.socket = zmq_context.socket(zmq.PUB)
+            self.socket.linger = 0
+            self.socket.bind(address)
+
+        time.sleep(self.DEFER_DURATION)  # allow subscribers to connect
+
+        logging.info(u"Starting publisher")
+
+        try:
+            self.context.set('publisher.counter', 0)
+            while self.context.get('general.switch', 'on') == 'on':
+
+                if self.fan.empty():
+                    time.sleep(self.EMPTY_DELAY)
+                    continue
+
+                try:
+                    item = self.fan.get_nowait()
+                    if item is None:
+                        break
+
+                    self.context.increment('publisher.counter')
+                    self.process(item)
+
+                except Exception as feedback:
+                    logging.exception(feedback)
+
+        except KeyboardInterrupt:
+            pass
+
+        logging.info("Publisher has been stopped")
+
+    def process(self, item):
+        """
+        Processes items received from the queue
+
+        :param item: the item received
+        :type item: str
+
+        Note that the item should result from serialization
+        of (channel, message) tuple done previously.
+        """
+        logging.debug(u"Publishing {}".format(item))
+        self.socket.send(item)
+
+    def put(self, channels, message):
         """
         Broadcasts a message
 
-        :param topics: one or multiple topics
-        :type topics: str or list of str
+        :param channels: one or multiple channels
+        :type channels: str or list of str
 
         :param message: the message to send
         :type message: dict or other json-serializable object
@@ -252,12 +364,17 @@ class Publisher(object):
             message = { ... }
             publisher.put(bot.id, message)
 
+        This function actually put the message in a global queue that is
+        handled asynchronously. Therefore, when the function returns there is
+        no guarantee that message has been transmitted nor received.
         """
-        assert topics not in (None, '', [], ())
-        if isinstance(topics, string_types):
-            topics = [topics]
+        assert channels not in (None, '', [], ())
+        if isinstance(channels, string_types):
+            channels = [channels]
 
         assert message not in (None, '')
         text = json.dumps(message)
-        for topic in topics:
-            self.socket.send(topic + ' ' + text)  # no multi-part because of non-blocking recv()
+        for channel in channels:
+            item = channel + ' ' + text
+            logging.debug(u"Queuing {}".format(item))
+            self.fan.put(item)
