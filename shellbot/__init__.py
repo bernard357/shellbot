@@ -14,6 +14,8 @@
 # limitations under the License.
 
 from .bot import ShellBot
+from .bus import Bus, Subscriber, Publisher
+from .channel import Channel
 from .context import Context
 from .engine import Engine
 from .listener import Listener
@@ -33,17 +35,21 @@ __version__ = '17.6.6'
 
 __all__ = [
     '__version__',
+    'Bus',
+    'Channel',
     'Command',
     'Context',
     'Engine',
     'Listener',
     'MachinesFactory',
     'Notifier',
+    'Publisher',
     'Route',
     'Server',
     'Shell',
     'ShellBot',
     'SpaceFactory',
     'Speaker',
+    'Subscriber',
     'Wrapper',
 ]
