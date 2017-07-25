@@ -11,17 +11,17 @@ import sys
 from threading import Timer
 import time
 
-from shellbot import Context, Engine
+from shellbot import Context, Engine, Bus
 from shellbot.machines import Menu
 from shellbot.stores import MemoryStore
 
 class MyEngine(Engine):
     def get_bot(self, id):
         logging.debug("Injecting test bot")
-        return my_bot
-
-
-my_engine = MyEngine()
+        bot = FakeBot(engine=self)
+        bot.subscriber = self.bus.subscribe('*id')
+        bot.publisher = self.publisher
+        return bot
 
 class FakeBot(object):
     id = '234'
@@ -41,43 +41,53 @@ class FakeBot(object):
         return self.store.recall(key, default)
 
 
-my_bot = FakeBot(engine=my_engine)
-
-
 class MenuTests(unittest.TestCase):
 
+    def setUp(self):
+        self.engine = MyEngine()
+        self.engine.bus = Bus(self.engine.context)
+        self.engine.bus.check()
+        self.engine.publisher = self.engine.bus.publish()
+        self.bot = FakeBot(engine=self.engine)
+        self.bot.subscriber = self.engine.bus.subscribe('*id')
+        self.bot.publisher = self.engine.publisher
+
     def tearDown(self):
-        my_engine.context.clear()
+        del self.bot
+        del self.engine.publisher
+        del self.engine.bus
+        del self.engine
         collected = gc.collect()
-        logging.info("Garbage collector: collected %d objects." % (collected))
+        if collected:
+            logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 
         logging.info("******** init")
 
         with self.assertRaises(AssertionError):
-            machine = Menu(bot=my_bot)  # missing question
+            machine = Menu(bot=self.bot)  # missing question
 
         with self.assertRaises(AssertionError):
-            machine = Menu(bot=my_bot,  # missing options
+            machine = Menu(bot=self.bot,  # missing options
                            question="What's up, Doc?")
 
         with self.assertRaises(AssertionError):
-            machine = Menu(bot=my_bot,  # not supported parameter
+            machine = Menu(bot=self.bot,  # not supported parameter
                            question="What's up, Doc?",
                            options=["option 1", "option 2"],
                            mask="*mask")
 
         with self.assertRaises(AssertionError):
-            machine = Menu(bot=my_bot,  # not supported parameter
+            machine = Menu(bot=self.bot,  # not supported parameter
                            question="What's up, Doc?",
                            options=["option 1", "option 2"],
                            regex="*regex")
 
-        machine = Menu(bot=my_bot,
+        machine = Menu(bot=self.bot,
                        question="What's up, Doc?",
                        options=["option 1", "option 2"])
-        self.assertEqual(machine.bot, my_bot)
+        self.assertEqual(machine.bot, self.bot)
         self.assertEqual(machine.question, "What's up, Doc?")
         self.assertEqual(machine.question_content, None)
         self.assertEqual(machine.options, [u"option 1", u"option 2"])
@@ -98,14 +108,14 @@ class MenuTests(unittest.TestCase):
         self.assertEqual(sorted(machine._transitions.keys()),
                          ['begin', 'delayed', 'waiting'])
 
-        machine = Menu(bot=my_bot,
+        machine = Menu(bot=self.bot,
                        question_content="What's *up*, Doc?",
                        options=["option 1", "option 2"])
         self.assertEqual(machine.question, None)
         self.assertEqual(machine.question_content, "What's *up*, Doc?")
         self.assertEqual(machine.options, [u"option 1", u"option 2"])
 
-        machine = Menu(bot=my_bot,
+        machine = Menu(bot=self.bot,
                        question="What's up, Doc?",
                        question_content="What's *up*, Doc?",
                        options=[u"option 1", u"option 2"],
@@ -122,7 +132,7 @@ class MenuTests(unittest.TestCase):
                        retry_delay=9,
                        cancel_delay=99,
                        key='rabbit.input')
-        self.assertEqual(machine.bot, my_bot)
+        self.assertEqual(machine.bot, self.bot)
         self.assertEqual(machine.question, "What's up, Doc?")
         self.assertEqual(machine.question_content, "What's *up*, Doc?")
         self.assertEqual(machine.options, [u"option 1", u"option 2"])
@@ -144,7 +154,7 @@ class MenuTests(unittest.TestCase):
 
         logging.info("******** elapsed")
 
-        machine = Menu(bot=my_bot,
+        machine = Menu(bot=self.bot,
                        question="What's up, Doc?",
                        options=["option 1", "option 2"])
 
@@ -167,19 +177,21 @@ class MenuTests(unittest.TestCase):
                 if file:
                     self.said.append(file)
 
-        my_bot = MyBot(engine=my_engine)
+        self.bot = MyBot(engine=self.engine)
+        self.bot.subscriber = self.engine.bus.subscribe('*id')
+        self.bot.publisher = self.engine.publisher
 
-        machine = Menu(bot=my_bot,
+        machine = Menu(bot=self.bot,
                        question="What's up, Doc?",
                        options=["option 1", "option 2"])
 
-        my_bot.said = []
+        self.bot.said = []
         machine.say_answer('*test')
         self.assertEqual(
-            my_bot.said,
+            self.bot.said,
             [machine.ANSWER_MESSAGE])
 
-        machine = Menu(bot=my_bot,
+        machine = Menu(bot=self.bot,
                        question="What's up, Doc?",
                        options=["option 1", "option 2"],
                        on_answer="ok for {}",
@@ -187,10 +199,10 @@ class MenuTests(unittest.TestCase):
                        on_answer_file="/file/to/upload.pdf",
                        )
 
-        my_bot.said = []
+        self.bot.said = []
         machine.say_answer('*test')
         self.assertEqual(
-            my_bot.said,
+            self.bot.said,
             ['ok for *test', ' ', '*ok* for *test', '/file/to/upload.pdf'])
 
     def test_say_retry(self):
@@ -209,19 +221,21 @@ class MenuTests(unittest.TestCase):
                 if file:
                     self.said.append(file)
 
-        my_bot = MyBot(engine=my_engine)
+        self.bot = MyBot(engine=self.engine)
+        self.bot.subscriber = self.engine.bus.subscribe('*id')
+        self.bot.publisher = self.engine.publisher
 
-        machine = Menu(bot=my_bot,
+        machine = Menu(bot=self.bot,
                        question="What's up, Doc?",
                        options=["option 1", "option 2"])
 
-        my_bot.said = []
+        self.bot.said = []
         machine.say_retry()
         self.assertEqual(
-            my_bot.said,
+            self.bot.said,
             [machine.RETRY_MESSAGE])
 
-        machine = Menu(bot=my_bot,
+        machine = Menu(bot=self.bot,
                        question="What's up, Doc?",
                        options=["option 1", "option 2"],
                        on_retry="please retry",
@@ -229,10 +243,10 @@ class MenuTests(unittest.TestCase):
                        on_retry_file="/file/to/upload.pdf",
                        )
 
-        my_bot.said = []
+        self.bot.said = []
         machine.say_retry()
         self.assertEqual(
-            my_bot.said,
+            self.bot.said,
             ['please retry', ' ', 'please *retry*', '/file/to/upload.pdf'])
 
     def test_say_cancel(self):
@@ -251,19 +265,21 @@ class MenuTests(unittest.TestCase):
                 if file:
                     self.said.append(file)
 
-        my_bot = MyBot(engine=my_engine)
+        self.bot = MyBot(engine=self.engine)
+        self.bot.subscriber = self.engine.bus.subscribe('*id')
+        self.bot.publisher = self.engine.publisher
 
-        machine = Menu(bot=my_bot,
+        machine = Menu(bot=self.bot,
                        question="What's up, Doc?",
                        options=["option 1", "option 2"])
 
-        my_bot.said = []
+        self.bot.said = []
         machine.say_cancel()
         self.assertEqual(
-            my_bot.said,
+            self.bot.said,
             [machine.CANCEL_MESSAGE])
 
-        machine = Menu(bot=my_bot,
+        machine = Menu(bot=self.bot,
                        question="What's up, Doc?",
                        options=["option 1", "option 2"],
                        on_cancel="Ok, forget about it",
@@ -271,10 +287,10 @@ class MenuTests(unittest.TestCase):
                        on_cancel_file="/file/to/upload.pdf",
                        )
 
-        my_bot.said = []
+        self.bot.said = []
         machine.say_cancel()
         self.assertEqual(
-            my_bot.said,
+            self.bot.said,
             ['Ok, forget about it', ' ', '*cancelled*', '/file/to/upload.pdf'])
 
     def test_ask(self):
@@ -286,16 +302,18 @@ class MenuTests(unittest.TestCase):
             def say(self, message, **kwargs):
                 self.engine.set('said', message)
 
-        my_bot = MyBot(engine=my_engine)
+        self.bot = MyBot(engine=self.engine)
+        self.bot.subscriber = self.engine.bus.subscribe('*id')
+        self.bot.publisher = self.engine.publisher
 
-        machine = Menu(bot=my_bot,
+        machine = Menu(bot=self.bot,
                        question="What's up, Doc?",
                        options=["option 1", "option 2"])
         machine.listen = mock.Mock()
 
         machine.ask()
         self.assertEqual(
-            my_engine.get('said'),
+            self.engine.get('said'),
             "What's up, Doc?\n1. option 1\n2. option 2\n")
         machine.listen.assert_called_with()
 
@@ -303,11 +321,11 @@ class MenuTests(unittest.TestCase):
 
         logging.info("******** listen")
 
-        machine = Menu(bot=my_bot,
+        machine = Menu(bot=self.bot,
                        question="What's up, Doc?",
                        options=["option 1", "option 2"])
 
-        my_engine.set('general.switch', 'off')
+        self.engine.set('general.switch', 'off')
         p = machine.listen()
         p.join()
 
@@ -327,15 +345,15 @@ class MenuTests(unittest.TestCase):
                 else:
                     self.set('answer', arguments)
 
-        machine = MyMenu(bot=my_bot,
+        machine = MyMenu(bot=self.bot,
                          question="What's up, Doc?",
                          options=["option 1", "option 2"])
 
         logging.debug("- with general switch off")
-        my_engine.set('general.switch', 'off')
+        self.engine.set('general.switch', 'off')
         machine.receive()
         self.assertEqual(machine.get('answer'), None)
-        my_engine.set('general.switch', 'on')
+        self.engine.set('general.switch', 'on')
 
         logging.debug("- with is_running false")
         machine.receive()
@@ -343,28 +361,28 @@ class MenuTests(unittest.TestCase):
         machine.set('is_running', True)
 
         logging.debug("- feed the queue after delay")
-        t = Timer(0.1, my_bot.fan.put, ['1'])
+        t = Timer(0.1, self.bot.fan.put, ['1'])
         t.start()
         machine.receive()
         self.assertEqual(machine.get('answer'), 'option 1')
 
         logging.debug("- exit on poison pill")
-        my_bot.fan.put(None)
+        self.bot.fan.put(None)
         machine.receive()
         self.assertEqual(machine.get('answer'), None)
 
         logging.debug("- exit on regular answer")
-        my_bot.fan.put('1')
+        self.bot.fan.put('1')
         machine.receive()
         self.assertEqual(machine.get('answer'), 'option 1')
 
         logging.debug("- exit on exception")
-        my_bot.fan.put('exception')
+        self.bot.fan.put('exception')
         machine.receive()
         self.assertEqual(machine.get('answer'), None)
 
         logging.debug("- exit on keyboard interrupt")
-        my_bot.fan.put('ctl-c')
+        self.bot.fan.put('ctl-c')
         machine.receive()
         self.assertEqual(machine.get('answer'), None)
 
@@ -372,11 +390,13 @@ class MenuTests(unittest.TestCase):
 
         logging.info("******** execute")
 
-        my_bot = FakeBot(engine=my_engine)
-        my_bot.store = mock.Mock()
-        my_bot.say = mock.Mock()
+        self.bot = FakeBot(engine=self.engine)
+        self.bot.store = mock.Mock()
+        self.bot.say = mock.Mock()
+        self.bot.subscriber = self.engine.bus.subscribe('*id')
+        self.bot.publisher = self.engine.publisher
 
-        machine = Menu(bot=my_bot,
+        machine = Menu(bot=self.bot,
                        question="What's up, Doc?",
                        options=["option 1", "option 2"])
         self.assertEqual(machine.get('answer'), None)
@@ -386,34 +406,34 @@ class MenuTests(unittest.TestCase):
         machine.step = mock.Mock()
 
         machine.execute(arguments=None)
-        my_bot.say.assert_called_with(machine.RETRY_MESSAGE)
+        self.bot.say.assert_called_with(machine.RETRY_MESSAGE)
         self.assertEqual(machine.get('answer'), None)
         self.assertFalse(machine.step.called)
 
         machine.execute(arguments='')
-        my_bot.say.assert_called_with(machine.RETRY_MESSAGE)
+        self.bot.say.assert_called_with(machine.RETRY_MESSAGE)
         self.assertEqual(machine.get('answer'), None)
         self.assertFalse(machine.step.called)
 
         machine.execute(arguments='no option in this response')
-        my_bot.say.assert_called_with(machine.RETRY_MESSAGE)
+        self.bot.say.assert_called_with(machine.RETRY_MESSAGE)
         self.assertFalse(machine.step.called)
 
         machine.execute(arguments='1')
-        my_bot.say.assert_called_with(machine.ANSWER_MESSAGE)
+        self.bot.say.assert_called_with(machine.ANSWER_MESSAGE)
         self.assertTrue(machine.step.called)
 
         machine.filter = mock.Mock(return_value=None)
         machine.step = mock.Mock()
         machine.execute(arguments='something else')
-        my_bot.say.assert_called_with(machine.RETRY_MESSAGE)
+        self.bot.say.assert_called_with(machine.RETRY_MESSAGE)
         self.assertFalse(machine.step.called)
 
     def test_filter(self):
 
         logging.info("******** filter")
 
-        machine = Menu(bot=my_bot,
+        machine = Menu(bot=self.bot,
                        question="What's up, Doc?",
                        options=[u"option 1", u"option 2"])
 
@@ -429,7 +449,7 @@ class MenuTests(unittest.TestCase):
 
         logging.info("******** on_input")
 
-        machine = Menu(bot=my_bot,
+        machine = Menu(bot=self.bot,
                        question="What's up, Doc?",
                        options=["option 1", "option 2"])
 
@@ -439,7 +459,7 @@ class MenuTests(unittest.TestCase):
 
         logging.info("******** cancel")
 
-        machine = Menu(bot=my_bot,
+        machine = Menu(bot=self.bot,
                        question="What's up, Doc?",
                        options=["option 1", "option 2"])
 
@@ -460,14 +480,16 @@ class MenuTests(unittest.TestCase):
             def say(self, message):
                 self.engine.set('said', message)
 
-        my_bot = MyBot(engine=my_engine, store=store)
+        self.bot = MyBot(engine=self.engine, store=store)
+        self.bot.subscriber = self.engine.bus.subscribe('*id')
+        self.bot.publisher = self.engine.publisher
 
         class MyMenu(Menu):
 
             def on_input(self, value):
                 assert value == 'option 2'
 
-        machine = Menu(bot=my_bot,
+        machine = Menu(bot=self.bot,
                        question="What's up, Doc?",
                        options=["option 1", "option 2"],
                        key='my.input')
@@ -475,13 +497,13 @@ class MenuTests(unittest.TestCase):
         p = machine.start(tick=0.001)
 
         time.sleep(0.01)
-        my_bot.fan.put('2')
+        self.bot.fan.put('2')
         p.join()
 
         self.assertEqual(machine.get('answer'), 'option 2')
-        self.assertEqual(my_bot.recall('input'), {u'my.input': u'option 2'})
+        self.assertEqual(self.bot.recall('input'), {u'my.input': u'option 2'})
 
-        self.assertEqual(my_engine.get('said'), machine.ANSWER_MESSAGE)
+        self.assertEqual(self.engine.get('said'), machine.ANSWER_MESSAGE)
 
     def test_delayed(self):
 
@@ -494,9 +516,11 @@ class MenuTests(unittest.TestCase):
             def say(self, message):
                 self.engine.set('said', message)
 
-        my_bot = MyBot(engine=my_engine, store=store)
+        self.bot = MyBot(engine=self.engine, store=store)
+        self.bot.subscriber = self.engine.bus.subscribe('*id')
+        self.bot.publisher = self.engine.publisher
 
-        machine = Menu(bot=my_bot,
+        machine = Menu(bot=self.bot,
                        question="What's up, Doc?",
                        options=["option 1", "option 2"],
                        key='my.input')
@@ -505,11 +529,11 @@ class MenuTests(unittest.TestCase):
         p = machine.start(tick=0.001)
 
         time.sleep(0.03)
-        my_bot.fan.put('2')
+        self.bot.fan.put('2')
         p.join()
 
-        self.assertEqual(my_bot.recall('input'), {u'my.input': u'option 2'})
-        self.assertEqual(my_engine.get('said'), machine.ANSWER_MESSAGE)
+        self.assertEqual(self.bot.recall('input'), {u'my.input': u'option 2'})
+        self.assertEqual(self.engine.get('said'), machine.ANSWER_MESSAGE)
 
     def test_cancelled(self):
 
@@ -520,10 +544,12 @@ class MenuTests(unittest.TestCase):
             def say(self, message):
                 self.engine.set('said', message)
 
-        my_bot = MyBot(engine=my_engine)
-        my_engine.set('my.input', '*void')
+        self.bot = MyBot(engine=self.engine)
+        self.bot.subscriber = self.engine.bus.subscribe('*id')
+        self.bot.publisher = self.engine.publisher
+        self.engine.set('my.input', '*void')
 
-        machine = Menu(bot=my_bot,
+        machine = Menu(bot=self.bot,
                        question="What's up, Doc?",
                        options=["option 1", "option 2"])
 
@@ -533,8 +559,8 @@ class MenuTests(unittest.TestCase):
         p = machine.start()
         p.join()
 
-        self.assertEqual(my_engine.get('my.input'), '*void')
-        self.assertEqual(my_engine.get('said'), machine.CANCEL_MESSAGE)
+        self.assertEqual(self.engine.get('my.input'), '*void')
+        self.assertEqual(self.engine.get('said'), machine.CANCEL_MESSAGE)
 
 
 if __name__ == '__main__':

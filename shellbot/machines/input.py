@@ -267,6 +267,12 @@ class Input(Machine):
 
         ]
 
+        during = {
+            'begin': self.on_inbound,
+            'waiting': self.on_inbound,
+            'delayed': self.on_inbound,
+            'end': self.on_inbound,
+        }
         self.build(states=states,
                    transitions=transitions,
                    initial='begin')
@@ -441,17 +447,24 @@ class Input(Machine):
             self.say_retry()
             return
 
-        # storage at machine level
+        # store at machine level
         self.set('answer', arguments)
 
-        # storage at bot level
+        # store at bot level
         if self.key:
             self.bot.update('input', self.key, arguments)
 
-        self.say_answer(arguments)
-
-        # use the input as soon as possible
+        # use the input in this instance as well
         self.on_input(value=arguments)
+
+        # advertise subscribers
+        if self.key:
+            self.bot.publisher.put(
+                'topic',
+                {'from': self.bot.id,
+                 'input': {'key': self.key, 'value': arguments}})
+
+        self.say_answer(arguments)
 
         self.step(event='tick')
 
@@ -612,6 +625,20 @@ class Input(Machine):
 
         """
         pass
+
+    def on_inbound(self, **kwargs):
+        """
+        Updates the chat on inbound message
+
+        """
+        if kwargs.get('event') != 'inbound':
+            return
+        logging.debug(u"Receiving inbound message")
+
+        message = kwargs('message')
+        self.bot.say(u"Received {}: {} (from {})".format(message['input']['key'],
+                                                    message['input']['value'],
+                                                    message['from']))
 
     def cancel(self):
         """

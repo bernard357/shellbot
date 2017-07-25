@@ -11,17 +11,17 @@ import sys
 from threading import Timer
 import time
 
-from shellbot import Context, Engine
+from shellbot import Context, Engine, Bus
 from shellbot.machines import Input
 from shellbot.stores import MemoryStore
 
 class MyEngine(Engine):
     def get_bot(self, id):
         logging.debug("Injecting test bot")
-        return my_bot
-
-
-my_engine = MyEngine()
+        bot = FakeBot(engine=self)
+        bot.subscriber = self.bus.subscribe('*id')
+        bot.publisher = self.publisher
+        return bot
 
 class FakeBot(object):
     id = '234'
@@ -40,33 +40,42 @@ class FakeBot(object):
     def recall(self, key, default=None):
         return self.store.recall(key, default)
 
-
-my_bot = FakeBot(engine=my_engine)
-
-
 class InputTests(unittest.TestCase):
 
+    def setUp(self):
+        self.engine = MyEngine()
+        self.engine.bus = Bus(self.engine.context)
+        self.engine.bus.check()
+        self.engine.publisher = self.engine.bus.publish()
+        self.bot = FakeBot(engine=self.engine)
+        self.bot.subscriber = self.engine.bus.subscribe('*id')
+        self.bot.publisher = self.engine.publisher
+
     def tearDown(self):
-        my_engine.context.clear()
+        del self.bot
+        del self.engine.publisher
+        del self.engine.bus
+        del self.engine
         collected = gc.collect()
-        logging.info("Garbage collector: collected %d objects." % (collected))
+        if collected:
+            logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 
         logging.info("******** init")
 
         with self.assertRaises(AssertionError):
-            machine = Input(bot=my_bot)  # missing question
+            machine = Input(bot=self.bot)  # missing question
 
         with self.assertRaises(AssertionError):
-            machine = Input(bot=my_bot,  # too many args
+            machine = Input(bot=self.bot,  # too many args
                             question="What's up, Doc?",
                             mask="*mask",
                             regex="*regex")
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question="What's up, Doc?")
-        self.assertEqual(machine.bot, my_bot)
+        self.assertEqual(machine.bot, self.bot)
         self.assertEqual(machine.question, "What's up, Doc?")
         self.assertEqual(machine.question_content, None)
         self.assertEqual(machine.on_answer, None)
@@ -86,17 +95,17 @@ class InputTests(unittest.TestCase):
         self.assertEqual(sorted(machine._transitions.keys()),
                          ['begin', 'delayed', 'waiting'])
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question_content="What's *up*, Doc?")
         self.assertEqual(machine.question, None)
         self.assertEqual(machine.question_content, "What's *up*, Doc?")
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question="What's up, Doc?",
                         mask="*mask")
         self.assertEqual(machine.mask, "*mask")
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question="What's up, Doc?",
                         regex="*regex",
                         on_answer="ok for {}",
@@ -112,7 +121,7 @@ class InputTests(unittest.TestCase):
                         retry_delay=9,
                         cancel_delay=99,
                         key='rabbit.input')
-        self.assertEqual(machine.bot, my_bot)
+        self.assertEqual(machine.bot, self.bot)
         self.assertEqual(machine.question, "What's up, Doc?")
         self.assertEqual(machine.mask, None)
         self.assertEqual(machine.regex, "*regex")
@@ -134,7 +143,7 @@ class InputTests(unittest.TestCase):
 
         logging.info("******** elapsed")
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question="What's up, Doc?")
 
         time.sleep(0.01)
@@ -156,28 +165,30 @@ class InputTests(unittest.TestCase):
                 if file:
                     self.said.append(file)
 
-        my_bot = MyBot(engine=my_engine)
+        self.bot = MyBot(engine=self.engine)
+        self.bot.subscriber = self.engine.bus.subscribe('*id')
+        self.bot.publisher = self.engine.publisher
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question="What's up, Doc?")
 
-        my_bot.said = []
+        self.bot.said = []
         machine.say_answer('*test')
         self.assertEqual(
-            my_bot.said,
+            self.bot.said,
             [machine.ANSWER_MESSAGE])
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question="What's up, Doc?",
                         on_answer="ok for {}",
                         on_answer_content="*ok* for {}",
                         on_answer_file="/file/to/upload.pdf",
                         )
 
-        my_bot.said = []
+        self.bot.said = []
         machine.say_answer('*test')
         self.assertEqual(
-            my_bot.said,
+            self.bot.said,
             ['ok for *test', ' ', '*ok* for *test', '/file/to/upload.pdf'])
 
     def test_say_retry(self):
@@ -196,28 +207,28 @@ class InputTests(unittest.TestCase):
                 if file:
                     self.said.append(file)
 
-        my_bot = MyBot(engine=my_engine)
+        self.bot = MyBot(engine=self.engine)
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question="What's up, Doc?")
 
-        my_bot.said = []
+        self.bot.said = []
         machine.say_retry()
         self.assertEqual(
-            my_bot.said,
+            self.bot.said,
             [machine.RETRY_MESSAGE])
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question="What's up, Doc?",
                         on_retry="please retry",
                         on_retry_content="please *retry*",
                         on_retry_file="/file/to/upload.pdf",
                         )
 
-        my_bot.said = []
+        self.bot.said = []
         machine.say_retry()
         self.assertEqual(
-            my_bot.said,
+            self.bot.said,
             ['please retry', ' ', 'please *retry*', '/file/to/upload.pdf'])
 
     def test_say_cancel(self):
@@ -236,28 +247,30 @@ class InputTests(unittest.TestCase):
                 if file:
                     self.said.append(file)
 
-        my_bot = MyBot(engine=my_engine)
+        self.bot = MyBot(engine=self.engine)
+        self.bot.subscriber = self.engine.bus.subscribe('*id')
+        self.bot.publisher = self.engine.publisher
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question="What's up, Doc?")
 
-        my_bot.said = []
+        self.bot.said = []
         machine.say_cancel()
         self.assertEqual(
-            my_bot.said,
+            self.bot.said,
             [machine.CANCEL_MESSAGE])
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question="What's up, Doc?",
                         on_cancel="Ok, forget about it",
                         on_cancel_content="*cancelled*",
                         on_cancel_file="/file/to/upload.pdf",
                         )
 
-        my_bot.said = []
+        self.bot.said = []
         machine.say_cancel()
         self.assertEqual(
-            my_bot.said,
+            self.bot.said,
             ['Ok, forget about it', ' ', '*cancelled*', '/file/to/upload.pdf'])
 
     def test_ask(self):
@@ -269,30 +282,32 @@ class InputTests(unittest.TestCase):
             def say(self, message, **kwargs):
                 self.engine.set('said', message)
 
-        my_bot = MyBot(engine=my_engine)
+        self.bot = MyBot(engine=self.engine)
+        self.bot.subscriber = self.engine.bus.subscribe('*id')
+        self.bot.publisher = self.engine.publisher
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question="What's up, Doc?")
         machine.listen = mock.Mock()
         machine.ask()
-        self.assertEqual(my_engine.get('said'), machine.question)
+        self.assertEqual(self.engine.get('said'), machine.question)
         machine.listen.assert_called_with()
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question_content="What's *up*, Doc?")
         machine.listen = mock.Mock()
         machine.ask()
-        self.assertEqual(my_engine.get('said'), ' ')
+        self.assertEqual(self.engine.get('said'), ' ')
         machine.listen.assert_called_with()
 
     def test_listen(self):
 
         logging.info("******** listen")
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question="What's up, Doc?")
 
-        my_engine.set('general.switch', 'off')
+        self.engine.set('general.switch', 'off')
         p = machine.listen()
         p.join()
 
@@ -309,14 +324,14 @@ class InputTests(unittest.TestCase):
                     raise KeyboardInterrupt()
                 self.set('answer', arguments)
 
-        machine = MyInput(bot=my_bot,
+        machine = MyInput(bot=self.bot,
                           question="What's up, Doc?")
 
         logging.debug("- with general switch off")
-        my_engine.set('general.switch', 'off')
+        self.engine.set('general.switch', 'off')
         machine.receive()
         self.assertEqual(machine.get('answer'), None)
-        my_engine.set('general.switch', 'on')
+        self.engine.set('general.switch', 'on')
 
         logging.debug("- with is_running false")
         machine.receive()
@@ -324,28 +339,28 @@ class InputTests(unittest.TestCase):
         machine.set('is_running', True)
 
         logging.debug("- feed the queue after delay")
-        t = Timer(0.1, my_bot.fan.put, ['ping'])
+        t = Timer(0.1, self.bot.fan.put, ['ping'])
         t.start()
         machine.receive()
         self.assertEqual(machine.get('answer'), 'ping')
 
         logging.debug("- exit on poison pill")
-        my_bot.fan.put(None)
+        self.bot.fan.put(None)
         machine.receive()
         self.assertEqual(machine.get('answer'), None)
 
         logging.debug("- exit on regular answer")
-        my_bot.fan.put('pong')
+        self.bot.fan.put('pong')
         machine.receive()
         self.assertEqual(machine.get('answer'), 'pong')
 
         logging.debug("- exit on exception")
-        my_bot.fan.put('exception')
+        self.bot.fan.put('exception')
         machine.receive()
         self.assertEqual(machine.get('answer'), None)
 
         logging.debug("- exit on keyboard interrupt")
-        my_bot.fan.put('ctl-c')
+        self.bot.fan.put('ctl-c')
         machine.receive()
         self.assertEqual(machine.get('answer'), None)
 
@@ -353,9 +368,11 @@ class InputTests(unittest.TestCase):
 
         logging.info("******** execute")
 
-        bot = FakeBot(engine=my_engine)
+        bot = FakeBot(engine=self.engine)
         bot.store = mock.Mock()
         bot.say = mock.Mock()
+        bot.subscriber = self.engine.bus.subscribe('*id')
+        bot.publisher = self.engine.publisher
 
         machine = Input(bot=bot,
                         question="What's up, Doc?",
@@ -390,7 +407,7 @@ class InputTests(unittest.TestCase):
 
         logging.info("******** filter")
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question="What's up, Doc?")
 
         self.assertEqual(machine.filter('hello world'), 'hello world')
@@ -404,7 +421,7 @@ class InputTests(unittest.TestCase):
 
         logging.info("******** search_mask")
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question="What's up, Doc?")
 
         with self.assertRaises(AssertionError):
@@ -427,7 +444,7 @@ class InputTests(unittest.TestCase):
 
         logging.info("******** search_expression")
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question="What's up, Doc?")
 
         with self.assertRaises(AssertionError):
@@ -470,7 +487,7 @@ class InputTests(unittest.TestCase):
 
         logging.info("******** on_input")
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question="What's up, Doc?")
 
         machine.on_input(value='ok!')
@@ -479,7 +496,7 @@ class InputTests(unittest.TestCase):
 
         logging.info("******** cancel")
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question="What's up, Doc?")
 
         machine.say_cancel = mock.Mock()
@@ -499,27 +516,29 @@ class InputTests(unittest.TestCase):
             def say(self, message):
                 self.engine.set('said', message)
 
-        my_bot = MyBot(engine=my_engine, store=store)
+        self.bot = MyBot(engine=self.engine, store=store)
+        self.bot.subscriber = self.engine.bus.subscribe('*id')
+        self.bot.publisher = self.engine.publisher
 
         class MyInput(Input):
 
             def on_input(self, value):
                 assert value == 'here we go'
 
-        machine = MyInput(bot=my_bot,
+        machine = MyInput(bot=self.bot,
                         question="What's up, Doc?",
                         key='my.input')
 
         p = machine.start(tick=0.001)
 
         time.sleep(0.01)
-        my_bot.fan.put('here we go')
+        self.bot.fan.put('here we go')
         p.join()
 
         self.assertEqual(machine.get('answer'), 'here we go')
-        self.assertEqual(my_bot.recall('input'), {u'my.input': u'here we go'})
+        self.assertEqual(self.bot.recall('input'), {u'my.input': u'here we go'})
 
-        self.assertEqual(my_engine.get('said'), machine.ANSWER_MESSAGE)
+        self.assertEqual(self.engine.get('said'), machine.ANSWER_MESSAGE)
 
     def test_delayed(self):
 
@@ -532,9 +551,11 @@ class InputTests(unittest.TestCase):
             def say(self, message):
                 self.engine.set('said', message)
 
-        my_bot = MyBot(engine=my_engine, store=store)
+        self.bot = MyBot(engine=self.engine, store=store)
+        self.bot.subscriber = self.engine.bus.subscribe('*id')
+        self.bot.publisher = self.engine.publisher
 
-        machine = Input(bot=my_bot,
+        machine = Input(bot=self.bot,
                         question="What's up, Doc?",
                         key='my.input')
 
@@ -542,11 +563,11 @@ class InputTests(unittest.TestCase):
         p = machine.start(tick=0.001)
 
         time.sleep(0.03)
-        my_bot.fan.put('here we go')
+        self.bot.fan.put('here we go')
         p.join()
 
-        self.assertEqual(my_bot.recall('input'), {u'my.input': u'here we go'})
-        self.assertEqual(my_engine.get('said'), machine.ANSWER_MESSAGE)
+        self.assertEqual(self.bot.recall('input'), {u'my.input': u'here we go'})
+        self.assertEqual(self.engine.get('said'), machine.ANSWER_MESSAGE)
 
     def test_cancelled(self):
 
@@ -557,10 +578,13 @@ class InputTests(unittest.TestCase):
             def say(self, message):
                 self.engine.set('said', message)
 
-        my_bot = MyBot(engine=my_engine)
-        my_engine.set('my.input', '*void')
+        self.bot = MyBot(engine=self.engine)
+        self.bot.subscriber = self.engine.bus.subscribe('*id')
+        self.bot.publisher = self.engine.publisher
 
-        machine = Input(bot=my_bot,
+        self.engine.set('my.input', '*void')
+
+        machine = Input(bot=self.bot,
                         question="What's up, Doc?",
                         key='my.input')
 
@@ -570,8 +594,8 @@ class InputTests(unittest.TestCase):
         p = machine.start()
         p.join()
 
-        self.assertEqual(my_engine.get('my.input'), '*void')
-        self.assertEqual(my_engine.get('said'), machine.CANCEL_MESSAGE)
+        self.assertEqual(self.engine.get('my.input'), '*void')
+        self.assertEqual(self.engine.get('said'), machine.CANCEL_MESSAGE)
 
 
 if __name__ == '__main__':
