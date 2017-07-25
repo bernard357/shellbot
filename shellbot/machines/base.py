@@ -30,27 +30,27 @@ class Machine(object):
 
     1. A machine instance is created and configured::
 
-           >>>a_bot = ShellBot(...)
-           >>>machine = Machine(bot=a_bot)
+           a_bot = ShellBot(...)
+           machine = Machine(bot=a_bot)
 
-           >>>machine.set(states=states, transitions=transitions, ...
+           machine.set(states=states, transitions=transitions, ...
 
     2. The machine is switched on and ticked at regular intervals::
 
-           >>>machine.start()
+           machine.start()
 
     3. Machine can process more events than ticks::
 
-           >>>machine.execute('hello world')
+           machine.execute('hello world')
 
     4. When a machine is expecting data from the chat space, it listens
        from the ``fan`` queue used by the shell::
 
-           >>>engine.fan.put('special command')
+           engine.fan.put('special command')
 
     5. When the machine is coming end of life, resources can be disposed::
 
-           >>>machine.stop()
+           machine.stop()
 
     credit: Alex Bertsch <abertsch@dropbox.com>   securitybot/state_machine.py
     """
@@ -419,6 +419,23 @@ class Machine(object):
             while machine.is_running:
                 machine.step(gauge=get_measurement())
 
+        Shellbot is using this mechanism for itself, and the function can be
+        called at various occasions:
+        - machine tick - This is done at regular intervals in time
+        - input from the chat - Typically, in response to a question
+        - inbound message - Received from subscription, over the network
+
+        Following parameters are used for machine ticks:
+        - event='tick' - fixed value
+
+        Following parameters are used for chat input:
+        - event='input' - fixed value
+        - arguments - the text that is submitted from the chat
+
+        Following parameters are used for subscriptions:
+        - event='inbound' - fixed value
+        - message - the object that has been transmitted
+
         This machine should report on progress by sending
         messages with one or multiple ``self.bot.say("Whatever message")``.
 
@@ -521,8 +538,7 @@ class Machine(object):
 
                 try:
                     if self.mixer.empty():
-#                        logging.debug(u"Clocking the machine")
-                        self.step(event='tick')
+                        self.on_tick()
                         time.sleep(self.TICK_DURATION)
                         continue
 
@@ -543,6 +559,16 @@ class Machine(object):
 
         logging.info(u"Machine has been stopped")
         self.set('is_running', False)
+
+    def on_tick(self):
+        """
+        Processes one tick
+        """
+        self.step(event='tick')
+
+        message = self.bot.subscriber.get()
+        if message:
+            self.step(event='inbound', message=message)
 
     def execute(self, arguments):
         """

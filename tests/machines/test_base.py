@@ -11,7 +11,7 @@ import sys
 from threading import Timer
 import time
 
-from shellbot import Context, Engine, ShellBot
+from shellbot import Context, Engine, ShellBot, Bus
 from shellbot.machines import Machine, State, Transition
 
 
@@ -47,7 +47,12 @@ class MachineTests(unittest.TestCase):
 
     def setUp(self):
         self.engine = Engine()
+        self.engine.bus = Bus(self.engine.context)
+        self.engine.bus.check()
+        self.engine.publisher = self.engine.bus.publish()
         self.bot = ShellBot(engine=self.engine)
+        self.bot.subscriber = self.engine.bus.subscribe('*id')
+        self.bot.publisher = self.engine.publisher
 
     def tearDown(self):
         del self.bot
