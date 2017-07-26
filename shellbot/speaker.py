@@ -16,7 +16,7 @@
 # limitations under the License.
 
 import logging
-from multiprocessing import Process, Queue
+from multiprocessing import Process
 from six import string_types
 import time
 
@@ -42,7 +42,7 @@ class Vibes(object):
             self.text, self.content, self.file, self.channel_id, self.person)
 
 
-class Speaker(object):
+class Speaker(Process):
     """
     Sends updates to a business messaging space
     """
@@ -57,21 +57,8 @@ class Speaker(object):
         :type engine: Engine
 
         """
+        Process.__init__(self)
         self.engine = engine
-
-    def start(self):
-        """
-        Starts the speaking process
-
-        :return: either the process that has been started, or None
-
-        This function starts a separate daemonic process to speak
-        in the background.
-        """
-        process = Process(target=self.run)
-        process.daemon = True
-        process.start()
-        return process
 
     def run(self):
         """

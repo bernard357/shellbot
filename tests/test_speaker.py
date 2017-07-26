@@ -45,17 +45,17 @@ class SpeakerTests(unittest.TestCase):
 
         speaker = Speaker(engine=my_engine)
 
-        speaker_process = speaker.start()
+        speaker.start()
 
-        speaker_process.join(0.1)
-        if speaker_process.is_alive():
+        speaker.join(0.1)
+        if speaker.is_alive():
             logging.info('Stopping speaker')
             my_engine.set('general.switch', 'off')
-            speaker_process.join()
+            speaker.join()
 
         logging.debug("here")
 
-        self.assertFalse(speaker_process.is_alive())
+        self.assertFalse(speaker.is_alive())
         self.assertEqual(my_engine.get('speaker.counter', 0), 0)
 
     def test_dynamic(self):
@@ -94,14 +94,14 @@ class SpeakerTests(unittest.TestCase):
         my_engine.set('speaker.counter', 0) # do not wait for run()
 
         speaker = Speaker(engine=my_engine)
-        speaker_process = speaker.start()
+        speaker.start()
         while True:
             counter = my_engine.get('speaker.counter', 0)
             if counter > 0:
                 logging.info("- speaker.counter > 0")
                 break
         my_engine.set('general.switch', 'off')
-        speaker_process.join()
+        speaker.join()
 
         self.assertTrue(my_engine.get('speaker.counter') > 0)
 
@@ -131,14 +131,14 @@ class SpeakerTests(unittest.TestCase):
 
         my_engine.speaker.NOT_READY_DELAY = 0.01
         my_engine.set('general.switch', 'on')
-        speaker_process = my_engine.speaker.start()
+        my_engine.speaker.start()
 
         t = Timer(0.1, my_engine.mouth.put, ['ping'])
         t.start()
 
         time.sleep(0.2)
         my_engine.set('general.switch', 'off')
-        speaker_process.join()
+        my_engine.speaker.join()
 
     def test_process(self):
 

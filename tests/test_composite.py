@@ -56,7 +56,7 @@ class CompositeTests(unittest.TestCase):
 
         logging.info('*** Static test ***')
 
-        speaker_process = self.engine.speaker.start()
+        self.engine.speaker.start()
         self.engine.listener.start()
 
         self.engine.listener.join(0.2)
@@ -64,7 +64,7 @@ class CompositeTests(unittest.TestCase):
             logging.info('Stopping all threads')
             self.engine.set('general.switch', 'off')
             self.engine.listener.join()
-            speaker_process.join()
+            self.engine.speaker.join()
 
         self.assertEqual(self.engine.get('listener.counter', 0), 0)
         self.assertEqual(self.engine.get('speaker.counter', 0), 0)
@@ -73,7 +73,7 @@ class CompositeTests(unittest.TestCase):
 
         logging.info('*** Dynamic test ***')
 
-        speaker_process = self.engine.speaker.start()
+        self.engine.speaker.start()
         self.engine.listener.start()
 
         items = [
@@ -171,7 +171,7 @@ class CompositeTests(unittest.TestCase):
             logging.info('Stopping all threads')
             self.engine.set('general.switch', 'off')
             self.engine.listener.join()
-            speaker_process.join()
+            self.engine.speaker.join()
 
         self.assertEqual(self.engine.get('listener.counter', 0), 5)
         self.assertEqual(self.engine.get('speaker.counter', 0), 2)
