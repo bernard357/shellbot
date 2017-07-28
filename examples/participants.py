@@ -37,7 +37,7 @@ ngrok for exposing services to the Internet::
 
     export CISCO_SPARK_BOT_TOKEN="<token id from Cisco Spark for Developers>"
     export SERVER_URL="http://1a107f21.ngrok.io"
-    python invitations.py
+    python participants.py
 
 
 """
@@ -45,6 +45,7 @@ ngrok for exposing services to the Internet::
 import logging
 from multiprocessing import Process
 import os
+import time
 
 from shellbot import Engine, Context
 from shellbot.machines import Input
@@ -56,14 +57,13 @@ Context.set_logger()
 
 class MyFactory(object):
     def get_machine(self, bot):
-        return Input(bot=bot,
-                     question="PO number please?",
-                     mask="9999A",
-                     on_retry="PO number should have 4 digits and a letter",
-                     on_answer="Ok, PO number has been noted: {}",
-                     on_cancel="Ok, forget about the PO number",
-                     key='order.id')
-
+            return Input(bot=bot,
+                         question="PO number please?",
+                         mask="9999A",
+                         on_retry="PO number should have 4 digits and a letter",
+                         on_answer="Ok, PO number has been noted: {}",
+                         on_cancel="Ok, forget about the PO number",
+                         key='order.id')
 
 #
 # create a bot and configure it
@@ -82,28 +82,41 @@ class Handler(object):
         self.engine = engine
 
     def on_enter(self, received):
+        print("ENTER: {}".format(received))
         bot = self.engine.get_bot(received.channel_id)
         bot.say(u"Happy to enter '{}'".format(bot.title))
 
     def on_exit(self, received):
+        print("EXIT: {}".format(received))
         logging.info(u"Sad to exit")
 
     def on_join(self, received):
+        print("JOIN: {}".format(received))
         bot = self.engine.get_bot(received.channel_id)
         bot.say(u"Welcome to '{}' in '{}'".format(
             received.actor_label, bot.title))
 
+        bot.say(person=received.actor_address, text=u"Please give me your attention please")
+
+        time.sleep(1)
+        direct_channel = self.engine.space.get_by_person(received.actor_label)
+        if direct_channel:
+            direct_bot = self.engine.get_bot(direct_channel.id)
+            if direct_bot.machine and not direct_bot.machine.is_running:
+                direct_bot.machine.restart()
+
     def on_leave(self, received):
+        print("LEAVE: {}".format(received))
         bot = self.engine.get_bot(received.channel_id)
         bot.say(u"Bye bye '{}', we will miss you in '{}'".format(
             received.actor_label, bot.title))
 
 
 handler = Handler(engine)
-engine.subscribe('enter', handler)
-engine.subscribe('exit', handler)
-engine.subscribe('join', handler)
-engine.subscribe('leave', handler)
+engine.register('enter', handler)
+engine.register('exit', handler)
+engine.register('join', handler)
+engine.register('leave', handler)
 
 #
 # run the server
