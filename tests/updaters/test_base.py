@@ -45,7 +45,7 @@ class BaseTests(unittest.TestCase):
         self.assertEqual(u.more, 'more')
         with self.assertRaises(AttributeError):
             self.assertEqual(u.weird, 'weird')
-        self.assertTrue(u.engine.subscribe.called)
+        self.assertTrue(u.engine.register.called)
 
     def test_on_bond(self):
 

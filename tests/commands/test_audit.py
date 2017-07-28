@@ -147,7 +147,7 @@ class AuditTests(unittest.TestCase):
         c = Audit(my_engine)
         c.engine = mock.Mock()
         c.on_init()
-        self.assertTrue(c.engine.subscribe.called)
+        self.assertTrue(c.engine.register.called)
 
     def test_on_start(self):
 

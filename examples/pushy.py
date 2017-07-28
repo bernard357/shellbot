@@ -220,7 +220,7 @@ class Handler(object):
 
 
 handler = Handler(engine)
-engine.subscribe('inbound', handler)  # receive clicks via listener
+engine.register('inbound', handler)  # receive clicks via listener
 
 # launch multiple processes to do the job
 #

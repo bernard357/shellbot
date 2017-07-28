@@ -408,8 +408,8 @@ class ListenerTests(unittest.TestCase):
                 self.joined = True
 
         handler = Handler()
-        my_engine.subscribe('enter', handler)
-        my_engine.subscribe('join', handler)
+        my_engine.register('enter', handler)
+        my_engine.register('join', handler)
 
         listener = Listener(engine=my_engine)
         with self.assertRaises(AssertionError):
@@ -460,8 +460,8 @@ class ListenerTests(unittest.TestCase):
                 self.left = True
 
         handler = Handler()
-        my_engine.subscribe('exit', handler)
-        my_engine.subscribe('leave', handler)
+        my_engine.register('exit', handler)
+        my_engine.register('leave', handler)
 
         listener = Listener(engine=my_engine)
         with self.assertRaises(AssertionError):

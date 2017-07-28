@@ -21,37 +21,16 @@ from six import string_types
 import time
 
 
-class Vibes(object):
-    def __init__(self,
-                 text=None,
-                 content=None,
-                 file=None,
-                 channel_id=None,
-                 person=None):
-        self.text = text
-        self.content = content
-        self.file = file
-        self.channel_id = channel_id
-        self.person = person
-
-    def __str__(self):
-        """
-        Returns a human-readable string representation of this object.
-        """
-        return u"text={}, content={}, file={}, channel_id={}, person={}".format(
-            self.text, self.content, self.file, self.channel_id, self.person)
-
-
-class Speaker(Process):
+class Observer(Process):
     """
-    Sends updates to a business messaging space
+    Dispatches inbound records to downwards updaters
     """
 
     EMPTY_DELAY = 0.005   # time to wait if queue is empty
 
     def __init__(self, engine=None):
         """
-        Sends updates to a business messaging space
+        Dispatches inbound records to downwards updaters
 
         :param engine: the overarching engine
         :type engine: Engine
@@ -62,7 +41,7 @@ class Speaker(Process):
 
     def run(self):
         """
-        Continuously send updates
+        Continuously handle inbound records and commands
 
         This function is looping on items received from the queue, and
         is handling them one by one in the background.
@@ -70,8 +49,8 @@ class Speaker(Process):
         Processing should be handled in a separate background process, like
         in the following example::
 
-            speaker = Speaker(engine=my_engine)
-            speaker.start()
+            observer = Observer(engine=my_engine)
+            observer.start()
 
         The recommended way for stopping the process is to change the
         parameter ``general.switch`` in the context. For example::
@@ -81,21 +60,21 @@ class Speaker(Process):
         Alternatively, the loop is also broken when an exception is pushed
         to the queue. For example::
 
-            engine.mouth.put(None)
+            engine.fan.put(None)
 
         """
-        logging.info(u"Starting speaker")
+        logging.info(u"Starting observer")
 
         try:
-            self.engine.set('speaker.counter', 0)
+            self.engine.set('observer.counter', 0)
             while self.engine.get('general.switch', 'on') == 'on':
 
-                if self.engine.mouth.empty():
+                if self.engine.fan.empty():
                     time.sleep(self.EMPTY_DELAY)
                     continue
 
                 try:
-                    item = self.engine.mouth.get(True, 0.1)
+                    item = self.engine.fan.get(True, 0.1)
                     if item is None:
                         break
 
@@ -107,28 +86,18 @@ class Speaker(Process):
         except KeyboardInterrupt:
             pass
 
-        logging.info(u"Speaker has been stopped")
+        logging.info(u"Observer has been stopped")
 
     def process(self, item):
         """
-        Sends one update to a business messaging space
+        Handles one record or command
 
-        :param item: the update to be transmitted
+        :param item: the record or command
         :type item: str or object
 
         """
 
-        counter = self.engine.context.increment('speaker.counter')
-        logging.debug(u'Speaker is working on {}'.format(counter))
+        counter = self.engine.context.increment('observer.counter')
+        logging.debug(u'Observer is working on {}'.format(counter))
 
-        if self.engine.space is not None:
-            if isinstance(item, string_types):
-                self.engine.space.post_message(id='*default', text=item)
-            else:
-                self.engine.space.post_message(id=item.channel_id,
-                                               text=item.text,
-                                               content=item.content,
-                                               file=item.file,
-                                               person=item.person)
-        else:
-            logging.info(item)
+        logging.debug(u"Observer is not finished yet -- Work in progress")

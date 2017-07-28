@@ -161,8 +161,8 @@ class Magic(object):
                 content=u'<@personEmail:{}|{}>, you can **check out any time you like**, but you can **never** leave!'.format(received.actor_address, received.actor_label))
 
 magic = Magic(engine=engine)
-engine.subscribe('join', magic)
-engine.subscribe('leave', magic)
+engine.register('join', magic)
+engine.register('leave', magic)
 
 # create a chat room
 #

@@ -76,8 +76,8 @@ class Updater(object):
         self.engine = engine
 
         if self.engine:
-            self.engine.subscribe('bond', self)
-            self.engine.subscribe('dispose', self)
+            self.engine.register('bond', self)
+            self.engine.register('dispose', self)
 
         self.on_init(**kwargs)
 
@@ -167,4 +167,3 @@ class Updater(object):
 
         """
         return str(event)
-

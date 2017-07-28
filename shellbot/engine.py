@@ -28,6 +28,7 @@ from .bot import ShellBot
 from .bus import Bus
 from .context import Context
 from .listener import Listener
+from .observer import Observer
 from .routes.wrapper import Wrapper
 from .server import Server
 from .shell import Shell
@@ -175,6 +176,7 @@ class Engine(object):
                  configure=False,
                  mouth=None,
                  ears=None,
+                 fan=None,
                  space=None,
                  type=None,
                  server=None,
@@ -196,11 +198,14 @@ class Engine(object):
         :param configure: Check configuration on initialisation
         :type configure: False (the default) or True
 
-        :param mouth: For asynchronous transmission to the chat space
+        :param mouth: For asynchronous outbound to the chat space
         :type mouth: Queue
 
-        :param ears: For asynchronous updates from the chat space
+        :param ears: For asynchronous inbound from the chat space
         :type ears: Queue
+
+        :param fan: For asynchronous audit of the chat space
+        :type fan: Queue
 
         :param type: Chat space to load for this engine. Default to 'local'
         :type type: str
@@ -248,7 +253,10 @@ class Engine(object):
         self.ears = ears
         self.listener = Listener(engine=self)
 
-        self.subscribed = {
+        self.fan = fan
+        self.observer = Observer(engine=self)
+
+        self.registered = {
             'bond': [],       # connected to a space
             'dispose': [],    # space will be destroyed
             'start': [],      # starting bot services
@@ -356,8 +364,8 @@ class Engine(object):
         self.space.ears = self.ears
         self.space.configure()
         self.space.connect()
-        self.subscribe('start', self.space)
-        self.subscribe('stop', self.space)
+        self.register('start', self.space)
+        self.register('stop', self.space)
 
         self.shell.configure()
 
@@ -463,7 +471,7 @@ class Engine(object):
         """
         return self.get('bot.version', '*unknown*')
 
-    def subscribe(self, event, instance):
+    def register(self, event, instance):
         """
         Registers an object to process an event
 
@@ -473,14 +481,14 @@ class Engine(object):
         :param instance: an object that will handle the event
         :type instance: object
 
-        This function is used to propagate bot events to any module
-        that may need it.
+        This function is used to propagate events to any module
+        that may need it via callbacks.
 
-        On each event, the bot will look for a related member function
+        On each event, the engine will look for a related member function
         in the target instance and call it. For example for the event
         'start' it will look for the member function 'on_start', etc.
 
-        Following standard events can be subscribed:
+        Following standard events can be registered:
 
         - 'bond' - when the bot has connected to a chat space
 
@@ -497,48 +505,48 @@ class Engine(object):
         Example::
 
             def on_init(self):
-                self.engine.subscribe('bond', self)  # call self.on_bond()
-                self.engine.subscribe('dispose', self) # call self.on_dispose()
+                self.engine.register('bond', self)  # call self.on_bond()
+                self.engine.register('dispose', self) # call self.on_dispose()
 
         If the function is called with an unknown label, then a new list
-        of subscribers will be created for this event. Therefore the bot
-        can be used for the dispatching of any custom event.
+        of registered callbacks will be created for this event. Therefore the
+        engine can be used for the dispatching of any custom event.
 
         Example::
 
-            self.engine.subscribe('input', processor)  # for processor.on_input()
+            self.engine.register('input', processor)  # for processor.on_input()
             ...
             received = 'a line of text'
             self.engine.dispatch('input', received)
 
         Registration uses weakref so that it affords the unattended deletion
-        of subscribed objects.
+        of registered objects.
 
         """
         logging.debug(u"Registering to '{}' dispatch".format(event))
 
         assert event not in (None, '')
         assert isinstance(event, string_types)
-        if event not in self.subscribed.keys():
-            self.subscribed[event] = []
+        if event not in self.registered.keys():
+            self.registered[event] = []
 
         name = 'on_' + event
         callback = getattr(instance, name)
         assert callable(callback)  # ensure the event is supported
 
         handle = weakref.proxy(instance)
-        self.subscribed[event].append(handle)
+        self.registered[event].append(handle)
 
-        if len(self.subscribed[event]) > 1:
-            logging.debug(u"- {} objects subscribed to '{}'".format(
-                len(self.subscribed[event]), event))
+        if len(self.registered[event]) > 1:
+            logging.debug(u"- {} objects registered to '{}'".format(
+                len(self.registered[event]), event))
 
         else:
-            logging.debug(u"- 1 object subscribed to '{}'".format(event))
+            logging.debug(u"- 1 object registered to '{}'".format(event))
 
     def dispatch(self, event, **kwargs):
         """
-        Triggers objects that have subscribed to some event
+        Triggers objects that have registered to some event
 
         :param event: label of the event
         :type event: str
@@ -548,20 +556,20 @@ class Engine(object):
             def on_bond(self):
                 self.dispatch('bond')
 
-        For each subscribed object, the function will look for a related member
+        For each registered object, the function will look for a related member
         function and call it. For example for the event
         'bond' it will look for the member function 'on_bond', etc.
 
         Dispatch uses weakref so that it affords the unattended deletion
-        of subscribed objects.
+        of registered objects.
         """
-        assert event in self.subscribed.keys()  # avoid unknown event type
+        assert event in self.registered.keys()  # avoid unknown event type
 
-        if len(self.subscribed[event]) > 1:
+        if len(self.registered[event]) > 1:
             logging.debug(u"Dispatching '{}' to {} objects".format(
-                event, len(self.subscribed[event])))
+                event, len(self.registered[event])))
 
-        elif len(self.subscribed[event]) > 0:
+        elif len(self.registered[event]) > 0:
             logging.debug(u"Dispatching '{}' to 1 object".format(event))
 
         else:
@@ -569,12 +577,12 @@ class Engine(object):
             return
 
         name = 'on_' + event
-        for handle in self.subscribed[event]:
+        for handle in self.registered[event]:
             try:
                 callback = getattr(handle, name)
                 callback(**kwargs)
             except ReferenceError:
-                logging.debug(u"- subscribed object no longer exists")
+                logging.debug(u"- registered object no longer exists")
 
     def load_commands(self, *args, **kwargs):
         """
@@ -675,6 +683,9 @@ class Engine(object):
             self.ears = Queue()
             self.space.ears = self.ears
 
+        if self.fan is None:
+            self.fan = Queue()
+
         self.start_processes()
 
         self.on_start()
@@ -694,6 +705,7 @@ class Engine(object):
         self.speaker.start()
         self.listener.start()
         self.publisher.start()
+        self.observer.start()
 
     def on_start(self):
         """

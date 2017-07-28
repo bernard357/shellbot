@@ -166,7 +166,7 @@ class Audit(Command):
         """
         Registers callback from bot
         """
-        self.engine.subscribe('start', self)
+        self.engine.register('start', self)
 
     def on_start(self):
         """
@@ -232,4 +232,3 @@ class Audit(Command):
                            'from_id': self.engine.name,
                            'from_label': self.engine.name})
         self.updater.put(message)
-

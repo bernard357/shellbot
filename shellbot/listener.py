@@ -205,8 +205,8 @@ class Listener(Process):
         :param received: the message received
         :type received: Message
 
-        Received information is dispatched to subscribers of the event
-        ``message`` at the engine level.
+        Received information is transmitted to registered callbacks on the
+        ``message`` event at the engine level.
 
         When a message is directed to the bot it is submitted directly to the
         shell. This is handled as a command, that can be executed immediately,
@@ -280,7 +280,7 @@ class Listener(Process):
         :param received: the event received
         :type received: Attachment
 
-        Received information is dispatched to subscribers of the event
+        Received information is transmitted to registered callbacks on the
         ``attachment`` at the engine level.
 
         """
@@ -297,7 +297,7 @@ class Listener(Process):
         :param received: the event received
         :type received: Join
 
-        Received information is dispatched to subscribers of the event
+        Received information is transmitted to registered callbacks on the
         ``join`` at the engine level.
 
         In the special case where the bot itself is joining a room by
@@ -321,7 +321,7 @@ class Listener(Process):
         :param received: the event received
         :type received: Leave
 
-        Received information is dispatched to subscribers of the event
+        Received information is transmitted to registered callbacks on the
         ``leave`` at the engine level.
 
         In the special case where the bot itself has been kicked off
@@ -343,7 +343,7 @@ class Listener(Process):
         :param received: the event received
         :type received: Event or derivative
 
-        Received information is dispatched to subscribers of the event
+        Received information is transmitted to registered callbacks on the
         ``inbound`` at the engine level.
 
         """

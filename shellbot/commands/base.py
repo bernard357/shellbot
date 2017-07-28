@@ -44,7 +44,7 @@ class Command(object):
         Example::
 
             def on_init(self):
-                self.engine.subscribe('stop', self)
+                self.engine.register('stop', self)
 
         """
         pass

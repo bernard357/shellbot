@@ -53,8 +53,6 @@ class SpeakerTests(unittest.TestCase):
             my_engine.set('general.switch', 'off')
             speaker.join()
 
-        logging.debug("here")
-
         self.assertFalse(speaker.is_alive())
         self.assertEqual(my_engine.get('speaker.counter', 0), 0)
 
