@@ -29,6 +29,8 @@ class Close(Command):
     keyword = 'close'
     information_message = u"Close this space"
 
+    in_direct = False  # do not allow command to close a direct channel
+
     def execute(self, bot, arguments=None):
         """
         Closes the space
