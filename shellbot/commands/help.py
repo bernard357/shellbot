@@ -47,7 +47,10 @@ class Help(Command):
             lines = []
             for key in self.engine.shell.commands:
                 command = self.engine.shell.command(key)
-                if not command.is_hidden:
+                if command.is_hidden:
+                    pass
+
+                elif self.allow(bot, command):
                     lines.append(u"{} - {}".format(
                         command.keyword,
                         command.information_message))
@@ -60,7 +63,13 @@ class Help(Command):
         else:
             command = self.engine.shell.command(arguments)
 
-            if command:
+            if not command:
+                bot.say(u"This command is unknown.")
+
+            elif not self.allow(bot, command):
+                bot.say(u"This command is unknown.")
+
+            else:
                 lines = []
                 lines.append(u"{} - {}".format(
                     command.keyword,
@@ -75,5 +84,20 @@ class Help(Command):
                 if lines:
                     bot.say('\n'.join(lines))
 
-            else:
-                bot.say(u"This command is unknown.")
+    def allow(self, bot, command):
+        """
+        Allows a command for this bot
+
+        :param bot: Can be a direct channel, or a group channel
+        :type bot: ShellBot
+
+        :param command: Can be restricted either to direct or to group channels
+        :type command: Command
+
+        :return: True is this command is allowed for this bot, else False
+        """
+        if command.in_group and not bot.channel.is_direct:
+            return True
+        if command.in_direct and bot.channel.is_direct:
+            return True
+        return False

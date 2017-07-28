@@ -66,10 +66,13 @@ class Command(object):
         if self.information_message:
             bot.say(self.information_message)
 
-    keyword = None      # verb or token for this command
+    keyword = None          # verb or token for this command
 
     information_message = None    # basic information for this command
 
     usage_message = None    # usage information for this command
 
-    is_hidden = False    # this command should be listed by 'help'
+    is_hidden = False       # when command should not be listed by 'help'
+
+    in_group = True         # when command can be used from group rooms
+    in_direct = True        # when command can be used from direct rooms

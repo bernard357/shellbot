@@ -23,26 +23,30 @@ class MyEngine(Engine):
         return my_bot
 
 
-my_engine = MyEngine(ears=Queue(), mouth=Queue())
-my_engine.shell.load_default_commands()
+class MyChannel(object):
+    is_direct = False
 
 
 class MyBot(object):
-    channel_id = '234'
+    channel = MyChannel()
+
+    id = '234'
     fan = Queue()
 
     def __init__(self, engine):
         self.engine = engine
 
     def say(self, text, content=None, file=None):
-        self.engine.mouth.put(Vibes(text, content, file, self.channel_id))
+        self.engine.mouth.put(Vibes(text, content, file, self.id))
 
     def on_enter(self):
         pass
 
 
-my_bot = MyBot(engine=my_engine)
+my_engine = MyEngine(ears=Queue(), mouth=Queue())
+my_engine.shell.load_default_commands()
 
+my_bot = MyBot(engine=my_engine)
 
 my_message = Message({
     "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
@@ -180,8 +184,6 @@ my_event = Event({
     "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
 })
 
-
-
 class ListenerTests(unittest.TestCase):
 
     def setUp(self):
@@ -189,7 +191,8 @@ class ListenerTests(unittest.TestCase):
 
     def tearDown(self):
         collected = gc.collect()
-        logging.info("Garbage collector: collected %d objects." % (collected))
+        if collected:
+            logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_work(self):
 
@@ -669,8 +672,6 @@ class ListenerTests(unittest.TestCase):
         self.assertEqual(my_engine.get('listener.counter'), 7)
         with self.assertRaises(Exception):
             my_engine.ears.get_nowait()
-        with self.assertRaises(Exception):
-            my_engine.inbox.get_nowait()
         self.assertEqual(
             my_engine.mouth.get_nowait().text,
             'Shelly version *unknown*')

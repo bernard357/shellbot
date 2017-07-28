@@ -15,13 +15,16 @@ from shellbot import Context, Engine, Shell, Vibes
 class MyEngine(Engine):
     def get_bot(self, id):
         logging.debug("Injecting test bot")
-        return Bot(self)
+        return my_bot
 
 
-my_engine = MyEngine(mouth=Queue())
+class MyChannel(object):
+    is_direct = False
 
 
-class Bot(object):
+class MyBot(object):
+    channel = MyChannel()
+
     def __init__(self, engine):
         self.engine = engine
 
@@ -29,15 +32,15 @@ class Bot(object):
         self.engine.mouth.put(Vibes(text, content, file))
 
 
-my_bot = Bot(engine=my_engine)
-
+my_engine = MyEngine(mouth=Queue())
+my_bot = MyBot(engine=my_engine)
 
 class ShellTests(unittest.TestCase):
 
     def tearDown(self):
-        my_engine.context.clear()
         collected = gc.collect()
-        logging.info("Garbage collector: collected %d objects." % (collected))
+        if collected:
+            logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 
@@ -233,7 +236,6 @@ class ShellTests(unittest.TestCase):
         shell = Shell(engine=my_engine)
 
         shell.do(12345, channel_id='*id')
-        logging.debug('*ouch')
         self.assertEqual(shell.line, '12345')
         self.assertEqual(shell.count, 1)
         self.assertEqual(shell.engine.mouth.get().text,
@@ -260,6 +262,84 @@ class ShellTests(unittest.TestCase):
         self.assertEqual(shell.line, 'azerty')
         self.assertEqual(shell.count, 3)
         self.assertEqual(shell.engine.mouth.get().text, 'azerty, really?')
+        with self.assertRaises(Exception):
+            print(shell.engine.mouth.get_nowait())
+
+    def test_in_direct_or_group(self):
+
+        logging.debug('***** in_direct or in_group')
+
+        shell = Shell(engine=my_engine)
+
+        from shellbot.commands.base import Command
+
+        class Custom(Command):
+            keyword =  'custom'
+            def execute(self, bot, arguments):
+                bot.say("{}, really?".format(arguments))
+
+        shell.load_command(Custom(my_engine))
+
+        my_bot.channel.is_direct = False  # in a group channel
+
+        shell.command('custom').in_direct = False
+        shell.command('custom').in_group = False
+        shell.do('custom nowhere', channel_id='*id')
+        self.assertEqual(
+            shell.engine.mouth.get().text,
+            "Sorry, I do not know how to handle 'custom'")
+
+        shell.command('custom').in_direct = True
+        shell.command('custom').in_group = False
+        shell.do('custom in_direct', channel_id='*id')
+        self.assertEqual(
+            shell.engine.mouth.get().text,
+            "Sorry, I do not know how to handle 'custom'")
+
+        shell.command('custom').in_direct = False
+        shell.command('custom').in_group = True
+        shell.do('custom in_group', channel_id='*id')
+        self.assertEqual(
+            shell.engine.mouth.get().text,
+            'in_group, really?')
+
+        shell.command('custom').in_direct = True
+        shell.command('custom').in_group = True
+        shell.do('custom both', channel_id='*id')
+        self.assertEqual(
+            shell.engine.mouth.get().text,
+            'both, really?')
+
+        my_bot.channel.is_direct = True  # in a direct channel
+
+        shell.command('custom').in_direct = False
+        shell.command('custom').in_group = False
+        shell.do('custom nowhere', channel_id='*id')
+        self.assertEqual(
+            shell.engine.mouth.get().text,
+            "Sorry, I do not know how to handle 'custom'")
+
+        shell.command('custom').in_direct = True
+        shell.command('custom').in_group = False
+        shell.do('custom in_direct', channel_id='*id')
+        self.assertEqual(
+            shell.engine.mouth.get().text,
+            'in_direct, really?')
+
+        shell.command('custom').in_direct = False
+        shell.command('custom').in_group = True
+        shell.do('custom in_group', channel_id='*id')
+        self.assertEqual(
+            shell.engine.mouth.get().text,
+            "Sorry, I do not know how to handle 'custom'")
+
+        shell.command('custom').in_direct = True
+        shell.command('custom').in_group = True
+        shell.do('custom both', channel_id='*id')
+        self.assertEqual(
+            shell.engine.mouth.get().text,
+            'both, really?')
+
         with self.assertRaises(Exception):
             print(shell.engine.mouth.get_nowait())
 

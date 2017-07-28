@@ -253,8 +253,17 @@ class Shell(object):
         try:
             if verb in self._commands.keys():
                 command = self._commands[verb]
-                self.verb = verb
-                command.execute(bot, arguments)
+
+                if ( (command.in_direct and bot.channel.is_direct)
+                    or (command.in_group and not bot.channel.is_direct) ):
+
+                    self.verb = verb
+                    command.execute(bot, arguments)
+
+                else:
+
+                    logging.debug(u"- command cannot be used in this room")
+                    bot.say(u"Sorry, I do not know how to handle '{}'".format(verb))
 
             elif '*default' in self._commands.keys():
                 command = self._commands['*default']

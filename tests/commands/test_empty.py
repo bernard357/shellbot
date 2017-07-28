@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import gc
 import logging
 import mock
 from multiprocessing import Process, Queue
@@ -11,11 +12,14 @@ import sys
 from shellbot import Context, Engine, Shell, Vibes
 from shellbot.commands import Empty
 
-my_engine = Engine(mouth=Queue())
-my_engine.shell = Shell(engine=my_engine)
+
+class MyChannel(object):
+    is_direct = False
 
 
-class Bot(object):
+class MyBot(object):
+    channel = MyChannel()
+
     def __init__(self, engine):
         self.engine = engine
 
@@ -23,10 +27,19 @@ class Bot(object):
         self.engine.mouth.put(Vibes(text, content, file))
 
 
-my_bot = Bot(engine=my_engine)
+my_engine = Engine(mouth=Queue())
+my_bot = MyBot(engine=my_engine)
 
 
 class EmptyTests(unittest.TestCase):
+
+    def setUp(self):
+        my_engine.shell = Shell(engine=my_engine)
+
+    def tearDown(self):
+        collected = gc.collect()
+        if collected:
+            logging.info("Garbage collector: collected %d objects." % (collected))
 
 
     def test_init(self):

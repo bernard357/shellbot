@@ -21,10 +21,16 @@ from shellbot.spaces import Space
 class MyEngine(Engine):
     def get_bot(self, id):
         logging.debug("Injecting test bot")
-        return Bot(engine=self)
+        return MyBot(engine=self)
 
 
-class Bot(object):
+class MyChannel(object):
+    is_direct = False
+
+
+class MyBot(object):
+    channel = MyChannel()
+
     id = '123'
 
     def __init__(self, engine):
@@ -34,18 +40,20 @@ class Bot(object):
         self.engine.mouth.put(Vibes(text, content, file))
 
 
+my_context = Context()
+my_ears = Queue()
+my_mouth = Queue()
+my_space = Space(my_context)
+my_space.post_message = MagicMock()
+
 class CompositeTests(unittest.TestCase):
 
     def setUp(self):
-        self.engine = MyEngine(ears=Queue(), mouth=Queue())
+        self.engine = MyEngine(context=my_context, ears=my_ears, mouth=my_mouth, space=my_space)
         self.engine.set('bot.id', "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg")
         self.engine.shell.load_default_commands()
-        self.engine.space = Space(self.engine.context)
-        self.engine.space.post_message = MagicMock()
 
         self.engine.listener.DEFER_DURATION = 0.0
-
-        self.bot = Bot(engine=self.engine)
 
     def tearDown(self):
         collected = gc.collect()
