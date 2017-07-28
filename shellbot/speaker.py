@@ -71,7 +71,7 @@ class Speaker(Process):
         in the following example::
 
             speaker = Speaker(engine=my_engine)
-            process_handle = speaker.start()
+            speaker.start()
 
         The recommended way for stopping the process is to change the
         parameter ``general.switch`` in the context. For example::

@@ -363,6 +363,7 @@ class Engine(object):
 
         self.bus = Bus(self.context)
         self.bus.check()
+        self.publisher = self.bus.publish()
 
     def check(self):
         """
@@ -690,8 +691,9 @@ class Engine(object):
 
         self.context.set('general.switch', 'on')
 
-        self._speaker_process = self.speaker.start()
+        self.speaker.start()
         self.listener.start()
+        self.publisher.start()
 
     def on_start(self):
         """
