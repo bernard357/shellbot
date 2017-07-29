@@ -744,10 +744,14 @@ class SparkSpace(Space):
             hook = request.json['name']
 
         if resource == 'messages' and event == 'created':
-            logging.debug(u"- handling '{}:{}'".format(resource, event))
-
             if not message_id:
                 message_id = data['id']
+
+                if data['personId'] == self.context.get('bot.id'):
+                    logging.debug(u"- sent by me, thrown away")
+                    return
+
+            logging.debug(u"- handling '{}:{}'".format(resource, event))
 
             @retry(u"Unable to retrieve new message")
             def fetch_message():
