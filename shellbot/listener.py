@@ -229,9 +229,9 @@ class Listener(Process):
         """
         assert received.type == 'message'  # sanity check
 
-        bot = self.engine.get_bot(received.channel_id)
-
         self.engine.dispatch('message', received=received)
+
+        bot = self.engine.get_bot(received.channel_id)
 
         if received.from_id == self.engine.get('bot.id'):
             logging.debug(u"- sent by me, thrown away")
@@ -286,9 +286,9 @@ class Listener(Process):
         """
         assert received.type == 'attachment'
 
-        bot = self.engine.get_bot(received.channel_id)
-
         self.engine.dispatch('attachment', received=received)
+
+        bot = self.engine.get_bot(received.channel_id)
 
     def on_join(self, received):
         """
@@ -306,12 +306,12 @@ class Listener(Process):
         """
         assert received.type == 'join'
 
-        bot = self.engine.get_bot(received.channel_id)
-
         if received.actor_id == self.engine.get('bot.id'):
-            self.engine.on_enter(received)
             self.engine.dispatch('enter', received=received)
+            bot = self.engine.get_bot(received.channel_id)
+            self.engine.on_enter(received)
         else:
+            bot = self.engine.get_bot(received.channel_id)
             self.engine.dispatch('join', received=received)
 
     def on_leave(self, received):
@@ -331,8 +331,8 @@ class Listener(Process):
         assert received.type == 'leave'
 
         if received.actor_id == self.engine.get('bot.id'):
-            self.engine.on_exit(received)
             self.engine.dispatch('exit', received=received)
+            self.engine.on_exit(received)
         else:
             self.engine.dispatch('leave', received=received)
 
