@@ -671,6 +671,7 @@ class EngineTests(unittest.TestCase):
         logging.info('*** static test ***')
 
         self.engine.configure()
+        self.context.set('bus.address', 'tcp://127.0.0.1:6666')
         self.engine.start()
         time.sleep(0.1)
         self.engine.stop()
