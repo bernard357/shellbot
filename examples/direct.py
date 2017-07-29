@@ -62,23 +62,34 @@ class MyInput(Input):
 
         self.bot.say(u"Switching to a group channel")
 
+        logging.debug(u"- setting lock")
+        self.bot.engine.set('general.lock', 'on')
+
         # create a group channel from the API
         title = 'Now in a group'
         logging.debug(u"- creating channel '{}''".format(title))
         channel = self.bot.space.create(title=title)
+
+        # push content to the store of the new channel
+        logging.debug(u"- pushing initial data for bot store")
+        label = "store.{}".format(channel.id)
+        self.bot.engine.set(
+            label,
+            {'from': self.bot.id,
+             'input': self.bot.recall('input')},
+        )
+
+        logging.debug(u"- {}: {}".format(label, self.bot.engine.get(label)))
+
+        # add participants
         participants = self.bot.space.get('participants', [])
         self.bot.space.add_participants(id=channel.id, persons=participants)
 
-        # ask the listener to load and start the related bot
-        self.bot.engine.ears.put({'type': 'load_bot', 'id': channel.id})
+        logging.debug(u"- releasing lock")
+        self.bot.engine.set('general.lock', 'off')
 
-        # send information to the new bot
-        time.sleep(1)
-        self.bot.publisher.put(
-            self.bot.id,
-            {'from': self.bot.id,
-             'store': self.bot.recall('input')},
-        )
+        # ask the listener to load and start the related bot
+#        self.bot.engine.ears.put({'type': 'load_bot', 'id': channel.id})
 
 
 class MyMachineFactory(object):
@@ -111,7 +122,11 @@ class Handler(object):
         self.engine = engine
 
     def on_enter(self, received):
-        print("ENTER: {}".format(received))
+
+        while self.engine.get('general.lock', 'off') == 'on':
+            time.sleep(0.001)
+
+#        print("ENTER: {}".format(received))
         bot = self.engine.get_bot(received.channel_id)
 
         if bot.channel.is_direct:
@@ -121,18 +136,22 @@ class Handler(object):
             bot.say(u"Happy to enter '{}'".format(bot.title))
 
     def on_exit(self, received):
-        print("EXIT: {}".format(received))
+#        print("EXIT: {}".format(received))
         logging.info(u"Sad to exit")
 
     def on_join(self, received):
-        print("JOIN: {}".format(received))
+
+        while self.engine.get('general.lock', 'off') == 'on':
+            time.sleep(0.001)
+
+#        print("JOIN: {}".format(received))
         bot = self.engine.get_bot(received.channel_id)
 
         bot.say(u"Welcome to '{}' in '{}'".format(
             received.actor_label, bot.title))
 
     def on_leave(self, received):
-        print("LEAVE: {}".format(received))
+#        print("LEAVE: {}".format(received))
         bot = self.engine.get_bot(received.channel_id)
         bot.say(u"Bye bye '{}', we will miss you in '{}'".format(
             received.actor_label, bot.title))
