@@ -938,11 +938,22 @@ class Engine(object):
         """
         Copies engine settings to the bot store
         """
+        logging.debug(u"Initializing bot store")
         settings = self.get('bot.store', {})
         if settings:
-            logging.debug(u"- initializing store")
+            logging.debug(u"- initializing store from general settings")
             for (key, value) in settings.items():
                 bot.store.remember(key, value)
+
+        if bot.id:
+            logging.debug(u"- seeking for bot settings")
+            label = "store.{}".format(bot.id)
+            logging.debug(u"- {}: {}".format(label, self.get(label, {})))
+            settings = self.get(label, {})
+            if settings:
+                logging.debug(u"- initializing store from bot settings")
+                for (key, value) in settings.items():
+                    bot.store.remember(key, value)
 
     def build_machine(self, bot):
         """
