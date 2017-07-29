@@ -34,14 +34,32 @@ class MachineFactory(object):
     """
     Provides new state machines
 
-    Example::
+    In simple situations, you can rely on standard machines, and provide any
+    parameters by these. For example::
 
         factory = MachineFactory(module='shellbot.machines.input'
-                                  question="What's Up, Doc?")
+                                 question="What's Up, Doc?")
 
         ...
 
         machine = factory.get_machine()
+
+    When you provide different state machines for direct channels and for
+    group channels, overlay member functions as in this example::
+
+        class GreatMachineForDirectChannel(Machine):
+            ...
+
+        class MachineOnlyForGroup(Machine):
+            ...
+
+        class MyFactory(MachineFactory):
+
+            def get_machine_for_direct_channel(self, bot):
+                return GreatMachineForDirectChannel( ... )
+
+            def get_machine_for_group_channel(self, bot):
+                return MachineOnlyForGroup( ... )
 
     """
 
@@ -52,10 +70,24 @@ class MachineFactory(object):
         :param module: The python module to import
         :type module: str
 
-        :param name: The class name to instantiate
+        :param name: The class name to instantiate (optional)
         :type name: str
 
+        If no name is provided, than we use the last part of the module instead.
+
         Other parameters are given to the instantiated object.
+
+        Example::
+
+            factory = MachineFactory('shellbot.machines.input')
+            machine = factory.get_machine()   # Input()
+
+
+        Example::
+
+            factory = MachineFactory('shellbot.machines.base', 'Machine')
+            machine = factory.get_machine()   # Machine()
+
         """
         self.module = module
         self.name = name
@@ -70,8 +102,99 @@ class MachineFactory(object):
 
         Example::
 
-            my_machine = factory.get(bot=my_bot)
+            my_machine = factory.get_machine(bot=my_bot)
             my_machine.start()
+
+        This function detects the kind of channel that is associated with this
+        bot, and provides a suitable state machine.
+        """
+        if bot and bot.channel and bot.channel.is_direct:
+            return self.get_machine_for_direct_channel(bot)
+
+        elif bot and bot.channel and bot.channel.is_group:
+            return self.get_machine_for_group_channel(bot)
+
+        else:
+            return self.get_default_machine(bot)
+
+    def get_machine_for_direct_channel(self, bot):
+        """
+        Gets a new state machine for a direct channel
+
+        :param bot: The bot associated with this state machine
+        :type bot: ShellBot
+
+        Example::
+
+            my_machine = factory.get_machine_for_direct_channel(bot=my_bot)
+            my_machine.start()
+
+        This function can be overlaid in a subclass for adapting
+        the production of state machines for direct channels.
+        """
+        return self.get_machine_from_class(bot=bot,
+                                           module=self.module,
+                                           name=self.name,
+                                           **self.parameters)
+
+    def get_machine_for_group_channel(self, bot):
+        """
+        Gets a new state machine for a group channel
+
+        :param bot: The bot associated with this state machine
+        :type bot: ShellBot
+
+        Example::
+
+            my_machine = factory.get_machine_for_group_channel(bot=my_bot)
+            my_machine.start()
+
+        This function can be overlaid in a subclass for adapting
+        the production of state machines for group channels.
+        """
+        return self.get_machine_from_class(bot=bot,
+                                           module=self.module,
+                                           name=self.name,
+                                           **self.parameters)
+
+    def get_default_machine(self, bot):
+        """
+        Gets a new state machine
+
+        :param bot: The bot associated with this state machine
+        :type bot: ShellBot
+
+        Example::
+
+            my_machine = factory.get_default_machine(bot=my_bot)
+            my_machine.start()
+
+        This function can be overlaid in a subclass for adapting
+        the production of state machines for default case.
+        """
+        return self.get_machine_from_class(bot=bot,
+                                           module=self.module,
+                                           name=self.name,
+                                           **self.parameters)
+
+    def get_machine_from_class(self, bot, module, name, **kwargs):
+        """
+        Gets a new state machine from a module
+
+        :param bot: The bot associated with this state machine
+        :type bot: ShellBot
+
+        :param module: The python module to import
+        :type module: str
+
+        :param name: The class name to instantiate (optional)
+        :type name: str
+
+        Example::
+
+            machine = factory.get_machine_from_class(my_bot,
+                                                     'shellbot.machines.base',
+                                                     'Machine')
 
         """
         assert self.module not in (None, '')  # need python module name
@@ -85,4 +208,4 @@ class MachineFactory(object):
         if not self.name:
             self.name = self.module.rsplit('.', 1)[1].capitalize()
         cls = getattr(handle, self.name)
-        return cls(bot, **self.parameters)
+        return cls(bot, **kwargs)
