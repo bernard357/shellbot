@@ -70,9 +70,11 @@ class MyInput(Input):
         self.bot.engine.set('general.lock', 'on')
 
         # create a group channel from the API
-        title = 'Follow-up in group room #{}'.format(bot.increment('group.count'))
+        title = 'Follow-up in group room #{}'.format(self.bot.store.increment('group.count'))
         logging.debug(u"- creating channel '{}''".format(title))
-        channel = self.bot.space.create(title=title)
+        team_title = 'shellbot environment'
+        channel = self.bot.space.create(title=title,
+                                        ex_team=team_title)
 
         # push content to the store of the new channel
         logging.debug(u"- pushing initial data for bot store")
