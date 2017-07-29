@@ -64,51 +64,60 @@ import logging
 from multiprocessing import Process, Queue
 import os
 
-from shellbot import ShellBot, Context, Command, Speaker
+from shellbot import Engine, Context, Command, Speaker
 from shellbot.commands import Audit
 from shellbot.spaces import SparkSpace
-from shellbot.updaters import SpaceUpdater
+from shellbot.updaters import FileUpdater
 Context.set_logger()
 
-# create a bot
-#
-bot = ShellBot()
 
-# add an audit command
+# # create a mirror chat room
+# #
+# mirror_bot = ShellBot()
+# mirror_bot.configure()
+# mirror = SparkSpace(bot=mirror_bot)
+# mirror.connect()
 #
-audit = Audit(bot=bot)
-bot.load_command(audit)
+# title = u"{} - {}".format(
+#     mirror.configured_title(), u"Audited content")
+#
+# mirror.bond(title=title)
+
+# enable auditing
+#
+#audit.arm(updater=SpaceUpdater(space=mirror))
+
+# run the bot
+#
+
+class UpdaterFactory(object):
+    def get_updater(self, id):
+        return FileUpdater(path='./updater-{}.log'.format(id))
+
+
+# create a chat engine
+#
+
+engine = Engine(
+    type='spark',
+    command='shellbot.commands.audit',
+    updater_factory=UpdaterFactory())
 
 # load configuration
 #
 os.environ['CHAT_ROOM_TITLE'] = 'Audit tutorial'
-bot.configure()
+engine.configure()
 
 # create a chat room
 #
-bot.bond(reset=True)
-
-# create a mirror chat room
-#
-mirror_bot = ShellBot()
-mirror_bot.configure()
-mirror = SparkSpace(bot=mirror_bot)
-mirror.connect()
-
-title = u"{} - {}".format(
-    mirror.configured_title(), u"Audited content")
-
-mirror.bond(title=title)
-
-# enable auditing
-#
-audit.arm(updater=SpaceUpdater(space=mirror))
+engine.bond(reset=True)
 
 # run the bot
 #
-bot.run()
+engine.run()
 
-# delete chat rooms when the bot is stopped
+# delete the chat room when the bot is stopped
 #
-mirror.delete_space()
-bot.dispose()
+engine.dispose()
+
+#mirror.delete_space()

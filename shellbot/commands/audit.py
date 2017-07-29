@@ -73,7 +73,7 @@ class Audit(Command):
         :type arguments: str
 
         """
-        if self.armed == False:
+        if self.disabled:
             bot.say(self.disabled_message)
 
         elif arguments == 'on':
@@ -96,11 +96,12 @@ class Audit(Command):
         :type bot: Shellbot
 
         """
-        if self.engine.get('audit.switch', 'off') == 'on':
+        label = 'audit.switch.{}'.format(bot.id)
+        if self.engine.get(label, 'off') == 'on':
             bot.say(self.already_on_message)
         else:
             self.say(u"{0} AUDIT ON {0}".format("====================="))
-            self.engine.set('audit.switch', 'on')
+            self.engine.set(label, 'on')
             bot.say(self.on_message)
 
     def audit_off(self, bot):
@@ -111,9 +112,10 @@ class Audit(Command):
         :type bot: Shellbot
 
         """
-        if self.engine.get('audit.switch', 'off') == 'on':
+        label = 'audit.switch.{}'.format(bot.id)
+        if self.engine.get(label, 'off') == 'on':
             self.say(u"{0} AUDIT OFF {0}".format("====================="))
-            self.engine.set('audit.switch', 'off')
+            self.engine.set(label, 'off')
             bot.say(self.off_message)
             self.on_off(bot)
         else:
@@ -127,39 +129,33 @@ class Audit(Command):
         :type bot: Shellbot
 
         """
-        if self.engine.get('audit.switch', 'off') == 'on':
+        label = 'audit.switch.{}'.format(bot.id)
+        if self.engine.get(label, 'off') == 'on':
             bot.say(self.on_message)
         else:
             bot.say(self.off_message)
 
-    def arm(self, updater):
-        """
-        Arms the auditing function
-
-        :param updater: the function to be used on each update
-        :type updater: callable
-
-        """
-        assert updater is not None
-        self.updater = updater
-        self.engine.listener.filter = self.filter
-
+    # def arm(self, updater):
+    #     """
+    #     Arms the auditing function
+    #
+    #     :param updater: the function to be used on each update
+    #     :type updater: callable
+    #
+    #     """
+    #     assert updater is not None
+    #     self.updater = updater
+    #     self.engine.listener.filter = self.filter
+    #
     @property
-    def armed(self):
+    def disabled(self):
         """
         Are we ready for auditing or not?
 
         :rtype: bool
         """
-        if self._armed:
-            return True
-
-        if self.updater is None:
+        if self.engine.get('audit.has_been_armed', False) == True:
             return False
-
-        if self.engine.listener.filter != self.filter:
-            return False
-
         return True
 
     def on_init(self):

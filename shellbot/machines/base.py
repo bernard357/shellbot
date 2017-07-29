@@ -490,8 +490,7 @@ class Machine(object):
         starts the machine on successful reset. Parameters given to
         it are those that are expected by start().
 
-        Note: this function has no effect on a running machine. It can
-        be used only against machines that have terminated their cycle.
+        Note: this function has no effect on a running machine. 
         """
         if not self.reset():
             return False
