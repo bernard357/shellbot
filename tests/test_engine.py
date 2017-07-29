@@ -48,6 +48,14 @@ class MyCounter(object):
         logging.info('(Deleting {})'.format(self.name))
 
 
+class MyUpdater(object):
+    def __init__(self, id):
+        self.id = id
+
+class MyUpdaterFactory(object):
+    def get_updater(self, id):
+        return MyUpdater(id)
+
 class EngineTests(unittest.TestCase):
 
     def setUp(self):
@@ -86,6 +94,7 @@ class EngineTests(unittest.TestCase):
         self.assertTrue(engine.shell is not None)
         self.assertEqual(engine.driver, ShellBot)
         self.assertEqual(engine.machine_factory, None)
+        self.assertEqual(engine.updater_factory, None)
 
         del engine
 
@@ -109,6 +118,7 @@ class EngineTests(unittest.TestCase):
         self.assertTrue(engine.shell is not None)
         self.assertEqual(engine.driver, ShellBot)
         self.assertEqual(engine.machine_factory, None)
+        self.assertEqual(engine.updater_factory, None)
 
         del engine
 
@@ -132,12 +142,14 @@ class EngineTests(unittest.TestCase):
         self.assertTrue(engine.shell is not None)
         self.assertEqual(engine.driver, ShellBot)
         self.assertEqual(engine.machine_factory, None)
+        self.assertEqual(engine.updater_factory, None)
 
         del engine
 
         engine = Engine(context=self.context,
                         driver=FakeBot,
-                        machine_factory=MachinesFactory)
+                        machine_factory=MachinesFactory,
+                        updater_factory=MyUpdaterFactory,)
 
         self.assertEqual(engine.context, self.context)
         self.assertEqual(engine.mouth, None)
@@ -153,6 +165,7 @@ class EngineTests(unittest.TestCase):
         self.assertTrue(engine.shell is not None)
         self.assertEqual(engine.driver, FakeBot)
         self.assertEqual(engine.machine_factory, MachinesFactory)
+        self.assertEqual(engine.updater_factory, MyUpdaterFactory)
 
         self.context.apply({
             'bot': {'name': 'testy', 'version': '17.4.1'},
@@ -784,6 +797,13 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(bot.store.recall('c'), None)
         self.assertEqual(bot.store.recall('e'), 'f')
 
+    def test_on_build(self):
+
+        logging.info('*** on_build ***')
+
+        bot = ShellBot(engine=self.engine)
+        self.engine.on_build(bot)
+
     def test_build_store(self):
 
         logging.info('*** build_store ***')
@@ -827,12 +847,16 @@ class EngineTests(unittest.TestCase):
         machine = self.engine.build_machine(bot)
         self.engine.machine_factory = previous
 
-    def test_on_build(self):
+    def test_build_updater(self):
 
-        logging.info('*** on_build ***')
+        logging.info('*** build_updater ***')
 
-        bot = ShellBot(engine=self.engine)
-        self.engine.on_build(bot)
+        updater = self.engine.build_updater('*id')
+        self.assertEqual(updater, None)
+
+        self.engine.updater_factory = MyUpdaterFactory()
+        updater = self.engine.build_updater('*id')
+        self.assertEqual(updater.id, '*id')
 
 
 if __name__ == '__main__':

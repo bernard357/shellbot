@@ -185,6 +185,7 @@ class Engine(object):
                  commands=None,
                  driver=ShellBot,
                  machine_factory=None,
+                 updater_factory=None,
                  ):
         """
         Powers multiple bots
@@ -228,6 +229,9 @@ class Engine(object):
         :param machine_factory: Provides a state machine for each bot
         :type machine_factory: MachinesFactory
 
+        :param updater_factory: Provides an updater for an audited channel
+        :type updater_factory: UpdatersFactory
+
         If a chat type is provided, e.g., 'spark', then one space instance is
         loaded from the SpaceFactory. Else a space of type 'local' is used.
 
@@ -257,8 +261,8 @@ class Engine(object):
         self.observer = Observer(engine=self)
 
         self.registered = {
-            'bond': [],       # connected to a space
-            'dispose': [],    # space will be destroyed
+            'bond': [],       # connected to a channel
+            'dispose': [],    # channel will be destroyed
             'start': [],      # starting bot services
             'stop': [],       # stopping bot services
             'message': [],    # message received (with message)
@@ -297,6 +301,8 @@ class Engine(object):
         self.driver = driver if driver else ShellBot
 
         self.machine_factory = machine_factory
+
+        self.updater_factory = updater_factory
 
     def configure_from_path(self, path="settings.yaml"):
         """
@@ -494,9 +500,9 @@ class Engine(object):
 
         - 'dispose' - when resources, including chat space, will be destroyed
 
-        - 'start' - when bot services are started
+        - 'start' - when the engine is started
 
-        - 'stop' - when bot services are stopped
+        - 'stop' - when the engine is stopped
 
         - 'join' - when a person is joining a space
 
@@ -897,6 +903,22 @@ class Engine(object):
 
         return bot
 
+    def on_build(self, bot):
+        """
+        Extends the building of a new bot instance
+
+        :param bot: a new bot instance
+        :type bot: ShellBot
+
+        Provide your own implementation in a sub-class where required.
+
+        Example::
+
+            on_build(self, bot):
+                bot.secondary_machine = Input(...)
+        """
+        pass
+
     def build_store(self, channel_id=None):
         """
         Builds a store for this bot
@@ -941,21 +963,24 @@ class Engine(object):
 
         return None
 
-    def on_build(self, bot):
+    def build_updater(self, id):
         """
-        Extends the building of a new bot instance
+        Builds an updater for this channel
 
-        :param bot: a new bot instance
-        :type bot: ShellBot
+        :param id: The identifier of an audited channel
+        :type id: str
 
-        Provide your own implementation in a sub-class where required.
+        :return: an Updater instance, or None
 
-        Example::
-
-            on_build(self, bot):
-                bot.secondary_machine = Input(...)
+        This function receives a bot, and returns
+        a state machine bound to it.
         """
-        pass
+        if self.updater_factory:
+            logging.debug(u"- building updater")
+            updater = self.updater_factory.get_updater(id=id)
+            return updater
+
+        return None
 
     def on_enter(self, join):
         """

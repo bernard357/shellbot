@@ -64,8 +64,8 @@ class Updater(object):
         """
         Handles inbound events
 
-        :param bot: the overarching bot
-        :type bot: ShellBot
+        :param engine: the overarching engine
+        :type engine: Engine
 
         Example::
 
