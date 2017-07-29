@@ -460,7 +460,7 @@ class Input(Machine):
         # advertise subscribers
         if self.key:
             self.bot.publisher.put(
-                'topic',
+                self.bot.id,
                 {'from': self.bot.id,
                  'input': {'key': self.key, 'value': arguments}})
 
