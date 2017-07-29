@@ -9,7 +9,7 @@ import os
 import sys
 
 from shellbot import Context, Engine, ShellBot, SpaceFactory
-from examples.steps import StepsFactory, Steps, Next, State
+from examples.steps import StepFactory, Steps, Next, State
 
 
 my_settings = {
@@ -60,7 +60,7 @@ class StepsTests(unittest.TestCase):
 
     def test_commands(self):
 
-        commands = StepsFactory.commands()
+        commands = StepFactory.commands()
         self.assertTrue(len(commands) == 2)
         for command in commands:
             self.assertTrue(command.keyword in ['escalate', 'state'])

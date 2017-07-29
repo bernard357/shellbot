@@ -11,10 +11,10 @@ import sys
 import time
 
 from shellbot import Context
-from shellbot.machines import MachinesFactory
+from shellbot.machines import MachineFactory
 
 
-class MachinesFactoryTests(unittest.TestCase):
+class MachineFactoryTests(unittest.TestCase):
 
     def tearDown(self):
         collected = gc.collect()
@@ -24,7 +24,7 @@ class MachinesFactoryTests(unittest.TestCase):
 
         logging.info("***** get Machine")
 
-        factory = MachinesFactory(module='shellbot.machines.base',
+        factory = MachineFactory(module='shellbot.machines.base',
                                   name='Machine')
         machine = factory.get_machine()
 
@@ -32,7 +32,7 @@ class MachinesFactoryTests(unittest.TestCase):
 
         logging.info("***** get Input")
 
-        factory = MachinesFactory(module='shellbot.machines.input',
+        factory = MachineFactory(module='shellbot.machines.input',
                                   question="What's Up, Doc?")
         machine = factory.get_machine()
 
@@ -40,7 +40,7 @@ class MachinesFactoryTests(unittest.TestCase):
 
         logging.info("***** get Menu")
 
-        factory = MachinesFactory(module='shellbot.machines.menu',
+        factory = MachineFactory(module='shellbot.machines.menu',
                                   question="What's Up, Doc?",
                                   options=["option 1", "option 2"])
         machine = factory.get_machine()
@@ -49,7 +49,7 @@ class MachinesFactoryTests(unittest.TestCase):
 
         logging.info("***** get Sequence")
 
-        factory = MachinesFactory(module='shellbot.machines.sequence',
+        factory = MachineFactory(module='shellbot.machines.sequence',
                                   machines=[])
         machine = factory.get_machine()
 
@@ -57,7 +57,7 @@ class MachinesFactoryTests(unittest.TestCase):
 
         logging.info("***** get Steps")
 
-        factory = MachinesFactory(module='shellbot.machines.steps',
+        factory = MachineFactory(module='shellbot.machines.steps',
                                   steps=[])
         machine = factory.get_machine()
 
@@ -65,14 +65,14 @@ class MachinesFactoryTests(unittest.TestCase):
 
         logging.info("***** get invalid machine")
 
-        factory = MachinesFactory(module='shellbot.machines.*unknown')
+        factory = MachineFactory(module='shellbot.machines.*unknown')
         machine = factory.get_machine()
 
     def test_get_void(self):
 
         logging.info("***** get void")
 
-        factory = MachinesFactory()
+        factory = MachineFactory()
 
         with self.assertRaises(AssertionError):
             machine = factory.get_machine()

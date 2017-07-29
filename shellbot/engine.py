@@ -227,10 +227,10 @@ class Engine(object):
         :type driver: class
 
         :param machine_factory: Provides a state machine for each bot
-        :type machine_factory: MachinesFactory
+        :type machine_factory: MachineFactory
 
         :param updater_factory: Provides an updater for an audited channel
-        :type updater_factory: UpdatersFactory
+        :type updater_factory: UpdaterFactory
 
         If a chat type is provided, e.g., 'spark', then one space instance is
         loaded from the SpaceFactory. Else a space of type 'local' is used.

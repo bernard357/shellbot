@@ -19,7 +19,7 @@ from .channel import Channel
 from .context import Context
 from .engine import Engine
 from .listener import Listener
-from .machines import MachinesFactory
+from .machines import MachineFactory
 from .server import Server
 from .shell import Shell
 from .spaces import SpaceFactory
@@ -41,7 +41,7 @@ __all__ = [
     'Context',
     'Engine',
     'Listener',
-    'MachinesFactory',
+    'MachineFactory',
     'Notifier',
     'Publisher',
     'Route',

@@ -10,7 +10,7 @@ from multiprocessing import Manager, Process, Queue
 import sys
 import time
 
-from shellbot import Context, Engine, ShellBot, MachinesFactory
+from shellbot import Context, Engine, ShellBot, MachineFactory
 from shellbot.spaces import Space, LocalSpace, SparkSpace
 
 
@@ -148,7 +148,7 @@ class EngineTests(unittest.TestCase):
 
         engine = Engine(context=self.context,
                         driver=FakeBot,
-                        machine_factory=MachinesFactory,
+                        machine_factory=MachineFactory,
                         updater_factory=MyUpdaterFactory,)
 
         self.assertEqual(engine.context, self.context)
@@ -164,7 +164,7 @@ class EngineTests(unittest.TestCase):
         self.assertTrue(engine.server is None)
         self.assertTrue(engine.shell is not None)
         self.assertEqual(engine.driver, FakeBot)
-        self.assertEqual(engine.machine_factory, MachinesFactory)
+        self.assertEqual(engine.machine_factory, MachineFactory)
         self.assertEqual(engine.updater_factory, MyUpdaterFactory)
 
         self.context.apply({
@@ -842,7 +842,7 @@ class EngineTests(unittest.TestCase):
         machine = self.engine.build_machine(bot)
 
         previous = self.engine.machine_factory
-        self.engine.machine_factory = MachinesFactory(
+        self.engine.machine_factory = MachineFactory(
             module='shellbot.machines.base',
             name='Machine')
         machine = self.engine.build_machine(bot)

@@ -30,13 +30,13 @@ __all__ = [
     'Menu',
 ]
 
-class MachinesFactory(object):
+class MachineFactory(object):
     """
     Provides new state machines
 
     Example::
 
-        factory = MachinesFactory(module='shellbot.machines.input'
+        factory = MachineFactory(module='shellbot.machines.input'
                                   question="What's Up, Doc?")
 
         ...

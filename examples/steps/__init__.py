@@ -21,10 +21,10 @@ __all__ = [
     'Next',
     'State',
     'Steps',
-    'StepsFactory',
+    'StepFactory',
 ]
 
-class StepsFactory(object):
+class StepFactory(object):
 
     @classmethod
     def commands(self):
