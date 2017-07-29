@@ -335,6 +335,9 @@ class Publisher(Process):
         except KeyboardInterrupt:
             pass
 
+        self.socket.close()
+        self.socket = None
+        
         logging.info("Publisher has been stopped")
 
     def process(self, item):
@@ -348,7 +351,7 @@ class Publisher(Process):
         of (channel, message) tuple done previously.
         """
         logging.debug(u"Publishing {}".format(item))
-        self.socket.send(item)
+        self.socket.send_string(item)
 
     def put(self, channels, message):
         """

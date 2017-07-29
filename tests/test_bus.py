@@ -19,7 +19,7 @@ class BusTests(unittest.TestCase):
     def setUp(self):
         self.context = Context()
         self.context.set('general.switch', 'on')
-        self.context.set('bus.address', 'tcp://127.0.0.1:5555')
+        self.context.set('bus.address', 'tcp://127.0.0.1:6666')
         self.bus = Bus(context=self.context)
 
     def tearDown(self):
@@ -144,11 +144,25 @@ class BusTests(unittest.TestCase):
 
         publisher.fan.put(None)
 
-        publisher.socket = mock.Mock()  # no output!
+        class MySocket(object):
+            def __init__(self, context):
+                self.context = context
+
+            def send_string(self, item):
+                pipe = self.context.get('pipe', [])
+                pipe.append(item)
+                self.context.set('pipe', pipe)
+
+            def close(self):
+                pass
+
+        publisher.socket = MySocket(self.context)
         publisher.run()
 
         self.assertEqual(self.context.get('publisher.counter', 0), 3)
-        publisher.socket.send.assert_called_with('channel_C {"hello": "world"}')
+        self.assertEqual(
+            self.context.get('pipe'),
+            ['channel_A "hello"', 'channel_B "world"', 'channel_C {"hello": "world"}'])
 
     def test_publisher_put(self):
 
@@ -227,6 +241,7 @@ class BusTests(unittest.TestCase):
         listener.join()
 
 #        self.assertEqual(self.context.get('received'), {'counter': 9})
+
 
 if __name__ == '__main__':
 
