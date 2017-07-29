@@ -490,7 +490,7 @@ class Machine(object):
         starts the machine on successful reset. Parameters given to
         it are those that are expected by start().
 
-        Note: this function has no effect on a running machine. 
+        Note: this function has no effect on a running machine.
         """
         if not self.reset():
             return False
@@ -529,6 +529,7 @@ class Machine(object):
         """
         logging.info(u"Starting machine")
         self.set('is_running', True)
+        self.on_start()
 
         time.sleep(self.DEFER_DURATION)
 
@@ -556,8 +557,39 @@ class Machine(object):
         except KeyboardInterrupt:
             pass
 
-        logging.info(u"Machine has been stopped")
+        self.on_stop()
         self.set('is_running', False)
+        logging.info(u"Machine has been stopped")
+
+    def on_start(self):
+        """
+        Adds to machine start
+
+        This function is invoked when the machine is started or restarted.
+        It can be expanded in sub-classes where required.
+
+        Example::
+
+            def on_start(self):  # clear bot store on machine start
+                self.bot.forget()
+        """
+        pass
+
+    def on_stop(self):
+        """
+        Adds to machine stop
+
+        This function is invoked when the machine is stopped.
+        It can be expanded in sub-classes where required.
+
+        Example::
+
+            def on_stop(self):  # dump bot store on machine stop
+                self.bot.publisher.put(
+                    self.bot.id,
+                    self.bot.recall('input'))
+        """
+        pass
 
     def on_tick(self):
         """

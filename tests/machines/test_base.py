@@ -673,10 +673,15 @@ class MachineTests(unittest.TestCase):
                             transitions=transitions,
                             initial='one')
 
+        machine.on_start = mock.Mock()
+        machine.on_stop = mock.Mock()
         self.engine.set('general.switch', 'off')
 
         logging.debug(u"- general switch is off")
         machine.run()
+
+        machine.on_start.assert_called_with()
+        machine.on_stop.assert_called_with()
 
         self.engine.set('general.switch', 'on')
 
@@ -701,6 +706,54 @@ class MachineTests(unittest.TestCase):
 
         logging.debug(u"- break on KeyboardInterrupt")
         machine.run()
+
+    def test_on_start(self):
+
+        logging.info("***** machine/on_start")
+
+        states = ['one', 'two']
+        transitions = [
+            {'source': 'one', 'target': 'two'},
+            {'source': 'two', 'target': 'one'},
+        ]
+
+        machine = Machine(bot=self.bot,
+                            states=states,
+                            transitions=transitions,
+                            initial='one')
+
+        machine.on_start()
+
+        machine.on_start = mock.Mock()
+        self.engine.set('general.switch', 'on')
+        machine.start(tick=0.001)
+
+        machine.on_start.ssert_called_with()
+
+        machine.stop()
+
+    def test_on_stop(self):
+
+        logging.info("***** machine/on_stop")
+
+        states = ['one', 'two']
+        transitions = [
+            {'source': 'one', 'target': 'two'},
+            {'source': 'two', 'target': 'one'},
+        ]
+
+        machine = Machine(bot=self.bot,
+                            states=states,
+                            transitions=transitions,
+                            initial='one')
+
+        machine.on_stop()
+
+        machine.on_stop = mock.Mock()
+        self.engine.set('general.switch', 'on')
+        machine.start(tick=0.001)
+        machine.stop()
+        machine.on_stop.ssert_called_with()
 
     def test_execute(self):
 
