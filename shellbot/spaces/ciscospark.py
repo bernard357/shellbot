@@ -318,7 +318,9 @@ class SparkSpace(Space):
             try:
                 teamId = ex_team.id
             except:
-                teamId = self.get_team(ex_team).id
+                team = self.get_team(ex_team)
+                if team and team.id:
+                    teamId = team.id
 
         logging.info(u"Creating Cisco Spark room '{}'".format(title))
 
