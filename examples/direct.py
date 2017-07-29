@@ -49,7 +49,8 @@ import os
 import time
 
 from shellbot import Engine, Context
-from shellbot.machines import Input
+from shellbot.commands import Command
+from shellbot.machines import MachineFactory, Input
 Context.set_logger()
 
 #
@@ -59,6 +60,9 @@ Context.set_logger()
 class MyInput(Input):
 
     def on_stop(self):
+        """
+        On state machine stop
+        """
 
         self.bot.say(u"Switching to a group channel")
 
@@ -66,7 +70,7 @@ class MyInput(Input):
         self.bot.engine.set('general.lock', 'on')
 
         # create a group channel from the API
-        title = 'Now in a group'
+        title = 'Follow-up in group room #{}'.format(bot.increment('group.count'))
         logging.debug(u"- creating channel '{}''".format(title))
         channel = self.bot.space.create(title=title)
 
@@ -88,29 +92,46 @@ class MyInput(Input):
         logging.debug(u"- releasing lock")
         self.bot.engine.set('general.lock', 'off')
 
-        # ask the listener to load and start the related bot
-#        self.bot.engine.ears.put({'type': 'load_bot', 'id': channel.id})
+
+class MyMachineFactory(MachineFactory):
+
+    def get_machine_for_direct_channel(self, bot):
+
+        return MyInput(bot=bot,
+                     question="PO number please?",
+                     mask="9999A",
+                     on_retry="PO number should have 4 digits and a letter",
+                     on_answer="Ok, PO number has been noted: {}",
+                     on_cancel="Ok, forget about the PO number",
+                     key='order.id')
+
+    def get_machine_for_group_channel(self, bot):
+        return None
+
+    def get_default_machine(self, bot):
+        return None
 
 
-class MyMachineFactory(object):
+class Start(Command):
+    keyword = 'start'
+    information_message = u"Start a new sequence"
+    in_direct = True
+    in_group = False
 
-    def get_machine(self, bot):
+    def execute(self, bot, arguments=None):
+        if not bot.machine:
+            bot.say(u"No state machine to start")
 
-        if bot.channel.is_direct:
-            return MyInput(bot=bot,
-                         question="PO number please?",
-                         mask="9999A",
-                         on_retry="PO number should have 4 digits and a letter",
-                         on_answer="Ok, PO number has been noted: {}",
-                         on_cancel="Ok, forget about the PO number",
-                         key='order.id')
+        elif not bot.machine.restart():
+            bot.say(u"Cannot restart the state machine")
 
 #
 # create a bot and configure it
 #
 engine = Engine(type='spark',
-                command='shellbot.commands.input',
+                commands=['shellbot.commands.input', Start()],
                 machine_factory=MyMachineFactory())
+
 os.environ['CHAT_ROOM_TITLE'] = '*dummy'
 engine.configure()
 
