@@ -691,6 +691,7 @@ class Engine(object):
 
         if self.fan is None:
             self.fan = Queue()
+            self.space.fan = self.fan
 
         self.start_processes()
 
@@ -791,6 +792,13 @@ class Engine(object):
         if channel and not reset:
             logging.debug(u"- found existing channel")
 
+            # ask explicitly the listener to load the bot
+            if self.ears is None:
+                self.ears = Queue()
+                self.space.ears = self.ears
+
+            self.ears.put({'type': 'load_bot', 'id': channel.id})
+
         else:
             if channel and reset:
                 logging.debug(u"- deleting existing channel")
@@ -803,14 +811,7 @@ class Engine(object):
                 participants = self.space.get('participants', [])
             self.space.add_participants(id=channel.id, persons=participants)
 
-        # because of multi-processing, we ask the listener to do the rest
-        if channel:
-
-            if self.ears is None:
-                self.ears = Queue()
-                self.space.ears = self.ears
-
-            self.ears.put({'type': 'load_bot', 'id': channel.id})
+            # listener will load bot on space webhook
 
         return channel
 
@@ -939,7 +940,7 @@ class Engine(object):
         Copies engine settings to the bot store
         """
         logging.debug(u"Initializing bot store")
-        
+
         settings = self.get('bot.store', {})
         if settings:
             logging.debug(u"- initializing store from general settings")
