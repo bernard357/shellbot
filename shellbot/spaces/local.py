@@ -227,6 +227,21 @@ class LocalSpace(Space):
         """
         pass
 
+    def list_participants(self, id):
+        """
+        Lists participants to a channel
+
+        :param id: the unique id of an existing channel
+        :type id: str
+
+        :return: a list of persons
+        :rtype: list of str
+
+        Note: this function returns all participants, except the bot itself.
+        """
+        assert id not in (None, '')  # target channel is required
+        return self.participants
+
     def add_participant(self, id, person, is_moderator=False):
         """
         Adds one participant

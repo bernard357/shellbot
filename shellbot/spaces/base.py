@@ -94,6 +94,7 @@ class Space(object):
     DEFAULT_SETTINGS = {
 
         'space': {
+            'type': 'local',
             'title': '$CHAT_ROOM_TITLE',
         },
 
@@ -427,6 +428,21 @@ class Space(object):
                 self.api.rooms.delete(id)
 
         """
+        raise NotImplementedError()
+
+    def list_participants(self, id):
+        """
+        Lists participants to a channel
+
+        :param id: the unique id of an existing channel
+        :type id: str
+
+        :return: a list of persons
+        :rtype: list of str
+
+        Note: this function returns all participants, except the bot itself.
+        """
+        assert id not in (None, '')  # target channel is required
         raise NotImplementedError()
 
     def add_participants(self, id, persons=[]):

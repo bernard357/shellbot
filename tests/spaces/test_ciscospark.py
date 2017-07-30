@@ -103,6 +103,7 @@ class FakeApi(object):
                  room=FakeRoom(),
                  teams=[],
                  messages=[],
+                 persons=[],
                  me=FakePerson()):
 
         self.token = access_token
@@ -119,6 +120,7 @@ class FakeApi(object):
         self.teams.create = mock.Mock()
 
         self.memberships = Fake()
+        self.memberships.list = mock.Mock(return_value=persons)
         self.memberships.create = mock.Mock()
         self.memberships.delete = mock.Mock()
 
@@ -278,7 +280,7 @@ class SparkSpaceTests(unittest.TestCase):
         self.space.api = FakeApi(me=FakeBot())
         self.space.on_connect()
         self.assertTrue(self.space.api.people.me.called)
-        self.assertEqual(self.context.get('bot.email'), 'shelly@sparkbot.io')
+        self.assertEqual(self.context.get('bot.address'), 'shelly@sparkbot.io')
         self.assertEqual(self.context.get('bot.name'), 'shelly')
         self.assertTrue(len(self.context.get('bot.id')) > 20)
 
@@ -455,6 +457,14 @@ class SparkSpaceTests(unittest.TestCase):
         team = self.space.get_team(name='*unknown')
         self.assertTrue(self.space.api.teams.list.called)
         self.assertEqual(team, None)
+
+    def test_list_participants(self):
+
+        logging.info("*** list_participants")
+
+        self.space.api = FakeApi()
+        self.space.list_participants(id='*id')
+        self.assertTrue(self.space.api.memberships.list.called)
 
     def test_add_participants(self):
 

@@ -178,6 +178,13 @@ class LocalSpaceTests(unittest.TestCase):
 
         self.space.delete(id='*id')
 
+    def test_list_participants(self):
+
+        logging.info("*** list_participants")
+
+        self.space.add_participant(id='*id', person='bob@acme.com')
+        self.assertEqual(self.space.list_participants('*id'), ['bob@acme.com'])
+
     def test_add_participants(self):
 
         logging.info("*** add_participants")

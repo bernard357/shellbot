@@ -279,9 +279,9 @@ class SparkSpace(Space):
         me = bot_identity()
 #       logging.debug(u"- {}".format(str(me)))
 
-        self.context.set('bot.email', str(me.emails[0]))
+        self.context.set('bot.address', str(me.emails[0]))
         logging.debug(u"- bot email: {}".format(
-            self.context.get('bot.email')))
+            self.context.get('bot.address')))
 
         self.context.set('bot.name',
                      str(me.displayName))
@@ -491,6 +491,43 @@ class SparkSpace(Space):
 
         logging.warning(u"- not found")
         return None
+
+    def list_participants(self, id):
+        """
+        Lists participants to a channel
+
+        :param id: the unique id of an existing channel
+        :type id: str
+
+        :return: a list of persons
+        :rtype: list of str
+
+        Note: this function returns all participants, except the bot itself.
+        """
+        assert id not in (None, '')  # target channel is required
+
+        logging.debug(
+            u"Looking for Cisco Spark room participants")
+
+        @retry(u"Unable to list memberships", silent=True)
+        def do_it():
+
+            participants = set()
+
+            avoided = set()
+            avoided.add(self.context.get('bot.address'))
+            for item in self.api.memberships.list(roomId=id):
+
+                person = item.personEmail
+                if person in avoided:
+                    continue
+
+                logging.debug(u"- {}".format(item.personEmail))
+                participants.add(person)
+
+            return participants
+
+        return do_it()
 
     def add_participant(self, id, person, is_moderator=False):
         """

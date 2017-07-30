@@ -227,6 +227,13 @@ class SpaceTests(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.space.delete(id='*id')
 
+    def test_list_participants(self):
+
+        logging.info("*** list_participants")
+
+        with self.assertRaises(NotImplementedError):
+            self.space.list_participants(id='*id')
+
     def test_add_participants(self):
 
         logging.info("*** add_participants")
