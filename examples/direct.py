@@ -85,10 +85,12 @@ class MyInput(Input):
              'input': self.bot.recall('input')},
         )
 
-        logging.debug(u"- {}: {}".format(label, self.bot.engine.get(label)))
+        # add participants, from current channel and from settings
+        participants = self.bot.space.list_participants(self.bot.id)
 
-        # add participants
-        participants = self.bot.space.get('participants', [])
+        for person in self.bot.space.get('participants', []):
+            participants.add(person)
+
         self.bot.space.add_participants(id=channel.id, persons=participants)
 
         logging.debug(u"- releasing lock")
