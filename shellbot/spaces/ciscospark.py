@@ -148,9 +148,8 @@ class SparkSpace(Space):
             self.set('token', token)
 
         self.api = None
-        self.api = None
+        self.audit_api = None
 
-        self.teamId = None
         self._last_message_id = 0
 
     def check(self):
@@ -191,7 +190,16 @@ class SparkSpace(Space):
           to use an environment variable instead,
           e.g., ``$MY_BOT_TOKEN``.
           If ``spark.token`` is not provided, then the function looks for an
-          environment variable ``CISCO_SPARK_BOT_TOKEN`` instead.
+          environment variable ``CISCO_SPARK_BOT_TOKEN``.
+
+        * ``spark.audit_token`` - token to be used for the audit of chat events.
+          It is recommended that a token of a person is used, so that the
+          visibility is maximised for the proper audit of events.
+          Instead of putting the real value of the token you are encouraged
+          to use an environment variable instead,
+          e.g., ``$MY_AUDIT_TOKEN``.
+          If ``spark.audit_token`` is not provided, then the function looks
+          for an environment variable ``CISCO_SPARK_AUDIT_TOKEN``.
 
         If a single value is provided for ``participants`` then it is turned
         automatically to a list.
@@ -210,6 +218,9 @@ class SparkSpace(Space):
         self.context.check(self.prefix+'.team')
         self.context.check(self.prefix+'.token',
                            '$CISCO_SPARK_BOT_TOKEN', filter=True)
+
+        self.context.check(self.prefix+'.audit_token',
+                           '$CISCO_SPARK_AUDIT_TOKEN', filter=True)
 
         values = self.context.get(self.prefix+'.participants')
         if isinstance(values, string_types):
@@ -234,22 +245,21 @@ class SparkSpace(Space):
         :parameter factory: an API factory, for test purpose
         :type: object
 
-        This function loads two instances of Cisco Spark API, one using
-        the bot token, and one using the personal token. If only one
-        token is available, then it is used for both.
-
         If a factory is provided, it is used to get API instances. Else
         the regular CiscoSparkAPI is invoked instead.
 
+        This function loads two instances of Cisco Spark API, one using
+        the bot token, and one using the audit token, if this is available.
         """
-        bot_token = self.get('token')
-        assert bot_token not in (None, '')  # some token is needed
-
         if not factory:
             from ciscosparkapi import CiscoSparkAPI
             factory = CiscoSparkAPI
 
         logging.debug(u"Loading Cisco Spark API")
+
+        bot_token = self.get('token')
+        assert bot_token not in (None, '')  # some token is needed
+
         self.api = None
         try:
             logging.debug(u"- token: {}".format(bot_token))
@@ -258,6 +268,16 @@ class SparkSpace(Space):
         except Exception as feedback:
             logging.error(u"Unable to load Cisco Spark API")
             logging.exception(feedback)
+
+        audit_token = self.get('audit_token')
+        self.audit_api = None
+        if audit_token:
+            try:
+                logging.debug(u"- audit token: {}".format(audit_token))
+                self.audit_api = factory(access_token=audit_token)
+
+            except Exception as feedback:
+                logging.warning(feedback)
 
         self.on_connect()
 
@@ -713,6 +733,14 @@ class SparkSpace(Space):
                        event='created',
                        filter=None)
 
+        if self.audit_api:
+            logging.debug(u"- registering 'shellbot-audit'")
+            create_webhook(api=self.audit_api,
+                           name='shellbot-audit',
+                           resource='messages',
+                           event='created',
+                           filter=None)
+
     def deregister(self):
         """
         Stops inbound flow from Cisco Spark
@@ -722,6 +750,9 @@ class SparkSpace(Space):
         Previous webhooks registered with the bot token are all removed before
         registration. This means that only the most recent instance of the bot
         will be notified of new invitations.
+
+        This function also removes webhooks created with the audit token, if
+        any. So after deregister the audit of individual rooms just stops.
 
         """
         assert self.api is not None  # connect() is prerequisite
@@ -738,6 +769,11 @@ class SparkSpace(Space):
         for webhook in list_webhooks(self.api):
             logging.debug(u"- deleting '{}'".format(webhook.name))
             delete_webhook(self.api, webhook.id)
+
+        if self.audit_api:
+            for webhook in list_webhooks(self.audit_api):
+                logging.debug(u"- deleting '{}'".format(webhook.name))
+                delete_webhook(self.audit_api, webhook.id)
 
     def webhook(self, message_id=None):
         """

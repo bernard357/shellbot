@@ -211,7 +211,6 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertEqual(self.space.prefix, 'spark')
         self.assertEqual(self.space.get('token'), None)
         self.assertEqual(self.space.api, None)
-        self.assertEqual(self.space.teamId, None)
         self.assertEqual(self.space._last_message_id, 0)
 
         space = SparkSpace(context=self.context, token='b')
@@ -272,6 +271,13 @@ class SparkSpaceTests(unittest.TestCase):
         self.space.set('token', 'a')
         self.space.connect(factory=my_factory)
         self.assertEqual(self.space.api.token, 'a')
+        self.assertEqual(self.space.audit_api, None)
+
+        self.space.set('token', 'a')
+        self.space.set('audit_token', 'b')
+        self.space.connect(factory=my_factory)
+        self.assertEqual(self.space.api.token, 'a')
+        self.assertEqual(self.space.audit_api.token, 'b')
 
     def test_on_connect(self):
 
