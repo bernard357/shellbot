@@ -19,6 +19,8 @@ my_engine.shell = Shell(engine=my_engine)
 
 
 class Bot(object):
+    id = '*id'
+
     def __init__(self, engine):
         self.engine = engine
 
@@ -42,6 +44,8 @@ class AuditTests(unittest.TestCase):
                          u'Check and change audit status')
         self.assertEqual(c.usage_message, u'audit [on|off]')
         self.assertFalse(c.is_hidden)
+        self.assertFalse(c.in_direct)
+        self.assertTrue(c.in_group)
 
     def test_execute(self):
 
@@ -56,90 +60,68 @@ class AuditTests(unittest.TestCase):
         with self.assertRaises(Exception):
             my_engine.mouth.get_nowait()
 
-        # c._armed = True
-        # c.execute(my_bot, u'')
-        # self.assertEqual(my_engine.mouth.get().text, c.off_message)
-        # with self.assertRaises(Exception):
-        #     my_engine.mouth.get_nowait()
-        #
-        # c.execute(my_bot, u'on')
-        # self.assertEqual(my_engine.mouth.get().text, c.on_message)
-        # with self.assertRaises(Exception):
-        #     my_engine.mouth.get_nowait()
-        #
-        # c.execute(my_bot, u'')
-        # self.assertEqual(my_engine.mouth.get().text, c.on_message)
-        # with self.assertRaises(Exception):
-        #     my_engine.mouth.get_nowait()
-        #
-        # c.execute(my_bot, u'on')
-        # self.assertEqual(my_engine.mouth.get().text, c.already_on_message)
-        # with self.assertRaises(Exception):
-        #     my_engine.mouth.get_nowait()
-        #
-        # c.execute(my_bot, u'')
-        # self.assertEqual(my_engine.mouth.get().text, c.on_message)
-        # with self.assertRaises(Exception):
-        #     my_engine.mouth.get_nowait()
-        #
-        # c.execute(my_bot, u'off')
-        # self.assertEqual(my_engine.mouth.get().text, c.off_message)
-        # with self.assertRaises(Exception):
-        #     my_engine.mouth.get_nowait()
-        #
-        # c.execute(my_bot, u'')
-        # self.assertEqual(my_engine.mouth.get().text, c.off_message)
-        # with self.assertRaises(Exception):
-        #     my_engine.mouth.get_nowait()
-        #
-        # c.execute(my_bot, u'off')
-        # self.assertEqual(my_engine.mouth.get().text, c.already_off_message)
-        # with self.assertRaises(Exception):
-        #     my_engine.mouth.get_nowait()
-        #
-        # c.execute(my_bot, u'')
-        # self.assertEqual(my_engine.mouth.get().text, c.off_message)
-        # with self.assertRaises(Exception):
-        #     my_engine.mouth.get_nowait()
-        #
-        # c.execute(my_bot, u'*weird')
-        # self.assertEqual(my_engine.mouth.get().text, 'usage: audit [on|off]')
-        # with self.assertRaises(Exception):
-        #     my_engine.mouth.get_nowait()
+        my_engine.set('audit.has_been_armed', True)
+        c.execute(my_bot, u'')
+        self.assertEqual(my_engine.mouth.get().text, c.off_message)
+        with self.assertRaises(Exception):
+            my_engine.mouth.get_nowait()
 
-    # def test_arm(self):
-    #
-    #     logging.info('***** arm')
-    #
-    #     c = Audit(my_engine)
-    #
-    #     updater = mock.Mock()
-    #     c.arm(updater=updater)
-    #     self.assertEqual(c.updater, updater)
-    #
-    #     self.assertEqual(my_engine.listener.filter, c.filter)
-    #
-    # def test_armed(self):
-    #
-    #     logging.info('***** armed')
-    #
-    #     c = Audit(my_engine)
-    #     self.assertFalse(c.armed)
-    #
-    #     c._armed = True
-    #     self.assertTrue(c.armed)
-    #
-    #     c = Audit(my_engine)
-    #
-    #     c.space = mock.Mock()
-    #     self.assertFalse(c.armed)
-    #
-    #     c.updater = Queue()
-    #     self.assertFalse(c.armed)
-    #
-    #     c.arm(updater=Queue())
-    #     self.assertTrue(c.armed)
-    #
+        c.execute(my_bot, u'on')
+        self.assertEqual(my_engine.mouth.get().text, c.on_message)
+        with self.assertRaises(Exception):
+            my_engine.mouth.get_nowait()
+
+        c.execute(my_bot, u'')
+        self.assertEqual(my_engine.mouth.get().text, c.on_message)
+        with self.assertRaises(Exception):
+            my_engine.mouth.get_nowait()
+
+        c.execute(my_bot, u'on')
+        self.assertEqual(my_engine.mouth.get().text, c.already_on_message)
+        with self.assertRaises(Exception):
+            my_engine.mouth.get_nowait()
+
+        c.execute(my_bot, u'')
+        self.assertEqual(my_engine.mouth.get().text, c.on_message)
+        with self.assertRaises(Exception):
+            my_engine.mouth.get_nowait()
+
+        c.execute(my_bot, u'off')
+        self.assertEqual(my_engine.mouth.get().text, c.off_message)
+        with self.assertRaises(Exception):
+            my_engine.mouth.get_nowait()
+
+        c.execute(my_bot, u'')
+        self.assertEqual(my_engine.mouth.get().text, c.off_message)
+        with self.assertRaises(Exception):
+            my_engine.mouth.get_nowait()
+
+        c.execute(my_bot, u'off')
+        self.assertEqual(my_engine.mouth.get().text, c.already_off_message)
+        with self.assertRaises(Exception):
+            my_engine.mouth.get_nowait()
+
+        c.execute(my_bot, u'')
+        self.assertEqual(my_engine.mouth.get().text, c.off_message)
+        with self.assertRaises(Exception):
+            my_engine.mouth.get_nowait()
+
+        c.execute(my_bot, u'*weird')
+        self.assertEqual(my_engine.mouth.get().text, 'usage: audit [on|off]')
+        with self.assertRaises(Exception):
+            my_engine.mouth.get_nowait()
+
+    def test_has_been_enabled(self):
+
+        logging.info('***** has_been_enabled')
+
+        my_engine.set('audit.has_been_armed', False)
+        c = Audit(my_engine)
+        self.assertFalse(c.has_been_enabled)
+
+        my_engine.set('audit.has_been_armed', True)
+        self.assertTrue(c.has_been_enabled)
+
     def test_on_init(self):
 
         logging.info('***** on_init')
@@ -185,74 +167,6 @@ class AuditTests(unittest.TestCase):
         my_engine.set('audit.switch', 'off')
         c.watchdog()
         self.assertEqual(my_engine.get('audit.switch'), 'on')
-
-    def test_filter_on(self):
-
-        logging.info('***** filter on')
-
-        c = Audit(my_engine)
-
-        class MyUpdater(object):
-            queue = Queue()
-            def put(self, event):
-                self.queue.put(str(event))
-
-        my_engine.set('audit.switch', 'on')
-
-        c.updater = None
-
-        item = Message({'text': 'hello world', 'person_label': 'a@me.com'})
-        self.assertEqual(c.filter(item), item)
-
-        c.updater = MyUpdater()
-        self.assertEqual(c.filter(item), item)
-        self.assertEqual(Message(c.updater.queue.get()), item)
-        with self.assertRaises(Exception):
-            c.updater.get_nowait()
-
-    def test_filter_off(self):
-
-        logging.info('***** filter off')
-
-        c = Audit(my_engine)
-
-        class MyUpdater(object):
-            queue = Queue()
-            def put(self, event):
-                self.queue.put(str(event))
-
-        my_engine.set('audit.switch', 'off')
-
-        c.updater = None
-
-        item = Message({'text': 'hello world', 'person_label': 'a@me.com'})
-        self.assertEqual(c.filter(item), item)
-
-        c.updater = MyUpdater()
-        self.assertEqual(c.filter(item), item)
-        with self.assertRaises(Exception):
-            c.updater.get_nowait()
-
-    def test_say(self):
-
-        logging.info('***** say')
-
-        c = Audit(my_engine)
-
-        class MyUpdater(object):
-            queue = Queue()
-            def put(self, event):
-                self.queue.put(str(event))
-
-        my_engine.set('audit.switch', 'on')
-
-        c.updater = MyUpdater()
-        c.say('hello world')
-        item = c.updater.queue.get()
-        self.assertEqual(yaml.safe_load(item),
-                         {"from_id": "Shelly", "from_label": "Shelly", "text": "hello world", "type": "message"})
-        with self.assertRaises(Exception):
-            c.updater.get_nowait()
 
 
 if __name__ == '__main__':

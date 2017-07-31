@@ -31,21 +31,26 @@ class Audit(Command):
     In essence, audit starts with the capture of information in real-time,
     and continues with the replication of information.
 
-    A typical use case is the monitoring of interactions happening in a space,
-    for security reasons or for compliancy.
-
-    The command Audit() has to be armed beforehand, meaning that it is
-    provided with a callable function that can receive updates, and that
-    it hooks the listener to filter all inbound traffic.
+    A typical use case is the monitoring of interactions happening in a channel,
+    for security reasons, for compliancy or, simply speaking, for
+    traceability.
 
     The command itself allows for suspending or restarting the audit process.
+    When audit has been activated in a channel, the attribute
+    ``audit.switch.<channel_id>`` is set to ``on`` in the context. This can be
+    checked by the observer for filtering of inbound records.
 
+    The audit has to be armed beforehand, and this is checked from the context
+    attribute ``audit.has_been_armed``. In normal cases, audit is armed from
+    the underlying space by setting this attribute to True.
 
     """
 
     keyword = u'audit'
     information_message = u'Check and change audit status'
     usage_message = u'audit [on|off]'
+
+    in_direct = False  # do not audit 1:1 interactions
 
     disabled_message = u'Audit has not been enabled.'
 
@@ -56,11 +61,6 @@ class Audit(Command):
 
     off_duration = 60  # after this time off, back to auditing on
     temporary_off_message = u"Please note that auditing will restart after {}"
-
-    updater = None
-    updater_ruler = u"<br >"
-
-    _armed = False  # for tests only
 
     def execute(self, bot, arguments=None):
         """
@@ -73,7 +73,7 @@ class Audit(Command):
         :type arguments: str
 
         """
-        if self.disabled:
+        if not self.has_been_enabled:
             bot.say(self.disabled_message)
 
         elif arguments == 'on':
@@ -100,7 +100,6 @@ class Audit(Command):
         if self.engine.get(label, 'off') == 'on':
             bot.say(self.already_on_message)
         else:
-            self.say(u"{0} AUDIT ON {0}".format("====================="))
             self.engine.set(label, 'on')
             bot.say(self.on_message)
 
@@ -114,7 +113,6 @@ class Audit(Command):
         """
         label = 'audit.switch.{}'.format(bot.id)
         if self.engine.get(label, 'off') == 'on':
-            self.say(u"{0} AUDIT OFF {0}".format("====================="))
             self.engine.set(label, 'off')
             bot.say(self.off_message)
             self.on_off(bot)
@@ -135,28 +133,14 @@ class Audit(Command):
         else:
             bot.say(self.off_message)
 
-    # def arm(self, updater):
-    #     """
-    #     Arms the auditing function
-    #
-    #     :param updater: the function to be used on each update
-    #     :type updater: callable
-    #
-    #     """
-    #     assert updater is not None
-    #     self.updater = updater
-    #     self.engine.listener.filter = self.filter
-    #
     @property
-    def disabled(self):
+    def has_been_enabled(self):
         """
         Are we ready for auditing or not?
 
         :rtype: bool
         """
-        if self.engine.get('audit.has_been_armed', False) == True:
-            return False
-        return True
+        return self.engine.get('audit.has_been_armed', False)
 
     def on_init(self):
         """
@@ -193,38 +177,3 @@ class Audit(Command):
         if self.engine.get('audit.switch', 'off') == 'off':
             logging.debug(u"- restarting audit")
             self.engine.set('audit.switch', 'on')
-
-    def filter(self, event):
-        """
-        Filters events handled by listener
-
-        :param event: an event received by listener
-        :type event: Event or Message or Attachment or Join or Leave, etc.
-
-        :return: a filtered event
-
-        This function implements the actual auditing of incoming events.
-        """
-        logging.debug(u"- filtering a {} event".format(event.type))
-        try:
-            if self.engine.get('audit.switch', 'off') == 'on':
-                logging.debug(u"- {}".format(str(event)))
-                self.updater.put(event)
-            else:
-                logging.debug(u"- audit has not been switched on")
-        finally:
-            return event
-
-    def say(self, text):
-        """
-        Inserts a string in the auditing flow
-        """
-        logging.info(u"Audit says: {}".format(text))
-        if not self.updater:
-            logging.debug(u"- no updater")
-            return
-
-        message = Message({'text': text,
-                           'from_id': self.engine.name,
-                           'from_label': self.engine.name})
-        self.updater.put(message)

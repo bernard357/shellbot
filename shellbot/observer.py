@@ -105,7 +105,11 @@ class Observer(Process):
         logging.debug(u"- {}".format(item))
 
         if item.channel_id not in self.engine.get('bots.ids', []):
-            logging.debug(u"- bot is not in this room -- thrown away")
+            logging.debug(u"- bot is not in this channel -- thrown away")
+            return
+
+        if self.engine.get(u"audit.switch.{}".format(item.channel_id), 'off') != 'on':
+            logging.debug(u"- audit has not been activated for this channel -- thrown away")
             return
 
         if item.channel_id in self.updaters.keys():

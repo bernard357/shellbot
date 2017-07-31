@@ -235,12 +235,29 @@ class ObserverTests(unittest.TestCase):
 
         logging.info('*** process ***')
 
+        self.engine.set('audit.switch.*id1', 'on')
+
         observer = Observer(engine=self.engine)
 
         observer.process(my_message)
+
         updater = observer.updaters['*id1']
+
         self.assertEqual(updater.count, 1)
         self.assertEqual(updater.text, 'hello world')
+
+        self.engine.set('audit.switch.*id1', 'off')
+
+        observer.process(my_message)
+        observer.process(my_01_message_from_bot_in_group)
+        observer.process(my_02_attachment_from_bot_in_group)
+        observer.process(my_03_message_from_person_in_group)
+        observer.process(my_04_response_from_bot_in_group)
+        observer.process(my_05_message_out_of_scope_for_audit)
+        self.assertEqual(updater.count, 1)
+        self.assertEqual(updater.text, 'hello world')
+
+        self.engine.set('audit.switch.*id1', 'on')
 
         observer.process(my_01_message_from_bot_in_group)
         self.assertEqual(updater.count, 2)
