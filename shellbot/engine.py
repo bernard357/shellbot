@@ -874,6 +874,7 @@ class Engine(object):
         if bot and bot.id:
             logging.debug(u"- remembering bot {}".format(bot.id))
             self.bots[bot.id] = bot
+            self.set('bots.ids', self.bots.keys())   # for the observer 
 
         bot.bond()
 
