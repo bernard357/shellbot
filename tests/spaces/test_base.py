@@ -172,12 +172,19 @@ class SpaceTests(unittest.TestCase):
 
         self.space.connect()
 
+    def test_list_group_channels(self):
+
+        logging.info("*** list_group_channels")
+
+        with self.assertRaises(NotImplementedError):
+            channels = self.space.list_group_channels()
+
     def test_create(self):
 
         logging.info("*** create")
 
         with self.assertRaises(NotImplementedError):
-            self.space.create(title='*title')
+            channel = self.space.create(title='*title')
 
     def test_get_by_title(self):
 

@@ -294,6 +294,18 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertEqual(self.context.get('bot.name'), 'shelly')
         self.assertTrue(len(self.context.get('bot.id')) > 20)
 
+    def test_list_group_channels(self):
+
+        logging.info("*** list_group_channels")
+
+        self.space.api = FakeApi()
+        channels = self.space.list_group_channels()
+        self.assertEqual(len(channels), 1)
+        self.assertTrue(self.space.api.rooms.list.called)
+        channel = channels[0]
+        self.assertEqual(channel.id, '*id')
+        self.assertEqual(channel.title, '*title')
+
     def test_create(self):
 
         logging.info("*** create")

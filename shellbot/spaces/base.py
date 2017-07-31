@@ -38,7 +38,7 @@ class Space(object):
 
     2. The space is connected to some back-end API::
 
-            >>>space.connect()
+            space.connect()
 
     3. Multiple channels can be handled by a single space::
 
@@ -133,7 +133,7 @@ class Space(object):
         for regular handling (by the listener) from auditing (by the observer)
 
         No auditing is taking place when no fan is provided.
-        
+
         Example::
 
             space = Space(context=my_engine.context,
@@ -299,6 +299,23 @@ class Space(object):
 
         """
         pass
+
+    def list_group_channels(self, **kwargs):
+        """
+        Lists available channels
+
+        :return: list of Channel
+
+        This function should be implemented in sub-class.
+
+        Example::
+
+            def list_group_channels(self, **kwargs):
+                for handle in self.api.rooms.list(type='group'):
+                    yield Channel(handle.attributes)
+
+        """
+        raise NotImplementedError()
 
     def create(self, title, **kwargs):
         """
@@ -716,7 +733,7 @@ class Space(object):
                     time.sleep(self.PULL_INTERVAL)
 
                 except Exception as feedback:
-                    logging.exception(feedback)
+                    logging.warning(feedback)
                     break
 
         except KeyboardInterrupt:

@@ -186,6 +186,7 @@ class Engine(object):
                  driver=ShellBot,
                  machine_factory=None,
                  updater_factory=None,
+                 preload=5,
                  ):
         """
         Powers multiple bots
@@ -231,6 +232,9 @@ class Engine(object):
 
         :param updater_factory: Provides an updater for an audited channel
         :type updater_factory: UpdaterFactory
+
+        :param preload: Number of existing bots to preload
+        :type preload: int
 
         If a chat type is provided, e.g., 'spark', then one space instance is
         loaded from the SpaceFactory. Else a space of type 'local' is used.
@@ -305,6 +309,9 @@ class Engine(object):
         self.machine_factory = machine_factory
 
         self.updater_factory = updater_factory
+
+        assert preload >= 0
+        self.preload = preload
 
     def configure_from_path(self, path="settings.yaml"):
         """
@@ -683,6 +690,9 @@ class Engine(object):
         """
 
         logging.warning(u'Starting the bot')
+
+        for channel in self.space.list_group_channels(quantity=self.preload):
+            self.bots_to_load.add(channel.id)  # handled by the listener
 
         if self.mouth is None:
             self.mouth = Queue()

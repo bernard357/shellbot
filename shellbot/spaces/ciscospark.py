@@ -313,6 +313,29 @@ class SparkSpace(Space):
         logging.debug(u"- bot id: {}".format(
             self.context.get('bot.id')))
 
+    def list_group_channels(self, quantity=10, **kwargs):
+        """
+        Lists available channels
+
+        :param quantity: maximum quantity of channels to return
+        :type quantity: positive integer
+
+        :return: list of Channel
+
+        """
+        assert quantity > 0
+
+        logging.info(u"Listing {} recent rooms".format(quantity))
+
+        @retry(u"Unable to list rooms", silent=True)
+        def list_rooms():
+            return [self._to_channel(x) \
+                        for x in self.api.rooms.list(type='group',
+                                                     sortBy='lastactivity',
+                                                     max=quantity)]
+
+        return list_rooms()[:quantity]  # enforce the maximum results
+
     def create(self, title, ex_team=None, **kwargs):
         """
         Creates a room

@@ -124,15 +124,25 @@ class LocalSpaceTests(unittest.TestCase):
 
         self.space.connect()
 
+    def test_list_group_channels(self):
+
+        logging.info("*** list_group_channels")
+
+        channels = self.space.list_group_channels()
+        self.assertEqual(len(channels), 1)
+        channel = channels[0]
+        self.assertEqual(channel.id, '*local')
+        self.assertEqual(channel.title, 'Collaboration space')
+
     def test_create(self):
 
         logging.info("*** create")
 
         with self.assertRaises(AssertionError):
-            self.space.create(title=None)
+            channel = self.space.create(title=None)
 
         with self.assertRaises(AssertionError):
-            self.space.create(title='')
+            channel = self.space.create(title='')
 
         channel = self.space.create(title='*title')
         self.assertEqual(channel.id, '*local')

@@ -150,6 +150,20 @@ class LocalSpace(Space):
 
             self._lines = read_stdin()  #  yield creates an iterator
 
+    def list_group_channels(self, **kwargs):
+        """
+        Lists available channels
+
+        :return: list of Channel
+
+        """
+        attributes = {
+            'id': '*local',
+            'title': self.configured_title(),
+
+        }
+        return [Channel(attributes)]
+
     def create(self, title, **kwargs):
         """
         Creates a channel
