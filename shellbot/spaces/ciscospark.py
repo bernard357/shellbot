@@ -91,6 +91,7 @@ def retry(give_up="Unable to request Cisco Spark API",
                             raise
 
                     else:
+                        logging.debug(feedback)
                         logging.warning(u"Retrying the API request...")
                         time.sleep(delay)
 
