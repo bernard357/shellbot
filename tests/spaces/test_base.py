@@ -40,6 +40,8 @@ class SpaceTests(unittest.TestCase):
 
         logging.debug("- default init")
         self.assertEqual(self.space.prefix, 'space')
+        self.assertEqual(self.space.ears, None)
+        self.assertEqual(self.space.fan, None)
 
         logging.debug("- unknown parameter")
         space = Space(context=self.context, weird='w')
@@ -52,18 +54,18 @@ class SpaceTests(unittest.TestCase):
             def on_init(self,
                         prefix='space',
                         ex_token=None,
-                        ex_ears=None,
                         **kwargs):
                 self.prefix = prefix
                 self.token = ex_token
-                self.ears = ex_ears
 
         space = ExSpace(context=self.context,
+                        ears='e',
+                        fan='f',
                         ex_token='*token',
-                        ex_ears='e',
                         ex_unknown='*weird')
-        self.assertEqual(space.token, '*token')
         self.assertEqual(space.ears, 'e')
+        self.assertEqual(space.fan, 'f')
+        self.assertEqual(space.token, '*token')
         with self.assertRaises(AttributeError):
             self.assertTrue(space.unknown is not None)
         with self.assertRaises(AttributeError):

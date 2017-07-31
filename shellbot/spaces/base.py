@@ -63,6 +63,7 @@ class Space(object):
 
     5. You can add and remove participants to channels::
 
+            persons = space.list_participant(id)
             space.add_participants(id, persons)
             space.add_participant(id, person)
             space.remove_participants(id, persons)
@@ -114,6 +115,7 @@ class Space(object):
     def __init__(self,
                  context=None,
                  ears=None,
+                 fan=None,
                  **kwargs):
         """
         Handles a collaborative space
@@ -124,14 +126,24 @@ class Space(object):
         :param ears: the listening queue
         :type ears: Queue
 
+        :param fan: the auditing queue
+        :type fan: Queue
+
+        Two queues are provided, so that the space can distinguish events
+        for regular handling (by the listener) from auditing (by the observer)
+
+        No auditing is taking place when no fan is provided.
+        
         Example::
 
             space = Space(context=my_engine.context,
-                          ears=my_engine.ears)
+                          ears=my_engine.ears,
+                          fan=my_engine.fan)
 
         """
         self.context = context
         self.ears = ears
+        self.fan = fan
 
         self.on_init(**kwargs)
 
