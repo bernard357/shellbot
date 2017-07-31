@@ -79,7 +79,6 @@ class SpaceFactoryTests(unittest.TestCase):
         self.assertEqual(space.get('token'), 'hkNWEtMJNkODVGlZWU1NmYtyY')
         self.assertEqual(self.context.get('spark.room'), 'My preferred room')
         self.assertEqual(space.configured_title(), 'My preferred room')
-        self.assertEqual(space.teamId, None)
 
     def test_sense_space(self):
 
@@ -232,7 +231,6 @@ class SpaceFactoryTests(unittest.TestCase):
 
         space = SpaceFactory.get(type='spark', context=self.context, token='b')
         self.assertEqual(space.get('token'), 'b')
-        self.assertEqual(space.teamId, None)
 
     def test_get_unknown(self):
 
