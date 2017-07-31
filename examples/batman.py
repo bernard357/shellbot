@@ -48,13 +48,13 @@ Multiple questions are adressed in this example:
   attach a link or a file to a message. Here we use public image, yet the
   same would work for the upload of a local file.
 
-- What about long-lasting commands? In that case, you can set the command
-  attribute ``is_interactive`` to False. On command submission, the bot
-  will execute it in the background. Look for example at the command
-  ``suicide``, where Batman is waiting for some seconds before acting.
-
 - How to load multiple commands? Since each command is a separate object,
   you can add them as a list bundle to the bot.
+
+- What about commands that do not apply to direct channels? In that case, you
+  can set the command attribute ``in_direct`` to False. In this example, the bot
+  is not entitled to delete a private channel. So we disbale the command
+  ``suicide`` from direct channels.
 
 
 To run this script you have to provide a custom configuration, or set
@@ -121,6 +121,7 @@ class Batsignal(Command):
 class Batsuicide(Command):
     keyword = 'suicide'
     information_message = u"Go back to Hell"
+    in_direct = False
 
     def execute(self, bot, arguments=None):
         bot.say(self.information_message)
