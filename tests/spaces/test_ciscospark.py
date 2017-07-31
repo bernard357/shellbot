@@ -568,11 +568,19 @@ class SparkSpaceTests(unittest.TestCase):
 
         logging.info("*** register")
 
-        self.space.api = FakeApi()
         self.context.set('bot.id', '*id')
         self.context.set('spark.token', '*token')
+
+        self.space.api = FakeApi()
         self.space.register('*hook')
         self.assertTrue(self.space.api.webhooks.create.called)
+        self.assertFalse(self.context.get('audit.has_been_armed'))
+
+        self.space.api = FakeApi()
+        self.space.audit_api = FakeApi()
+        self.space.register('*hook')
+        self.assertTrue(self.space.api.webhooks.create.called)
+        self.assertTrue(self.context.get('audit.has_been_armed'))
 
     def test_deregister(self):
 

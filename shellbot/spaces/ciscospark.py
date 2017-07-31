@@ -740,6 +740,7 @@ class SparkSpace(Space):
                        filter=None)
 
         if self.audit_api:
+            self.context.set('audit.has_been_armed', True)
             logging.debug(u"- registering 'shellbot-audit'")
             create_webhook(api=self.audit_api,
                            name='shellbot-audit',
