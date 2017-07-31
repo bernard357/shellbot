@@ -30,7 +30,7 @@ class Listener(Process):
     Handles messages received from chat space
     """
 
-    DEFER_DURATION = 1.0  # let SSL stabilize before pumping from the queue
+    DEFER_DURATION = 2.0  # let SSL stabilize before pumping from the queue
     EMPTY_DELAY = 0.005   # time to wait if queue is empty
 
     FRESH_DURATION = 0.5  # maximum amount of time for listener detection
