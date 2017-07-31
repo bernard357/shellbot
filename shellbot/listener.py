@@ -18,6 +18,7 @@
 import json
 import logging
 from multiprocessing import Process
+import random
 from six import string_types
 import time
 import yaml
@@ -126,6 +127,18 @@ class Listener(Process):
         if self.engine.bots_to_load:
             id = self.engine.bots_to_load.pop()
             self.engine.ears.put({'type': 'load_bot', 'id': id})
+
+        elif not self.engine.get('vacuum.stamp'):
+            self.engine.set('vacuum.stamp', time.time())
+
+        elif time.time() - self.engine.get('vacuum.stamp') > 5.0:
+            self.engine.set('vacuum.stamp', time.time())
+
+            id = random.choice(self.engine.bots.keys())
+            if id:
+                logging.debug(u"- to vacuum: {}".format(id))
+
+#            self.engine.vacuum.put()
 
     def process(self, item):
         """
