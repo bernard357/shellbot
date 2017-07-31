@@ -51,7 +51,7 @@ class FakeDirectRoom(Fake):
 
 class FakeTeamRoom(Fake):
     id = '*team_id'
-    isLocked = True
+    isLocked = False
     title = '*team_title'
     type = 'team'
     teamId = None
@@ -65,7 +65,7 @@ class FakeChannel(object):
 
 
 class FakeMessage(Fake):
-    id = '*id'
+    id = '*123'
     message = '*message'
     _json = {'text': '*message'}
 
@@ -103,6 +103,7 @@ class FakeApi(object):
                  room=FakeRoom(),
                  teams=[],
                  messages=[],
+                 message=FakeMessage(),
                  persons=[],
                  me=FakePerson()):
 
@@ -125,10 +126,10 @@ class FakeApi(object):
         self.memberships.delete = mock.Mock()
 
         self.messages = Fake()
-        self.messages.list = mock.Mock(return_value=messages)
-        self.messages.create = mock.Mock(return_value=FakeMessage())
+        self.messages.list = mock.Mock(return_value=messages if messages else [message])
+        self.messages.create = mock.Mock(return_value=message)
         self.messages.delete = mock.Mock()
-        self.messages.get = mock.Mock(return_value=FakeMessage())
+        self.messages.get = mock.Mock(return_value=message)
 
         self.webhooks = Fake()
         self.webhooks.list = mock.Mock(return_value=[])
@@ -139,29 +140,29 @@ class FakeApi(object):
 
 
 my_message = {
-    "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-    "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+    "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvMWU2LThhZTktZGQ1YjNkZmM1NjVk",
+    "roomId" : "*id1",
     "roomType" : "group",
-    "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
+    "toPersonId" : "*julie*id",
     "toPersonEmail" : "julie@example.com",
     "text" : "The PM for this project is Mike C. and the Engineering Manager is Jane W.",
     "markdown" : "**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>.",
     "files" : [ "http://www.example.com/images/media.png" ],
-    "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+    "personId" : "*matt*id",
     "personEmail" : "matt@example.com",
     "created" : "2015-10-18T14:26:16+00:00",
-    "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
+    "mentionedPeople" : [ "*matt*id", "*julie*id" ],
 }
 
 my_private_message = {
     "id": "Y2lzY29zcGFyazovL3VzL01FU1NB0xMWU3LTljODctNTljZjJjNDRhYmIy",
-    "roomId": "Y2lzY29zcGFyazovL3VzL1JP0zY2VmLWJiNDctOTZlZjA1NmJhYzFl",
+    "roomId": "*direct*id",
     "roomType": "direct",
     "text": "test",
     "created": "2017-07-22T16:49:22.008Z",
     "hook": "shellbot-messages",
     "personEmail": "foo.bar@again.org",
-    "personId": "Y2lzY29zcGFyazovL3VzL1LTQ5YzQtYTIyYi1mYWYwZWQwMjkyMzU",
+    "personId": "*foo*id",
 }
 
 my_join = {
@@ -188,16 +189,19 @@ my_leave = {
     'id': 'Y2lzY29zcGFyazovL3VzDctMTFlNy05OTAwLTA1OTAyNmIwYjQ1Mw'
 }
 
-
 class SparkSpaceTests(unittest.TestCase):
 
     def setUp(self):
         self.context = Context()
         self.ears = Queue()
-        self.space = SparkSpace(context=self.context, ears=self.ears)
+        self.fan = Queue()
+        self.space = SparkSpace(context=self.context,
+                                ears=self.ears,
+                                fan=self.fan)
 
     def tearDown(self):
         del self.space
+        del self.fan
         del self.ears
         del self.context
         collected = gc.collect()
@@ -602,8 +606,31 @@ class SparkSpaceTests(unittest.TestCase):
 
         logging.info("*** webhook")
 
+        fake_message = {
+            u'status': u'active',
+            u'resource': u'messages',
+            u'name': u'shellbot-messages',
+            u'created': u'2017-07-30T20:14:24.050Z',
+            u'appId': u'Y2lzY29zcGFyazovL3VzLmM3ZDUxNWNiNGEwY2M5MWFh',
+            u'id': u'Y2lzY29zcGFyazovL3VzjI0MTM2ZjgwY2Yy',
+            u'orgId': u'Y2lzY29zcGFyazovL3VYjU1ZS00ODYzY2NmNzIzZDU',
+            u'createdBy': u'Y2lzY29zcGFyazovL3VzLS01ZGI5M2Y5MjI5MWM',
+            u'targetUrl': u'http://0dab1.ngrok.io/hook',
+            u'ownedBy': u'creator',
+            u'actorId': u'Y2lzY29zcGFyazovL3VzL1BFkyMzU',
+            u'data': {
+                u'roomType': u'group',
+                u'created': u'2017-07-30T20:14:50.882Z',
+                u'personId': u'Y2lzY29zcGFyayYi1mYWYwZWQwMjkyMzU',
+                u'personEmail': u'foo.bar@acme.com',
+                u'mentionedPeople': [u'Y2lzY29zcGFyazovL3VGI5M2Y5MjI5MWM'],
+                u'roomId': u'Y2lzY29zcGFyazovL3VzL1NzUtYzc2ZDMyOGY0Y2Rj',
+                u'id': '*123',
+                },
+            u'event': u'created',
+        }
         self.space.api = FakeApi()
-        self.assertEqual(self.space.webhook(message_id='*123'), 'OK')
+        self.assertEqual(self.space.webhook(fake_message), 'OK')
         self.assertTrue(self.space.api.messages.get.called)
         data = self.space.ears.get()
         self.assertEqual(yaml.safe_load(data),
@@ -611,13 +638,60 @@ class SparkSpaceTests(unittest.TestCase):
                           'content': '*message',
                           'from_id': None,
                           'from_label': None,
-                          'hook': 'injection',
+                          'hook': 'shellbot-messages',
                           'channel_id': None,
                           'type': 'message',
                           'is_direct': False,
                           'mentioned_ids': []})
+
         with self.assertRaises(Exception):
-            print(self.ears.get_nowait())
+            print(self.space.ears.get_nowait())
+        with self.assertRaises(Exception):
+            print(self.space.fan.get_nowait())
+
+        fake_message = {
+            u'status': u'active',
+            u'resource': u'messages',
+            u'name': u'shellbot-audit',
+            u'created': u'2017-07-30T20:25:29.924Z',
+            u'appId': u'Y2lzY29zcGFyazovL3VzL0FQUE2YyNjZhYmY2NmM5OTllYzFm',
+            u'id': u'Y2lzY29zcGFyazovL3VzL1dFC00NzllLTg0MDQtZGQ2NGJiNTk3Nzdi',
+            u'orgId': u'Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVY2NmNzIzZDU',
+            u'createdBy': u'Y2lzY29zcGFyazovL3VzL1BFTTIyYi1mYWYwZWQwMjkyMzU',
+            u'targetUrl': u'http://0dab1.ngrok.io/hook',
+            u'ownedBy': u'creator',
+            u'actorId': u'Y2lzY29zcGFyazovL3VzLM2Y5MjI5MWM',
+            u'data': {
+                u'files': [u'http://hydra-a5.wbx2.com/contents/Y2lzY29zcGFWY5LzA'],
+                u'roomType': u'group',
+                u'created': u'2017-07-30T20:25:33.803Z',
+                u'personId': u'Y2lzY29zcGFyazovL3VzL1BFT5M2Y5MjI5MWM',
+                u'personEmail': u'shelly@sparkbot.io',
+                u'roomId': u'Y2lzY29zcGFyazovL3VzL1JPTyNmFhNWYxYTY4',
+                u'id': u'*123',
+                },
+            u'event': u'created',
+        }
+
+        self.space.audit_api = FakeApi()
+        self.assertEqual(self.space.webhook(fake_message), 'OK')
+        self.assertTrue(self.space.audit_api.messages.get.called)
+        data = self.space.fan.get()
+        self.assertEqual(yaml.safe_load(data),
+                         {'text': '*message',
+                          'content': '*message',
+                          'from_id': None,
+                          'from_label': None,
+                          'hook': 'shellbot-audit',
+                          'channel_id': None,
+                          'type': 'message',
+                          'is_direct': False,
+                          'mentioned_ids': []})
+
+        with self.assertRaises(Exception):
+            print(self.space.ears.get_nowait())
+        with self.assertRaises(Exception):
+            print(self.space.fan.get_nowait())
 
     def test_pull(self):
 
@@ -629,15 +703,15 @@ class SparkSpaceTests(unittest.TestCase):
         self.space.pull()
         self.assertEqual(self.context.get('puller.counter'), 1)
         self.assertTrue(self.space.api.messages.list.called)
-        self.assertEqual(self.space._last_message_id, '*id')
+        self.assertEqual(self.space._last_message_id, '*123')
 
         self.space.pull()
         self.assertEqual(self.context.get('puller.counter'), 2)
-        self.assertEqual(self.space._last_message_id, '*id')
+        self.assertEqual(self.space._last_message_id, '*123')
 
         self.space.pull()
         self.assertEqual(self.context.get('puller.counter'), 3)
-        self.assertEqual(self.space._last_message_id, '*id')
+        self.assertEqual(self.space._last_message_id, '*123')
 
         self.assertEqual(yaml.safe_load(self.ears.get()),
                          {'text': '*message',
@@ -660,32 +734,31 @@ class SparkSpaceTests(unittest.TestCase):
         message = my_message.copy()
         message.update({"type": "message"})
         message.update({"content": message['text']})
-        message.update({"from_id": 'Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY'})
+        message.update({"from_id": '*matt*id'})
         message.update({"from_label": 'matt@example.com'})
         message.update({'is_direct': False})
-        message.update({"mentioned_ids": ['Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM',
-                       'Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg']})
-        message.update({"channel_id": 'Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0'})
+        message.update({"mentioned_ids": ['*matt*id', '*julie*id']})
+        message.update({"channel_id": '*id1'})
         self.maxDiff = None
         self.assertEqual(yaml.safe_load(self.ears.get()), message)
 
         attachment = my_message.copy()
         attachment.update({"type": "attachment"})
         attachment.update({"url": "http://www.example.com/images/media.png"})
-        attachment.update({"from_id": 'Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY'})
+        attachment.update({"from_id": '*matt*id'})
         attachment.update({"from_label": 'matt@example.com'})
-        attachment.update({"channel_id": 'Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0'})
+        attachment.update({"channel_id": '*id1'})
         self.assertEqual(yaml.safe_load(self.ears.get()), attachment)
 
         self.space.on_message(my_private_message, self.ears)
         message = my_private_message.copy()
         message.update({"type": "message"})
         message.update({"content": message['text']})
-        message.update({"from_id": 'Y2lzY29zcGFyazovL3VzL1LTQ5YzQtYTIyYi1mYWYwZWQwMjkyMzU'})
+        message.update({"from_id": '*foo*id'})
         message.update({"from_label": 'foo.bar@again.org'})
         message.update({'is_direct': True})
         message.update({"mentioned_ids": []})
-        message.update({"channel_id": 'Y2lzY29zcGFyazovL3VzL1JP0zY2VmLWJiNDctOTZlZjA1NmJhYzFl'})
+        message.update({"channel_id": '*direct*id'})
         self.maxDiff = None
         self.assertEqual(yaml.safe_load(self.ears.get()), message)
 
@@ -803,6 +876,22 @@ class SparkSpaceTests(unittest.TestCase):
         self.assertTrue(channel.is_group)
         self.assertFalse(channel.is_team)
         self.assertTrue(channel.is_moderated)
+
+        channel = self.space._to_channel(FakeDirectRoom())
+        self.assertEqual(channel.id, '*direct_id')
+        self.assertEqual(channel.title, 'Marcel Jones')
+        self.assertTrue(channel.is_direct)
+        self.assertFalse(channel.is_group)
+        self.assertFalse(channel.is_team)
+        self.assertFalse(channel.is_moderated)
+
+        channel = self.space._to_channel(FakeTeamRoom())
+        self.assertEqual(channel.id, '*team_id')
+        self.assertEqual(channel.title, '*team_title')
+        self.assertFalse(channel.is_direct)
+        self.assertTrue(channel.is_group)
+        self.assertTrue(channel.is_team)
+        self.assertFalse(channel.is_moderated)
 
 
 if __name__ == '__main__':

@@ -696,7 +696,13 @@ class SparkSpace(Space):
           webhook name = shellbot-messages
           resource = messages,
           event = created,
-          registered with personal token (for chat auditing)
+          registered with bot token
+
+        - Messages are sent, maybe with some files:
+          webhook name = shellbot-audit
+          resource = messages,
+          event = created,
+          registered with audit token
 
         Previous webhooks registered with the bot token are all removed before
         registration. This means that only the most recent instance of the bot
@@ -775,75 +781,79 @@ class SparkSpace(Space):
                 logging.debug(u"- deleting '{}'".format(webhook.name))
                 delete_webhook(self.audit_api, webhook.id)
 
-    def webhook(self, message_id=None):
+    def webhook(self, item=None):
         """
         Processes the flow of events from Cisco Spark
 
-        :param message_id: if provided, do not invoke the request object
-
-        Example message received from Cisco Spark::
-
-            {
-              "id" : "Y2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-              "roomId" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
-              "roomType" : "group",
-              "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
-              "toPersonEmail" : "julie@example.com",
-              "text" : "PROJECT UPDATE - A new project lan has been published on Box: http://box.com/s/lf5vj. The PM for this project is Mike C. and the Engineering Manager is Jane W.",
-              "markdown" : "**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>.",
-              "files" : [ "http://www.example.com/images/media.png" ],
-              "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
-              "personEmail" : "matt@example.com",
-              "created" : "2015-10-18T14:26:16+00:00",
-              "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
-            }
+        :param item: if provided, do not invoke the ``request`` object
+        :type item: dict
 
         This function is called from far far away, over the Internet,
-        when `message_id` is None. Or it is called locally, from test environment,
-        when `message_id` has a value.
+        most of the time. Or it is called locally, from test environment,
+        when an item is provided.
+
+        The structure of the provided item should be identical to those of
+        updates sent by Cisco Spark.
+
+        Example event on message creation::
+
+            {
+                "resource": "messages",
+                "event": "created",
+                "data": { "id": "...." },
+                "name": "shellbot-audit"
+            }
 
         """
 
         logging.debug(u'Receiving data from webhook')
 
-        if message_id:
-            resource = 'messages'
-            event = 'created'
-            hook = 'injection'
+        if not item:
+            item = request.json
+        assert isinstance(item, dict)
+
+        logging.debug(u"- {}".format(item))
+        resource = item['resource']
+        event = item['event']
+        data = item['data']
+        hook = item['name']
+
+        if hook == 'shellbot-audit':
+            logging.debug(u"- for audit")
+            api = self.audit_api
+            queue = self.fan
 
         else:
-#           logging.debug(u"- {}".format(request.json))
-            resource = request.json['resource']
-            event = request.json['event']
-            data = request.json['data']
-            hook = request.json['name']
+            api = self.api
+            queue = self.ears
 
         if resource == 'messages' and event == 'created':
-            if not message_id:
-                message_id = data['id']
 
-                if data['personId'] == self.context.get('bot.id'):
+            if hook != 'shellbot-audit':
+
+                filter_id = self.context.get('bot.id')
+                if filter_id and data.get('personId') == filter_id:
                     logging.debug(u"- sent by me, thrown away")
-                    return
+                    return 'OK'
 
             logging.debug(u"- handling '{}:{}'".format(resource, event))
 
             @retry(u"Unable to retrieve new message")
             def fetch_message():
 
-                item = self.api.messages.get(messageId=message_id)
+                item = api.messages.get(messageId=data['id'])
                 item._json['hook'] = hook
                 return item._json
 
-            self.on_message(fetch_message(), self.ears)
+            self.on_message(fetch_message(), queue)
 
         elif resource == 'memberships' and event == 'created':
             logging.debug(u"- handling '{}:{}'".format(resource, event))
-            self.on_join(data, self.ears)
+            self.on_join(data, queue)
 
         elif resource == 'memberships' and event == 'deleted':
             logging.debug(u"- handling '{}:{}'".format(resource, event))
-            self.on_leave(data, self.ears)
+            self.on_leave(data, queue)
 
         else:
             logging.debug(u"- throwing away {}:{}".format(resource, event))
@@ -918,7 +928,7 @@ class SparkSpace(Space):
         message.mentioned_ids = message.get('mentionedPeople', [])
         message.channel_id = message.get('roomId')
 
-        logging.debug(u"- putting message to ears")
+        logging.debug(u"- putting message to queue")
         queue.put(str(message))
 
         for url in item.get('files', []):
@@ -928,7 +938,7 @@ class SparkSpace(Space):
             attachment.from_label = item.get('personEmail', None)
             attachment.channel_id = item.get('roomId', None)
 
-            logging.debug(u"- putting attachment to ears")
+            logging.debug(u"- putting attachment to queue")
             queue.put(str(attachment))
 
     def download_attachment(self, url):
@@ -1028,6 +1038,7 @@ class SparkSpace(Space):
         join.actor_label = join.get('personDisplayName')
         join.channel_id = join.get('roomId')
 
+        logging.debug(u"- putting join to queue")
         queue.put(str(join))
 
     def on_leave(self, item, queue):
@@ -1068,6 +1079,7 @@ class SparkSpace(Space):
         leave.actor_label = leave.get('personDisplayName')
         leave.channel_id = leave.get('roomId')
 
+        logging.debug(u"- putting leave to queue")
         queue.put(str(leave))
 
     def _to_channel(self, room):
