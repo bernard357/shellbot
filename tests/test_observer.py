@@ -11,45 +11,168 @@ import sys
 from threading import Timer
 import time
 
-from shellbot import Context, Engine, SpaceFactory
+from shellbot import Context, Engine
+from shellbot.events import Message
 from shellbot.observer import Observer
 
-my_engine = Engine(fan=Queue())
+class FakeMessage(object):
+    channel_id = '*id1'
+    text = "hello world"
+
+my_message = FakeMessage()
+
+class FakeUpdater(object):
+
+    def __init__(self, id):
+        self.id = id
+        self.count = 0
+        self.text = None
+
+    def put(self, item):
+        self.count += 1
+        self.text = item.text
+        logging.debug(u"- update: {}".format(item.text))
+
+class FakeFactory(object):
+
+    def get_updater(self, id):
+        return FakeUpdater(id)
+
+my_01_message_from_bot_in_group = Message({
+    "channel_id": "*id1",
+    "content": "<p>Hello there!</p>",
+    "created": "2017-07-30T20:34:35.593Z",
+    "files": ["http://hydra-a5.wbx2.com/MWU3LTg5MzgtZjU1MWY1ZTU1ZmE5LzA"],
+    "from_id": "*shelly*id",
+    "from_label": "shelly@sparkbot.io",
+    "hook": "shellbot-audit",
+    "id": "Y2lzY29zcGFyazovL3VzL01FU1NBR0UvgtZjU1MWY1ZTU1ZmE5",
+    "is_direct": False,
+    "markdown": "Hello there!",
+    "mentioned_ids": [],
+    "personEmail": "shelly@sparkbot.io",
+    "personId": "*shelly*id",
+    "roomId": "*id1",
+    "roomType": "group",
+    "text": "Type '@shelly help' for more information",
+    "type": "message",
+})
+
+my_02_attachment_from_bot_in_group = Message({
+    "channel_id": "*id1",
+    "created": "2017-07-30T20:34:35.593Z",
+    "files": ["http://hydra-a5.wbx2.com/MWU3LTg5MzgtZjU1MWY1ZTU1ZmE5LzA"],
+    "from_id": "*shelly*id",
+    "from_label": "shelly@sparkbot.io",
+    "hook": "shellbot-audit",
+    "html": "<p>Hello there!</p>",
+    "id": "Y2lzY29zcGFyazovL3VzL01FU1NBR0UvgtZjU1MWY1ZTU1ZmE5",
+    "markdown": "Hello there!",
+    "personEmail": "shelly@sparkbot.io",
+    "personId": "*shelly*id",
+    "roomId": "*id1",
+    "roomType": "group",
+    "text": "This is an attachment",
+    "type": "attachment",
+    "url": "http://hydra-a5.wbx2.com/MWU3LTg5MzgtZjU1MWY1ZTU1ZmE5LzA",
+})
+
+my_03_message_from_person_in_group = Message({
+    "channel_id": "*id1",
+    "content": "<p>shelly hello</p>",
+    "created": "2017-07-30T20:41:30.822Z",
+    "from_id": "*foo*id",
+    "from_label": "foo.bar@acme.com",
+    "hook": "shellbot-audit",
+    "html": "<p>shelly hello</p>",
+    "id": "Y2lzY29zcGFyazovL3VzL01FU1NU2Ny0xMWU3LTliMTctOTc4N2UzMWUzZWQ4",
+    "is_direct": False,
+    "mentionedPeople": ["*shelly*id"],
+    "mentioned_ids": ["*shelly*id"],
+    "personEmail": "foo.bar@acme.com",
+    "personId": "*foo*id",
+    "roomId": "*id1",
+    "roomType": "group",
+    "text": "shelly hello",
+    "type": "message"
+})
+
+my_04_response_from_bot_in_group = Message({
+    "channel_id": "*id1",
+    "content": "Hello, World!",
+    "created": "2017-07-30T20:41:33.104Z",
+    "from_id": "*shelly*id",
+    "from_label": "shelly@sparkbot.io",
+    "hook": "shellbot-audit",
+    "id": "Y2lzY29zcGFyazovL3VzL01FU1NBR2Ny0xMWU3LWI4NWEtNDU3YmY3NDg5MmJh",
+    "is_direct": False,
+    "mentioned_ids": [],
+    "personEmail": "shelly@sparkbot.io",
+    "personId": "*shelly*id",
+    "roomId": "*id1",
+    "roomType": "group",
+    "text": "Hello, World!",
+    "type": "message"
+})
+
+my_05_message_out_of_scope_for_audit = Message({
+    "channel_id": "*id2",
+    "content": "sent in a room where bot is not",
+    "created": "2017-07-30T20:47:18.865Z",
+    "from_id": "*foo*id",
+    "from_label": "foo.bar@acme.com",
+    "hook": "shellbot-audit",
+    "id": "Y2lzY29zcGFyazovL3VzL01FU1NBtNzU2OC0xMWU3LTlhOTctN2QxODMzMTU5MzJl",
+    "is_direct": False,
+    "mentioned_ids": [],
+    "personEmail": "foo.bar@acme.com",
+    "personId": "*foo*id",
+    "roomId": "*id2",
+    "roomType": "group",
+    "text": "sent in a room where bot is not",
+    "type": "message"
+})
 
 
 class ObserverTests(unittest.TestCase):
 
+    def setUp(self):
+        self.fan = Queue()
+        self.engine = Engine(updater_factory=FakeFactory(), fan=self.fan)
+        self.engine.set('bots.ids', ['*id1'])
+
     def tearDown(self):
+        del self.engine
+        del self.fan
         collected = gc.collect()
-        logging.info("Garbage collector: collected %d objects." % (collected))
+        if collected:
+            logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_static(self):
 
         logging.info('*** Static test ***')
 
-        observer = Observer(engine=my_engine)
+        observer = Observer(engine=self.engine)
 
         observer.start()
 
         observer.join(0.1)
         if observer.is_alive():
             logging.info('Stopping observer')
-            my_engine.set('general.switch', 'off')
+            self.engine.set('general.switch', 'off')
             observer.join()
 
         self.assertFalse(observer.is_alive())
-        self.assertEqual(my_engine.get('observer.counter', 0), 0)
+        self.assertEqual(self.engine.get('observer.counter', 0), 0)
 
     def test_dynamic(self):
 
         logging.info('*** Dynamic test ***')
 
-        items = ['hello', 'world']
-        for item in items:
-            my_engine.fan.put(item)
-        my_engine.fan.put(None)
+        self.engine.fan.put(my_message)
+        self.engine.fan.put(None)
 
-        observer = Observer(engine=my_engine)
+        observer = Observer(engine=self.engine)
 
         observer.run()
 
@@ -60,62 +183,83 @@ class ObserverTests(unittest.TestCase):
 
         logging.info("*** start")
 
-        my_engine.fan.put('ping')
+        self.engine.fan.put(my_message)
 
-        my_engine.set('general.switch', 'on')
-        my_engine.set('observer.counter', 0) # do not wait for run()
+        self.engine.set('general.switch', 'on')
+        self.engine.set('observer.counter', 0) # do not wait for run()
 
-        observer = Observer(engine=my_engine)
+        observer = Observer(engine=self.engine)
         observer.start()
         while True:
-            counter = my_engine.get('observer.counter', 0)
+            counter = self.engine.get('observer.counter', 0)
             if counter > 0:
                 logging.info("- observer.counter > 0")
                 break
-        my_engine.set('general.switch', 'off')
+        self.engine.set('general.switch', 'off')
         observer.join()
 
-        self.assertTrue(my_engine.get('observer.counter') > 0)
+        self.assertTrue(self.engine.get('observer.counter') > 0)
 
     def test_run(self):
 
         logging.info("*** run")
 
-        my_engine.observer.process = mock.Mock(side_effect=Exception('TEST'))
-        my_engine.fan.put(('dummy'))
-        my_engine.fan.put(None)
-        my_engine.observer.run()
-        self.assertEqual(my_engine.get('observer.counter'), 0)
+        self.engine.observer.process = mock.Mock(side_effect=Exception('TEST'))
+        self.engine.fan.put(my_message)
+        self.engine.fan.put(None)
+        self.engine.observer.run()
+        self.assertEqual(self.engine.get('observer.counter'), 0)
 
-        my_engine.observer = Observer(engine=my_engine)
-        my_engine.observer.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
-        my_engine.fan.put(('dummy'))
-        my_engine.observer.run()
-        self.assertEqual(my_engine.get('observer.counter'), 0)
+        self.engine.observer = Observer(engine=self.engine)
+        self.engine.observer.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
+        self.engine.fan.put(my_message)
+        self.engine.observer.run()
+        self.assertEqual(self.engine.get('observer.counter'), 0)
 
     def test_run_wait(self):
 
         logging.info("*** run/wait while empty")
 
-        my_engine.observer.NOT_READY_DELAY = 0.01
-        my_engine.set('general.switch', 'on')
-        my_engine.observer.start()
+        self.engine.observer.NOT_READY_DELAY = 0.01
+        self.engine.set('general.switch', 'on')
+        self.engine.observer.start()
 
-        t = Timer(0.1, my_engine.fan.put, ['ping'])
+        t = Timer(0.1, self.engine.fan.put, [my_message])
         t.start()
 
         time.sleep(0.2)
-        my_engine.set('general.switch', 'off')
-        my_engine.observer.join()
+        self.engine.set('general.switch', 'off')
+        self.engine.observer.join()
 
     def test_process(self):
 
         logging.info('*** process ***')
 
-        observer = Observer(engine=my_engine)
+        observer = Observer(engine=self.engine)
 
-        observer.process('hello world')
+        observer.process(my_message)
+        updater = observer.updaters['*id1']
+        self.assertEqual(updater.count, 1)
+        self.assertEqual(updater.text, 'hello world')
 
+        observer.process(my_01_message_from_bot_in_group)
+        self.assertEqual(updater.count, 2)
+        self.assertEqual(updater.text, "Type '@shelly help' for more information")
+
+        observer.process(my_02_attachment_from_bot_in_group)
+        self.assertEqual(updater.count, 3)
+        self.assertEqual(updater.text, 'This is an attachment')
+
+        observer.process(my_03_message_from_person_in_group)
+        self.assertEqual(updater.count, 4)
+        self.assertEqual(updater.text, 'shelly hello')
+
+        observer.process(my_04_response_from_bot_in_group)
+        self.assertEqual(updater.count, 5)
+        self.assertEqual(updater.text, 'Hello, World!')
+
+        observer.process(my_05_message_out_of_scope_for_audit)
+        self.assertEqual(updater.count, 5)
 
 
 if __name__ == '__main__':
