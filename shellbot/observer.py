@@ -20,6 +20,7 @@ from multiprocessing import Process
 from six import string_types
 import time
 
+from shellbot.events import Event
 
 class Observer(Process):
     """
@@ -83,7 +84,7 @@ class Observer(Process):
                     self.process(item)
 
                 except Exception as feedback:
-                    logging.warning(feedback)
+                    logging.exception(feedback)
 
         except KeyboardInterrupt:
             pass
@@ -102,7 +103,10 @@ class Observer(Process):
         counter = self.engine.context.increment('observer.counter')
         logging.debug(u'Observer is working on {}'.format(counter))
 
-        logging.debug(u"- {}".format(item))
+        if isinstance(item, string_types):
+            item = Event(item)
+
+        # logging.debug(u"- {}".format(item))
 
         if item.channel_id not in self.engine.get('bots.ids', []):
             logging.debug(u"- bot is not in this channel -- thrown away")
@@ -118,9 +122,11 @@ class Observer(Process):
 
         else:
             updater = self.engine.build_updater(item.channel_id)
+
             if updater:
                 self.updaters[item.channel_id] = updater
                 logging.debug(u"- caching updater")
+
             else:
                 logging.debug(u"- no updater available -- thrown away")
                 return

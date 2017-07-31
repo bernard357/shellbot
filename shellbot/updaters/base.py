@@ -95,7 +95,7 @@ class Updater(object):
         """
         pass
 
-    def on_bond(self):
+    def on_bond(self, bot):
         """
         Reacts on space bonding
 
@@ -103,8 +103,8 @@ class Updater(object):
 
         Example::
 
-            def on_bond(self):
-                self.db = Driver.open()
+            def on_bond(self, bot):
+                self.db = Driver.open(bot.id)
 
         """
         pass

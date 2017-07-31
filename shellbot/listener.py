@@ -100,6 +100,7 @@ class Listener(Process):
             while self.engine.get('general.switch', 'on') == 'on':
 
                 if self.engine.ears.empty():
+                    self.idle()
                     time.sleep(self.EMPTY_DELAY)
                     continue
 
@@ -117,6 +118,14 @@ class Listener(Process):
             pass
 
         logging.info(u"Listener has been stopped")
+
+    def idle(self):
+        """
+        Finds something smart to do
+        """
+        if self.engine.bots_to_load:
+            id = self.engine.bots_to_load.pop()
+            self.engine.ears.put({'type': 'load_bot', 'id': id})
 
     def process(self, item):
         """

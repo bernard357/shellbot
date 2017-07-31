@@ -276,6 +276,8 @@ class Engine(object):
 
         self.bots = {}
 
+        self.bots_to_load = set()  # for bots created before the engine runs
+
         assert space is None or type is None  # use only one
         if space:
             self.space = space
@@ -496,7 +498,7 @@ class Engine(object):
 
         Following standard events can be registered:
 
-        - 'bond' - when the bot has connected to a chat space
+        - 'bond' - when the bot has connected to a chat channel
 
         - 'dispose' - when resources, including chat space, will be destroyed
 
@@ -560,7 +562,7 @@ class Engine(object):
         Example::
 
             def on_bond(self):
-                self.dispatch('bond')
+                self.dispatch('bond', bot=this_bot)
 
         For each registered object, the function will look for a related member
         function and call it. For example for the event
@@ -797,8 +799,6 @@ class Engine(object):
                 self.ears = Queue()
                 self.space.ears = self.ears
 
-            self.ears.put({'type': 'load_bot', 'id': channel.id})
-
         else:
             if channel and reset:
                 logging.debug(u"- deleting existing channel")
@@ -811,7 +811,7 @@ class Engine(object):
                 participants = self.space.get('participants', [])
             self.space.add_participants(id=channel.id, persons=participants)
 
-            # listener will load bot on space webhook
+        self.bots_to_load.add(channel.id)  # handled by the listener
 
         return channel
 
@@ -874,7 +874,7 @@ class Engine(object):
         if bot and bot.id:
             logging.debug(u"- remembering bot {}".format(bot.id))
             self.bots[bot.id] = bot
-            self.set('bots.ids', self.bots.keys())   # for the observer 
+            self.set('bots.ids', self.bots.keys())   # for the observer
 
         bot.bond()
 

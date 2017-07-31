@@ -226,6 +226,8 @@ class ShellBot(object):
 
         self.on_bond()
 
+        self.engine.dispatch('bond', bot=self)
+
         if self.machine:
             self.machine.restart(defer=2.0)
 

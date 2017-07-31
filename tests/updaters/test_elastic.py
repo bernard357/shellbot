@@ -71,7 +71,7 @@ class UpdaterTests(unittest.TestCase):
 
         u = ElasticsearchUpdater(host='this.does.not.exist')
         with self.assertRaises(Exception):
-            u.on_bond()
+            u.on_bond(bot='*dummy')
 
     def test_put(self):
 

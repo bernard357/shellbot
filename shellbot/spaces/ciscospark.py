@@ -813,7 +813,7 @@ class SparkSpace(Space):
             item = request.json
         assert isinstance(item, dict)
 
-        logging.debug(u"- {}".format(item))
+#        logging.debug(u"- {}".format(item))
         resource = item['resource']
         event = item['event']
         data = item['data']

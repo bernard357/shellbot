@@ -51,20 +51,17 @@ class BaseTests(unittest.TestCase):
 
         logging.info('***** on_bond')
 
-        u = Updater()
-        u.on_bond()
-
         class MyUpdater(Updater):
 
             def on_init(self, **kwargs):
                 self.count = 0
 
-            def on_bond(self):
+            def on_bond(self, bot):
                 self.count += 1
 
         u = MyUpdater(engine=my_engine)
         self.assertEqual(u.count, 0)
-        my_engine.dispatch('bond')
+        my_engine.dispatch('bond', bot='*dummy')
         self.assertEqual(u.count, 1)
 
     def test_on_dispose(self):

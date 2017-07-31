@@ -61,7 +61,7 @@ class FileUpdater(Updater):
 
         return self.path
 
-    def on_bond(self):
+    def on_bond(self, bot):
         """
         Creates path on space bonding
         """

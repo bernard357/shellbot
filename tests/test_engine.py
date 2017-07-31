@@ -38,7 +38,7 @@ class MyCounter(object):
     def __init__(self, name='counter'):
         self.name = name
         self.count = 0
-    def on_bond(self):
+    def on_bond(self, bot):
         logging.info('{}.on_bond'.format(self.name))
         self.count += 1
     def on_dispose(self):
@@ -434,7 +434,7 @@ class EngineTests(unittest.TestCase):
         self.engine.register('bond', MyCounter('counter #2'))
 
         class AllEvents(object):
-            def on_bond(self):
+            def on_bond(self, bot):
                 pass
             def on_dispose(self):
                 pass
@@ -500,7 +500,7 @@ class EngineTests(unittest.TestCase):
         class AllEvents(object):
             def __init__(self):
                 self.events = []
-            def on_bond(self):
+            def on_bond(self, bot):
                 self.events.append('bond')
             def on_dispose(self):
                 self.events.append('dispose')
@@ -547,7 +547,7 @@ class EngineTests(unittest.TestCase):
         self.engine.register('inbound', all_events)
         self.engine.register('some_custom_event', all_events)
 
-        self.engine.dispatch('bond')
+        self.engine.dispatch('bond', bot='*dummy')
         self.engine.dispatch('dispose')
         self.engine.dispatch('start')
         self.engine.dispatch('stop')

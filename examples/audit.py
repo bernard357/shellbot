@@ -36,7 +36,7 @@ environment variables instead::
 
 - ``CHANNEL_DEFAULT_PARTICIPANTS`` - Mention at least your e-mail address
 - ``CISCO_SPARK_BOT_TOKEN`` - Received from Cisco Spark on bot registration
-- ``CISCO_SPARK_TOKEN`` - Your personal Cisco Spark token
+- ``CISCO_SPARK_AUDIT_TOKEN`` - The Cisco Spark token used for audit
 - ``SERVER_URL`` - Public link used by Cisco Spark to reach your server
 
 The bot token is specific to your run-time, please visit Cisco Spark for
@@ -52,8 +52,8 @@ For example, if you run this script under Linux or macOs with support from
 ngrok for exposing services to the Internet::
 
     export CHANNEL_DEFAULT_PARTICIPANTS="alice@acme.com"
-    export CISCO_SPARK_BOT_TOKEN="<token id from Cisco Spark for Developers>"
-    export CISCO_SPARK_TOKEN="<personal token id from Cisco Spark>"
+    export CISCO_SPARK_BOT_TOKEN="<token id from Cisco Spark for bot>"
+    export CISCO_SPARK_AUDIT_TOKEN="<token id from Cisco Spark for audit>"
     export SERVER_URL="http://1a107f21.ngrok.io"
     python hello.py
 
@@ -71,33 +71,14 @@ from shellbot.updaters import FileUpdater
 Context.set_logger()
 
 
-# # create a mirror chat room
-# #
-# mirror_bot = ShellBot()
-# mirror_bot.configure()
-# mirror = SparkSpace(bot=mirror_bot)
-# mirror.connect()
+# for chat audit, create one updater per channel
 #
-# title = u"{} - {}".format(
-#     mirror.configured_title(), u"Audited content")
-#
-# mirror.bond(title=title)
-
-# enable auditing
-#
-#audit.arm(updater=SpaceUpdater(space=mirror))
-
-# run the bot
-#
-
 class UpdaterFactory(object):
     def get_updater(self, id):
         return FileUpdater(path='./updater-{}.log'.format(id))
 
-
 # create a chat engine
 #
-
 engine = Engine(
     type='spark',
     command='shellbot.commands.audit',
@@ -119,5 +100,3 @@ engine.run()
 # delete the chat room when the bot is stopped
 #
 engine.dispose()
-
-#mirror.delete_space()

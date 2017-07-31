@@ -76,7 +76,7 @@ class UpdaterTests(unittest.TestCase):
             pass
 
         u = FileUpdater(path=my_path+'/on_bond/file.log')
-        u.on_bond()
+        u.on_bond(bot='*dummy')
         self.assertTrue(os.path.isdir(my_path+'/on_bond'))
 
         try:
@@ -99,7 +99,7 @@ class UpdaterTests(unittest.TestCase):
             pass
 
         u = FileUpdater(path=my_file)
-        u.on_bond()
+        u.on_bond(bot='*dummy')
 
         message_1 = Message({
             'person_label': 'alice@acme.com',

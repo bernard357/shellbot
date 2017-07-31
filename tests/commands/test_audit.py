@@ -18,8 +18,12 @@ my_engine = Engine(mouth=Queue())
 my_engine.shell = Shell(engine=my_engine)
 
 
+class MyChannel(object):
+    is_group = True
+
 class Bot(object):
     id = '*id'
+    channel = MyChannel()
 
     def __init__(self, engine):
         self.engine = engine
@@ -131,13 +135,13 @@ class AuditTests(unittest.TestCase):
         c.on_init()
         self.assertTrue(c.engine.register.called)
 
-    def test_on_start(self):
+    def test_on_bond(self):
 
-        logging.info('***** on_start')
+        logging.info('***** on_bond')
 
         c = Audit(my_engine)
-        c.on_start()
-        self.assertEqual(my_engine.get('audit.switch'), 'on')
+        c.on_bond(my_bot)
+        self.assertEqual(my_engine.get('audit.switch.*id'), 'on')
 
     def test_on_off(self):
 
@@ -146,7 +150,7 @@ class AuditTests(unittest.TestCase):
         class MyAudit(Audit):
             def on_init(self):
                 self.expected = False
-            def watchdog(self):
+            def watchdog(self, bot, **kwargs):
                 self.expected = True
 
         c = MyAudit(my_engine)
@@ -158,15 +162,26 @@ class AuditTests(unittest.TestCase):
             if c.expected:
                 break
 
+        self.assertEqual(my_engine.mouth.get().text, c.on_message)
+        self.assertEqual(
+            my_engine.mouth.get().text,
+            "Please note that auditing will restart after 0.001 seconds")
+        with self.assertRaises(Exception):
+            print(my_engine.mouth.get_nowait())
+
     def test_watchdog(self):
 
         logging.info('***** watchdog')
 
         c = Audit(my_engine)
-        c.audit_on = mock.Mock()
-        my_engine.set('audit.switch', 'off')
-        c.watchdog()
-        self.assertEqual(my_engine.get('audit.switch'), 'on')
+        my_engine.set('audit.switch.*id', 'off')
+        c.watchdog(bot=my_bot)
+
+        self.assertEqual(my_engine.get('audit.switch.*id'), 'on')
+
+        self.assertEqual(my_engine.mouth.get().text, c.on_message)
+        with self.assertRaises(Exception):
+            print(my_engine.mouth.get_nowait())
 
 
 if __name__ == '__main__':

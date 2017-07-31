@@ -61,7 +61,7 @@ class ElasticsearchUpdater(Updater):
 
         return self.engine.get('elasticsearch.updater.host', 'localhost:9200')
 
-    def on_bond(self):
+    def on_bond(self, bot):
         """
         Creates index on space bonding
         """

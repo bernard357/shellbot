@@ -35,10 +35,18 @@ class Audit(Command):
     for security reasons, for compliancy or, simply speaking, for
     traceability.
 
+    Audit can be suspended explicitly by channel participants. This allows for
+    some private exchanges that are not audited at all. However, then command
+    is put in the audit log itself, so that people can be queried afterwards
+    on their private interactions.
+    If the parameter ``off_duration`` is set, then it is used by a watchdog
+    to restart auditing. Else it is up to channel participants to activate or
+    to de-activate auditing, at will.
+
     The command itself allows for suspending or restarting the audit process.
     When audit has been activated in a channel, the attribute
     ``audit.switch.<channel_id>`` is set to ``on`` in the context. This can be
-    checked by the observer for filtering of inbound records.
+    checked by the observer while handling inbound records.
 
     The audit has to be armed beforehand, and this is checked from the context
     attribute ``audit.has_been_armed``. In normal cases, audit is armed from
@@ -97,6 +105,7 @@ class Audit(Command):
 
         """
         label = 'audit.switch.{}'.format(bot.id)
+        logging.debug(u"- activating audit mode for {}".format(label))
         if self.engine.get(label, 'off') == 'on':
             bot.say(self.already_on_message)
         else:
@@ -112,6 +121,7 @@ class Audit(Command):
 
         """
         label = 'audit.switch.{}'.format(bot.id)
+        logging.debug(u"- de-activating audit mode for {}".format(label))
         if self.engine.get(label, 'off') == 'on':
             self.engine.set(label, 'off')
             bot.say(self.off_message)
@@ -146,14 +156,15 @@ class Audit(Command):
         """
         Registers callback from bot
         """
-        self.engine.register('start', self)
+        self.engine.register('bond', self)
 
-    def on_start(self):
+    def on_bond(self, bot):
         """
-        Reacts on bot start
+        Activates audit when a bot joins a channel
         """
-        logging.info(u"Activating real-time audit")
-        self.engine.set('audit.switch', 'on')
+        if bot.channel.is_group:
+            logging.info(u"Activating real-time audit")
+            self.audit_on(bot)
 
     def on_off(self, bot):
         """
@@ -166,14 +177,17 @@ class Audit(Command):
                     str(self.off_duration)+' seconds'))
 
             logging.debug(u"- triggering watchdog timer")
-            t = Timer(self.off_duration, self.watchdog)
+            label = 'audit.switch.{}'.format(bot.id)
+            t = Timer(self.off_duration, self.watchdog, [bot])
             t.start()
 
-    def watchdog(self):
+    def watchdog(self, bot):
         """
         Ensures that audit is restarted
         """
         logging.debug(u"Watchdog is checking audit status")
-        if self.engine.get('audit.switch', 'off') == 'off':
+        label = 'audit.switch.{}'.format(bot.id)
+        if self.engine.get(label, 'off') == 'off':
             logging.debug(u"- restarting audit")
-            self.engine.set('audit.switch', 'on')
+            self.audit_on(bot)
+            logging.debug(u"- done")
