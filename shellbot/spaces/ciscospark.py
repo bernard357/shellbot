@@ -767,7 +767,7 @@ class SparkSpace(Space):
 
         @retry(u"Unable to list webhooks", silent=True)
         def list_webhooks(api):
-            return api.webhooks.list()
+            return [x for x in api.webhooks.list()]
 
         @retry(u"Unable to delete webhook", silent=True)
         def delete_webhook(api, id):
