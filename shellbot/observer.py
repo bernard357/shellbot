@@ -20,7 +20,7 @@ from multiprocessing import Process
 from six import string_types
 import time
 
-from shellbot.events import Event
+from shellbot.events import Event, Message
 
 class Observer(Process):
     """
@@ -112,10 +112,6 @@ class Observer(Process):
             logging.debug(u"- bot is not in this channel -- thrown away")
             return
 
-        if self.engine.get(u"audit.switch.{}".format(item.channel_id), 'off') != 'on':
-            logging.debug(u"- audit has not been activated for this channel -- thrown away")
-            return
-
         if item.channel_id in self.updaters.keys():
             logging.debug(u"- found matching updater")
             updater = self.updaters[item.channel_id]
@@ -130,5 +126,26 @@ class Observer(Process):
             else:
                 logging.debug(u"- no updater available -- thrown away")
                 return
+
+        current = self.engine.get(u"audit.switch.{}".format(item.channel_id), 'off')
+        previous = self.engine.get(u"audit.previous-switch.{}".format(item.channel_id), 'off')
+        self.engine.set(u"audit.previous-switch.{}".format(item.channel_id), current)
+
+        if current == 'on' and previous == 'off':
+
+            updater.put(Message({'text': "========== AUDIT ON ==========",
+                                 'from_id': self.engine.get('bot.id'),
+                                 'channel_id': item.channel_id}))
+
+        elif current == 'off' and previous == 'on':
+
+            updater.put(Message({'text': "========== AUDIT OFF ==========",
+                                 'from_id': self.engine.get('bot.id'),
+                                 'channel_id': item.channel_id}))
+
+
+        if current != 'on':
+            logging.debug(u"- audit has not been activated for this channel -- thrown away")
+            return
 
         updater.put(item)
