@@ -243,40 +243,45 @@ class ObserverTests(unittest.TestCase):
 
         updater = observer.updaters['*id1']
 
-        self.assertEqual(updater.count, 1)
+        self.assertEqual(updater.count, 2)  # because of self-generated msg
         self.assertEqual(updater.text, 'hello world')
 
         self.engine.set('audit.switch.*id1', 'off')
 
         observer.process(my_message)
+
+        self.assertEqual(updater.count, 3)  # because of self-generated msg
+        self.assertEqual(updater.text, '========== AUDIT OFF ==========')
+
         observer.process(my_01_message_from_bot_in_group)
         observer.process(my_02_attachment_from_bot_in_group)
         observer.process(my_03_message_from_person_in_group)
         observer.process(my_04_response_from_bot_in_group)
         observer.process(my_05_message_out_of_scope_for_audit)
-        self.assertEqual(updater.count, 1)
-        self.assertEqual(updater.text, 'hello world')
+
+        self.assertEqual(updater.count, 3)
+        self.assertEqual(updater.text, '========== AUDIT OFF ==========')
 
         self.engine.set('audit.switch.*id1', 'on')
 
         observer.process(my_01_message_from_bot_in_group)
-        self.assertEqual(updater.count, 2)
+        self.assertEqual(updater.count, 5)  # because of self-generated msg
         self.assertEqual(updater.text, "Type '@shelly help' for more information")
 
         observer.process(my_02_attachment_from_bot_in_group)
-        self.assertEqual(updater.count, 3)
+        self.assertEqual(updater.count, 6)
         self.assertEqual(updater.text, 'This is an attachment')
 
         observer.process(my_03_message_from_person_in_group)
-        self.assertEqual(updater.count, 4)
+        self.assertEqual(updater.count, 7)
         self.assertEqual(updater.text, 'shelly hello')
 
         observer.process(my_04_response_from_bot_in_group)
-        self.assertEqual(updater.count, 5)
+        self.assertEqual(updater.count, 8)
         self.assertEqual(updater.text, 'Hello, World!')
 
         observer.process(my_05_message_out_of_scope_for_audit)
-        self.assertEqual(updater.count, 5)
+        self.assertEqual(updater.count, 8)  # not considered by observer
 
 
 if __name__ == '__main__':
