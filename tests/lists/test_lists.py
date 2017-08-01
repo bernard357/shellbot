@@ -124,21 +124,21 @@ class StoreFactoryTests(unittest.TestCase):
         self.context.apply(settings)
         factory = ListFactory(context=self.context)
         factory.configure()
-        self.assertEqual(factory.lists.keys(), [])
+        self.assertEqual(len(factory.lists.keys()), 0)
 
         settings = yaml.load(list_instead_of_dict_yaml )
         self.context.clear()
         self.context.apply(settings)
         factory = ListFactory(context=self.context)
         factory.configure()
-        self.assertEqual(factory.lists.keys(), [])
+        self.assertEqual(len(factory.lists.keys()), 0)
 
         settings = yaml.load(missing_names_yaml )
         self.context.clear()
         self.context.apply(settings)
         factory = ListFactory(context=self.context)
         factory.configure()
-        self.assertEqual(factory.lists.keys(), [])
+        self.assertEqual(len(factory.lists.keys()), 0)
 
     def test_build_list(self):
 
