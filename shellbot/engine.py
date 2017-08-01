@@ -187,7 +187,7 @@ class Engine(object):
                  driver=ShellBot,
                  machine_factory=None,
                  updater_factory=None,
-                 preload=5,
+                 preload=0,
                  ):
         """
         Powers multiple bots
