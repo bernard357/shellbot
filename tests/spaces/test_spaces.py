@@ -31,7 +31,7 @@ class SpaceFactoryTests(unittest.TestCase):
 
         self.context.apply(settings={  # from settings to member attributes
             'space': {
-                'title': 'My preferred room',
+                'title': 'My preferred channel',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -41,8 +41,8 @@ class SpaceFactoryTests(unittest.TestCase):
         })
 
         space = SpaceFactory.build(context=self.context)
-        self.assertEqual(self.context.get('space.title'), 'My preferred room')
-        self.assertEqual(space.configured_title(), 'My preferred room')
+        self.assertEqual(self.context.get('space.title'), 'My preferred channel')
+        self.assertEqual(space.configured_title(), 'My preferred channel')
 
     def test_build_local(self):
 
@@ -50,7 +50,7 @@ class SpaceFactoryTests(unittest.TestCase):
 
         self.context.apply(settings={  # from settings to member attributes
             'space': {
-                'title': 'My preferred room',
+                'title': 'My preferred channel',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'input': ['help', 'version'],
@@ -58,8 +58,8 @@ class SpaceFactoryTests(unittest.TestCase):
         })
 
         space = SpaceFactory.build(context=self.context)
-        self.assertEqual(self.context.get('space.title'), 'My preferred room')
-        self.assertEqual(space.configured_title(), 'My preferred room')
+        self.assertEqual(self.context.get('space.title'), 'My preferred channel')
+        self.assertEqual(space.configured_title(), 'My preferred channel')
 
     def test_build_spark(self):
 
@@ -67,7 +67,7 @@ class SpaceFactoryTests(unittest.TestCase):
 
         self.context.apply(settings={  # from settings to member attributes
             'spark': {
-                'room': 'My preferred room',
+                'room': 'My preferred channel',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -77,8 +77,8 @@ class SpaceFactoryTests(unittest.TestCase):
 
         space = SpaceFactory.build(context=self.context)
         self.assertEqual(space.get('token'), 'hkNWEtMJNkODVGlZWU1NmYtyY')
-        self.assertEqual(self.context.get('spark.room'), 'My preferred room')
-        self.assertEqual(space.configured_title(), 'My preferred room')
+        self.assertEqual(self.context.get('spark.room'), 'My preferred channel')
+        self.assertEqual(space.configured_title(), 'My preferred channel')
 
     def test_sense_space(self):
 
@@ -86,7 +86,7 @@ class SpaceFactoryTests(unittest.TestCase):
 
         self.context.apply(settings={  # sense='space'
             'space': {
-                'room': 'My preferred room',
+                'room': 'My preferred channel',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -103,7 +103,7 @@ class SpaceFactoryTests(unittest.TestCase):
 
         self.context.apply(settings={  # sense='local'
             'space': {
-                'title': 'My preferred room',
+                'title': 'My preferred channel',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'input': ['help', 'version'],
@@ -118,7 +118,7 @@ class SpaceFactoryTests(unittest.TestCase):
 
         self.context.apply(settings={  # sense='spark'
             'spark': {
-                'room': 'My preferred room',
+                'room': 'My preferred channel',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -135,7 +135,7 @@ class SpaceFactoryTests(unittest.TestCase):
 
         self.context.apply(settings={  # 'space' is coming before 'spark'
             'spark': {
-                'room': 'My preferred room',
+                'room': 'My preferred channel',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -144,7 +144,7 @@ class SpaceFactoryTests(unittest.TestCase):
             },
 
             'space': {
-                'room': 'My preferred room',
+                'room': 'My preferred channel',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -157,7 +157,7 @@ class SpaceFactoryTests(unittest.TestCase):
 
         self.context.apply(settings={  # 'space' is coming before 'spark'
             'space': {
-                'room': 'My preferred room',
+                'room': 'My preferred channel',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -166,7 +166,7 @@ class SpaceFactoryTests(unittest.TestCase):
             },
 
             'spark': {
-                'room': 'My preferred room',
+                'room': 'My preferred channel',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -183,7 +183,7 @@ class SpaceFactoryTests(unittest.TestCase):
 
         self.context.apply(settings={  # no recognizable space type
             'not_a_space_type': {
-                'room': 'My preferred room',
+                'room': 'My preferred channel',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -192,7 +192,7 @@ class SpaceFactoryTests(unittest.TestCase):
             },
 
             'neither_me': {
-                'room': 'My preferred room',
+                'room': 'My preferred channel',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',

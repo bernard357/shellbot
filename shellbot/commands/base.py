@@ -74,5 +74,5 @@ class Command(object):
 
     is_hidden = False       # when command should not be listed by 'help'
 
-    in_group = True         # when command can be used from group rooms
-    in_direct = True        # when command can be used from direct rooms
+    in_group = True         # when command can be used from group channels
+    in_direct = True        # when command can be used from direct channels

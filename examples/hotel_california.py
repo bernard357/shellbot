@@ -19,7 +19,7 @@
 """
 Hotel California
 
-In this example we show how to keep people in the same room. Following command
+In this example we show how to keep people in the same channel. Following command
 is used:
 
 - command: open
@@ -164,7 +164,7 @@ magic = Magic(engine=engine)
 engine.register('join', magic)
 engine.register('leave', magic)
 
-# create a chat room
+# create a chat channel
 #
 engine.bond(reset=True)
 
@@ -172,6 +172,6 @@ engine.bond(reset=True)
 #
 engine.run()
 
-# delete the chat room when the bot is stopped
+# delete the chat channel when the bot is stopped
 #
 engine.dispose()

@@ -149,6 +149,8 @@ class EventsTests(unittest.TestCase):
         self.assertEqual(event.type, 'message')
         with self.assertRaises(AttributeError):
             message = event.text
+        self.assertEqual(event.attachment, None)
+        self.assertEqual(event.url, None)
         self.assertEqual(event.from_id, None)
         self.assertEqual(event.from_label, None)
         self.assertEqual(event.is_direct, False)

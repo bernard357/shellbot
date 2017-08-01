@@ -127,7 +127,7 @@ engine.set('bot.store.planets', ['Mercury',
                                  'Neptune',
                                  ])
 
-# create a chat room
+# create a chat channel
 #
 engine.bond(reset=True)
 
@@ -135,6 +135,6 @@ engine.bond(reset=True)
 #
 engine.run()
 
-# delete the chat room when the bot is stopped
+# delete the chat channel when the bot is stopped
 #
 engine.dispose()

@@ -32,7 +32,7 @@ In this example we create following commands with some lines of code:
 
 - command: signal
 - response: NANA NANA NANA NANA
-- also uploads an image to the chat room
+- also uploads an image to the chat channel
 
 - command: suicide
 - delayed response: Going back to Hell
@@ -41,7 +41,7 @@ In this example we create following commands with some lines of code:
 Multiple questions are adressed in this example:
 
 - How to build a dynamic response? Look at the command ``cave``, where
-  the message pushed to the chat room depends on the input received. This
+  the message pushed to the chat channel depends on the input received. This
   is done with regular python code in the member function ``execute()``.
 
 - How to upload files? The command ``signal`` demonstrates how to
@@ -139,7 +139,7 @@ os.environ['BOT_ON_EXIT'] = 'Batman is now quitting the room, bye'
 os.environ['CHAT_ROOM_TITLE'] = 'Chat with Batman'
 engine.configure()
 
-# create a chat room
+# create a chat channel
 #
 engine.bond(reset=True)
 
@@ -147,6 +147,6 @@ engine.bond(reset=True)
 #
 engine.run()
 
-# delete the chat room when the bot is stopped
+# delete the chat channel when the bot is stopped
 #
 engine.dispose()

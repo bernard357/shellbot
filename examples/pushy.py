@@ -31,22 +31,22 @@ Then following commands are available from the bot:
 - response describes current state
 
 - command: close
-- responses describes the proper archiving of the room
+- responses describes the proper archiving of the channel
 
 
 Multiple questions are adressed in this example:
 
-- How to create a room on some external event? Here we wait for a link to be
+- How to create a channel on some external event? Here we wait for a link to be
   triggered over the internet. This can done directly from the command line
   with CURL, from a web browser, or from a button connected to the internet, or
-  from an application on a mobile device. When this occurs, a room is created,
+  from an application on a mobile device. When this occurs, a channel is created,
   participants are added, and people can interact immediately.
   Look at the class ``Trigger`` below, and at the bottom of the script, to see
   how this is implemented.
 
 - How to implement a linear process? The typical use case is to let joining
-  people interact in the room, then involve some support experts, then
-  call stakeholders for a decision. These are reflected in the chat room
+  people interact in the channel, then involve some support experts, then
+  call stakeholders for a decision. These are reflected in the chat channel
   with commands ``state`` and ``next``. Related code is in the ``steps``
   subdirectory.
 

@@ -46,11 +46,11 @@ In this example we create following commands with some lines of code:
 
 Here we showcase how a bot manages information over time. A simple
 todo list is added to the engine, and any participant is entitled to act on it,
-from any room.
+from any channel.
 
 Multiple questions are adressed in this example:
 
-- How to share information across multiple rooms? You can attach any
+- How to share information across multiple channels? You can attach any
   attribute to the engine, and this will be made available to every bot
   instance. Here we add ``factory`` to the engine, and it is accessed from
   within commands as ``bot.engine.factory``.
@@ -106,7 +106,7 @@ os.environ['BOT_ON_ENTER'] = 'What do you want to do today?'
 os.environ['CHAT_ROOM_TITLE'] = 'Manage todos'
 engine.configure()
 
-# create a chat room
+# create a chat channel
 #
 engine.bond(reset=True)
 
@@ -114,6 +114,6 @@ engine.bond(reset=True)
 #
 engine.run()
 
-# delete the chat room when the bot is stopped
+# delete the chat channel when the bot is stopped
 #
 engine.dispose()

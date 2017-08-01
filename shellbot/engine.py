@@ -83,7 +83,7 @@ class Engine(object):
         #
         engine.run()
 
-        # delete the chat room when the engine is stopped
+        # delete the chat channel when the engine is stopped
         #
         engine.dispose()
 
@@ -104,7 +104,7 @@ class Engine(object):
 
             'bot': {
                 'on_enter': 'You can now chat with Batman',
-                'on_exit': 'Batman is now quitting the room, bye',
+                'on_exit': 'Batman is now quitting the channel, bye',
             },
 
             'server': {
@@ -133,7 +133,7 @@ class Engine(object):
     When no configuration is provided to the engine, then default settings
     are considered for the engine itself, and for various components.
 
-    For example, for a basic engine interacting in a Cisco Spark room::
+    For example, for a basic engine interacting in a Cisco Spark channel::
 
         engine = Engine(type='spark')
         engine.configure()
@@ -407,7 +407,7 @@ class Engine(object):
 
                 'bot': {
                     'on_enter': 'You can now chat with Batman',
-                    'on_exit': 'Batman is now quitting the room, bye',
+                    'on_exit': 'Batman is now quitting the channel, bye',
                 },
 
                 'server': {
@@ -779,7 +779,7 @@ class Engine(object):
         :param title: title of the target channel
         :type: title: str
 
-        :param reset: if True, delete previous room and re-create one
+        :param reset: if True, delete previous channel and re-create one
         :type reset: bool
 
         :param participants: the list of initial participants (optional)

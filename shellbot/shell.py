@@ -208,15 +208,15 @@ class Shell(object):
 
         self._commands[command.keyword] = command
 
-    def do(self, line, channel_id=None):
+    def do(self, line, received=None):
         """
         Handles one line of text
 
         :param line: a line of text to parse and to handle
         :type line: str
 
-        :param channel_id: the unique id of the target chat context
-        :type channel_id: str
+        :param received: the message that contains the command
+        :type received: Message
 
         This function uses the first token as a verb, and looks for a command
         of the same name in the shell.
@@ -229,8 +229,32 @@ class Shell(object):
         If an empty line is provided, the command ``*empty`` is triggered.
         Default implementation is provided in ``shellbot.commands.empty``.
 
-        A bot instance is retrieved from the id provided, and given to the
-        command that is executed.
+        When a file has been uploaded, the information is given to the
+        command that is executed. If no message is provided with the file, the
+        command ``*upload`` is triggered instad of ``*empty``.
+        Default implementation is provided in ``shellbot.commands.upload``.
+
+        Following parameters are used for the execution of a command:
+
+        - ``bot`` - A bot instance is retrieved from the channel id mentioned
+          in ``received``, and provided to the command.
+
+        - ``arguments`` - This is a string that contains everything after the
+          command verb. When ``hello How are you doing?`` is submitted to the
+          shell, ``hello`` is the verb, and ``How are you doing?`` are the
+          arguments. This is the regular case. If there is no command ``hello``
+          then the command ``*default`` is used instead, and arguments provided
+          are the full line ``hello How are you doing?``.
+
+        - ``attachment`` - When a file has been uploaded, this attributes
+          provides its external name, e.g., ``picture024.png``. This can be used
+          in the executed command, if you keep n mind that the same name can be
+          used multiple times in a conversation.
+
+        - ``url`` - When a file has been uploaded, this is the handle by which
+          actual content can be retrieved. Usually, ask the underlying space
+          to get a local copy of the document.
+
         """
         line = str(line) if line else ''  # sanity check
 
@@ -241,13 +265,25 @@ class Shell(object):
         tokens = line.split(' ')
         verb = tokens.pop(0)
         if len(verb) < 1:
-            verb = '*empty'
+            if received and received.url:
+                verb = '*upload'
+            else:
+                verb = '*empty'
+
+        kwargs = {}
 
         if len(tokens) > 0:
-            arguments = ' '.join(tokens)
+            kwargs['arguments'] = ' '.join(tokens)
         else:
-            arguments = ''
+            kwargs['arguments'] = ''
 
+        if received and received.attachment:
+            kwargs['attachment'] = received.attachment
+
+        if received and received.url:
+            kwargs['url'] = received.url
+
+        channel_id = received.channel_id if received else None
         bot = self.engine.get_bot(channel_id)
 
         try:
@@ -258,16 +294,17 @@ class Shell(object):
                     or (command.in_group and not bot.channel.is_direct) ):
 
                     self.verb = verb
-                    command.execute(bot, arguments)
+                    command.execute(bot, **kwargs)
 
                 else:
 
-                    logging.debug(u"- command cannot be used in this room")
+                    logging.debug(u"- command cannot be used in this channel")
                     bot.say(u"Sorry, I do not know how to handle '{}'".format(verb))
 
             elif '*default' in self._commands.keys():
+                kwargs['arguments'] = line  # provide full input line
                 command = self._commands['*default']
-                command.execute(bot, line)  # provide full input line
+                command.execute(bot, **kwargs)
 
             else:
                 bot.say(u"Sorry, I do not know how to handle '{}'".format(verb))

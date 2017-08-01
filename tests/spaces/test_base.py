@@ -158,13 +158,13 @@ class SpaceTests(unittest.TestCase):
         self.assertEqual(space.configured_title(),
                          space.DEFAULT_SPACE_TITLE)
 
-        settings = {'alien.title': 'my room'}
+        settings = {'alien.title': 'my channel'}
 
         space.configure(settings=settings)
-        self.assertEqual(self.context.get('alien.title'), 'my room')
+        self.assertEqual(self.context.get('alien.title'), 'my channel')
         self.assertEqual(space.prefix, 'alien')
-        self.assertEqual(space.get('title'), 'my room')
-        self.assertEqual(space.configured_title(), 'my room')
+        self.assertEqual(space.get('title'), 'my channel')
+        self.assertEqual(space.configured_title(), 'my channel')
 
     def test_connect(self):
 

@@ -98,7 +98,7 @@ my_04_response_from_bot_in_group = Message({
 
 my_05_message_out_of_scope_for_audit = Message({
     "channel_id": "*id2",
-    "content": "sent in a room where bot is not",
+    "content": "sent in a channel where bot is not",
     "created": "2017-07-30T20:47:18.865Z",
     "from_id": "*foo*id",
     "from_label": "foo.bar@acme.com",
@@ -110,7 +110,7 @@ my_05_message_out_of_scope_for_audit = Message({
     "personId": "*foo*id",
     "roomId": "*id2",
     "roomType": "group",
-    "text": "sent in a room where bot is not",
+    "text": "sent in a channel where bot is not",
     "type": "message"
 })
 

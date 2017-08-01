@@ -10,6 +10,7 @@ import os
 import sys
 
 from shellbot import Context, Engine, Shell, Vibes
+from shellbot.events import Message
 
 
 class MyEngine(Engine):
@@ -32,14 +33,27 @@ class MyBot(object):
         self.engine.mouth.put(Vibes(text, content, file))
 
 
+my_message = {
+    "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
+    "channel_id" : "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0",
+    "text" : "/plumby use containers/docker",
+    "created" : "2015-10-18T14:26:16+00:00",
+    "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+    "from_label" : "Masked Cucumber",
+    "mentioned_ids" : ["Y2lzYDMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"],
+    }
+
+
 class ShellTests(unittest.TestCase):
 
     def setUp(self):
         self.engine = MyEngine(mouth=Queue())
         self.engine.configure()
         self.bot = MyBot(engine=self.engine)
+        self.message = Message(my_message)
 
     def tearDown(self):
+        del self.message
         del self.bot
         del self.engine
         collected = gc.collect()
@@ -146,7 +160,7 @@ class ShellTests(unittest.TestCase):
         self.assertEqual(shell.line, None)
         self.assertEqual(shell.count, 0)
 
-        shell.do('*unknown*', channel_id='*id')
+        shell.do('*unknown*', received=self.message)
         self.assertEqual(shell.line, '*unknown*')
         self.assertEqual(shell.count, 1)
         self.assertEqual(shell.engine.mouth.get().text,
@@ -154,14 +168,14 @@ class ShellTests(unittest.TestCase):
         with self.assertRaises(Exception):
             shell.engine.mouth.get_nowait()
 
-        shell.do('echo hello world', channel_id='*id')
+        shell.do('echo hello world', received=self.message)
         self.assertEqual(shell.line, 'echo hello world')
         self.assertEqual(shell.count, 2)
         self.assertEqual(shell.engine.mouth.get().text, 'hello world')
         with self.assertRaises(Exception):
             shell.engine.mouth.get_nowait()
 
-        shell.do('help help', channel_id='*id')
+        shell.do('help help', received=self.message)
         self.assertEqual(shell.line, 'help help')
         self.assertEqual(shell.count, 3)
         self.assertEqual(shell.engine.mouth.get().text,
@@ -170,31 +184,31 @@ class ShellTests(unittest.TestCase):
         with self.assertRaises(Exception):
             print(shell.engine.mouth.get_nowait())
 
-        shell.do('pass', channel_id='*id')
+        shell.do('pass', received=self.message)
         self.assertEqual(shell.line, 'pass')
         self.assertEqual(shell.count, 4)
         with self.assertRaises(Exception):
             shell.engine.mouth.get_nowait()
 
-        shell.do('sleep .0103', channel_id='*id')
+        shell.do('sleep .0103', received=self.message)
         self.assertEqual(shell.line, 'sleep .0103')
         self.assertEqual(shell.count, 5)
         self.engine.set('worker.busy', True)
-        shell.do('sleep .0201', channel_id='*id')
+        shell.do('sleep .0201', received=self.message)
         self.assertEqual(shell.line, 'sleep .0201')
         self.assertEqual(shell.count, 6)
         self.engine.set('worker.busy', False)
         with self.assertRaises(Exception):
             print(shell.engine.mouth.get_nowait())
 
-        shell.do('version', channel_id='*id')
+        shell.do('version', received=self.message)
         self.assertEqual(shell.line, 'version')
         self.assertEqual(shell.count, 7)
         self.assertEqual(shell.engine.mouth.get().text, u'Shelly version *unknown*')
         with self.assertRaises(Exception):
             shell.engine.mouth.get_nowait()
 
-        shell.do('', channel_id='*id')
+        shell.do('', received=self.message)
         self.assertEqual(shell.line, '')
         self.assertEqual(shell.count, 8)
         self.assertEqual(
@@ -219,14 +233,14 @@ class ShellTests(unittest.TestCase):
         doc = Doc(self.engine)
         shell.load_command(doc)
 
-        shell.do('', channel_id='*id')
+        shell.do('', received=self.message)
         self.assertEqual(shell.line, '')
         self.assertEqual(shell.count, 1)
         self.assertEqual(shell.engine.mouth.get().text, "What'up Doc?")
         with self.assertRaises(Exception):
             print(shell.engine.mouth.get_nowait())
 
-        shell.do(None, channel_id='*id')
+        shell.do(None, received=self.message)
         self.assertEqual(shell.line, '')
         self.assertEqual(shell.count, 2)
         self.assertEqual(shell.engine.mouth.get().text, "What'up Doc?")
@@ -239,7 +253,7 @@ class ShellTests(unittest.TestCase):
 
         shell = Shell(engine=self.engine)
 
-        shell.do(12345, channel_id='*id')
+        shell.do(12345, received=self.message)
         self.assertEqual(shell.line, '12345')
         self.assertEqual(shell.count, 1)
         self.assertEqual(shell.engine.mouth.get().text,
@@ -255,14 +269,14 @@ class ShellTests(unittest.TestCase):
 
         shell.load_command(Custom(self.engine))
 
-        shell.do(12345, channel_id='*id')
+        shell.do(12345, received=self.message)
         self.assertEqual(shell.line, '12345')
         self.assertEqual(shell.count, 2)
         self.assertEqual(shell.engine.mouth.get().text, '12345, really?')
         with self.assertRaises(Exception):
             print(shell.engine.mouth.get_nowait())
 
-        shell.do('azerty', channel_id='*id')
+        shell.do('azerty', received=self.message)
         self.assertEqual(shell.line, 'azerty')
         self.assertEqual(shell.count, 3)
         self.assertEqual(shell.engine.mouth.get().text, 'azerty, really?')
@@ -288,28 +302,28 @@ class ShellTests(unittest.TestCase):
 
         shell.command('custom').in_direct = False
         shell.command('custom').in_group = False
-        shell.do('custom nowhere', channel_id='*id')
+        shell.do('custom nowhere', received=self.message)
         self.assertEqual(
             shell.engine.mouth.get().text,
             "Sorry, I do not know how to handle 'custom'")
 
         shell.command('custom').in_direct = True
         shell.command('custom').in_group = False
-        shell.do('custom in_direct', channel_id='*id')
+        shell.do('custom in_direct', received=self.message)
         self.assertEqual(
             shell.engine.mouth.get().text,
             "Sorry, I do not know how to handle 'custom'")
 
         shell.command('custom').in_direct = False
         shell.command('custom').in_group = True
-        shell.do('custom in_group', channel_id='*id')
+        shell.do('custom in_group', received=self.message)
         self.assertEqual(
             shell.engine.mouth.get().text,
             'in_group, really?')
 
         shell.command('custom').in_direct = True
         shell.command('custom').in_group = True
-        shell.do('custom both', channel_id='*id')
+        shell.do('custom both', received=self.message)
         self.assertEqual(
             shell.engine.mouth.get().text,
             'both, really?')
@@ -318,28 +332,28 @@ class ShellTests(unittest.TestCase):
 
         shell.command('custom').in_direct = False
         shell.command('custom').in_group = False
-        shell.do('custom nowhere', channel_id='*id')
+        shell.do('custom nowhere', received=self.message)
         self.assertEqual(
             shell.engine.mouth.get().text,
             "Sorry, I do not know how to handle 'custom'")
 
         shell.command('custom').in_direct = True
         shell.command('custom').in_group = False
-        shell.do('custom in_direct', channel_id='*id')
+        shell.do('custom in_direct', received=self.message)
         self.assertEqual(
             shell.engine.mouth.get().text,
             'in_direct, really?')
 
         shell.command('custom').in_direct = False
         shell.command('custom').in_group = True
-        shell.do('custom in_group', channel_id='*id')
+        shell.do('custom in_group', received=self.message)
         self.assertEqual(
             shell.engine.mouth.get().text,
             "Sorry, I do not know how to handle 'custom'")
 
         shell.command('custom').in_direct = True
         shell.command('custom').in_group = True
-        shell.do('custom both', channel_id='*id')
+        shell.do('custom both', received=self.message)
         self.assertEqual(
             shell.engine.mouth.get().text,
             'both, really?')
@@ -359,7 +373,7 @@ class ShellTests(unittest.TestCase):
         shell._commands = Intruder()
 
         with self.assertRaises(Exception):
-            shell.do(12345, channel_id='*id')
+            shell.do(12345, received=self.message)
 
         self.assertEqual(
             shell.engine.mouth.get().text,

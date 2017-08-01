@@ -283,7 +283,7 @@ class Listener(Process):
             return
 
         logging.debug(u"- submitting command to the shell")
-        self.engine.shell.do(input, channel_id=received.channel_id)
+        self.engine.shell.do(input, received=received)
 
     def on_join(self, received):
         """
@@ -295,7 +295,7 @@ class Listener(Process):
         Received information is transmitted to registered callbacks on the
         ``join`` at the engine level.
 
-        In the special case where the bot itself is joining a room by
+        In the special case where the bot itself is joining a channel by
         invitation, then the event ``enter`` is dispatched instead.
 
         """
@@ -320,7 +320,7 @@ class Listener(Process):
         ``leave`` at the engine level.
 
         In the special case where the bot itself has been kicked off
-        from a room, then the event ``exit`` is dispatched instead.
+        from a channel, then the event ``exit`` is dispatched instead.
 
         """
         assert received.type == 'leave'

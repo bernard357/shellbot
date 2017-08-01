@@ -22,7 +22,7 @@ Audit interactions in real-time
 In this example we create a shell with one simple command: audit
 
 - command: audit
-- provides clear status if this room is currently audited or not
+- provides clear status if this channel is currently audited or not
 
 - command: audit on
 - starts auditing
@@ -89,7 +89,7 @@ engine = Engine(
 os.environ['CHAT_ROOM_TITLE'] = 'Audit tutorial'
 engine.configure()
 
-# create a chat room
+# create a chat channel
 #
 engine.bond(reset=True)
 
@@ -97,6 +97,6 @@ engine.bond(reset=True)
 #
 engine.run()
 
-# delete the chat room when the bot is stopped
+# delete the chat channel when the bot is stopped
 #
 engine.dispose()

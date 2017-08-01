@@ -123,7 +123,7 @@ class ContextTests(unittest.TestCase):
 
         settings = {
             'spark': {
-                'room': 'My preferred room',
+                'room': 'My preferred channel',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',
@@ -137,7 +137,7 @@ class ContextTests(unittest.TestCase):
         self.context.apply(settings)
 
         self.context.check('spark.room', is_mandatory=True)
-        self.assertEqual(self.context.get('spark.room'), 'My preferred room')
+        self.assertEqual(self.context.get('spark.room'), 'My preferred channel')
 
         self.context.check('spark.team')
         self.assertEqual(self.context.get('spark.team'), 'Anchor team')
@@ -308,7 +308,7 @@ class ContextTests(unittest.TestCase):
 
         self.context.apply({
             'spark': {
-                'room': 'My preferred room',
+                'room': 'My preferred channel',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
                 'team': 'Anchor team',

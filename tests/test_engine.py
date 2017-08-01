@@ -221,7 +221,7 @@ class EngineTests(unittest.TestCase):
                                       + '/test_settings/regular.yaml')
         self.assertEqual(self.engine.get('bot.on_enter'), 'How can I help you?')
         self.assertEqual(self.engine.get('bot.on_exit'), 'Bye for now')
-        self.assertEqual(self.engine.get('local.title'), 'Support room')
+        self.assertEqual(self.engine.get('local.title'), 'Support channel')
         self.assertEqual(self.engine.get('local.participants'),
                          ['joe.bar@acme.com', 'super.support@help.org'])
         self.assertEqual(self.engine.get('server.url'), None)
@@ -250,7 +250,7 @@ class EngineTests(unittest.TestCase):
             },
 
             'space': {
-                'title': 'Support room',
+                'title': 'Support channel',
             },
 
             'server': {
@@ -268,7 +268,7 @@ class EngineTests(unittest.TestCase):
         engine = Engine(context=context, configure=True)
         self.assertEqual(engine.get('bot.on_enter'), 'Hello!')
         self.assertEqual(engine.get('bot.on_exit'), 'Bye!')
-        self.assertEqual(engine.get('space.title'), 'Support room')
+        self.assertEqual(engine.get('space.title'), 'Support channel')
         self.assertEqual(engine.get('space.participants'), None)
         self.assertEqual(engine.get('server.url'), 'http://to.nowhere/')
         self.assertEqual(engine.get('server.hook'), '/hook')
@@ -322,7 +322,7 @@ class EngineTests(unittest.TestCase):
         os.environ["BOT_BANNER_FILE"] = 'some link'
         os.environ["BOT_ON_ENTER"] = 'Hello!'
         os.environ["BOT_ON_EXIT"] = 'Bye!'
-        os.environ["CHAT_ROOM_TITLE"] = 'Support room'
+        os.environ["CHAT_ROOM_TITLE"] = 'Support channel'
         os.environ["CHANNEL_DEFAULT_PARTICIPANTS"] = 'foo.bar@acme.com'
         os.environ["CISCO_SPARK_BOT_TOKEN"] = '*token'
         os.environ["SERVER_URL"] = 'http://to.nowhere/'
@@ -337,7 +337,7 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(self.engine.get('bot.on_enter'), 'Hello!')
         self.assertEqual(self.engine.get('bot.on_exit'), 'Bye!')
 
-        self.assertEqual(self.engine.get('space.title'), 'Support room')
+        self.assertEqual(self.engine.get('space.title'), 'Support channel')
         self.assertEqual(self.engine.get('space.participants'), 'foo.bar@acme.com')
         self.assertEqual(self.engine.get('space.unknown'), None)
 
@@ -352,7 +352,7 @@ class EngineTests(unittest.TestCase):
 
         os.environ["BOT_ON_ENTER"] = 'Hello!'
         os.environ["BOT_ON_EXIT"] = 'Bye!'
-        os.environ["CHAT_ROOM_TITLE"] = 'Support room'
+        os.environ["CHAT_ROOM_TITLE"] = 'Support channel'
         os.environ["CHANNEL_DEFAULT_PARTICIPANTS"] = 'foo.bar@acme.com'
         os.environ["CISCO_SPARK_BOT_TOKEN"] = '*token'
         os.environ["SERVER_URL"] = 'http://to.nowhere/'
@@ -381,7 +381,7 @@ class EngineTests(unittest.TestCase):
 
         self.assertEqual(self.engine.get('bot.on_enter'), 'Hello!')
         self.assertEqual(self.engine.get('bot.on_exit'), 'Bye!')
-        self.assertEqual(self.engine.get('space.title'), 'Support room')
+        self.assertEqual(self.engine.get('space.title'), 'Support channel')
         self.assertEqual(self.engine.get('space.participants'), 'foo.bar@acme.com')
 
         self.assertEqual(self.engine.get('space.unknown'), None)

@@ -30,14 +30,14 @@ Multiple questions are adressed in this example:
   as the Cisco Spark token (see below). Or variables can be set directly
   from within the script itself, as ``CHAT_ROOM_TITLE`` in this example.
 
-- How to create or to delete a room? This is done with ``engine.get_bot()`` and
+- How to create or to delete a channel? This is done with ``engine.get_bot()`` and
   with ``bot.dispose()`` respectively.
 
 - How to post a notification? Use ``bot.say()`` right after a call
   to ``engine.get_bot()``.
 
 - Why do we not start the bot? There is no call to ``bot.run()`` below
-  because there is no need for an active shell. The program updates a room,
+  because there is no need for an active shell. The program updates a channel,
   but is not interactive and cannot answer send to it. Of course, it is easy
   to implement a couple of commands and evolve towards a responsive bot.
 
@@ -105,11 +105,11 @@ def some_message():
 os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
 engine = Engine(type='spark', configure=True)
 
-# create a chat room
+# create a chat channel
 #
 bot = engine.get_bot(reset=True)  # safe, one single process
 
-# send notifications to the room
+# send notifications to the channel
 #
 for index in range(7):
 
@@ -127,6 +127,6 @@ try:
 except KeyboardInterrupt:
     pass
 
-# delete the chat room
+# delete the chat channel
 #
 bot.dispose()
