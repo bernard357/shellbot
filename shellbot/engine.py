@@ -751,6 +751,7 @@ class Engine(object):
         logging.debug(u"Switching off")
         self.context.set('general.switch', 'off')
         time.sleep(1)
+        self.listener.join()
 
     def on_stop(self):
         """

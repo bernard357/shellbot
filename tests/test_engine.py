@@ -52,9 +52,11 @@ class MyUpdater(object):
     def __init__(self, id):
         self.id = id
 
+
 class MyUpdaterFactory(object):
     def get_updater(self, id):
         return MyUpdater(id)
+
 
 class EngineTests(unittest.TestCase):
 
