@@ -704,9 +704,9 @@ class Engine(object):
             self.ears = Queue()
             self.space.ears = self.ears
 
-        if self.fan is None:
+        if self.fan is None and self.updater_factory:
             self.fan = Queue()
-            self.space.fan = self.fan
+        self.space.fan = self.fan
 
         self.start_processes()
 
