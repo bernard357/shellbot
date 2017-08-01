@@ -23,8 +23,14 @@ In this example we create a shell with one simple command: hello
 
 Multiple questions are adressed in this example:
 
-- How to build a basic command that displays a static message? Look at the
- command ``hello`` below, this is really done in 3 lines of code.
+- How to build a basic command that displays a message? Look at the
+ command ``hello`` below, this is really done in some lines of code.
+
+- How to provide with rich content? Here we use Markdown so that input
+  provided by the end user is smartly reflected by the bot.
+
+- How to react to file upload? In shellbot, commands receive everything
+  that is flowing from the underlying chat space, including file uploads.
 
 - How to use Cisco Spark? As shown below, the platform is selected during
   the initialisation of the engine. Here we put ``type='spark'`` and that's it.
@@ -69,6 +75,17 @@ class Hello(Command):
     keyword = 'hello'
     information_message = u"Hello, World!"
 
+    feedback_content = u"Hello, **{}**!"
+    attachment_content = u"Thanks for the upload of `{}`"
+
+    def execute(self, bot, arguments=None, attachment=None, url=None, **kwargs):
+
+        bot.say(content=self.feedback_content.format(
+            arguments if arguments else 'World'))
+
+        if attachment:
+            bot.say(content=self.attachment_content.format(attachment))
+
 engine = Engine(type='spark', command=Hello())
 
 # load configuration
@@ -79,7 +96,7 @@ os.environ['BOT_BANNER_CONTENT'] = u"Hello there! Type ``@{} help`` at any time 
 os.environ['BOT_BANNER_FILE'] = "https://upload.wikimedia.org/wikipedia/commons/5/5e/Sunrise_Matobo_Zimbabwe.jpg"
 engine.configure()
 
-# create a chat room
+# create a chat channel
 #
 engine.bond(reset=True)
 
@@ -87,6 +104,6 @@ engine.bond(reset=True)
 #
 engine.run()
 
-# delete the chat room when the bot is stopped
+# delete the chat channel when the bot is stopped
 #
 engine.dispose()
