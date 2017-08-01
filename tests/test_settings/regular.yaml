@@ -5,6 +5,23 @@ bot:
     on_enter: How can I help you?
     on_exit: Bye for now
 
+# named lists
+#
+lists:
+
+    - name: The Famous Four
+      items:
+        - alice@acme.com
+        - bob@project.org
+        - celine@secret.mil
+        - dude@bangkok.travel
+
+    - name: SupportTeam
+      as_command: true
+      items:
+        - service.desk@acme.com
+        - supervisor@brother.mil
+
 # shell settings
 #
 shell:

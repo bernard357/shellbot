@@ -183,6 +183,8 @@ class EngineTests(unittest.TestCase):
         logging.info('*** configure ***')
 
         self.engine.configure({})
+        self.assertEqual(self.engine.space.ears, self.engine.ears)
+        self.assertTrue(self.engine.list_factory is not None)
 
         self.engine.context.clear()
         settings = {
@@ -226,6 +228,15 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(self.engine.get('server.hook'), None)
         self.assertEqual(self.engine.get('server.binding'), None)
         self.assertEqual(self.engine.get('server.port'), None)
+
+        items = [x for x in self.engine.list_factory.get_list('SupportTeam')]
+        self.assertEqual(items, ['service.desk@acme.com', 'supervisor@brother.mil'])
+
+        items = [x for x in self.engine.list_factory.get_list('*unknown*list')]
+        self.assertEqual(items, [])
+
+        names = self.engine.list_factory.list_commands()
+        self.assertEqual(sorted(names), ['SupportTeam'])
 
     def test_configuration_2(self):
 
@@ -674,8 +685,9 @@ class EngineTests(unittest.TestCase):
 
         self.engine.configure()
         self.context.set('bus.address', 'tcp://127.0.0.1:6666')
+        self.engine.listener.DEFER_DURATION = 0.0
+        self.engine.publisher.DEFER_DURATION = 0.0
         self.engine.start()
-        time.sleep(0.1)
         self.engine.stop()
 
         self.assertEqual(self.engine.get('listener.counter', 0), 0)

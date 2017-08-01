@@ -27,6 +27,7 @@ import weakref
 from .bot import ShellBot
 from .bus import Bus
 from .context import Context
+from .lists import ListFactory
 from .listener import Listener
 from .observer import Observer
 from .routes.wrapper import Wrapper
@@ -381,6 +382,9 @@ class Engine(object):
         self.space.connect()
         self.register('start', self.space)
         self.register('stop', self.space)
+
+        self.list_factory = ListFactory(self.context)
+        self.list_factory.configure()
 
         self.shell.configure()
 
