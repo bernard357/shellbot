@@ -15,7 +15,7 @@ from shellbot import Context, Engine, Shell, Vibes
 class MyEngine(Engine):
     def get_bot(self, id):
         logging.debug("Injecting test bot")
-        return my_bot
+        return MyBot(engine=self)
 
 
 class MyChannel(object):
@@ -32,26 +32,30 @@ class MyBot(object):
         self.engine.mouth.put(Vibes(text, content, file))
 
 
-my_engine = MyEngine(mouth=Queue())
-my_bot = MyBot(engine=my_engine)
-
 class ShellTests(unittest.TestCase):
 
+    def setUp(self):
+        self.engine = MyEngine(mouth=Queue())
+        self.engine.configure()
+        self.bot = MyBot(engine=self.engine)
+
     def tearDown(self):
+        del self.bot
+        del self.engine
         collected = gc.collect()
         if collected:
             logging.info("Garbage collector: collected %d objects." % (collected))
 
     def test_init(self):
 
-        logging.debug('***** init')
+        logging.info('***** init')
 
-        shell = Shell(engine=my_engine)
+        shell = Shell(engine=self.engine)
         self.assertEqual(shell.engine.name, 'Shelly')
         self.assertEqual(shell.engine.version, '*unknown*')
         self.assertEqual(shell.commands, [])
 
-        my_engine.context.apply({
+        self.engine.context.apply({
             'bot': {'name': 'testy', 'version': '17.4.1'},
             })
         self.assertEqual(shell.engine.name, 'testy')
@@ -60,9 +64,9 @@ class ShellTests(unittest.TestCase):
 
     def test_configure(self):
 
-        logging.debug('***** configure')
+        logging.info('***** configure')
 
-        shell = Shell(engine=my_engine)
+        shell = Shell(engine=self.engine)
 
         shell.configure({
             'shell': {
@@ -76,40 +80,40 @@ class ShellTests(unittest.TestCase):
 
     def test_load_command(self):
 
-        logging.debug('***** load_command')
+        logging.info('***** load_command')
 
-        shell = Shell(engine=my_engine)
+        shell = Shell(engine=self.engine)
         shell.load_command('this.one.does.not.exist.at.all')
         self.assertEqual(shell.commands, [])
 
-        my_engine.context.clear()
-        shell = Shell(engine=my_engine)
+        self.engine.context.clear()
+        shell = Shell(engine=self.engine)
         shell.load_command('shellbot.commands.help')
         self.assertEqual(shell.commands, ['help'])
 
-        my_engine.context.clear()
-        shell = Shell(engine=my_engine)
+        self.engine.context.clear()
+        shell = Shell(engine=self.engine)
         from shellbot.commands.help import Help
-        help = Help(my_engine)
+        help = Help(self.engine)
         shell.load_command(help)
-        self.assertEqual(help.engine, my_engine)
+        self.assertEqual(help.engine, self.engine)
         self.assertEqual(shell.commands, ['help'])
         self.assertEqual(shell.command('help'), help)
 
     def test_load_commands(self):
 
-        logging.debug('***** load_commands')
+        logging.info('***** load_commands')
 
-        shell = Shell(engine=my_engine)
+        shell = Shell(engine=self.engine)
 
         shell.load_commands(['shellbot.commands.help',
                              'shellbot.commands.noop'])
         self.assertEqual(shell.commands, ['help', 'pass'])
 
         from shellbot.commands.help import Help
-        help = Help(my_engine)
+        help = Help(self.engine)
         from shellbot.commands.noop import Noop
-        noop = Noop(my_engine)
+        noop = Noop(self.engine)
         shell.load_commands((help, noop))
         self.assertEqual(shell.commands, ['help', 'pass'])
         self.assertEqual(shell.command('help'), help)
@@ -117,14 +121,14 @@ class ShellTests(unittest.TestCase):
 
     def test_load_commands_via_configure(self):
 
-        logging.debug('***** load_commands via configure')
+        logging.info('***** load_commands via configure')
 
         settings = {
             'shell': {'commands': ['shellbot.commands.help',
                                    'shellbot.commands.noop']},
         }
 
-        shell = Shell(engine=my_engine)
+        shell = Shell(engine=self.engine)
         shell.configure(settings)
 
         self.assertEqual(
@@ -133,9 +137,9 @@ class ShellTests(unittest.TestCase):
 
     def test_vocabulary(self):
 
-        logging.debug('***** vocabulary')
+        logging.info('***** vocabulary')
 
-        shell = Shell(engine=my_engine)
+        shell = Shell(engine=self.engine)
         shell.load_default_commands()
 
         self.assertEqual(len(shell.commands), 7)
@@ -175,11 +179,11 @@ class ShellTests(unittest.TestCase):
         shell.do('sleep .0103', channel_id='*id')
         self.assertEqual(shell.line, 'sleep .0103')
         self.assertEqual(shell.count, 5)
-        my_engine.set('worker.busy', True)
+        self.engine.set('worker.busy', True)
         shell.do('sleep .0201', channel_id='*id')
         self.assertEqual(shell.line, 'sleep .0201')
         self.assertEqual(shell.count, 6)
-        my_engine.set('worker.busy', False)
+        self.engine.set('worker.busy', False)
         with self.assertRaises(Exception):
             print(shell.engine.mouth.get_nowait())
 
@@ -202,9 +206,9 @@ class ShellTests(unittest.TestCase):
 
     def test_empty(self):
 
-        logging.debug('***** empty')
+        logging.info('***** empty')
 
-        shell = Shell(engine=my_engine)
+        shell = Shell(engine=self.engine)
 
         from shellbot.commands.empty import Empty
 
@@ -212,7 +216,7 @@ class ShellTests(unittest.TestCase):
             def execute(self, bot, *args):
                 bot.say("What'up Doc?")
 
-        doc = Doc(my_engine)
+        doc = Doc(self.engine)
         shell.load_command(doc)
 
         shell.do('', channel_id='*id')
@@ -231,9 +235,9 @@ class ShellTests(unittest.TestCase):
 
     def test_default(self):
 
-        logging.debug('***** default')
+        logging.info('***** default')
 
-        shell = Shell(engine=my_engine)
+        shell = Shell(engine=self.engine)
 
         shell.do(12345, channel_id='*id')
         self.assertEqual(shell.line, '12345')
@@ -249,7 +253,7 @@ class ShellTests(unittest.TestCase):
             def execute(self, bot, arguments):
                 bot.say("{}, really?".format(arguments))
 
-        shell.load_command(Custom(my_engine))
+        shell.load_command(Custom(self.engine))
 
         shell.do(12345, channel_id='*id')
         self.assertEqual(shell.line, '12345')
@@ -267,9 +271,9 @@ class ShellTests(unittest.TestCase):
 
     def test_in_direct_or_group(self):
 
-        logging.debug('***** in_direct or in_group')
+        logging.info('***** in_direct or in_group')
 
-        shell = Shell(engine=my_engine)
+        shell = Shell(engine=self.engine)
 
         from shellbot.commands.base import Command
 
@@ -278,9 +282,9 @@ class ShellTests(unittest.TestCase):
             def execute(self, bot, arguments):
                 bot.say("{}, really?".format(arguments))
 
-        shell.load_command(Custom(my_engine))
+        shell.load_command(Custom(self.engine))
 
-        my_bot.channel.is_direct = False  # in a group channel
+        self.bot.channel.is_direct = False  # in a group channel
 
         shell.command('custom').in_direct = False
         shell.command('custom').in_group = False
@@ -310,7 +314,7 @@ class ShellTests(unittest.TestCase):
             shell.engine.mouth.get().text,
             'both, really?')
 
-        my_bot.channel.is_direct = True  # in a direct channel
+        self.bot.channel.is_direct = True  # in a direct channel
 
         shell.command('custom').in_direct = False
         shell.command('custom').in_group = False
@@ -345,20 +349,22 @@ class ShellTests(unittest.TestCase):
 
     def test_exception(self):
 
-        logging.debug('***** exception')
+        logging.info('***** exception')
 
         class Intruder(object):
             def keys(self):
                 raise Exception('*boom*')
 
-        shell = Shell(engine=my_engine)
+        shell = Shell(engine=self.engine)
         shell._commands = Intruder()
 
         with self.assertRaises(Exception):
             shell.do(12345, channel_id='*id')
 
-        self.assertEqual(shell.engine.mouth.get().text,
-                         u"Sorry, I do not know how to handle '12345'")
+        self.assertEqual(
+            shell.engine.mouth.get().text,
+            "Sorry, I do not know how to handle '12345'")
+
         with self.assertRaises(Exception):
             print(shell.engine.mouth.get_nowait())
 

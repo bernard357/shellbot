@@ -18,9 +18,10 @@ from shellbot.events import Event, Message, Attachment, Join, Leave
 
 
 class MyEngine(Engine):
+    injected_bot = None
     def get_bot(self, id):
         logging.debug("Injecting test bot")
-        return my_bot
+        return self.injected_bot
 
 
 class MyChannel(object):
@@ -42,11 +43,6 @@ class MyBot(object):
     def on_enter(self):
         pass
 
-
-my_engine = MyEngine(ears=Queue(), mouth=Queue())
-my_engine.shell.load_default_commands()
-
-my_bot = MyBot(engine=my_engine)
 
 my_message = Message({
     "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
@@ -187,9 +183,15 @@ my_event = Event({
 class ListenerTests(unittest.TestCase):
 
     def setUp(self):
-        my_engine.set('bot.id', "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg")
+        self.engine = MyEngine(ears=Queue(), mouth=Queue())
+        self.engine.configure()
+        self.engine.set('bot.id', "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg")
+        self.bot = MyBot(engine=self.engine)
+        self.engine.injected_bot = self.bot
 
     def tearDown(self):
+        del self.bot
+        del self.engine
         collected = gc.collect()
         if collected:
             logging.info("Garbage collector: collected %d objects." % (collected))
@@ -198,76 +200,78 @@ class ListenerTests(unittest.TestCase):
 
         logging.info("*** run")
 
-        my_engine.set('general.switch', 'on')
+        self.engine.set('general.switch', 'on')
 
-        listener = Listener(engine=my_engine)
-        listener.process = mock.Mock(side_effect=Exception('TEST'))
-        my_engine.ears.put(('dummy'))
-        my_engine.ears.put(None)
+        listener = Listener(engine=self.engine)
         listener.DEFER_DURATION = 0.0
+        listener.process = mock.Mock(side_effect=Exception('TEST'))
+        self.engine.ears.put(('dummy'))
+        self.engine.ears.put(None)
         listener.run()
-        self.assertEqual(my_engine.get('listener.counter'), 0)
+        self.assertEqual(self.engine.get('listener.counter'), 0)
 
-        listener = Listener(engine=my_engine)
+        listener = Listener(engine=self.engine)
+        listener.DEFER_DURATION = 0.0
         listener.process = mock.Mock(side_effect=KeyboardInterrupt('ctl-C'))
-        my_engine.ears.put(('dummy'))
+        self.engine.ears.put(('dummy'))
         listener.run()
-        self.assertEqual(my_engine.get('listener.counter'), 0)
+        self.assertEqual(self.engine.get('listener.counter'), 0)
 
     def test_run_wait(self):
 
         logging.info("*** run/wait while empty and not ready")
 
-        my_engine.listener.DEFER_DURATION = 0.0
-        my_engine.set('general.switch', 'on')
-        my_engine.listener.start()
+        self.engine.listener.DEFER_DURATION = 0.0
+        self.engine.set('general.switch', 'on')
+        self.engine.listener.start()
 
-        t = Timer(0.1, my_engine.ears.put, [str(my_message)])
+        t = Timer(0.1, self.engine.ears.put, [str(my_message)])
         t.start()
 
         time.sleep(0.2)
-        my_engine.set('general.switch', 'off')
-        my_engine.listener.join()
+        self.engine.set('general.switch', 'off')
+        self.engine.listener.join()
 
     def test_process(self):
 
         logging.info('*** process ***')
 
-        listener = Listener(engine=my_engine)
+        listener = Listener(engine=self.engine)
+        listener.DEFER_DURATION = 0.0
 
-        my_engine.set('listener.counter', 22)
+        self.engine.set('listener.counter', 22)
         with self.assertRaises(AssertionError):
             listener.process('hello world')
-        self.assertEqual(my_engine.get('listener.counter'), 23)
+        self.assertEqual(self.engine.get('listener.counter'), 23)
 
         listener.on_message = mock.Mock()
         listener.process(str(my_message))
-        self.assertEqual(my_engine.get('listener.counter'), 24)
+        self.assertEqual(self.engine.get('listener.counter'), 24)
         self.assertTrue(listener.on_message.called)
 
         listener.on_message = mock.Mock()
         listener.process(str(my_private_message))
-        self.assertEqual(my_engine.get('listener.counter'), 25)
+        self.assertEqual(self.engine.get('listener.counter'), 25)
         self.assertTrue(listener.on_message.called)
 
         listener.on_attachment = mock.Mock()
         listener.process(str(my_attachment))
-        self.assertEqual(my_engine.get('listener.counter'), 26)
+        self.assertEqual(self.engine.get('listener.counter'), 26)
         self.assertTrue(listener.on_attachment.called)
 
         listener.on_join = mock.Mock()
         listener.process(str(my_join))
-        self.assertEqual(my_engine.get('listener.counter'), 27)
+        self.assertEqual(self.engine.get('listener.counter'), 27)
         self.assertTrue(listener.on_join.called)
 
         listener.on_leave = mock.Mock()
         listener.process(str(my_leave))
-        self.assertEqual(my_engine.get('listener.counter'), 28)
+        self.assertEqual(self.engine.get('listener.counter'), 28)
         self.assertTrue(listener.on_leave.called)
 
         listener.on_inbound = mock.Mock()
         listener.process(str(my_event))
-        self.assertEqual(my_engine.get('listener.counter'), 29)
+        self.assertEqual(self.engine.get('listener.counter'), 29)
         self.assertTrue(listener.on_inbound.called)
 
     def test_process_filter(self):
@@ -285,47 +289,49 @@ class ListenerTests(unittest.TestCase):
 
         mocked = Mocked()
 
-        listener = Listener(engine=my_engine, filter=mocked.filter)
+        listener = Listener(engine=self.engine, filter=mocked.filter)
+        listener.DEFER_DURATION = 0.0
 
-        my_engine.set('listener.counter', 22)
+        self.engine.set('listener.counter', 22)
 
         mocked.event = None
         listener.process(str(my_message))
-        self.assertEqual(my_engine.get('listener.counter'), 23)
+        self.assertEqual(self.engine.get('listener.counter'), 23)
         self.assertEqual(mocked.event.text,
                          'The Pm For This Project Is Mike C. And The Engineering Manager Is Jane W.')
         self.assertTrue(mocked.event.flag)
 
         listener.process(str(my_private_message))
-        self.assertEqual(my_engine.get('listener.counter'), 24)
+        self.assertEqual(self.engine.get('listener.counter'), 24)
         self.assertEqual(mocked.event.text, 'Test')
         self.assertTrue(mocked.event.flag)
 
         mocked.event = None
         listener.process(str(my_attachment))
-        self.assertEqual(my_engine.get('listener.counter'), 25)
+        self.assertEqual(self.engine.get('listener.counter'), 25)
         self.assertTrue(mocked.event.flag)
 
         mocked.event = None
         listener.process(str(my_join))
-        self.assertEqual(my_engine.get('listener.counter'), 26)
+        self.assertEqual(self.engine.get('listener.counter'), 26)
         self.assertTrue(mocked.event.flag)
 
         mocked.event = None
         listener.process(str(my_leave))
-        self.assertEqual(my_engine.get('listener.counter'), 27)
+        self.assertEqual(self.engine.get('listener.counter'), 27)
         self.assertTrue(mocked.event.flag)
 
         mocked.event = None
         listener.process(str(my_event))
-        self.assertEqual(my_engine.get('listener.counter'), 28)
+        self.assertEqual(self.engine.get('listener.counter'), 28)
         self.assertTrue(mocked.event.flag)
 
     def test_on_message(self):
 
         logging.info('*** on_message ***')
 
-        listener = Listener(engine=my_engine)
+        listener = Listener(engine=self.engine)
+        listener.DEFER_DURATION = 0.0
         listener.on_message(my_message)
         listener.on_message(my_private_message)
         with self.assertRaises(AssertionError):
@@ -337,7 +343,7 @@ class ListenerTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             listener.on_message(my_event)
 
-        with mock.patch.object(my_engine,
+        with mock.patch.object(self.engine,
                                'dispatch',
                                return_value=None) as mocked:
             listener.on_message(my_message)
@@ -347,7 +353,7 @@ class ListenerTests(unittest.TestCase):
 
         logging.info('*** on_message/fan ***')
 
-        my_engine.set('bot.id', '*not*for*me')
+        self.engine.set('bot.id', '*not*for*me')
 
         class MyFan(object):
             def __init__(self):
@@ -355,24 +361,26 @@ class ListenerTests(unittest.TestCase):
             def put(self, arguments):
                 self.called = True
 
-        my_bot.fan = MyFan()
+        self.bot.fan = MyFan()
 
-        listener = Listener(engine=my_engine)
+        listener = Listener(engine=self.engine)
+        listener.DEFER_DURATION = 0.0
 
         listener.on_message(my_message)
-        self.assertFalse(my_bot.fan.called)
+        self.assertFalse(self.bot.fan.called)
 
         label = 'fan.' + my_message.channel_id
         logging.debug(u"- stamping '{}'".format(label))
-        my_engine.set(label, time.time())
+        self.engine.set(label, time.time())
         listener.on_message(my_message)
-        self.assertTrue(my_bot.fan.called)
+        self.assertTrue(self.bot.fan.called)
 
     def test_on_attachment(self):
 
         logging.info('*** on_attachment ***')
 
-        listener = Listener(engine=my_engine)
+        listener = Listener(engine=self.engine)
+        listener.DEFER_DURATION = 0.0
         with self.assertRaises(AssertionError):
             listener.on_attachment(my_message)
         with self.assertRaises(AssertionError):
@@ -385,7 +393,7 @@ class ListenerTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             listener.on_attachment(my_event)
 
-        with mock.patch.object(my_engine,
+        with mock.patch.object(self.engine,
                                'dispatch',
                                return_value=None) as mocked:
             listener.on_attachment(my_attachment)
@@ -408,10 +416,11 @@ class ListenerTests(unittest.TestCase):
                 self.joined = True
 
         handler = Handler()
-        my_engine.register('enter', handler)
-        my_engine.register('join', handler)
+        self.engine.register('enter', handler)
+        self.engine.register('join', handler)
 
-        listener = Listener(engine=my_engine)
+        listener = Listener(engine=self.engine)
+        listener.DEFER_DURATION = 0.0
         with self.assertRaises(AssertionError):
             listener.on_join(my_message)
         with self.assertRaises(AssertionError):
@@ -437,7 +446,7 @@ class ListenerTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             listener.on_join(my_event)
 
-        with mock.patch.object(my_engine,
+        with mock.patch.object(self.engine,
                                'dispatch',
                                return_value=None) as mocked:
             listener.on_join(my_join)
@@ -460,10 +469,11 @@ class ListenerTests(unittest.TestCase):
                 self.left = True
 
         handler = Handler()
-        my_engine.register('exit', handler)
-        my_engine.register('leave', handler)
+        self.engine.register('exit', handler)
+        self.engine.register('leave', handler)
 
-        listener = Listener(engine=my_engine)
+        listener = Listener(engine=self.engine)
+        listener.DEFER_DURATION = 0.0
         with self.assertRaises(AssertionError):
             listener.on_leave(my_message)
         with self.assertRaises(AssertionError):
@@ -489,7 +499,7 @@ class ListenerTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             listener.on_leave(my_event)
 
-        with mock.patch.object(my_engine,
+        with mock.patch.object(self.engine,
                                'dispatch',
                                return_value=None) as mocked:
             listener.on_leave(my_leave)
@@ -499,7 +509,8 @@ class ListenerTests(unittest.TestCase):
 
         logging.info('*** on_inbound ***')
 
-        listener = Listener(engine=my_engine)
+        listener = Listener(engine=self.engine)
+        listener.DEFER_DURATION = 0.0
         with self.assertRaises(AssertionError):
             listener.on_inbound(my_message)
         with self.assertRaises(AssertionError):
@@ -512,7 +523,7 @@ class ListenerTests(unittest.TestCase):
             listener.on_inbound(my_leave)
         listener.on_inbound(my_event)
 
-        with mock.patch.object(my_engine,
+        with mock.patch.object(self.engine,
                                'dispatch',
                                return_value=None) as mocked:
             listener.on_inbound(my_event)
@@ -522,7 +533,7 @@ class ListenerTests(unittest.TestCase):
 
         logging.info('*** Static test ***')
 
-        listener = Listener(engine=my_engine)
+        listener = Listener(engine=self.engine)
         listener.DEFER_DURATION = 0.0
 
         listener.start()
@@ -530,11 +541,11 @@ class ListenerTests(unittest.TestCase):
         listener.join(0.1)
         if listener.is_alive():
             logging.info('Stopping listener')
-            my_engine.set('general.switch', 'off')
+            self.engine.set('general.switch', 'off')
             listener.join()
 
         self.assertFalse(listener.is_alive())
-        self.assertEqual(my_engine.get('listener.counter', 0), 0)
+        self.assertEqual(self.engine.get('listener.counter', 0), 0)
 
     def test_dynamic(self):
 
@@ -654,9 +665,9 @@ class ListenerTests(unittest.TestCase):
         ]
 
         for item in items:
-            my_engine.ears.put(str(Message(item)))
+            self.engine.ears.put(str(Message(item)))
 
-        my_engine.ears.put(None)
+        self.engine.ears.put(None)
 
         tee = Queue()
 
@@ -664,33 +675,33 @@ class ListenerTests(unittest.TestCase):
             tee.put(str(item))
             return item
 
-        listener = Listener(engine=my_engine, filter=filter)
+        listener = Listener(engine=self.engine, filter=filter)
         listener.DEFER_DURATION = 0.0
 
         listener.run()
 
-        self.assertEqual(my_engine.get('listener.counter'), 7)
+        self.assertEqual(self.engine.get('listener.counter'), 7)
         with self.assertRaises(Exception):
-            my_engine.ears.get_nowait()
+            self.engine.ears.get_nowait()
         self.assertEqual(
-            my_engine.mouth.get_nowait().text,
+            self.engine.mouth.get_nowait().text,
             'Shelly version *unknown*')
         self.assertEqual(
-            my_engine.mouth.get_nowait().text,
+            self.engine.mouth.get_nowait().text,
             u'Available commands:\n'
             + u'help - Show commands and usage')
         self.assertEqual(
-            my_engine.mouth.get_nowait().text,
+            self.engine.mouth.get_nowait().text,
             u'Available commands:\n'
             + u'help - Show commands and usage')
         self.assertEqual(
-            my_engine.mouth.get_nowait().text,
+            self.engine.mouth.get_nowait().text,
             u'help - Show commands and usage\nusage: help <command>')
         self.assertEqual(
-            my_engine.mouth.get_nowait().text,
+            self.engine.mouth.get_nowait().text,
             u"Sorry, I do not know how to handle 'test'")
         with self.assertRaises(Exception):
-            print(my_engine.mouth.get_nowait())
+            print(self.engine.mouth.get_nowait())
 
         self.maxDiff = None
         for item in items:

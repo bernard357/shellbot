@@ -23,12 +23,19 @@ from .base import Command
 class Default(Command):
     """
     Handles unmatched command
+
+    This function looks for a named list and adds participants accordingly.
+    Note that only list with attribute ``as_command`` set to true are
+    considered.
+
+    In other cases, the end user is advised that the command is unknown.
     """
 
     keyword = u'*default'
     information_message = u'Handle unmatched command'
     is_hidden = True
 
+    participants_message = u"Adding participants from '{}'"
     default_message = u"Sorry, I do not know how to handle '{}'"
 
     def execute(self, bot, arguments):
@@ -44,4 +51,11 @@ class Default(Command):
         Arguments provided should include all of the user input, including
         the first token that has not been recognised as a valid command.
         """
-        bot.say(self.default_message.format(arguments))
+        list = bot.engine.list_factory.get_list(arguments)
+        if list and list.as_command:
+            bot.say(self.participants_message.format(arguments))
+            persons = [x for x in list]
+            bot.add_participants(persons)
+
+        else:
+            bot.say(self.default_message.format(arguments))
