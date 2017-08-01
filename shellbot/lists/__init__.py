@@ -90,17 +90,26 @@ class ListFactory(object):
         Example in YAML::
 
             - name: The Famous Four
+              as_command: true
               items:
                 - alice@acme.com
                 - bob@project.org
                 - celine@secret.mil
                 - dude@bangkok.travel
 
+        The ``as_command`` parameter is a boolean that indicates if the list
+        can be used as a shell command. When ``as_command`` is set to true,
+        the named list appears in the list of shell commands. Members of the
+        list are added to a channel when the name of the list is submitted to
+        the shell.
+
         """
         assert isinstance(attributes, dict)
 
         items = attributes.get('items', [])
-        return List(items=items)
+        list = List(items=items)
+        list.as_command = attributes.get('as_command', False)
+        return list
 
     def get_list(self, name):
         """
@@ -109,8 +118,57 @@ class ListFactory(object):
         :param name: Name of the target list
         :type name: str
 
-        :return: list
+        :return: an iterator
 
         An empty list is returned when the name is unknown.
+
+        Example use case, where an alert is sent to members of a team::
+
+            for person in factory.get_list('SupportTeam'):
+                number = get_phone_number(person)
+                send_sms(important_message, number)
         """
         return self.lists.get(name, [])
+
+    def list_commands(self):
+        """
+        Lists items that can be invoked as shell commands
+
+        :return: an iterator of list names
+        """
+
+        for name in self.lists.keys():
+            list = self.lists[name]
+            if list.as_command:
+                yield name
+
+    def apply_to_list(self, name, apply):
+        """
+        Handles each item of a named list
+
+        :param name: designates the list to use
+        :type name: str
+
+        :param apply: the function that is applied to each item
+        :type apply: callable
+
+        This function calls the provided function for each item of a named
+        list.
+
+        For example, you could write an alerting system like this::
+
+            def alert(person):
+                number = get_phone_number(person)
+                send_sms(important_message, number)
+
+            factory.apply_to_list('SupportTeam', alert)
+
+        Lambda functions are welcome as well. For example, this can be useful
+        for the straightforward addition of participants to a given bot::
+
+            factory.apply_to_list(name='SupportTeam',
+                                  apply=lambda x: my_bot.add_participant(x))
+
+        """
+        for item in self.get_list(name):
+            apply(item)
