@@ -766,7 +766,7 @@ class SparkSpace(Space):
                        event='created',
                        filter=None)
 
-        if self.audit_api:
+        if self.audit_api and self.fan:
             self.context.set('audit.has_been_armed', True)
             logging.debug(u"- registering 'shellbot-audit'")
             create_webhook(api=self.audit_api,
@@ -960,30 +960,39 @@ class SparkSpace(Space):
         if files:
             url = files[0]
             message.url = url
-            message.attachment = self.name_attachment(url)
+
+            if message.hook == 'shellbot-audit':
+                token = self.get('audit_token', '*no*token')
+            else:
+                token = self.get('token', '*no*token')
+
+            message.attachment = self.name_attachment(url, token=token)
 
         logging.debug(u"- putting message to queue")
         queue.put(str(message))
 
-    def download_attachment(self, url):
+    def download_attachment(self, url, token=None):
         """
         Copies a shared document locally
         """
-        path = tempfile.gettempdir()+'/'+self.name_attachment(url)
+        path = tempfile.gettempdir()+'/'+self.name_attachment(url, token=token)
         logging.debug(u"- writing to {}".format(path))
         with open(path, "w+b") as handle:
-            handle.write(self.get_attachment(url))
+            handle.write(self.get_attachment(url, token=token))
 
         return path
 
-    def name_attachment(self, url, response=None):
+    def name_attachment(self, url, token=None, response=None):
         """
         Retrieves a document attached to a room
         """
         logging.debug(u"- sensing {}".format(url))
 
+        if not token:
+            token = self.get('token', '*no*token')
+
         headers = {}
-        headers['Authorization'] = 'Bearer '+self.get('token', '*no*token')
+        headers['Authorization'] = 'Bearer '+token
 
         if not response:
             response = requests.head(url=url, headers=headers)
@@ -1003,14 +1012,17 @@ class SparkSpace(Space):
 
         return 'downloadable'
 
-    def get_attachment(self, url, response=None):
+    def get_attachment(self, url, token=None, response=None):
         """
         Retrieves a document attached to a room
         """
         logging.debug(u"- fetching {}".format(url))
 
+        if not token:
+            token = self.get('token', '*no*token')
+
         headers = {}
-        headers['Authorization'] = 'Bearer '+self.get('token', '*no*token')
+        headers['Authorization'] = 'Bearer '+token
 
         if not response:
             response = requests.get(url=url, headers=headers)

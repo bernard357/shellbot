@@ -151,6 +151,7 @@ my_message = {
     "personId" : "*matt*id",
     "personEmail" : "matt@example.com",
     "created" : "2015-10-18T14:26:16+00:00",
+    "hook": "shellbot-messages",
     "mentionedPeople" : [ "*matt*id", "*julie*id" ],
 }
 
@@ -751,10 +752,10 @@ class SparkSpaceTests(unittest.TestCase):
         logging.info("*** on_message")
 
         class MySpace(SparkSpace):
-            def name_attachment(self, url):
+            def name_attachment(self, url, token=None):
                 return 'some_file.pdf'
 
-            def get_attachment(self, url):
+            def get_attachment(self, url, token=None):
                 return b'hello world'
 
         self.space = MySpace(context=self.context)
@@ -793,10 +794,10 @@ class SparkSpaceTests(unittest.TestCase):
         logging.info("*** download_attachment")
 
         class MySpace(SparkSpace):
-            def name_attachment(self, url):
+            def name_attachment(self, url, token=None):
                 return 'some_file.pdf'
 
-            def get_attachment(self, url):
+            def get_attachment(self, url, token=None):
                 return b'hello world'
 
         space = MySpace(context=self.context)
