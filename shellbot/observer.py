@@ -71,6 +71,9 @@ class Observer(Process):
         try:
             self.engine.set('observer.counter', 0)
             while self.engine.get('general.switch', 'on') == 'on':
+                
+                if not self.engine.fan:
+                    break
 
                 if self.engine.fan.empty():
                     time.sleep(self.EMPTY_DELAY)
