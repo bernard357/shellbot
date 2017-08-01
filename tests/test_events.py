@@ -11,7 +11,7 @@ import sys
 import yaml
 
 from shellbot import Context
-from shellbot.events import Event, Message, Attachment, Join, Leave
+from shellbot.events import Event, Message, Attachment, Join, Leave, EventFactory
 
 
 class EventsTests(unittest.TestCase):
@@ -159,7 +159,7 @@ class EventsTests(unittest.TestCase):
 
         item = {
               "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-              "channel_id" : "Y2lzY29zcGFyazovNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+              "channel_id" : "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0",
               "text" : "/plumby use containers/docker",
               "content" : "<p>/plumby use containers/docker</p>",
               "created" : "2015-10-18T14:26:16+00:00",
@@ -183,7 +183,7 @@ class EventsTests(unittest.TestCase):
         self.assertEqual(event.mentioned_ids,
                          ["Y2lzYDMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"])
         self.assertEqual(event.channel_id,
-                         "Y2lzY29zcGFyazovNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0")
+                         "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0")
 
         item.update({'type': 'message'})
         self.assertEqual(json.loads(str(event)), item)
@@ -191,7 +191,7 @@ class EventsTests(unittest.TestCase):
 
         item = {
               "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-              "channel_id" : "Y2lzY29zcGFyazovNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+              "channel_id" : "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0",
               "text" : "/plumby use containers/docker",
               "created" : "2015-10-18T14:26:16+00:00",
               "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
@@ -206,7 +206,7 @@ class EventsTests(unittest.TestCase):
 
         item = {
               "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-              "channel_id" : "Y2lzY29zcGFyazovNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
+              "channel_id" : "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0",
               "text" : "/plumby use containers/docker",
               "created" : "2015-10-18T14:26:16+00:00",
               "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
@@ -252,6 +252,95 @@ class EventsTests(unittest.TestCase):
             value = event.actor_label
         with self.assertRaises(AttributeError):
             value = event.channel_id
+
+    def test_factory_message(self):
+
+        item = {
+              "type": "message",
+              "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
+              "channel_id" : "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0",
+              "text" : "/plumby use containers/docker",
+              "created" : "2015-10-18T14:26:16+00:00",
+              "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+              "from_label" : "Masked Cucumber",
+              "is_direct" : True,
+              "mentioned_ids" : ["Y2lzYDMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"],
+            }
+
+        event = EventFactory.build_event(item)
+        self.assertTrue(isinstance(event, Message))
+        self.assertEqual(event.type, 'message')
+
+    def test_factory_join(self):
+
+        item = {
+              "type": "join",
+              "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
+              "channel_id" : "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0",
+              "text" : "/plumby use containers/docker",
+              "created" : "2015-10-18T14:26:16+00:00",
+              "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+              "from_label" : "Masked Cucumber",
+              "is_direct" : True,
+              "mentioned_ids" : ["Y2lzYDMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"],
+            }
+
+        event = EventFactory.build_event(item)
+        self.assertTrue(isinstance(event, Join))
+        self.assertEqual(event.type, 'join')
+
+    def test_factory_leave(self):
+
+        item = {
+              "type": "leave",
+              "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
+              "channel_id" : "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0",
+              "text" : "/plumby use containers/docker",
+              "created" : "2015-10-18T14:26:16+00:00",
+              "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+              "from_label" : "Masked Cucumber",
+              "is_direct" : True,
+              "mentioned_ids" : ["Y2lzYDMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"],
+            }
+
+        event = EventFactory.build_event(item)
+        self.assertTrue(isinstance(event, Leave))
+        self.assertEqual(event.type, 'leave')
+
+    def test_factory_void(self):
+
+        item = {
+              "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
+              "channel_id" : "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0",
+              "text" : "/plumby use containers/docker",
+              "created" : "2015-10-18T14:26:16+00:00",
+              "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+              "from_label" : "Masked Cucumber",
+              "is_direct" : True,
+              "mentioned_ids" : ["Y2lzYDMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"],
+            }
+
+        event = EventFactory.build_event(item)
+        self.assertTrue(isinstance(event, Event))
+        self.assertEqual(event.type, 'event')
+
+    def test_factory_unknown(self):
+
+        item = {
+              "type": "*really*unknown",
+              "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
+              "channel_id" : "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0",
+              "text" : "/plumby use containers/docker",
+              "created" : "2015-10-18T14:26:16+00:00",
+              "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
+              "from_label" : "Masked Cucumber",
+              "is_direct" : True,
+              "mentioned_ids" : ["Y2lzYDMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"],
+            }
+
+        event = EventFactory.build_event(item)
+        self.assertTrue(isinstance(event, Event))
+        self.assertEqual(event.type, 'event')
 
 
 if __name__ == '__main__':

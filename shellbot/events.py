@@ -427,3 +427,39 @@ class Leave(Event):
 
         """
         return self.__getattr__('channel_id')
+
+
+class EventFactory(object):
+    """
+    Generates events
+    """
+
+    @classmethod
+    def build_event(cls, attributes):
+        """
+        Turns a dictionary to a typed event
+
+        :param attributes: the set of attributes to consider
+        :type attributes: dict
+
+        :return: an Event, such as a Message, a Join, a Leave, etc.
+
+        """
+        assert isinstance(attributes, dict)
+
+        flavour= attributes.get('type')
+        if not flavour:
+            return Event(attributes)
+
+        all_types = {
+            'message': Message,
+            'join': Join,
+            'leave': Leave,
+        }
+
+        loader = all_types.get(flavour)
+
+        if loader:
+            return loader(attributes)
+
+        return Event(attributes)
