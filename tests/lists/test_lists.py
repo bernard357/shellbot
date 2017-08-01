@@ -116,7 +116,7 @@ class StoreFactoryTests(unittest.TestCase):
         self.context.apply(settings)
         factory = ListFactory(context=self.context)
         factory.configure()
-        self.assertEqual(factory.lists.keys(), ['Support Team', 'The Famous Four'])
+        self.assertEqual(sorted(factory.lists.keys()), ['Support Team', 'The Famous Four'])
 
         settings = yaml.load(dict_instead_of_list_yaml )
         self.context.clear()
