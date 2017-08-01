@@ -58,7 +58,7 @@ class Help(Command):
 
             for name in self.engine.list_factory.list_commands():
                 item = self.engine.list_factory.get_list(name)
-                first = iter(item).next()
+                first = next(iter(item))
                 lines.append(u"{} - {}".format(
                     name,
                     u"add participants ({}, ...)".format(first)))
