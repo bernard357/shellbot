@@ -323,7 +323,10 @@ class SparkSpace(Space):
         :return: list of Channel
 
         """
-        assert quantity > 0
+        assert quantity >= 0
+
+        if not quantity:
+            return []
 
         logging.info(u"Listing {} recent rooms".format(quantity))
 
