@@ -67,7 +67,7 @@ class SpaceUpdater(Updater):
         Processes one event
 
         :param event: an inbound event
-        :type event: Event or Message or Attachment or Join or Leave
+        :type event: Event or Message or Join or Leave
 
         With this class a string representation of the received event
         is forwarded to the speaker queue of a chat space.
@@ -90,7 +90,7 @@ class SpaceUpdater(Updater):
         Prepares an outbound line
 
         :param event: an inbound event
-        :type event: Event or Message or Attachment or Join or Leave
+        :type event: Event or Message or Join or Leave
 
         :return: outbound line
         :rtype: str
@@ -108,9 +108,6 @@ class SpaceUpdater(Updater):
             return Vibes(text=u"{}: {}".format(event.from_label, event.text),
                          content=u"{}: {}".format(event.from_label, event.content),
                          file=None)
-
-        if event.type == 'attachment':
-            return u"{} has been shared".format(event.url)
 
         if event.type == 'join':
             return u"{} has joined".format(event.actor_label)

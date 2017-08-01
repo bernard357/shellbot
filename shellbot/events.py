@@ -244,12 +244,12 @@ class Message(Event):
     @property
     def is_direct(self):
         """
-        Determines if this is a private message
+        Determines if this is a direct message
 
         :rtype: True or False
 
-        This attribute allows the listener to determine if the input is
-        explicitly for this bot or not.
+        This attribute is set for 1-to-1 channels. It allows the listener to
+        determine if the input is explicitly for this bot or not.
         """
         return self.attributes.get('is_direct', False)
 
@@ -275,56 +275,42 @@ class Message(Event):
         """
         return self.attributes.get('channel_id')
 
+    @property
+    def attachment(self):
+        """
+        Returns name of uploaded file
 
-class Attachment(Event):
-    """
-    Represents the attachment of a file to a space
-    """
+        :rtype: str
 
-    type = 'attachment'
+        This attribute is set on file upload. It provides with the
+        external name of the file that has been shared, if any.
+
+        For example, to get a local copy of an uploaded file::
+
+            if message.attachment:
+                path = space.download_attachment(message.url)
+
+        """
+        return self.attributes.get('attachment')
 
     @property
     def url(self):
         """
-        Returns link to file content
+        Returns link to uploaded file
 
         :rtype: str
-        """
-        return self.__getattr__('url')
 
-    @property
-    def from_id(self):
-        """
-        Returns the id of the message originator
+        This attribute is set on file upload. It provides with the
+        address that can be used to fetch the actual content.
 
-        :rtype: str or None
+        There is a need to rely on the underlying space to authenticate and
+        get the file itself. For example::
 
-        This attribute allows listener to distinguish between messages
-        from the bot and messages from other chat participants.
-        """
-        return self.attributes.get('from_id')
-
-    @property
-    def from_label(self):
-        """
-        Returns the name or title of the message originator
-
-        :rtype: str or None
-
-        This attribute is used by updaters that log messages or copy them
-        for archiving.
-        """
-        return self.attributes.get('from_label')
-
-    @property
-    def channel_id(self):
-        """
-        Returns the id of the chat space
-
-        :rtype: str or None
+            if message.url:
+                content = space.get_attachment(message.url)
 
         """
-        return self.attributes.get('channel_id')
+        return self.attributes.get('url')
 
 
 class Join(Event):

@@ -11,7 +11,7 @@ import sys
 import yaml
 
 from shellbot import Context
-from shellbot.events import Event, Message, Attachment, Join, Leave, EventFactory
+from shellbot.events import Event, Message, Join, Leave, EventFactory
 
 
 class EventsTests(unittest.TestCase):
@@ -220,16 +220,6 @@ class EventsTests(unittest.TestCase):
         my_queue.put(str(before))
         after = Message(my_queue.get())
         self.assertEqual(after.attributes, item)
-
-    def test_attachment_init(self):
-
-        event = Attachment()
-        self.assertEqual(event.type, 'attachment')
-        with self.assertRaises(AttributeError):
-            url = event.url
-        self.assertEqual(event.from_id, None)
-        self.assertEqual(event.from_label, None)
-        self.assertEqual(event.channel_id, None)
 
     def test_join_init(self):
 

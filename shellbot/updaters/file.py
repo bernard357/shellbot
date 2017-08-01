@@ -31,7 +31,7 @@ class FileUpdater(Updater):
 
     This updater serializes events and write JSON records to a flat file.
 
-    An event may be a Message, an Attachment, a Join or Leave notification,
+    An event may be a Message, a Join or Leave notification,
     or any other Event.
 
     Updaters expose a filtering function that can be connected to the
@@ -74,7 +74,7 @@ class FileUpdater(Updater):
         Processes one event
 
         :param event: inbound event
-        :type event: Event or Message or Attachment or Join or Leave
+        :type event: Event or Message or Join or Leave
 
         The function serializes the event and write it to a file.
         """

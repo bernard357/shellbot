@@ -27,7 +27,7 @@ import tempfile
 import time
 
 from shellbot.channel import Channel
-from shellbot.events import Event, Message, Attachment, Join, Leave
+from shellbot.events import Event, Message, Join, Leave
 from .base import Space
 
 
@@ -953,18 +953,14 @@ class SparkSpace(Space):
         message.mentioned_ids = message.get('mentionedPeople', [])
         message.channel_id = message.get('roomId')
 
+        files = item.get('files', [])
+        if files:
+            url = files[0]
+            message.url = url
+            message.attachment = self.name_attachment(url)
+
         logging.debug(u"- putting message to queue")
         queue.put(str(message))
-
-        for url in item.get('files', []):
-            attachment = Attachment(item.copy())
-            attachment.url = url
-            attachment.from_id = item.get('personId', None)
-            attachment.from_label = item.get('personEmail', None)
-            attachment.channel_id = item.get('roomId', None)
-
-            logging.debug(u"- putting attachment to queue")
-            queue.put(str(attachment))
 
     def download_attachment(self, url):
         """

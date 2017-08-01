@@ -457,8 +457,6 @@ class EngineTests(unittest.TestCase):
                 pass
             def on_message(self):
                 pass
-            def on_attachment(self):
-                pass
             def on_join(self):
                 pass
             def on_leave(self):
@@ -478,7 +476,6 @@ class EngineTests(unittest.TestCase):
         self.engine.register('start', all_events)
         self.engine.register('stop', all_events)
         self.engine.register('message', all_events)
-        self.engine.register('attachment', all_events)
         self.engine.register('join', all_events)
         self.engine.register('leave', all_events)
         self.engine.register('enter', all_events)
@@ -491,7 +488,6 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(len(self.engine.registered['start']), 1)
         self.assertEqual(len(self.engine.registered['stop']), 1)
         self.assertEqual(len(self.engine.registered['message']), 1)
-        self.assertEqual(len(self.engine.registered['attachment']), 1)
         self.assertEqual(len(self.engine.registered['join']), 1)
         self.assertEqual(len(self.engine.registered['leave']), 1)
         self.assertEqual(len(self.engine.registered['enter']), 1)
@@ -524,9 +520,6 @@ class EngineTests(unittest.TestCase):
             def on_message(self, received):
                 assert received == '*void'
                 self.events.append('message')
-            def on_attachment(self, received):
-                assert received == '*void'
-                self.events.append('attachment')
             def on_join(self, received):
                 assert received == '*void'
                 self.events.append('join')
@@ -552,7 +545,6 @@ class EngineTests(unittest.TestCase):
         self.engine.register('start', all_events)
         self.engine.register('stop', all_events)
         self.engine.register('message', all_events)
-        self.engine.register('attachment', all_events)
         self.engine.register('join', all_events)
         self.engine.register('leave', all_events)
         self.engine.register('enter', all_events)
@@ -565,7 +557,6 @@ class EngineTests(unittest.TestCase):
         self.engine.dispatch('start')
         self.engine.dispatch('stop')
         self.engine.dispatch('message', received='*void')
-        self.engine.dispatch('attachment', received='*void')
         self.engine.dispatch('join', received='*void')
         self.engine.dispatch('leave', received='*void')
         self.engine.dispatch('enter', received='*void')
@@ -583,7 +574,6 @@ class EngineTests(unittest.TestCase):
                           'start',
                           'stop',
                           'message',
-                          'attachment',
                           'join',
                           'leave',
                           'enter',

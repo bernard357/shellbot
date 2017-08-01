@@ -271,7 +271,6 @@ class Engine(object):
             'start': [],      # starting bot services
             'stop': [],       # stopping bot services
             'message': [],    # message received (with message)
-            'attachment': [], # attachment received (with attachment)
             'join': [],       # joining a space (with person)
             'leave': [],      # leaving a space (with person)
             'enter': [],      # invited to a space (for the bot)

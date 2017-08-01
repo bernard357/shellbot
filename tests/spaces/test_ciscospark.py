@@ -14,7 +14,7 @@ import yaml
 
 from shellbot import Context
 from shellbot.channel import Channel
-from shellbot.events import Event, Message, Attachment, Join, Leave
+from shellbot.events import Event, Message, Join, Leave
 from shellbot.spaces import Space, SparkSpace
 
 
@@ -750,10 +750,21 @@ class SparkSpaceTests(unittest.TestCase):
 
         logging.info("*** on_message")
 
+        class MySpace(SparkSpace):
+            def name_attachment(self, url):
+                return 'some_file.pdf'
+
+            def get_attachment(self, url):
+                return b'hello world'
+
+        self.space = MySpace(context=self.context)
+
         self.space.on_message(my_message, self.ears)
         message = my_message.copy()
         message.update({"type": "message"})
         message.update({"content": message['text']})
+        message.update({"attachment": "some_file.pdf"})
+        message.update({"url": "http://www.example.com/images/media.png"})
         message.update({"from_id": '*matt*id'})
         message.update({"from_label": 'matt@example.com'})
         message.update({'is_direct': False})
@@ -761,14 +772,6 @@ class SparkSpaceTests(unittest.TestCase):
         message.update({"channel_id": '*id1'})
         self.maxDiff = None
         self.assertEqual(yaml.safe_load(self.ears.get()), message)
-
-        attachment = my_message.copy()
-        attachment.update({"type": "attachment"})
-        attachment.update({"url": "http://www.example.com/images/media.png"})
-        attachment.update({"from_id": '*matt*id'})
-        attachment.update({"from_label": 'matt@example.com'})
-        attachment.update({"channel_id": '*id1'})
-        self.assertEqual(yaml.safe_load(self.ears.get()), attachment)
 
         self.space.on_message(my_private_message, self.ears)
         message = my_private_message.copy()

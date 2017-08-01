@@ -10,7 +10,7 @@ import os
 import sys
 
 from shellbot import Context, Engine, Shell
-from shellbot.events import Event, Message, Attachment, Join, Leave
+from shellbot.events import Event, Message, Join, Leave
 from shellbot.updaters import SpaceUpdater
 
 my_engine = Engine()
@@ -49,21 +49,21 @@ class UpdaterTests(unittest.TestCase):
         with self.assertRaises(Exception):
             u.mouth.get_nowait()
 
-        item = Attachment({
-            'from_label': 'alice@acme.com',
-            'text': 'my message',
-            'url': 'http://some.server/some/file',
-        })
-
-        class FakeSpace(object):
-            def download_attachment(self, url):
-                return 'some_file.pdf'
-
-        u.space = FakeSpace()
-        u.put(item)
-        self.assertEqual(u.mouth.get().text, u'alice@acme.com: some_file.pdf')
-        with self.assertRaises(Exception):
-            u.mouth.get_nowait()
+        # item = Attachment({
+        #     'from_label': 'alice@acme.com',
+        #     'text': 'my message',
+        #     'url': 'http://some.server/some/file',
+        # })
+        #
+        # class FakeSpace(object):
+        #     def download_attachment(self, url):
+        #         return 'some_file.pdf'
+        #
+        # u.space = FakeSpace()
+        # u.put(item)
+        # self.assertEqual(u.mouth.get().text, u'alice@acme.com: some_file.pdf')
+        # with self.assertRaises(Exception):
+        #     u.mouth.get_nowait()
 
     def test_format(self):
 
@@ -94,12 +94,6 @@ class UpdaterTests(unittest.TestCase):
         outbound = u.format(inbound)
         self.assertEqual(outbound.text, 'alice@acme.com: my message')
         self.assertEqual(outbound.content, 'alice@acme.com: <p>my message</p>')
-
-        inbound = Attachment({
-            'url': 'http://my.server/my/file',
-        })
-        outbound = u.format(inbound)
-        self.assertEqual(outbound, u'http://my.server/my/file has been shared')
 
         inbound = Join({
             'actor_label': 'alice@acme.com',

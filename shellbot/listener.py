@@ -23,7 +23,7 @@ from six import string_types
 import time
 import yaml
 
-from .events import Event, Message, Attachment, Join, Leave
+from .events import Event, Message, Join, Leave
 
 
 class Listener(Process):
@@ -47,7 +47,7 @@ class Listener(Process):
         :type filter: callable
 
         If a ``filter`` is provided, then it is called for each event received.
-        An event may be a Message, an Attachment, a Join or Leave notification,
+        An event may be a Message, a Join or Leave notification,
         or any other Event.
 
         Example::
@@ -155,9 +155,6 @@ class Listener(Process):
         * ``message`` -- This is a textual message, maybe with a file attached.
           The message is given to the ``on_message()`` function.
 
-        * ``attachment`` -- A file has been attached to the chat space. The
-          ``on_attachment()`` function is invoked.
-
         * ``join`` -- This is when a person or the bot joins a space.
           The function ``on_join()`` is called, providing details on the
           person or the bot who joined
@@ -187,13 +184,6 @@ class Listener(Process):
             if self.filter:
                 event = self.filter(event)
             self.on_message(event)
-
-        elif item['type'] == 'attachment':
-            logging.debug(u"- processing an 'attachment' event")
-            event = Attachment(item)
-            if self.filter:
-                event = self.filter(event)
-            self.on_attachment(event)
 
         elif item['type'] == 'join':
             logging.debug(u"- processing a 'join' event")
@@ -295,23 +285,6 @@ class Listener(Process):
         logging.debug(u"- submitting command to the shell")
         self.engine.shell.do(input, channel_id=received.channel_id)
 
-    def on_attachment(self, received):
-        """
-        An attachment has been received
-
-        :param received: the event received
-        :type received: Attachment
-
-        Received information is transmitted to registered callbacks on the
-        ``attachment`` at the engine level.
-
-        """
-        assert received.type == 'attachment'
-
-        self.engine.dispatch('attachment', received=received)
-
-        bot = self.engine.get_bot(received.channel_id)
-
     def on_join(self, received):
         """
         A person, or the bot, has joined a space
@@ -369,6 +342,6 @@ class Listener(Process):
         ``inbound`` at the engine level.
 
         """
-        assert received.type not in ('message', 'attachment', 'join', 'leave')
+        assert received.type not in ('message', 'join', 'leave')
 
         self.engine.dispatch('inbound', received=received)

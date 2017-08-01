@@ -58,25 +58,6 @@ my_01_message_from_bot_in_group = Message({
     "type": "message",
 })
 
-my_02_attachment_from_bot_in_group = Message({
-    "channel_id": "*id1",
-    "created": "2017-07-30T20:34:35.593Z",
-    "files": ["http://hydra-a5.wbx2.com/MWU3LTg5MzgtZjU1MWY1ZTU1ZmE5LzA"],
-    "from_id": "*shelly*id",
-    "from_label": "shelly@sparkbot.io",
-    "hook": "shellbot-audit",
-    "html": "<p>Hello there!</p>",
-    "id": "Y2lzY29zcGFyazovL3VzL01FU1NBR0UvgtZjU1MWY1ZTU1ZmE5",
-    "markdown": "Hello there!",
-    "personEmail": "shelly@sparkbot.io",
-    "personId": "*shelly*id",
-    "roomId": "*id1",
-    "roomType": "group",
-    "text": "This is an attachment",
-    "type": "attachment",
-    "url": "http://hydra-a5.wbx2.com/MWU3LTg5MzgtZjU1MWY1ZTU1ZmE5LzA",
-})
-
 my_03_message_from_person_in_group = Message({
     "channel_id": "*id1",
     "content": "<p>shelly hello</p>",
@@ -254,7 +235,6 @@ class ObserverTests(unittest.TestCase):
         self.assertEqual(updater.text, '========== AUDIT OFF ==========')
 
         observer.process(my_01_message_from_bot_in_group)
-        observer.process(my_02_attachment_from_bot_in_group)
         observer.process(my_03_message_from_person_in_group)
         observer.process(my_04_response_from_bot_in_group)
         observer.process(my_05_message_out_of_scope_for_audit)
@@ -268,20 +248,16 @@ class ObserverTests(unittest.TestCase):
         self.assertEqual(updater.count, 5)  # because of self-generated msg
         self.assertEqual(updater.text, "Type '@shelly help' for more information")
 
-        observer.process(my_02_attachment_from_bot_in_group)
-        self.assertEqual(updater.count, 6)
-        self.assertEqual(updater.text, 'This is an attachment')
-
         observer.process(my_03_message_from_person_in_group)
-        self.assertEqual(updater.count, 7)
+        self.assertEqual(updater.count, 6)
         self.assertEqual(updater.text, 'shelly hello')
 
         observer.process(my_04_response_from_bot_in_group)
-        self.assertEqual(updater.count, 8)
+        self.assertEqual(updater.count, 7)
         self.assertEqual(updater.text, 'Hello, World!')
 
         observer.process(my_05_message_out_of_scope_for_audit)
-        self.assertEqual(updater.count, 8)  # not considered by observer
+        self.assertEqual(updater.count, 7)  # not considered by observer
 
 
 if __name__ == '__main__':

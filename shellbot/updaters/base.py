@@ -30,7 +30,7 @@ class Updater(object):
     Updaters are useful for logging or replication, or side
     storage, or achiving, of received events.
 
-    An event may be a Message, an Attachment, a Join or Leave notification,
+    An event may be a Message, a Join or Leave notification,
     or any other Event.
 
     Updaters expose a filtering function that can be connected to the
@@ -128,7 +128,7 @@ class Updater(object):
         Filters events handled by listener
 
         :param event: an event received by listener
-        :type event: Event or Message or Attachment or Join or Leave, etc.
+        :type event: Event or Message or Join or Leave, etc.
 
         :return: a filtered event
 
@@ -144,7 +144,7 @@ class Updater(object):
         Processes one event
 
         :param event: inbound event
-        :type event: Event or Message or Attachment or Join or Leave
+        :type event: Event or Message or Join or Leave
 
         The default behaviour is to write text to ``sys.stdout`` so it is easy
         to redirect the stream for any reason.
@@ -156,7 +156,7 @@ class Updater(object):
         Prepares an outbound line
 
         :param event: an inbound event
-        :type event: Event or Message or Attachment or Join or Leave
+        :type event: Event or Message or Join or Leave
 
         :return: outbound line
         :rtype: str

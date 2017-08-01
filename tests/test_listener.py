@@ -14,7 +14,7 @@ import time
 import yaml
 
 from shellbot import Context, Engine, Listener, SpaceFactory, Vibes
-from shellbot.events import Event, Message, Attachment, Join, Leave
+from shellbot.events import Event, Message, Join, Leave
 
 
 class MyEngine(Engine):
@@ -59,6 +59,8 @@ my_message = Message({
     "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
     "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
     "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
+    "attachment" : "media.png",
+    "url" : "http://www.example.com/images/media.png",
 })
 
 my_private_message = Message({
@@ -76,23 +78,6 @@ my_private_message = Message({
     'is_direct': True,
     "mentioned_ids": [],
     "channel_id": 'Y2lzY29zcGFyazovL3VzL1JP0zY2VmLWJiNDctOTZlZjA1NmJhYzFl',
-})
-
-my_attachment = Attachment({
-    "id" : "1_lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
-    "channel_id" : "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0",
-    "roomType" : "group",
-    "toPersonId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX",
-    "toPersonEmail" : "julie@example.com",
-    "text" : "The PM for this project is Mike C. and the Engineering Manager is Jane W.",
-    "markdown" : "**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>.",
-    "url" : "http://www.example.com/images/media.png",
-    "personId" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
-    "personEmail" : "matt@example.com",
-    "created" : "2015-10-18T14:26:16+00:00",
-    "mentionedPeople" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
-    "from_id" : "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
-    "mentioned_ids" : [ "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM", "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ],
 })
 
 my_join = Join({
@@ -254,24 +239,19 @@ class ListenerTests(unittest.TestCase):
         self.assertEqual(self.engine.get('listener.counter'), 25)
         self.assertTrue(listener.on_message.called)
 
-        listener.on_attachment = mock.Mock()
-        listener.process(str(my_attachment))
-        self.assertEqual(self.engine.get('listener.counter'), 26)
-        self.assertTrue(listener.on_attachment.called)
-
         listener.on_join = mock.Mock()
         listener.process(str(my_join))
-        self.assertEqual(self.engine.get('listener.counter'), 27)
+        self.assertEqual(self.engine.get('listener.counter'), 26)
         self.assertTrue(listener.on_join.called)
 
         listener.on_leave = mock.Mock()
         listener.process(str(my_leave))
-        self.assertEqual(self.engine.get('listener.counter'), 28)
+        self.assertEqual(self.engine.get('listener.counter'), 27)
         self.assertTrue(listener.on_leave.called)
 
         listener.on_inbound = mock.Mock()
         listener.process(str(my_event))
-        self.assertEqual(self.engine.get('listener.counter'), 29)
+        self.assertEqual(self.engine.get('listener.counter'), 28)
         self.assertTrue(listener.on_inbound.called)
 
     def test_process_filter(self):
@@ -307,23 +287,18 @@ class ListenerTests(unittest.TestCase):
         self.assertTrue(mocked.event.flag)
 
         mocked.event = None
-        listener.process(str(my_attachment))
+        listener.process(str(my_join))
         self.assertEqual(self.engine.get('listener.counter'), 25)
         self.assertTrue(mocked.event.flag)
 
         mocked.event = None
-        listener.process(str(my_join))
+        listener.process(str(my_leave))
         self.assertEqual(self.engine.get('listener.counter'), 26)
         self.assertTrue(mocked.event.flag)
 
         mocked.event = None
-        listener.process(str(my_leave))
-        self.assertEqual(self.engine.get('listener.counter'), 27)
-        self.assertTrue(mocked.event.flag)
-
-        mocked.event = None
         listener.process(str(my_event))
-        self.assertEqual(self.engine.get('listener.counter'), 28)
+        self.assertEqual(self.engine.get('listener.counter'), 27)
         self.assertTrue(mocked.event.flag)
 
     def test_on_message(self):
@@ -334,8 +309,6 @@ class ListenerTests(unittest.TestCase):
         listener.DEFER_DURATION = 0.0
         listener.on_message(my_message)
         listener.on_message(my_private_message)
-        with self.assertRaises(AssertionError):
-            listener.on_message(my_attachment)
         with self.assertRaises(AssertionError):
             listener.on_message(my_join)
         with self.assertRaises(AssertionError):
@@ -375,30 +348,6 @@ class ListenerTests(unittest.TestCase):
         listener.on_message(my_message)
         self.assertTrue(self.bot.fan.called)
 
-    def test_on_attachment(self):
-
-        logging.info('*** on_attachment ***')
-
-        listener = Listener(engine=self.engine)
-        listener.DEFER_DURATION = 0.0
-        with self.assertRaises(AssertionError):
-            listener.on_attachment(my_message)
-        with self.assertRaises(AssertionError):
-            listener.on_attachment(my_private_message)
-        listener.on_attachment(my_attachment)
-        with self.assertRaises(AssertionError):
-            listener.on_attachment(my_join)
-        with self.assertRaises(AssertionError):
-            listener.on_attachment(my_leave)
-        with self.assertRaises(AssertionError):
-            listener.on_attachment(my_event)
-
-        with mock.patch.object(self.engine,
-                               'dispatch',
-                               return_value=None) as mocked:
-            listener.on_attachment(my_attachment)
-            self.assertTrue(mocked.called)
-
     def test_on_join(self):
 
         logging.info('*** on_join ***')
@@ -425,8 +374,6 @@ class ListenerTests(unittest.TestCase):
             listener.on_join(my_message)
         with self.assertRaises(AssertionError):
             listener.on_join(my_private_message)
-        with self.assertRaises(AssertionError):
-            listener.on_join(my_attachment)
 
         self.assertFalse(handler.entered)
         self.assertFalse(handler.joined)
@@ -479,8 +426,6 @@ class ListenerTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             listener.on_leave(my_private_message)
         with self.assertRaises(AssertionError):
-            listener.on_leave(my_attachment)
-        with self.assertRaises(AssertionError):
             listener.on_leave(my_join)
 
         self.assertFalse(handler.out)
@@ -515,8 +460,6 @@ class ListenerTests(unittest.TestCase):
             listener.on_inbound(my_message)
         with self.assertRaises(AssertionError):
             listener.on_inbound(my_private_message)
-        with self.assertRaises(AssertionError):
-            listener.on_inbound(my_attachment)
         with self.assertRaises(AssertionError):
             listener.on_inbound(my_join)
         with self.assertRaises(AssertionError):
