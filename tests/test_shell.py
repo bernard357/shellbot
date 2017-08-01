@@ -43,6 +43,22 @@ my_message = {
     "mentioned_ids" : ["Y2lzYDMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"],
     }
 
+my_upload = {
+    'text': '',
+    'is_direct': True,
+    'hook': 'shellbot-messages',
+    'url': 'https://api.ciscospark.com/contents/Y2lM2RjZDUxZjEwOTQxLzA',
+    'mentioned_ids': [],
+    'id': 'Y2lzY29zcGFyazovL3VzL01FU1NBR0UvxMWU3LTkzNzYtM2RjZDUxZjEwOTQx',
+    'from_id': 'Y2lzY29zcGFyazovL3VzL1BFT1B5LTQ5YzQtYTIyYi1mYWYwZWQwMjkyMzU',
+    'created': '2017-08-01T19:12:16.768Z',
+    'from_label': 'bernard.paques@dimensiondata.com',
+    'content': '',
+    'channel_id': 'Y2lzY29zcGFyazovL3VzL1JPzY2VmLWJiNDctOTZlZjA1NmJhYzFl',
+    'attachment': 'viral.txt'
+}
+
+
 
 class ShellTests(unittest.TestCase):
 
@@ -51,8 +67,10 @@ class ShellTests(unittest.TestCase):
         self.engine.configure()
         self.bot = MyBot(engine=self.engine)
         self.message = Message(my_message)
+        self.upload = Message(my_upload)
 
     def tearDown(self):
+        del self.upload
         del self.message
         del self.bot
         del self.engine
@@ -147,7 +165,8 @@ class ShellTests(unittest.TestCase):
 
         self.assertEqual(
             shell.commands,
-            ['*default', '*empty', 'echo', 'help', 'pass', 'sleep', 'version'])
+            ['*default', '*empty', '*upload',
+             'echo', 'help', 'pass', 'sleep', 'version'])
 
     def test_vocabulary(self):
 
@@ -156,7 +175,7 @@ class ShellTests(unittest.TestCase):
         shell = Shell(engine=self.engine)
         shell.load_default_commands()
 
-        self.assertEqual(len(shell.commands), 7)
+        self.assertEqual(len(shell.commands), 8)
         self.assertEqual(shell.line, None)
         self.assertEqual(shell.count, 0)
 
@@ -215,6 +234,15 @@ class ShellTests(unittest.TestCase):
             shell.engine.mouth.get().text,
             u'Available commands:\n'
             + u'help - Show commands and usage')
+        with self.assertRaises(Exception):
+            print(shell.engine.mouth.get_nowait())
+
+        shell.do('', received=self.upload)
+        self.assertEqual(shell.line, '')
+        self.assertEqual(shell.count, 9)
+        self.assertEqual(
+            shell.engine.mouth.get().text,
+            u'Thank you for the information shared!')
         with self.assertRaises(Exception):
             print(shell.engine.mouth.get_nowait())
 

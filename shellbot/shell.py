@@ -130,6 +130,7 @@ class Shell(object):
             'shellbot.commands.help',
             'shellbot.commands.noop',
             'shellbot.commands.sleep',
+            'shellbot.commands.upload',
             'shellbot.commands.version',
         ]
         self.load_commands(labels)

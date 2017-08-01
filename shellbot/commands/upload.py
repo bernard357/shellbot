@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -13,34 +15,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .audit import Audit
 from .base import Command
-from .close import Close
-from .default import Default
-from .echo import Echo
-from .empty import Empty
-from .help import Help
-from .input import Input
-from .noop import Noop
-from .sleep import Sleep
-from .step import Step
-from .upload import Upload
-from .version import Version
-from .update import Update
 
-__all__ = [
-    'Audit',
-    'Command',
-    'Close',
-    'Default',
-    'Echo',
-    'Empty',
-    'Input',
-    'Help',
-    'Noop',
-    'Sleep',
-    'Step',
-    'Upload',
-    'Version',
-    'Update',
-]
+
+class Upload(Command):
+    """
+    Handles a bare file upload
+    """
+
+    keyword = u'*upload'
+    information_message = u'Handle file upload'
+    is_hidden = True
+
+    feedback_message = u"Thank you for the information shared!"
+
+    def execute(self, bot, attachment, url, arguments=None, **kwargs):
+        """
+        Handles bare upload
+
+        :param bot: The bot for this execution
+        :type bot: Shellbot
+
+        :param attachment: External name of the uploaded file
+        :type attachment: str
+
+        :param url: The link to fetch actual content
+        :type url: str
+
+        :param arguments: The arguments for this command
+        :type arguments: str or ``None``
+
+        """
+        bot.say(self.feedback_message.format(attachment))
