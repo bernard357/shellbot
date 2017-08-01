@@ -30,7 +30,7 @@ class Drop(Command):
     information_message = u'Delete an item from the todo list'
     usage_message = u'drop [#<n>]'
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Deletes an item from the todo list
         """

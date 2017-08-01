@@ -31,7 +31,7 @@ class Blast(Command):
     information_message = u'Blast a planet and come back'
     usage_message = u'blast <destination>'
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Flights to a planet and comes back
         """

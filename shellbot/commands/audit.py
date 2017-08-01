@@ -70,7 +70,7 @@ class Audit(Command):
     off_duration = 60  # after this time off, back to auditing on
     temporary_off_message = u"Please note that auditing will restart after {}"
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Checks and changes audit status
 

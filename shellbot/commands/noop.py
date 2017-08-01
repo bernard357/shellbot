@@ -27,7 +27,7 @@ class Noop(Command):
     information_message = u'Do absolutely nothing'
     is_hidden = True
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Does absolutely nothing
 

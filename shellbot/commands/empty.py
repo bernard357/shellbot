@@ -27,7 +27,7 @@ class Empty(Command):
     information_message = u'Handle empty command'
     is_hidden = True
 
-    def execute(self, bot, *args):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Handles empty command
 

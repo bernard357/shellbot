@@ -30,7 +30,7 @@ class Todos(Command):
     information_message = u'List items to do'
     list_header = u"On the todo list:"
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Displays the list of items to do
         """

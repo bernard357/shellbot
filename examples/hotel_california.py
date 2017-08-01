@@ -76,7 +76,7 @@ class Open(Command):
     keyword = 'open'
     information_message = u"Open Hotel California"
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         if bot.channel.is_direct:
             bot.say('This is a private place, not an hotel')
         elif bot.recall('hotel_california.state', 'off') == 'on':
@@ -90,7 +90,7 @@ class Close(Command):
     keyword = 'close'
     information_message = u"Close Hotel California"
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         if bot.channel.is_direct:
             bot.say('This is a private place, not an hotel')
         elif bot.recall('hotel_california.state', 'off') == 'off':
@@ -104,7 +104,7 @@ class Hotel(Command):
     keyword = 'hotel'
     information_message = u"Get status of Hotel California"
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         if bot.channel.is_direct:
             bot.say('This is a private place, not an hotel')
         elif bot.recall('hotel_california.state', 'off') == 'off':

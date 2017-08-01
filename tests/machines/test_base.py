@@ -657,7 +657,7 @@ class MachineTests(unittest.TestCase):
 
         class MyMachine(Machine):
 
-            def execute(self, arguments):
+            def execute(self, arguments=None, **kwargs):
                 if arguments == 'ctl-c':
                     raise KeyboardInterrupt()
                 raise Exception('TEST')

@@ -29,7 +29,7 @@ class Input(Command):
     no_input_message = u'There is nothing to display'
     input_header =u'Input:'
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Displays input data
 

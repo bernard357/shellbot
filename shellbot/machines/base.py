@@ -601,7 +601,7 @@ class Machine(object):
         if message:
             self.step(event='inbound', message=message)
 
-    def execute(self, arguments):
+    def execute(self, arguments=None, **kwargs):
         """
         Processes data received from the chat
 
@@ -610,7 +610,7 @@ class Machine(object):
 
         This function can be used to feed the machine asynchronously
         """
-        self.step(event='input', arguments=arguments)
+        self.step(event='input', arguments=arguments, **kwargs)
 
     @property
     def is_running(self):

@@ -122,7 +122,7 @@ class Start(Command):
     in_direct = True
     in_group = False
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         if not bot.machine:
             bot.say(u"No state machine to start")
 

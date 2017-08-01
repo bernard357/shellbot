@@ -30,7 +30,7 @@ class Update(Command):
     no_input = u'There is nothing to update, input is empty'
     ok_msg = u'Update successfuly done'
 
-    def execute(self, bot, arguments):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Update input data
 
@@ -57,5 +57,3 @@ class Update(Command):
 
         bot.update('input', tokens[0], tokens[1])
         bot.say(self.ok_msg)
-
-

@@ -31,7 +31,7 @@ class Explore(Command):
     information_message = u'Explore a planet and come back'
     usage_message = u'explore <destination>'
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Explores a planet and comes back
         """

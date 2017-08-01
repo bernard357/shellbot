@@ -426,7 +426,7 @@ class Input(Machine):
 
         logging.info(u"Input receiver has been stopped")
 
-    def execute(self, arguments):
+    def execute(self, arguments=None, **kwargs):
         """
         Receives data from the chat
 
@@ -455,7 +455,7 @@ class Input(Machine):
             self.bot.update('input', self.key, arguments)
 
         # use the input in this instance as well
-        self.on_input(value=arguments)
+        self.on_input(value=arguments, **kwargs)
 
         # advertise subscribers
         if self.key:
@@ -605,7 +605,7 @@ class Input(Machine):
         logging.debug(u"- found '{}'".format(matched))
         return matched
 
-    def on_input(self, value):
+    def on_input(self, value, **kwargs):
         """
         Processes input data
 
@@ -623,6 +623,8 @@ class Input(Machine):
             machine = MyInput(...)
             machine.start()
 
+        The extra parameters wil be used in case of attachment with
+        the value.
         """
         pass
 

@@ -317,7 +317,7 @@ class InputTests(unittest.TestCase):
 
         class MyInput(Input):
 
-            def execute(self, arguments):
+            def execute(self, arguments=None, **kwargs):
                 if arguments == 'exception':
                     raise Exception('TEST')
                 if arguments == 'ctl-c':

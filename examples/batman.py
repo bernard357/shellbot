@@ -101,7 +101,7 @@ class Batcave(Command):
     keyword = 'cave'
     information_message = u"The Batcave is silent..."
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         if arguments:
             bot.say(u"The Batcave echoes, '{0}'".format(arguments))
         else:
@@ -113,7 +113,7 @@ class Batsignal(Command):
     information_message = u"NANA NANA NANA NANA"
     information_file = "https://upload.wikimedia.org/wikipedia/en/c/c6/Bat-signal_1989_film.jpg"
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         bot.say(self.information_message,
                 file=self.information_file)
 
@@ -123,7 +123,7 @@ class Batsuicide(Command):
     information_message = u"Go back to Hell"
     in_direct = False
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         bot.say(self.information_message)
         bot.dispose()
 

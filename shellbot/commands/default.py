@@ -38,7 +38,7 @@ class Default(Command):
     participants_message = u"Adding participants from '{}'"
     default_message = u"Sorry, I do not know how to handle '{}'"
 
-    def execute(self, bot, arguments):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Handles unmatched command
 

@@ -30,7 +30,7 @@ class Done(Command):
     information_message = u'Archive an item from the todo list'
     usage_message = u'done [#<n>]'
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Archives an item from the todo list
         """

@@ -30,7 +30,7 @@ class History(Command):
     information_message = u'List archived items'
     list_header = u"Items that have been archived:"
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Displays the list of completed items
         """

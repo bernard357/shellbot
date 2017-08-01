@@ -36,7 +36,7 @@ class Step(Command):
     keyword = u'step'
     information_message = u'Move process to next step'
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Moves underlying state machine to the next step
 

@@ -27,7 +27,7 @@ class Version(Command):
     information_message = u'Display software version'
     is_hidden = True
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Displays software version
 

@@ -31,7 +31,7 @@ class Planets(Command):
     information_message = u'List reachable planets'
     list_header = u"Available destinations:"
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Displays the list of available planets
         """

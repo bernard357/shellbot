@@ -29,7 +29,7 @@ class Next(Command):
     keyword = u'next'
     information_message = u'Display next item to do'
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Displays the next item to do
         """

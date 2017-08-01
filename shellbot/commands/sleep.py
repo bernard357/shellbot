@@ -32,7 +32,7 @@ class Sleep(Command):
 
     DEFAULT_DELAY = 1.0
 
-    def execute(self, bot, arguments):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Sleeps for a while
 

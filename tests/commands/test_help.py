@@ -147,7 +147,7 @@ class HelpTests(unittest.TestCase):
 
         class Custom(Command):
             keyword =  'custom'
-            def execute(self, bot, arguments):
+            def execute(self, bot, arguments=None, **kwargs):
                 bot.say("{}, really?".format(arguments))
 
         self.engine.load_command(Custom(self.engine))

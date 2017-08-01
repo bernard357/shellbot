@@ -28,7 +28,7 @@ class Help(Command):
     usage_message = u'help <command>'
     usage_template = u"usage: {}"
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Lists available commands and related usage information
 

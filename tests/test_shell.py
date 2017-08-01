@@ -213,7 +213,7 @@ class ShellTests(unittest.TestCase):
         from shellbot.commands.empty import Empty
 
         class Doc(Empty):
-            def execute(self, bot, *args):
+            def execute(self, bot, arguments=None, **kwargs):
                 bot.say("What'up Doc?")
 
         doc = Doc(self.engine)
@@ -250,7 +250,7 @@ class ShellTests(unittest.TestCase):
         from shellbot.commands.default import Default
 
         class Custom(Default):
-            def execute(self, bot, arguments):
+            def execute(self, bot, arguments=None, **kwargs):
                 bot.say("{}, really?".format(arguments))
 
         shell.load_command(Custom(self.engine))
@@ -279,7 +279,7 @@ class ShellTests(unittest.TestCase):
 
         class Custom(Command):
             keyword =  'custom'
-            def execute(self, bot, arguments):
+            def execute(self, bot, arguments=None, **kwargs):
                 bot.say("{}, really?".format(arguments))
 
         shell.load_command(Custom(self.engine))

@@ -31,7 +31,7 @@ class Close(Command):
 
     in_direct = False  # do not allow command to close a direct channel
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Closes the space
 

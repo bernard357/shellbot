@@ -27,7 +27,7 @@ class Echo(Command):
     information_message = u'Echo input string'
     is_hidden = True
 
-    def execute(self, bot, arguments):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Echoes input string
 

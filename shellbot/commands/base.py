@@ -49,7 +49,7 @@ class Command(object):
         """
         pass
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Executes this command
 

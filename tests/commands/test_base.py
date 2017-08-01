@@ -74,7 +74,7 @@ class BaseTests(unittest.TestCase):
             keyword = u'batcave'
             information_message = u"The Batcave is silent..."
 
-            def execute(self, bot, arguments=None):
+            def execute(self, bot, arguments=None, **kwargs):
                 if arguments:
                     bot.say(
                         u"The Batcave echoes, '{0}'".format(arguments))

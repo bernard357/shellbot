@@ -30,7 +30,7 @@ class Todo(Command):
     information_message = u'Append an item to the todo list, or change it'
     usage_message = u'todo [#n] <something to do>'
 
-    def execute(self, bot, arguments=None):
+    def execute(self, bot, arguments=None, **kwargs):
         """
         Creates or updates an item to do
         """
