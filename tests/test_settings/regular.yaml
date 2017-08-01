@@ -47,7 +47,7 @@ local:
 
     # the title of the local space handled by this bot
     #
-    title: Support room
+    title: Support channel
 
     # the title of the team associated with the room
     #
