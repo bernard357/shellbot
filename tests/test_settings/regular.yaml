@@ -27,9 +27,7 @@ lists:
 shell:
 
     commands:
-        - examples.steps.state
-        - examples.steps.next
-        - this.one.does.not.exist
+        - shellbot.commands.close
 
 # additional settings
 #
