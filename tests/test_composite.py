@@ -51,7 +51,7 @@ class CompositeTests(unittest.TestCase):
     def setUp(self):
         self.engine = MyEngine(context=my_context, ears=my_ears, mouth=my_mouth, space=my_space)
         self.engine.set('bot.id', "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg")
-        self.engine.shell.load_default_commands()
+        self.engine.configure()
 
         self.engine.listener.DEFER_DURATION = 0.0
 

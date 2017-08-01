@@ -45,6 +45,7 @@ class Help(Command):
 
         elif arguments in (None, ''):
             lines = []
+
             for key in self.engine.shell.commands:
                 command = self.engine.shell.command(key)
                 if command.is_hidden:
@@ -54,6 +55,13 @@ class Help(Command):
                     lines.append(u"{} - {}".format(
                         command.keyword,
                         command.information_message))
+
+            for name in self.engine.list_factory.list_commands():
+                item = self.engine.list_factory.get_list(name)
+                first = iter(item).next()
+                lines.append(u"{} - {}".format(
+                    name,
+                    u"add participants ({}, ...)".format(first)))
 
             if lines:
                 bot.say(

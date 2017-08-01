@@ -27,16 +27,17 @@ class MyBot(object):
         self.engine.mouth.put(Vibes(text, content, file))
 
 
-my_engine = Engine(mouth=Queue())
-my_bot = MyBot(engine=my_engine)
-
-
 class HelpTests(unittest.TestCase):
 
     def setUp(self):
-        my_engine.shell = Shell(engine=my_engine)
+        self.engine = Engine(mouth=Queue())
+        self.engine.configure()
+        self.engine.shell = Shell(engine=self.engine)
+        self.bot = MyBot(engine=self.engine)
 
     def tearDown(self):
+        del self.bot
+        del self.engine
         collected = gc.collect()
         if collected:
             logging.info("Garbage collector: collected %d objects." % (collected))
@@ -45,7 +46,7 @@ class HelpTests(unittest.TestCase):
 
         logging.info('***** init')
 
-        c = Help(my_engine)
+        c = Help(self.engine)
 
         self.assertEqual(c.keyword, u'help')
         self.assertEqual(
@@ -54,93 +55,93 @@ class HelpTests(unittest.TestCase):
         self.assertEqual(c.usage_message, u'help <command>')
         self.assertFalse(c.is_hidden)
 
-        c.execute(my_bot)
-        self.assertEqual(my_engine.mouth.get().text, u'No command has been found.')
+        c.execute(self.bot)
+        self.assertEqual(self.engine.mouth.get().text, u'No command has been found.')
         with self.assertRaises(Exception):
-            print(my_engine.mouth.get_nowait())
+            print(self.engine.mouth.get_nowait())
 
     def test_execute_no_usage(self):
 
         logging.info('***** execute/no_usage')
 
-        my_engine.shell.load_command(Command(keyword='hello',
+        self.engine.shell.load_command(Command(keyword='hello',
                                                information_message='world'))
 
-        c = Help(my_engine)
+        c = Help(self.engine)
 
-        c.execute(my_bot)
+        c.execute(self.bot)
         self.assertEqual(
-            my_engine.mouth.get().text,
+            self.engine.mouth.get().text,
             u'Available commands:\nhello - world')
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
-        c.execute(my_bot, 'hello')
+        c.execute(self.bot, 'hello')
         self.assertEqual(
-            my_engine.mouth.get().text,
+            self.engine.mouth.get().text,
             u'hello - world\nusage: hello')
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
-        c.execute(my_bot, '*unknown*')
+        c.execute(self.bot, '*unknown*')
         self.assertEqual(
-            my_engine.mouth.get().text,
+            self.engine.mouth.get().text,
             u'This command is unknown.')
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
     def test_help_true(self):
 
         logging.info('***** help/true')
 
-        my_engine.shell.load_command('shellbot.commands.help')
+        self.engine.shell.load_command('shellbot.commands.help')
 
-        c = Help(my_engine)
+        c = Help(self.engine)
 
-        c.execute(my_bot)
+        c.execute(self.bot)
         self.assertEqual(
-            my_engine.mouth.get().text,
+            self.engine.mouth.get().text,
             u'Available commands:\nhelp - Show commands and usage')
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
-        c.execute(my_bot, "help")
+        c.execute(self.bot, "help")
         self.assertEqual(
-            my_engine.mouth.get().text,
+            self.engine.mouth.get().text,
             u'help - Show commands and usage\nusage: help <command>')
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
     def test_help_false(self):
 
         logging.info('***** help/false')
 
-        c = Help(my_engine)
+        c = Help(self.engine)
 
-        c.execute(my_bot)
-        self.assertEqual(my_engine.mouth.get().text, u'No command has been found.')
+        c.execute(self.bot)
+        self.assertEqual(self.engine.mouth.get().text, u'No command has been found.')
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
-        c.execute(my_bot, u"*unknown*command*")
-        self.assertEqual(my_engine.mouth.get().text, u'No command has been found.')
+        c.execute(self.bot, u"*unknown*command*")
+        self.assertEqual(self.engine.mouth.get().text, u'No command has been found.')
         with self.assertRaises(Exception):
-            print(my_engine.mouth.get_nowait())
+            print(self.engine.mouth.get_nowait())
 
-        my_engine.load_command('shellbot.commands.help')
+        self.engine.load_command('shellbot.commands.help')
 
-        c.execute(my_bot, "*unknown*command*")
-        self.assertEqual(my_engine.mouth.get().text, u'This command is unknown.')
+        c.execute(self.bot, "*unknown*command*")
+        self.assertEqual(self.engine.mouth.get().text, u'This command is unknown.')
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
 
     def test_in_direct_or_in_group(self):
 
         logging.info('***** in_direct or in_group')
 
-        c = Help(my_engine)
+        c = Help(self.engine)
 
-        my_engine.load_command('shellbot.commands.help')
+        self.engine.load_command('shellbot.commands.help')
 
         from shellbot.commands.base import Command
 
@@ -149,70 +150,92 @@ class HelpTests(unittest.TestCase):
             def execute(self, bot, arguments):
                 bot.say("{}, really?".format(arguments))
 
-        my_engine.load_command(Custom(my_engine))
+        self.engine.load_command(Custom(self.engine))
 
-        my_bot.channel.is_direct = False  # group channel
+        self.bot.channel.is_direct = False  # group channel
 
-        my_engine.shell.command('custom').in_direct = False
-        my_engine.shell.command('custom').in_group = False
-        c.execute(my_bot, "custom")
+        self.engine.shell.command('custom').in_direct = False
+        self.engine.shell.command('custom').in_group = False
+        c.execute(self.bot, "custom")
         self.assertEqual(
-            my_engine.mouth.get().text,
+            self.engine.mouth.get().text,
             u'This command is unknown.')
 
-        my_engine.shell.command('custom').in_direct = True
-        my_engine.shell.command('custom').in_group = False
-        c.execute(my_bot, "custom")
+        self.engine.shell.command('custom').in_direct = True
+        self.engine.shell.command('custom').in_group = False
+        c.execute(self.bot, "custom")
         self.assertEqual(
-            my_engine.mouth.get().text,
+            self.engine.mouth.get().text,
             u'This command is unknown.')
 
-        my_engine.shell.command('custom').in_direct = False
-        my_engine.shell.command('custom').in_group = True
-        c.execute(my_bot, "custom")
+        self.engine.shell.command('custom').in_direct = False
+        self.engine.shell.command('custom').in_group = True
+        c.execute(self.bot, "custom")
         self.assertEqual(
-            my_engine.mouth.get().text,
+            self.engine.mouth.get().text,
             u'custom - None\nusage: custom')
 
-        my_engine.shell.command('custom').in_direct = True
-        my_engine.shell.command('custom').in_group = True
-        c.execute(my_bot, "custom")
+        self.engine.shell.command('custom').in_direct = True
+        self.engine.shell.command('custom').in_group = True
+        c.execute(self.bot, "custom")
         self.assertEqual(
-            my_engine.mouth.get().text,
+            self.engine.mouth.get().text,
             u'custom - None\nusage: custom')
 
-        my_bot.channel.is_direct = True  # direct channel
+        self.bot.channel.is_direct = True  # direct channel
 
-        my_engine.shell.command('custom').in_direct = False
-        my_engine.shell.command('custom').in_group = False
-        c.execute(my_bot, "custom")
+        self.engine.shell.command('custom').in_direct = False
+        self.engine.shell.command('custom').in_group = False
+        c.execute(self.bot, "custom")
         self.assertEqual(
-            my_engine.mouth.get().text,
+            self.engine.mouth.get().text,
             u'This command is unknown.')
 
-        my_engine.shell.command('custom').in_direct = True
-        my_engine.shell.command('custom').in_group = False
-        c.execute(my_bot, "custom")
+        self.engine.shell.command('custom').in_direct = True
+        self.engine.shell.command('custom').in_group = False
+        c.execute(self.bot, "custom")
         self.assertEqual(
-            my_engine.mouth.get().text,
+            self.engine.mouth.get().text,
             u'custom - None\nusage: custom')
 
-        my_engine.shell.command('custom').in_direct = False
-        my_engine.shell.command('custom').in_group = True
-        c.execute(my_bot, "custom")
+        self.engine.shell.command('custom').in_direct = False
+        self.engine.shell.command('custom').in_group = True
+        c.execute(self.bot, "custom")
         self.assertEqual(
-            my_engine.mouth.get().text,
+            self.engine.mouth.get().text,
             u'This command is unknown.')
 
-        my_engine.shell.command('custom').in_direct = True
-        my_engine.shell.command('custom').in_group = True
-        c.execute(my_bot, "custom")
+        self.engine.shell.command('custom').in_direct = True
+        self.engine.shell.command('custom').in_group = True
+        c.execute(self.bot, "custom")
         self.assertEqual(
-            my_engine.mouth.get().text,
+            self.engine.mouth.get().text,
             u'custom - None\nusage: custom')
 
         with self.assertRaises(Exception):
-            my_engine.mouth.get_nowait()
+            self.engine.mouth.get_nowait()
+
+    def test_named_lists(self):
+
+        logging.info('***** named lists')
+
+        c = Help(self.engine)
+
+        self.engine.configure_from_path(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            + '/test_settings/regular.yaml')
+
+        self.engine.shell = Shell(engine=self.engine)
+        self.engine.load_command('shellbot.commands.help')
+
+        c.execute(self.bot)
+
+        self.assertEqual(
+            self.engine.mouth.get().text,
+            u"Available commands:\nhelp - Show commands and usage\nSupportTeam - add participants (service.desk@acme.com, ...)")
+
+        with self.assertRaises(Exception):
+            self.engine.mouth.get_nowait()
 
 
 if __name__ == '__main__':

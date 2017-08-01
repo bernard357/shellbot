@@ -27,14 +27,13 @@ class MyBot(object):
         self.engine.mouth.put(Vibes(text, content, file))
 
 
-my_engine = Engine(mouth=Queue())
-my_bot = MyBot(engine=my_engine)
-
-
 class EmptyTests(unittest.TestCase):
 
     def setUp(self):
-        my_engine.shell = Shell(engine=my_engine)
+        self.engine = Engine(mouth=Queue())
+        self.engine.configure()
+        self.engine.shell = Shell(engine=self.engine)
+        self.bot = MyBot(engine=self.engine)
 
     def tearDown(self):
         collected = gc.collect()
@@ -46,7 +45,7 @@ class EmptyTests(unittest.TestCase):
 
         logging.info('***** init')
 
-        c = Empty(my_engine)
+        c = Empty(self.engine)
 
         self.assertEqual(c.keyword, u'*empty')
         self.assertEqual(c.information_message, u'Handle empty command')
@@ -57,24 +56,24 @@ class EmptyTests(unittest.TestCase):
 
         logging.info('***** execute')
 
-        my_engine.shell.load_command('shellbot.commands.help')
+        self.engine.shell.load_command('shellbot.commands.help')
 
-        c = Empty(my_engine)
+        c = Empty(self.engine)
 
-        c.execute(my_bot)
+        c.execute(self.bot)
         self.assertEqual(
-            my_engine.mouth.get().text,
+            self.engine.mouth.get().text,
             u'Available commands:\nhelp - Show commands and usage')
         with self.assertRaises(Exception):
-            print(my_engine.mouth.get_nowait())
+            print(self.engine.mouth.get_nowait())
 
-        c = Empty(my_engine)
-        my_engine.shell._commands = {}
-        c.execute(my_bot)
-        self.assertEqual(my_engine.mouth.get().text,
+        c = Empty(self.engine)
+        self.engine.shell._commands = {}
+        c.execute(self.bot)
+        self.assertEqual(self.engine.mouth.get().text,
                          u'No help command has been found.')
         with self.assertRaises(Exception):
-            print(my_engine.mouth.get_nowait())
+            print(self.engine.mouth.get_nowait())
 
 
 if __name__ == '__main__':
