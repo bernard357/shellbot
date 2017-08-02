@@ -287,6 +287,9 @@ class Shell(object):
         channel_id = received.channel_id if received else None
         bot = self.engine.get_bot(channel_id)
 
+        if bot.channel is None:
+            return
+            
         try:
             if verb in self._commands.keys():
                 command = self._commands[verb]
