@@ -41,7 +41,7 @@ class FakeFactory(object):
 my_01_message_from_bot_in_group = Message({
     "channel_id": "*id1",
     "content": "<p>Hello there!</p>",
-    "created": "2017-07-30T20:34:35.593Z",
+    "stamp": "2017-07-30T20:34:35.593Z",
     "files": ["http://hydra-a5.wbx2.com/MWU3LTg5MzgtZjU1MWY1ZTU1ZmE5LzA"],
     "from_id": "*shelly*id",
     "from_label": "shelly@sparkbot.io",
@@ -61,7 +61,7 @@ my_01_message_from_bot_in_group = Message({
 my_03_message_from_person_in_group = Message({
     "channel_id": "*id1",
     "content": "<p>shelly hello</p>",
-    "created": "2017-07-30T20:41:30.822Z",
+    "stamp": "2017-07-30T20:41:30.822Z",
     "from_id": "*foo*id",
     "from_label": "foo.bar@acme.com",
     "hook": "shellbot-audit",
@@ -81,7 +81,7 @@ my_03_message_from_person_in_group = Message({
 my_04_response_from_bot_in_group = Message({
     "channel_id": "*id1",
     "content": "Hello, World!",
-    "created": "2017-07-30T20:41:33.104Z",
+    "stamp": "2017-07-30T20:41:33.104Z",
     "from_id": "*shelly*id",
     "from_label": "shelly@sparkbot.io",
     "hook": "shellbot-audit",
@@ -99,7 +99,7 @@ my_04_response_from_bot_in_group = Message({
 my_05_message_out_of_scope_for_audit = Message({
     "channel_id": "*id2",
     "content": "sent in a channel where bot is not",
-    "created": "2017-07-30T20:47:18.865Z",
+    "stamp": "2017-07-30T20:47:18.865Z",
     "from_id": "*foo*id",
     "from_label": "foo.bar@acme.com",
     "hook": "shellbot-audit",

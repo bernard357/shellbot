@@ -558,6 +558,108 @@ class Space(object):
         assert person not in (None, '')
         raise NotImplementedError()
 
+    def list_messages(self,
+                      id=None,
+                      quantity=10,
+                      stop_id=None,
+                      up_to=None,
+                      with_attachment=False,
+                      **kwargs):
+        """
+        List messages
+
+        :param id: the unique id of an existing channel
+        :type id: str
+
+        :param quantity: maximum number of returned messages
+        :type quantity: positive integer
+
+        :param stop_id: stop on this message id, and do not include it
+        :type stop_id: str
+
+        :param up_to: stop on this date and time
+        :type up_to: str of ISO date and time
+
+        :param with_attachment: to get only messages with some attachments
+        :type with_attachment: True or False
+
+        :return: a list of Message objects
+
+        This function fetches messages from one channel, from newest to the
+        oldest. Compared to the bare ``walk_messages`` function, it brings
+        additional capabilities listed below:
+
+        * quantity - limit the maximum number of messages provided
+
+        * stop_id - get new messages since the latest we got
+
+        * up_to - get messages up a given date and time
+
+        * with_attachments - filter messages to retrieve attachments
+
+        Example::
+
+            for message in space.list_messages(id=channel_id):
+
+                do_something_with_message(message)
+
+                if message.url:
+                    do_something_with_attachment(message.url)
+
+        """
+        assert id not in (None, '')
+        assert quantity > 0
+        assert with_attachment in (True, False)
+
+        logging.info(u'Listing messages')
+
+        messages = []
+
+        scanned = 10 * quantity
+        for message in self.walk_messages(id=id, **kwargs):
+
+            if stop_id and message.id == stop_id:
+                logging.debug(u"- hit stop id")
+                break
+
+            if up_to and message.stamp < up_to:
+                logging.debug(u"- hit stamp limit")
+                break
+
+            if with_attachment and not message.url:
+                logging.debug(u"- no attachment in this message")
+                scanned -= 1
+                if scanned:
+                    continue
+                break
+
+            messages.append(message)
+            if len(messages) >= quantity:
+                break
+
+        if len(messages):
+            logging.info(u"- returning {} messages".format(len(messages)))
+
+        return messages
+
+    def walk_messages(self,
+                      id=None,
+                      **kwargs):
+        """
+        Walk messages
+
+        :param id: the unique id of an existing channel
+        :type id: str
+
+        :return: a iterator of Message objects
+
+        This function returns messages from a channel, from the newest to
+        the oldest.
+
+        This function should be implemented in sub-class
+        """
+        raise NotImplementedError
+
     def post_message(self,
                      id=None,
                      text=None,

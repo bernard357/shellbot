@@ -307,14 +307,21 @@ class SpaceTests(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.space.remove_participant(id='*id', person='alice@acme.com')
 
+    def test_walk_messages(self):
+
+        logging.info("*** walk_messages")
+
+        with self.assertRaises(NotImplementedError):
+            message = next(self.space.walk_messages(id='*id'))
+
     def test_post_message(self):
 
         logging.info("*** post_message")
 
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(AssertionError):  # missing id and person
             self.space.post_message(text="What's up, Doc?")
 
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(AssertionError): # too much: id and person
             self.space.post_message(id='1', person='2', text="What's up, Doc?")
 
         with self.assertRaises(NotImplementedError):

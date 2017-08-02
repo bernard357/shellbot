@@ -64,20 +64,19 @@ class MyInput(Input):
         On state machine stop
         """
 
-        self.bot.say(u"Switching to a group channel")
+        self.bot.say(u"Switching to a group channel:")
 
         logging.debug(u"- setting lock")
         self.bot.engine.set('general.lock', 'on')
 
         # create a group channel from the API
         title = 'Follow-up in group room #{}'.format(self.bot.store.increment('group.count'))
-        logging.debug(u"- creating channel '{}''".format(title))
+        self.bot.say(u"- creating channel '{}'...".format(title))
         team_title = 'shellbot environment'
         channel = self.bot.space.create(title=title,
                                         ex_team=team_title)
 
-        # push content to the store of the new channel
-        logging.debug(u"- pushing initial data for bot store")
+        self.bot.say(u"- pushing input data to the group channel...")
         label = "store.{}".format(channel.id)
         self.bot.engine.set(
             label,
@@ -85,7 +84,25 @@ class MyInput(Input):
              'input': self.bot.recall('input')},
         )
 
-        # add participants, from current channel and from settings
+        self.bot.say(u"- replicating documents to the group channel...")
+        counter = 0
+        for message in self.bot.space.list_messages(id=self.bot.id,
+                                                    quantity=1,
+                                                    with_attachment=True):
+            if not counter:
+                self.bot.space.post_message(channel.id,
+                                            text="Documents gathered so far:")
+            counter += 1
+            self.bot.say(u"- replicating document #{}".format(counter))
+
+            name = self.bot.space.name_attachment(message.url)
+            logging.debug(u"- attachment: {}".format(name))
+            downloaded = self.bot.space.download_attachment(message.url)
+            self.bot.space.post_message(id=channel.id,
+                                        text=name,
+                                        file=downloaded)
+
+        self.bot.say(u"- adding participants to the group channel...")
         participants = self.bot.space.list_participants(self.bot.id)
 
         for person in self.bot.space.get('participants', []):
@@ -96,18 +113,21 @@ class MyInput(Input):
         logging.debug(u"- releasing lock")
         self.bot.engine.set('general.lock', 'off')
 
+        self.bot.say(u"- done")
+        self.bot.say(u"Please go to the new channel for group interactions. Come back here and type ```start`` for a new sequence.")
+
 
 class MyMachineFactory(MachineFactory):
 
     def get_machine_for_direct_channel(self, bot):
 
         return MyInput(bot=bot,
-                     question="PO number please?",
-                     mask="9999A",
-                     on_retry="PO number should have 4 digits and a letter",
-                     on_answer="Ok, PO number has been noted: {}",
-                     on_cancel="Ok, forget about the PO number",
-                     key='order.id')
+                       question="PO number please?",
+                       mask="9999A",
+                       on_retry="PO number should have 4 digits and a letter",
+                       on_answer="Ok, PO number has been noted: {}",
+                       on_cancel="Ok, forget about the PO number",
+                       key='order.id')
 
     def get_machine_for_group_channel(self, bot):
         return None
@@ -133,7 +153,9 @@ class Start(Command):
 # create a bot and configure it
 #
 engine = Engine(type='spark',
-                commands=['shellbot.commands.input', Start()],
+                commands=['shellbot.commands.input',
+                          'shellbot.commands.close',
+                          Start()],
                 machine_factory=MyMachineFactory())
 
 os.environ['CHAT_ROOM_TITLE'] = '*dummy'

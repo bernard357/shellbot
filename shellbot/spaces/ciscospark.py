@@ -630,6 +630,24 @@ class SparkSpace(Space):
 
         do_it()
 
+    def walk_messages(self,
+                      id=None,
+                      **kwargs):
+        """
+        Walk messages from a Cisco Spark room
+
+        :param id: the unique id of an existing room
+        :type id: str
+
+        :return: an iterator of Message objects
+
+        """
+        assert self.api is not None  # connect() is prerequisite
+
+        for item in self.api.messages.list(roomId=id):
+            item._json['hook'] = 'shellbot-messages'
+            yield self.on_message(item._json)
+
     def post_message(self,
                      id=None,
                      text=None,
@@ -929,15 +947,17 @@ class SparkSpace(Space):
             item._json['hook'] = 'pull'
             self.on_message(item._json, self.ears)
 
-    def on_message(self, item, queue):
+    def on_message(self, item, queue=None):
         """
         Normalizes message for the listener
 
         :param item: attributes of the inbound message
         :type item: dict
 
-        :param queue: the processing queue
+        :param queue: the processing queue (optional)
         :type queue: Queue
+
+        :return: a Message
 
         This function prepares a Message and push it to the provided queue.
 
@@ -962,6 +982,7 @@ class SparkSpace(Space):
         message.mentioned_ids = message.get('mentionedPeople', [])
         message.channel_id = message.get('roomId')
         message.stamp = message.get('created')
+
         files = item.get('files', [])
         if files:
             url = files[0]
@@ -974,8 +995,11 @@ class SparkSpace(Space):
 
             message.attachment = self.name_attachment(url, token=token)
 
-        logging.debug(u"- putting message to queue")
-        queue.put(str(message))
+        if queue:
+            logging.debug(u"- putting message to queue")
+            queue.put(str(message))
+
+        return message
 
     def download_attachment(self, url, token=None):
         """
@@ -1042,14 +1066,14 @@ class SparkSpace(Space):
         logging.debug(u"- length: {}".format(len(response.content)))
         return response.content
 
-    def on_join(self, item, queue):
+    def on_join(self, item, queue=None):
         """
         Normalizes message for the listener
 
         :param item: attributes of the inbound message
         :type item: dict
 
-        :param queue: the processing queue
+        :param queue: the processing queue (optional)
         :type queue: Queue
 
         Example item received on memberships:create::
@@ -1082,17 +1106,20 @@ class SparkSpace(Space):
         join.channel_id = join.get('roomId')
         join.stamp = join.get('created')
 
-        logging.debug(u"- putting join to queue")
-        queue.put(str(join))
+        if queue:
+            logging.debug(u"- putting join to queue")
+            queue.put(str(join))
 
-    def on_leave(self, item, queue):
+        return join
+
+    def on_leave(self, item, queue=None):
         """
         Normalizes message for the listener
 
         :param item: attributes of the inbound message
         :type item: dict
 
-        :param queue: the processing queue
+        :param queue: the processing queue (optional)
         :type queue: Queue
 
         Example item received on memberships:delete::
@@ -1125,8 +1152,11 @@ class SparkSpace(Space):
         leave.channel_id = leave.get('roomId')
         leave.stamp = leave.get('created')
 
-        logging.debug(u"- putting leave to queue")
-        queue.put(str(leave))
+        if queue:
+            logging.debug(u"- putting leave to queue")
+            queue.put(str(leave))
+
+        return leave
 
     def _to_channel(self, room):
         """

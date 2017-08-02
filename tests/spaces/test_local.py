@@ -231,6 +231,13 @@ class LocalSpaceTests(unittest.TestCase):
         self.space.remove_participant(id='*id', person='bob@acme.com')
         self.assertEqual(self.space.participants, [])
 
+    def test_walk_messages(self):
+
+        logging.info("*** walk_messages")
+
+        messages = [x for x in self.space.walk_messages(id='*id')]
+        self.assertEqual(messages, [])
+
     def test_post_message(self):
 
         logging.info("***** post_message")

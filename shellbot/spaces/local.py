@@ -289,6 +289,23 @@ class LocalSpace(Space):
         assert person not in (None, '')
         self.participants.remove(person)
 
+    def walk_messages(self,
+                      id=None,
+                      **kwargs):
+        """
+        Walk messages
+
+        :param id: the unique id of an existing channel
+        :type id: str
+
+        :return: a iterator of Message objects
+
+        This function returns messages from a channel, from the newest to
+        the oldest.
+
+        """
+        return iter([])
+
     def post_message(self,
                      id=None,
                      text=None,
