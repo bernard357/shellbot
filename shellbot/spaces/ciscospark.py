@@ -946,6 +946,7 @@ class SparkSpace(Space):
         * ``is_direct`` if the message is coming from 1:1 room
         * ``mentioned_ids`` is a copy of ``mentionedPeople``
         * ``channel_id`` is a copy of ``roomId``
+        * ``stamp`` is a copy of ``created``
 
         """
         message = Message(item.copy())
@@ -955,7 +956,7 @@ class SparkSpace(Space):
         message.is_direct = True if message.get('roomType') == 'direct' else False
         message.mentioned_ids = message.get('mentionedPeople', [])
         message.channel_id = message.get('roomId')
-
+        message.stamp = message.get('created')
         files = item.get('files', [])
         if files:
             url = files[0]
@@ -1066,6 +1067,7 @@ class SparkSpace(Space):
         * ``actor_id`` is a copy of ``personId``
         * ``actor_address`` is a copy of ``personEmail``
         * ``actor_label`` is a copy of ``personDisplayName``
+        * ``stamp`` is a copy of ``created``
 
         """
         join = Join(item.copy())
@@ -1073,6 +1075,7 @@ class SparkSpace(Space):
         join.actor_address = join.get('personEmail')
         join.actor_label = join.get('personDisplayName')
         join.channel_id = join.get('roomId')
+        join.stamp = join.get('created')
 
         logging.debug(u"- putting join to queue")
         queue.put(str(join))
@@ -1107,6 +1110,7 @@ class SparkSpace(Space):
         * ``actor_id`` is a copy of ``personId``
         * ``actor_address`` is a copy of ``personEmail``
         * ``actor_label`` is a copy of ``personDisplayName``
+        * ``stamp`` is a copy of ``created``
 
         """
         leave = Leave(item.copy())
@@ -1114,6 +1118,7 @@ class SparkSpace(Space):
         leave.actor_address = leave.get('personEmail')
         leave.actor_label = leave.get('personDisplayName')
         leave.channel_id = leave.get('roomId')
+        leave.stamp = leave.get('created')
 
         logging.debug(u"- putting leave to queue")
         queue.put(str(leave))

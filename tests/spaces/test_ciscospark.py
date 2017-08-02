@@ -67,7 +67,7 @@ class FakeChannel(object):
 class FakeMessage(Fake):
     id = '*123'
     message = '*message'
-    _json = {'text': '*message'}
+    _json = {'text': '*message', 'created': "2017-07-19T05:29:23.962Z"}
 
 
 class FakeBot(Fake):
@@ -660,6 +660,8 @@ class SparkSpaceTests(unittest.TestCase):
                           'from_id': None,
                           'from_label': None,
                           'hook': 'shellbot-messages',
+                          'stamp': '2017-07-19T05:29:23.962Z',
+                          'created': '2017-07-19T05:29:23.962Z',
                           'channel_id': None,
                           'type': 'message',
                           'is_direct': False,
@@ -704,6 +706,8 @@ class SparkSpaceTests(unittest.TestCase):
                           'from_id': None,
                           'from_label': None,
                           'hook': 'shellbot-audit',
+                          'stamp': '2017-07-19T05:29:23.962Z',
+                          'created': '2017-07-19T05:29:23.962Z',
                           'channel_id': None,
                           'type': 'message',
                           'is_direct': False,
@@ -740,6 +744,8 @@ class SparkSpaceTests(unittest.TestCase):
                           'from_id': None,
                           'from_label': None,
                           'hook': 'pull',
+                          'stamp': '2017-07-19T05:29:23.962Z',
+                          'created': '2017-07-19T05:29:23.962Z',
                           'channel_id': None,
                           'type': 'message',
                           'is_direct': False,
@@ -771,6 +777,7 @@ class SparkSpaceTests(unittest.TestCase):
         message.update({'is_direct': False})
         message.update({"mentioned_ids": ['*matt*id', '*julie*id']})
         message.update({"channel_id": '*id1'})
+        message.update({"stamp": '2015-10-18T14:26:16+00:00'})
         self.maxDiff = None
         self.assertEqual(yaml.safe_load(self.ears.get()), message)
 
@@ -783,6 +790,7 @@ class SparkSpaceTests(unittest.TestCase):
         message.update({'is_direct': True})
         message.update({"mentioned_ids": []})
         message.update({"channel_id": '*direct*id'})
+        message.update({"stamp": '2017-07-22T16:49:22.008Z'})
         self.maxDiff = None
         self.assertEqual(yaml.safe_load(self.ears.get()), message)
 
@@ -872,6 +880,7 @@ class SparkSpaceTests(unittest.TestCase):
         item.update({"actor_address": 'foo.bar@acme.com'})
         item.update({"actor_label": 'Foo Bar'})
         item.update({"channel_id": 'Y2lzY29zcGFyazovL3VzL1JP3LTk5MDAtMDU5MDI2YjBiNDUz'})
+        item.update({"stamp": '2017-05-31T21:25:30.424Z'})
         self.maxDiff = None
         self.assertEqual(yaml.safe_load(self.ears.get()), item)
 
@@ -886,6 +895,7 @@ class SparkSpaceTests(unittest.TestCase):
         item.update({"actor_address": 'foo.bar@acme.com'})
         item.update({"actor_label": 'Foo Bar'})
         item.update({"channel_id": 'Y2lzY29zcGFyazovL3VzL1JP3LTk5MDAtMDU5MDI2YjBiNDUz'})
+        item.update({"stamp": '2017-05-31T21:25:30.424Z'})
         self.maxDiff = None
         self.assertEqual(yaml.safe_load(self.ears.get()), item)
 
