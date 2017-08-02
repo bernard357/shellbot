@@ -531,13 +531,18 @@ class SparkSpace(Space):
 
         logging.info(u"Looking for Cisco Spark team '{}'".format(name))
 
-        for team in self.api.teams.list():
-            if name == team.name:
-                logging.info(u"- found it")
-                return team
+        @retry(u"Unable to list teams", silent=True)
+        def do_it():
 
-        logging.warning(u"- not found")
-        return None
+            for team in self.api.teams.list():
+
+                if name == team.name:
+                    logging.info(u"- found team")
+                    return team
+
+            logging.info(u"- team not found")
+
+        return do_it()
 
     def list_participants(self, id):
         """
