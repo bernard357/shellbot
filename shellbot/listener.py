@@ -134,7 +134,8 @@ class Listener(Process):
         elif time.time() - self.engine.get('vacuum.stamp') > 5.0:
             self.engine.set('vacuum.stamp', time.time())
 
-            id = random.choice(self.engine.bots.keys())
+            if self.engine.bots:
+                id = random.choice(self.engine.bots.keys())
             # if id:
             #     logging.debug(u"- to vacuum: {}".format(id))
 
