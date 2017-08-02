@@ -312,6 +312,18 @@ class Message(Event):
         """
         return self.attributes.get('url')
 
+    @property
+    def stamp(self):
+        """
+        Returns the date and time of this event in ISO format
+
+        :rtype: str or None
+
+        This attribute allows listener to limit the horizon of messages
+        fetched from a space back-end.
+        """
+        return self.attributes.get('stamp')
+
 
 class Join(Event):
     """
@@ -363,6 +375,16 @@ class Join(Event):
         """
         return self.__getattr__('channel_id')
 
+    @property
+    def stamp(self):
+        """
+        Returns the date and time of this event in ISO format
+
+        :rtype: str or None
+
+        """
+        return self.attributes.get('stamp')
+
 
 class Leave(Event):
     """
@@ -413,6 +435,16 @@ class Leave(Event):
 
         """
         return self.__getattr__('channel_id')
+
+    @property
+    def stamp(self):
+        """
+        Returns the date and time of this event in ISO format
+
+        :rtype: str or None
+
+        """
+        return self.attributes.get('stamp')
 
 
 class EventFactory(object):

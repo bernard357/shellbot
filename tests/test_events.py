@@ -156,6 +156,7 @@ class EventsTests(unittest.TestCase):
         self.assertEqual(event.is_direct, False)
         self.assertEqual(event.mentioned_ids, [])
         self.assertEqual(event.channel_id, None)
+        self.assertEqual(event.stamp, None)
 
     def test_message(self):
 
@@ -164,7 +165,7 @@ class EventsTests(unittest.TestCase):
               "channel_id" : "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0",
               "text" : "/plumby use containers/docker",
               "content" : "<p>/plumby use containers/docker</p>",
-              "created" : "2015-10-18T14:26:16+00:00",
+              "stamp" : "2015-10-18T14:26:16+00:00",
               "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
               "from_label" : "Masked Cucumber",
               "is_direct" : True,
@@ -173,10 +174,14 @@ class EventsTests(unittest.TestCase):
 
         event = Message(item)
         self.assertEqual(event.type, 'message')
+        self.assertEqual(event.channel_id,
+                         "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0")
         self.assertEqual(event.text,
                          "/plumby use containers/docker")
         self.assertEqual(event.content,
                          "<p>/plumby use containers/docker</p>")
+        self.assertEqual(event.stamp,
+                         "2015-10-18T14:26:16+00:00")
         self.assertEqual(event.from_id,
                          "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY")
         self.assertEqual(event.from_label,
@@ -184,8 +189,8 @@ class EventsTests(unittest.TestCase):
         self.assertEqual(event.is_direct, True)
         self.assertEqual(event.mentioned_ids,
                          ["Y2lzYDMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"])
-        self.assertEqual(event.channel_id,
-                         "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0")
+        self.assertEqual(event.url, None)
+        self.assertEqual(event.attachment, None)
 
         item.update({'type': 'message'})
         self.assertEqual(json.loads(str(event)), item)
@@ -195,7 +200,7 @@ class EventsTests(unittest.TestCase):
               "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
               "channel_id" : "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0",
               "text" : "/plumby use containers/docker",
-              "created" : "2015-10-18T14:26:16+00:00",
+              "stamp" : "2015-10-18T14:26:16+00:00",
               "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
               "from_label" : "Masked Cucumber",
               "mentioned_ids" : ["Y2lzYDMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"],
@@ -210,7 +215,7 @@ class EventsTests(unittest.TestCase):
               "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
               "channel_id" : "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0",
               "text" : "/plumby use containers/docker",
-              "created" : "2015-10-18T14:26:16+00:00",
+              "stamp" : "2015-10-18T14:26:16+00:00",
               "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
               "from_label" : "Masked Cucumber",
               "is_direct" : True,
@@ -252,7 +257,7 @@ class EventsTests(unittest.TestCase):
               "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
               "channel_id" : "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0",
               "text" : "/plumby use containers/docker",
-              "created" : "2015-10-18T14:26:16+00:00",
+              "stamp" : "2015-10-18T14:26:16+00:00",
               "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
               "from_label" : "Masked Cucumber",
               "is_direct" : True,
@@ -270,7 +275,7 @@ class EventsTests(unittest.TestCase):
               "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
               "channel_id" : "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0",
               "text" : "/plumby use containers/docker",
-              "created" : "2015-10-18T14:26:16+00:00",
+              "stamp" : "2015-10-18T14:26:16+00:00",
               "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
               "from_label" : "Masked Cucumber",
               "is_direct" : True,
@@ -288,7 +293,7 @@ class EventsTests(unittest.TestCase):
               "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
               "channel_id" : "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0",
               "text" : "/plumby use containers/docker",
-              "created" : "2015-10-18T14:26:16+00:00",
+              "stamp" : "2015-10-18T14:26:16+00:00",
               "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
               "from_label" : "Masked Cucumber",
               "is_direct" : True,
@@ -305,7 +310,7 @@ class EventsTests(unittest.TestCase):
               "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
               "channel_id" : "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0",
               "text" : "/plumby use containers/docker",
-              "created" : "2015-10-18T14:26:16+00:00",
+              "stamp" : "2015-10-18T14:26:16+00:00",
               "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
               "from_label" : "Masked Cucumber",
               "is_direct" : True,
@@ -323,7 +328,7 @@ class EventsTests(unittest.TestCase):
               "id" : "Z2lzY29zcGFyazovL3VzDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk",
               "channel_id" : "Y2lzY29zcGFyazovNmMS0zYLTkxNDctZjE0YmIwYzRkMTU0",
               "text" : "/plumby use containers/docker",
-              "created" : "2015-10-18T14:26:16+00:00",
+              "stamp" : "2015-10-18T14:26:16+00:00",
               "from_id" : "Y2lzY29zcGFyjOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY",
               "from_label" : "Masked Cucumber",
               "is_direct" : True,
