@@ -301,7 +301,6 @@ class Publisher(Process):
 
         """
         address=self.context.get('bus.address')
-        logging.debug(u"Publishing at {}".format(address))
 
         if not self.socket:
             zmq_context = zmq.Context.instance()
@@ -312,6 +311,7 @@ class Publisher(Process):
         time.sleep(self.DEFER_DURATION)  # allow subscribers to connect
 
         logging.info(u"Starting publisher")
+        logging.debug(u"- publishing at {}".format(address))
 
         try:
             self.context.set('publisher.counter', 0)
@@ -337,7 +337,7 @@ class Publisher(Process):
 
         self.socket.close()
         self.socket = None
-        
+
         logging.info("Publisher has been stopped")
 
     def process(self, item):
