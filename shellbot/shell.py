@@ -247,9 +247,9 @@ class Shell(object):
           then the command ``*default`` is used instead, and arguments provided
           are the full line ``hello How are you doing?``.
 
-        - ``attachment`` - When a file has been uploaded, this attributes
+        - ``attachment`` - When a file has been uploaded, this attribute
           provides its external name, e.g., ``picture024.png``. This can be used
-          in the executed command, if you keep n mind that the same name can be
+          in the executed command, if you keep in mind that the same name can be
           used multiple times in a conversation.
 
         - ``url`` - When a file has been uploaded, this is the handle by which
@@ -289,7 +289,7 @@ class Shell(object):
 
         if bot.channel is None:
             return
-            
+
         try:
             if verb in self._commands.keys():
                 command = self._commands[verb]
