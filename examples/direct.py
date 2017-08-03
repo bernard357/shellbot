@@ -53,9 +53,6 @@ from shellbot.commands import Command
 from shellbot.machines import MachineFactory, Input
 Context.set_logger()
 
-#
-#
-#
 
 class MyInput(Input):
 
@@ -67,7 +64,7 @@ class MyInput(Input):
         self.bot.say(u"Switching to a group channel:")
 
         logging.debug(u"- setting lock")
-        self.bot.engine.set('general.lock', 'on')
+        self.bot.engine.set('listener.lock', 'on')
 
         # create a group channel from the API
         title = 'Follow-up in group room #{}'.format(self.bot.store.increment('group.count'))
@@ -110,11 +107,14 @@ class MyInput(Input):
 
         self.bot.space.add_participants(id=channel.id, persons=participants)
 
+        self.bot.space.post_message(channel.id,
+                                    content="Use command ``input`` to view data gathered so far.")
+
         logging.debug(u"- releasing lock")
-        self.bot.engine.set('general.lock', 'off')
+        self.bot.engine.set('listener.lock', 'off')
 
         self.bot.say(u"- done")
-        self.bot.say(u"Please go to the new channel for group interactions. Come back here and type ```start`` for a new sequence.")
+        self.bot.say(content=u"Please go to the new channel for group interactions. Come back here and type ``start`` for a new sequence.")
 
 
 class MyMachineFactory(MachineFactory):
@@ -135,7 +135,8 @@ class MyMachineFactory(MachineFactory):
     def get_default_machine(self, bot):
         return None
 
-
+# a command to restart the state machine
+#
 class Start(Command):
     keyword = 'start'
     information_message = u"Start a new sequence"
@@ -149,7 +150,6 @@ class Start(Command):
         elif not bot.machine.restart():
             bot.say(u"Cannot restart the state machine")
 
-#
 # create a bot and configure it
 #
 engine = Engine(type='spark',
@@ -161,56 +161,6 @@ engine = Engine(type='spark',
 os.environ['CHAT_ROOM_TITLE'] = '*dummy'
 engine.configure()
 
-# add some event handler
-#
-class Handler(object):
-
-    def __init__(self, engine):
-        self.engine = engine
-
-    def on_enter(self, received):
-
-        while self.engine.get('general.lock', 'off') == 'on':
-            time.sleep(0.001)
-
-#        print("ENTER: {}".format(received))
-        bot = self.engine.get_bot(received.channel_id)
-
-        if bot.channel.is_direct:
-            bot.say("Please give me your attention please")
-
-        else:
-            bot.say(u"Happy to enter '{}'".format(bot.title))
-
-    def on_exit(self, received):
-#        print("EXIT: {}".format(received))
-        logging.info(u"Sad to exit")
-
-    def on_join(self, received):
-
-        while self.engine.get('general.lock', 'off') == 'on':
-            time.sleep(0.001)
-
-#        print("JOIN: {}".format(received))
-        bot = self.engine.get_bot(received.channel_id)
-
-        bot.say(u"Welcome to '{}' in '{}'".format(
-            received.actor_label, bot.title))
-
-    def on_leave(self, received):
-#        print("LEAVE: {}".format(received))
-        bot = self.engine.get_bot(received.channel_id)
-        bot.say(u"Bye bye '{}', we will miss you in '{}'".format(
-            received.actor_label, bot.title))
-
-
-handler = Handler(engine)
-engine.register('enter', handler)
-engine.register('exit', handler)
-engine.register('join', handler)
-engine.register('leave', handler)
-
-#
 # run the server
 #
 engine.run()
