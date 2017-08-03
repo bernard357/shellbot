@@ -16,6 +16,7 @@
 # limitations under the License.
 
 from bottle import request
+from functools import wraps
 import itertools
 import logging
 from multiprocessing import Process, Queue
@@ -96,6 +97,37 @@ def retry(give_up="Unable to request Cisco Spark API",
                         time.sleep(delay)
 
         return wrapped
+    return wrapper
+
+
+def no_exception(function, return_value=None):
+    """
+    Stops the propagation of exceptions
+
+    :param return_value: Returned by the decorated function on exception
+
+    This decorator is a convenient approach for silently discarding
+    exceptions.
+
+    #wip -- this should be moved in a general-purpose module of shellbot
+
+    Example::
+
+        @no_exception(return_value=[])
+        def list_items():
+            ...  # if an exception is raised here, an empty list is returned
+
+    """
+    def wrapper(*args, **kwargs):
+
+        wraps(function)
+        try:
+            return function(*args, **kwargs)
+
+        except Exception as feedback:
+            logging.debug(feedback)
+            return return_value
+
     return wrapper
 
 
@@ -580,6 +612,7 @@ class SparkSpace(Space):
 
         return do_it()
 
+    @no_exception
     def add_participant(self, id, person, is_moderator=False):
         """
         Adds one participant
@@ -607,6 +640,7 @@ class SparkSpace(Space):
 
         do_it()
 
+    @no_exception
     def remove_participant(self, id, person):
         """
         Removes a participant
@@ -746,7 +780,7 @@ class SparkSpace(Space):
           event = created,
           registered with bot token
 
-        - Messages are sent, maybe with some files:
+        - Messages sent, maybe with some files, for audit purpose:
           webhook name = shellbot-audit
           resource = messages,
           event = created,

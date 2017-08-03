@@ -507,10 +507,12 @@ class Space(object):
         parameter ``is_moderator`` into account. The default bahaviour is to
         discard it, as if the parameter had the value ``False``.
 
-        This function should be implemented in sub-class.
+        This function should be implemented in sub-class. It should not
+        raise exceptions, since this would kill ``list_participants()``.
 
         Example::
 
+            @no_exception
             def add_participant(self, id, person):
                 self.api.memberships.create(id=id, person=person)
 
@@ -546,10 +548,12 @@ class Space(object):
         :param person: e-mail address of the person to delete
         :type person: str
 
-        This function should be implemented in sub-class.
+        This function should be implemented in sub-class. It should not
+        raise exceptions, since this would kill ``remove_participants()``.
 
         Example::
 
+            @no_exception
             def remove_participant(self, id, person):
                 self.api.memberships.delete(id=id, person=person)
 
