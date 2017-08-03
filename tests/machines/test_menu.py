@@ -31,7 +31,7 @@ class FakeBot(object):
         self.engine = engine
         self.store = store
 
-    def say(self, text, content=None, file=None):
+    def say(self, text=None, content=None, file=None):
         self.engine.mouth.put(Vibes(text, content, file, self.id))
 
     def update(self, key, label, item):
@@ -169,7 +169,7 @@ class MenuTests(unittest.TestCase):
             def on_init(self):
                 self.said = []
 
-            def say(self, message, content=None, file=None):
+            def say(self, message=None, content=None, file=None):
                 if message:
                     self.said.append(message)
                 if content:
@@ -299,13 +299,16 @@ class MenuTests(unittest.TestCase):
 
         class MyBot(FakeBot):
 
-            def say(self, message, **kwargs):
+            def say(self, text=None, content=None, **kwargs):
+                message = content if not text else text
                 self.engine.set('said', message)
 
         self.bot = MyBot(engine=self.engine)
         self.bot.subscriber = self.engine.bus.subscribe('*id')
         self.bot.publisher = self.engine.publisher
 
+        # ask as text
+        #
         machine = Menu(bot=self.bot,
                        question="What's up, Doc?",
                        options=["option 1", "option 2"])
@@ -315,6 +318,34 @@ class MenuTests(unittest.TestCase):
         self.assertEqual(
             self.engine.get('said'),
             "What's up, Doc?\n1. option 1\n2. option 2\n")
+        machine.listen.assert_called_with()
+
+        # ask using Markdown
+        #
+        machine = Menu(bot=self.bot,
+                       question="Where do you want to go?",
+                       options=["I want to go North", "Actually, South would be better"],
+                       question_content="**Where do you want to go?**\n1. I want to go _North_\n2. Actually, _South_ would be better")
+        machine.listen = mock.Mock()
+
+        machine.ask()
+        self.assertEqual(
+            self.engine.get('said'),
+            '**Where do you want to go?**\n1. I want to go _North_\n2. Actually, _South_ would be better')
+        machine.listen.assert_called_with()
+
+        # ask using HTML
+        #
+        machine = Menu(bot=self.bot,
+                       question="Where do you want to go?",
+                       options=["I want to go North", "Actually, South would be better"],
+                       question_content="<h3>Where do you want to go?</h3><ol><li>I want to go North</li><li>Actually, South would be better</li></ol>")
+        machine.listen = mock.Mock()
+
+        machine.ask()
+        self.assertEqual(
+            self.engine.get('said'),
+            '<h3>Where do you want to go?</h3><ol><li>I want to go North</li><li>Actually, South would be better</li></ol>')
         machine.listen.assert_called_with()
 
     def test_listen(self):

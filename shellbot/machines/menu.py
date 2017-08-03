@@ -76,14 +76,14 @@ class Menu(Input):
         value = bot.recall('input')['my_field']
 
     The most straightforward way to process captured data in real-time
-    is to subclass ``Input``, like in the following example::
+    is to subclass ``Menu``, like in the following example::
 
-        class MyInput(Input):
+        class MyMenu(Menu):
 
             def on_input(self, value):
                 do_something_with(value)
 
-        machine = MyInput(...)
+        machine = MyMenu(...)
         machine.start()
 
 
@@ -177,8 +177,7 @@ class Menu(Input):
         content = self.question_content if self.question_content else None
 
         if content:
-            self.bot.say(' ',
-                         content=content)
+            self.bot.say(content=content)
 
         self.start_time = time.time()
         self.listen()
