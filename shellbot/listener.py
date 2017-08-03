@@ -100,6 +100,10 @@ class Listener(Process):
             self.engine.set('listener.counter', 0)
             while self.engine.get('general.switch', 'on') == 'on':
 
+                if self.engine.get('listener.lock', 'off') == 'on':
+                    time.sleep(0.001)
+                    continue
+
                 if self.engine.ears.empty():
                     self.idle()
                     time.sleep(self.EMPTY_DELAY)
