@@ -190,4 +190,3 @@ class Audit(Command):
         if self.engine.get(label, 'off') == 'off':
             logging.debug(u"- restarting audit")
             self.audit_on(bot)
-            logging.debug(u"- done")

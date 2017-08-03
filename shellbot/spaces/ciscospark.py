@@ -376,7 +376,6 @@ class SparkSpace(Space):
 
             room = self.api.rooms.create(title=title,
                                          teamId=teamId)
-            logging.info(u"- done")
 
             return self._to_channel(room)
 
@@ -721,7 +720,6 @@ class SparkSpace(Space):
                                      text=text,
                                      markdown=content,
                                      files=files)
-            logging.debug(u"- done")
 
         do_it()
 
@@ -1027,11 +1025,11 @@ class SparkSpace(Space):
         if not response:
             response = requests.head(url=url, headers=headers)
 
-        logging.debug(u"- status: {}".format(response.status_code))
+#        logging.debug(u"- status: {}".format(response.status_code))
         if response.status_code != 200:
             raise Exception(u"Unable to download attachment")
 
-        logging.debug(u"- headers: {}".format(response.headers))
+#        logging.debug(u"- headers: {}".format(response.headers))
         line = response.headers['Content-Disposition']
         match = re.search('filename=(.+)', line)
         if match:
@@ -1057,12 +1055,12 @@ class SparkSpace(Space):
         if not response:
             response = requests.get(url=url, headers=headers)
 
-        logging.debug(u"- status: {}".format(response.status_code))
+#        logging.debug(u"- status: {}".format(response.status_code))
         if response.status_code != 200:
             raise Exception(u"Unable to download attachment")
 
-        logging.debug(u"- headers: {}".format(response.headers))
-        logging.debug(u"- encoding: {}".format(response.encoding))
+#        logging.debug(u"- headers: {}".format(response.headers))
+#        logging.debug(u"- encoding: {}".format(response.encoding))
         logging.debug(u"- length: {}".format(len(response.content)))
         return response.content
 
