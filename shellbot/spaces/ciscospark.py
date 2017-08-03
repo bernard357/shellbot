@@ -510,6 +510,12 @@ class SparkSpace(Space):
         :type channel: Channel
 
         This function can change the title of a room.
+
+        For example, change the title from a bot instance::
+
+            bot.channel.title = "A new title"
+            bot.space.update(bot.channel)
+
         """
         assert channel is not None
         assert self.api is not None  # connect() is prerequisite
