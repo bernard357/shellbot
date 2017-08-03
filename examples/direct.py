@@ -54,20 +54,19 @@ from shellbot.machines import MachineFactory, Input
 Context.set_logger()
 
 
+# on data capture in direct channel, create and initialise a group channel
+#
 class MyInput(Input):
 
     def on_stop(self):
-        """
-        On state machine stop
-        """
 
         self.bot.say(u"Switching to a group channel:")
 
-        logging.debug(u"- setting lock")
+        logging.debug(u"- prevent racing conditions from webhooks")
         self.bot.engine.set('listener.lock', 'on')
 
-        # create a group channel from the API
-        title = 'Follow-up in group room #{}'.format(self.bot.store.increment('group.count'))
+        title = 'Follow-up in group room #{}'.format(
+            self.bot.store.increment('group.count'))
         self.bot.say(u"- creating channel '{}'...".format(title))
         team_title = 'shellbot environment'
         channel = self.bot.space.create(title=title,
@@ -90,7 +89,7 @@ class MyInput(Input):
                 self.bot.space.post_message(channel.id,
                                             text="Documents gathered so far:")
             counter += 1
-            self.bot.say(u"- replicating document #{}".format(counter))
+            self.bot.say(u"- replicating document #{}...".format(counter))
 
             name = self.bot.space.name_attachment(message.url)
             logging.debug(u"- attachment: {}".format(name))
@@ -110,13 +109,15 @@ class MyInput(Input):
         self.bot.space.post_message(channel.id,
                                     content="Use command ``input`` to view data gathered so far.")
 
-        logging.debug(u"- releasing lock")
+        logging.debug(u"- releasing listener lock")
         self.bot.engine.set('listener.lock', 'off')
 
         self.bot.say(u"- done")
         self.bot.say(content=u"Please go to the new channel for group interactions. Come back here and type ``start`` for a new sequence.")
 
 
+# we use state machines only in direct channels
+#
 class MyMachineFactory(MachineFactory):
 
     def get_machine_for_direct_channel(self, bot):
@@ -135,32 +136,20 @@ class MyMachineFactory(MachineFactory):
     def get_default_machine(self, bot):
         return None
 
-# a command to restart the state machine
-#
-class Start(Command):
-    keyword = 'start'
-    information_message = u"Start a new sequence"
-    in_direct = True
-    in_group = False
-
-    def execute(self, bot, arguments=None, **kwargs):
-        if not bot.machine:
-            bot.say(u"No state machine to start")
-
-        elif not bot.machine.restart():
-            bot.say(u"Cannot restart the state machine")
 
 # create a bot and configure it
 #
 engine = Engine(type='spark',
                 commands=['shellbot.commands.input',
+                          'shellbot.commands.start',
                           'shellbot.commands.close',
-                          Start()],
+                          ],
                 machine_factory=MyMachineFactory())
 
 os.environ['CHAT_ROOM_TITLE'] = '*dummy'
 engine.configure()
 
-# run the server
+# run the engine
 #
+print(u"Go to Cisco Spark and engage with the bot in a direct channel")
 engine.run()
