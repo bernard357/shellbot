@@ -36,7 +36,8 @@ In this example we create following commands with some lines of code:
 
 - command: suicide
 - delayed response: Going back to Hell
-- also stops the bot itself on the server
+- also deletes the group channel where the command was executed
+
 
 Multiple questions are adressed in this example:
 
@@ -53,8 +54,9 @@ Multiple questions are adressed in this example:
 
 - What about commands that do not apply to direct channels? In that case, you
   can set the command attribute ``in_direct`` to False. In this example, the bot
-  is not entitled to delete a private channel. So we disbale the command
-  ``suicide`` from direct channels.
+  is not entitled to delete a private channel. So we disable the command
+  ``suicide`` from direct channels. If you use the command ``help`` both in
+  group channel and in direct channel, you will see that the list is different.
 
 
 To run this script you have to provide a custom configuration, or set
@@ -84,20 +86,16 @@ Credit: https://developer.ciscospark.com/blog/blog-details-8110.html
 import os
 import time
 
-from shellbot import Engine, ShellBot, Context, Command
+from shellbot import Engine, Context, Command
 Context.set_logger()
 
-#
-# create a bot and load commands
-#
 
-
-class Batman(Command):
+class Batman(Command):  # a command that displays static text
     keyword = 'whoareyou'
     information_message = u"I'm Batman!"
 
 
-class Batcave(Command):
+class Batcave(Command):  # a command that reflects input from the end user
     keyword = 'cave'
     information_message = u"The Batcave is silent..."
 
@@ -108,7 +106,7 @@ class Batcave(Command):
             bot.say(self.information_message)
 
 
-class Batsignal(Command):
+class Batsignal(Command):  # a command that uploads a file/link
     keyword = 'signal'
     information_message = u"NANA NANA NANA NANA"
     information_file = "https://upload.wikimedia.org/wikipedia/en/c/c6/Bat-signal_1989_film.jpg"
@@ -118,7 +116,7 @@ class Batsignal(Command):
                 file=self.information_file)
 
 
-class Batsuicide(Command):
+class Batsuicide(Command):  # a command only for group channels
     keyword = 'suicide'
     information_message = u"Go back to Hell"
     in_direct = False
@@ -128,25 +126,15 @@ class Batsuicide(Command):
         bot.dispose()
 
 
-engine = Engine(
+engine = Engine(  # use Cisco Spark and load shell commands
     type='spark',
     commands=[Batman(), Batcave(), Batsignal(), Batsuicide()])
 
-# load configuration
-#
 os.environ['BOT_ON_ENTER'] = 'You can now chat with Batman'
 os.environ['BOT_ON_EXIT'] = 'Batman is now quitting the room, bye'
 os.environ['CHAT_ROOM_TITLE'] = 'Chat with Batman'
-engine.configure()
+engine.configure()  # ensure that all components are ready
 
-# create a chat channel
-#
-engine.bond(reset=True)
-
-# run the bot
-#
-engine.run()
-
-# delete the chat channel when the bot is stopped
-#
-engine.dispose()
+engine.bond(reset=True)  # create a group channel for this example
+engine.run()  # until Ctl-C
+engine.dispose()  # delete the initial group channel
