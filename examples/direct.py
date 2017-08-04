@@ -22,6 +22,59 @@ Direct interaction
 In this example we start an interaction in a direct channel and then
 create a group channel to follow-up.
 
+Following commands are used in this example:
+
+- command: start
+- this is used in a direct channel to start a new transaction
+
+- command: input
+- reflect data that has been captured so far
+
+- command: close
+- this is used in a group channel to destroy it
+
+
+Multiple questions are adressed in this example:
+
+- How to engage with a bot in a direct channel? When the end user
+  invites the bot in a direct channel, a first transaction starts immediately.
+  Later on, the command ``start`` is used on each new transaction. In essence,
+  this command resets and restarts the underlying state machine, so the design
+  is really generic. In this example we use a simple state machine derived
+  from ``Input`` for this purpose. For more sophisticated situations, you
+  could consider ``Menu``, ``Sequence`` and ``Steps`` as well.
+  Or write your own state machine if needed.
+
+- How to ask for data and manage the capture? Shellbot provides with mask and
+  with regex expressions to validate information provided by end users. The
+  state machines also provide tip and help information, or give up on time-out.
+
+- How to list participants of a channel? Here we retrieve the address of
+  end user in direct channel, and add him to the participants of the new group
+  channel. Look for ``bot.list_participants()`` in the code below.
+
+- How to store data that has been captured? State machines coming with shellbot
+  save captured data in the store attached to each bot. In the example below,
+  the state machine is configured to use the key ``order.id``. This is
+  done in a specialized list of key-value pairs named ``input``.
+
+- How to display data that has been captured from the end user? Type the command
+  ``input`` and that's it.
+
+- How to populate a bot store? When a bot is created, shellbot initializes it
+  with content from the context. First, shellbot looks for generic key
+  ``bot.store``. Second, shellbot also consider the key ``store.<channel_id>``
+  for content that is specific to one bot. Here we use the second mechanism so
+  that input captured in a direct channel is replicated to the store of the
+  group channel.
+
+- How to retrieve attachments from a channel? This capablity is required to
+  replicate a document from the direct channel to the group channel.
+  Attachments are listed from ``bot.space.list_message()``, with the addition
+  of flag ``with_attachment``. Based on this, attachments can be downloaded
+  on local computer, and uploaded as updates of the group channel. Look at the
+  code, it is rather self-explanatory.
+
 To run this script you have to provide a custom configuration, or set
 environment variables instead::
 
@@ -40,35 +93,32 @@ ngrok for exposing services to the Internet::
     export SERVER_URL="http://1a107f21.ngrok.io"
     python direct.py
 
-
 """
 
 import logging
-from multiprocessing import Process
 import os
 import time
 
 from shellbot import Engine, Context
-from shellbot.commands import Command
 from shellbot.machines import MachineFactory, Input
 Context.set_logger()
 
 
-# on data capture in direct channel, create and initialise a group channel
-#
-class MyInput(Input):
+class MyInput(Input):  # transition from direct channel to group channel
 
     def on_stop(self):
+
+        team_title = 'shellbot environment'
+
+        title = 'Follow-up in group room #{}'.format(
+            self.bot.store.increment('group.count'))
 
         self.bot.say(u"Switching to a group channel:")
 
         logging.debug(u"- prevent racing conditions from webhooks")
         self.bot.engine.set('listener.lock', 'on')
 
-        title = 'Follow-up in group room #{}'.format(
-            self.bot.store.increment('group.count'))
         self.bot.say(u"- creating channel '{}'...".format(title))
-        team_title = 'shellbot environment'
         channel = self.bot.space.create(title=title,
                                         ex_team=team_title)
 
@@ -106,19 +156,20 @@ class MyInput(Input):
 
         self.bot.space.add_participants(id=channel.id, persons=participants)
 
-        self.bot.space.post_message(channel.id,
-                                    content="Use command ``input`` to view data gathered so far.")
+        self.bot.space.post_message(
+            channel.id,
+            content="Use command ``input`` to view data gathered so far.")
 
         logging.debug(u"- releasing listener lock")
         self.bot.engine.set('listener.lock', 'off')
 
         self.bot.say(u"- done")
-        self.bot.say(content=u"Please go to the new channel for group interactions. Come back here and type ``start`` for a new sequence.")
+        self.bot.say(content=(u"Please go to the new channel for group "
+                              u"interactions. Come back here and type "
+                              u"``start`` for a new sequence."))
 
 
-# we use state machines only in direct channels
-#
-class MyMachineFactory(MachineFactory):
+class MyMachineFactory(MachineFactory):  # provide machines to direct channels
 
     def get_machine_for_direct_channel(self, bot):
 
@@ -137,9 +188,7 @@ class MyMachineFactory(MachineFactory):
         return None
 
 
-# create a bot and configure it
-#
-engine = Engine(type='spark',
+engine = Engine(type='spark',  # use Cisco Spark and setup the environment
                 commands=['shellbot.commands.input',
                           'shellbot.commands.start',
                           'shellbot.commands.close',
@@ -147,9 +196,7 @@ engine = Engine(type='spark',
                 machine_factory=MyMachineFactory())
 
 os.environ['CHAT_ROOM_TITLE'] = '*dummy'
-engine.configure()
+engine.configure()  # ensure that all components are ready
 
-# run the engine
-#
 print(u"Go to Cisco Spark and engage with the bot in a direct channel")
-engine.run()
+engine.run()  # until Ctl-C
