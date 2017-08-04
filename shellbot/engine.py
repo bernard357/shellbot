@@ -685,7 +685,8 @@ class Engine(object):
                 self._server_process.join()
             except KeyboardInterrupt:
                 logging.error(u"Aborted by user")
-                self.stop()
+
+        self.stop()
 
     def start(self):
         """
