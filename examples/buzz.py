@@ -19,7 +19,10 @@
 """
 Fly with Buzz
 
-In this example we create following commands with some lines of code:
+In this example we cover the situation where commands take significant
+time to execute. How to deal with long-lasting transactions?
+
+Also, this example support following commands:
 
 - command: explore <planet>
 - you then track in real-time the progress of the mission
@@ -31,13 +34,31 @@ In this example we create following commands with some lines of code:
 - list available destinations
 
 
-What is showcased here are commands that take significant time to execute.
+Multiple questions are adressed in this example:
+
+- How to handle long-lasting transactions? Commands should be written with
+  responsiveness in mind. If some heavy processing is considered, this should be
+  implemented in a separate object. The shell command would only trigger it, built
+  not run it. Below we explain how we implement long flights in space with
+  shellbot, so keep reading!
+
+- How to store data for each bot? In this example, the list of available
+  planets evolve over time, depending of which planets the end user decides to
+  nuke. So, if Mercury is blasted in one channel, and Mercury in another
+  channel, there is a need for independant management of planets. In the code
+  below you learn how to use ``bot.remember()`` and ``bot.recall()`` and
+  manage bot-specific data.
+
+- How to run a standalone process for each bot? As featured below, pass
+  a custom driver to the engine that will be used for the creation of each bot.
+  The driver can add attributes (here, a rocket) and start processes as well.
+
 
 Buzz is flying from Earth to some planets and come back. Obviously,
 this is the kind of activity that can take ages, yet here each mission
 lasts about 30 seconds.
 
-Ok. So, when I type ``buzz explore Uranus`` in the chat box, do I have to
+Ok. So, when I type ``explore Uranus`` in the chat box, do I have to
 wait for 30 seconds before the next command is considered? Hopefully not!
 
 The two commands ``explore`` and ``blast`` are non-interactive. This means
@@ -68,6 +89,11 @@ In other terms, the bot is always responsive, whatever is executing in the
 background. Also, non-interactive commands are executed in the exact
 sequence of their submission.
 
+These concepts are implemented with instances of ``Rocket`` that are
+attached to bots. Every rocket has a queue that receives commands submitted
+in the chat box. And of course, every rocket is runnning a separate process
+to pick up new missions and to execute them.
+
 To run this script you have to provide a custom configuration, or set
 environment variables instead::
 
@@ -88,35 +114,31 @@ ngrok for exposing services to the Internet::
     export SERVER_URL="http://1a107f21.ngrok.io"
     python buzz.py
 
-
 """
 
 import os
 
 from shellbot import Engine, ShellBot, Context
+from planets import PlanetFactory
 from planets.rocket import Rocket
 Context.set_logger()
 
-# use a customized driver for new bots
-#
-class FlyingBot(ShellBot):
+
+class FlyingBot(ShellBot):  # add a rocket to each bot
     def on_init(self):
         self.rocket = Rocket(self)
         self.rocket.start()
 
-# create a bot and load commands
-#
-from planets import PlanetFactory
-engine = Engine(type='spark',
+
+engine = Engine(type='spark',  # use Cisco Spark and setup flying envronment
                 commands=PlanetFactory.commands(),
                 driver=FlyingBot)
 
-# load configuration
-#
 os.environ['BOT_ON_ENTER'] = 'Hello Buzz, welcome to Cape Canaveral'
 os.environ['BOT_ON_EXIT'] = 'Batman is now quitting the room, bye'
 os.environ['CHAT_ROOM_TITLE'] = 'Buzz flights'
-engine.configure()
+engine.configure()  # ensure that all components are ready
+
 engine.set('bot.store.planets', ['Mercury',
                                  'Venus',
                                  'Moon',
@@ -127,14 +149,6 @@ engine.set('bot.store.planets', ['Mercury',
                                  'Neptune',
                                  ])
 
-# create a chat channel
-#
-engine.bond(reset=True)
-
-# run the bot
-#
-engine.run()
-
-# delete the chat channel when the bot is stopped
-#
-engine.dispose()
+engine.bond(reset=True)  # create a group channel for this example
+engine.run()  # until Ctl-C
+engine.dispose()  # delete the initial group channel
