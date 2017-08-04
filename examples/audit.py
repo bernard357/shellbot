@@ -31,6 +31,26 @@ In this example we create a shell with one simple command: audit
 - ensure private interactions for some time
 
 
+Multiple questions are adressed in this example:
+
+- How to audit chat channels? There are mechanisms built in shellbot by which
+  you can received updates from the chat space and forward these to a safe
+  place. For this you will need: an audit token that can receive updates,
+  a shell command for starting and stopping the audit, and a component to
+  handle updates, namely, an updater. All these are featured below.
+
+- What can be done with audited updates? The module ``shellbot.updaters``
+  offers standard solutions: write to log files, index updates in ELK, or events
+  reflect updates in a sister channel. We expect that more updaters will be
+  developed over time by the community. And of course, you can built your own.
+
+- How to customize the handling of audited updates? Shellbot just invoke the
+  member function ``put()`` from every updater. There are really no other
+  constraints. Shellbot creates one updater instance per bot that it manages.
+  This is delegated to the updater factory that is provided on engine
+  initialisation.
+
+
 To run this script you have to provide a custom configuration, or set
 environment variables instead::
 
@@ -55,8 +75,7 @@ ngrok for exposing services to the Internet::
     export CISCO_SPARK_BOT_TOKEN="<token id from Cisco Spark for bot>"
     export CISCO_SPARK_AUDIT_TOKEN="<token id from Cisco Spark for audit>"
     export SERVER_URL="http://1a107f21.ngrok.io"
-    python hello.py
-
+    python audit.py
 
 """
 
@@ -64,39 +83,24 @@ import logging
 from multiprocessing import Process, Queue
 import os
 
-from shellbot import Engine, Context, Command, Speaker
-from shellbot.commands import Audit
-from shellbot.spaces import SparkSpace
+from shellbot import Engine, Context
 from shellbot.updaters import FileUpdater
 Context.set_logger()
 
 
-# for chat audit, create one updater per channel
-#
-class UpdaterFactory(object):
+class UpdaterFactory(object):  # create one updater per group channel
     def get_updater(self, id):
         return FileUpdater(path='./updater-{}.log'.format(id))
 
-# create a chat engine
-#
-engine = Engine(
+
+engine = Engine(  # use Cisco Spark and setup audit environment
     type='spark',
     command='shellbot.commands.audit',
     updater_factory=UpdaterFactory())
 
-# load configuration
-#
 os.environ['CHAT_ROOM_TITLE'] = 'Audit tutorial'
-engine.configure()
+engine.configure()  # ensure all components are ready
 
-# create a chat channel
-#
-engine.bond(reset=True)
-
-# run the bot
-#
-engine.run()
-
-# delete the chat channel when the bot is stopped
-#
-engine.dispose()
+engine.bond(reset=True)  # create a group channel for this example
+engine.run()  # until Ctl-C
+engine.dispose()  # delete the initial group channel
