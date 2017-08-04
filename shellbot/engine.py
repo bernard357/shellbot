@@ -785,7 +785,7 @@ class Engine(object):
         :param participants: the list of initial participants (optional)
         :type participants: list of str
 
-        :return: Channel
+        :return: Channel or None
 
         This function creates a channel, or connect to an existing one.
         If no title is provided, then the generic title configured for the
@@ -793,7 +793,9 @@ class Engine(object):
 
         For example::
 
-            engine.bond('My crazy channel')
+            channel = engine.bond('My crazy channel')
+            if channel:
+                ...
 
         Note: this function asks the listener to load a new bot in its cache
         on successful channel creation or lookup. In other terms, this function
@@ -818,8 +820,12 @@ class Engine(object):
                 logging.debug(u"- deleting existing channel")
                 self.space.delete(id=channel.id)
 
-            logging.debug(u"- creating channel '{}''".format(title))
+            logging.debug(u"- creating channel '{}'".format(title))
             channel = self.space.create(title=title, **kwargs)
+
+            if not channel:
+                logging.error("Unable to create channel")
+                return
 
             if not participants:
                 participants = self.space.get('participants', [])
@@ -876,6 +882,8 @@ class Engine(object):
         """
         if not channel_id:
             channel = self.bond(**kwargs)
+            if not channel:
+                return
             channel_id = channel.id
 
         logging.debug(u"Getting bot {}".format(channel_id))
