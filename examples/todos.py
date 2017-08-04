@@ -60,7 +60,6 @@ environment variables instead::
 
 - ``CHANNEL_DEFAULT_PARTICIPANTS`` - Mention at least your e-mail address
 - ``CISCO_SPARK_BOT_TOKEN`` - Received from Cisco Spark on bot registration
-- ``CISCO_SPARK_TOKEN`` - Your personal Cisco Spark token
 - ``SERVER_URL`` - Public link used by Cisco Spark to reach your server
 
 The token is specific to your run-time, please visit Cisco Spark for
@@ -82,13 +81,9 @@ ngrok for exposing services to the Internet::
 import os
 
 from shellbot import Engine, Context
+from todos import TodoFactory
 Context.set_logger()
 
-#
-# create a bot and load commands
-#
-
-from todos import TodoFactory
 factory = TodoFactory([
     'write down the driving question',
     'gather facts and related information',
@@ -97,23 +92,15 @@ factory = TodoFactory([
     'select the most appropriate scenario',
 ])
 
-engine = Engine(type='spark', commands=TodoFactory.commands())
+engine = Engine(  # use Cisco Spark and load shell commands
+    type='spark', 
+    commands=TodoFactory.commands())
 engine.factory = factory
 
-# load configuration
-#
 os.environ['BOT_ON_ENTER'] = 'What do you want to do today?'
 os.environ['CHAT_ROOM_TITLE'] = 'Manage todos'
-engine.configure()
+engine.configure()  # ensure that all components are ready
 
-# create a chat channel
-#
-engine.bond(reset=True)
-
-# run the bot
-#
-engine.run()
-
-# delete the chat channel when the bot is stopped
-#
-engine.dispose()
+engine.bond(reset=True)  # create a group channel for this example
+engine.run()  # until Ctl-C
+engine.dispose()  # delete the initial group channel
