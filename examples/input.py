@@ -41,43 +41,37 @@ For example, if you run this script under Linux or macOs::
 
     python input.py
 
-
 """
 
-import logging
 import os
 
-from shellbot import Engine, ShellBot, Context, Command
-from shellbot.spaces import SpaceFactory
+from shellbot import Engine, Context
 from shellbot.machines import Input, Sequence
 Context.set_logger()
 
-# create a local bot
-#
 engine = Engine(type='local', command='shellbot.commands.input')
-engine.configure()
-bot = engine.get_bot()  # safe from process perspective
+engine.configure()  # ensure that all components are ready
 
-# ask some information
-#
-order_id = Input(bot=bot,
-                question="PO number please?",
-                mask="9999A",
-                on_answer="Ok, PO number has been noted: {}",
-                on_retry="PO number should have 4 digits and a letter",
-                on_cancel="Ok, forget about the PO number",
-                key='order.id')
+bot = engine.get_bot()  # get generic group channel for this bot
 
-description = Input(bot=bot,
-                question="Issue description please?",
-                on_answer="Ok, description noted: {}",
-                on_retry="Please enter a one-line description of the issue",
-                on_cancel="Ok, forget about the description",
-                key='description')
+order_id = Input(  # use a mask to validate input
+    bot=bot,
+    question="PO number please?",
+    mask="9999A",
+    on_answer="Ok, PO number has been noted: {}",
+    on_retry="PO number should have 4 digits and a letter",
+    on_cancel="Ok, forget about the PO number",
+    key='order.id')
+
+description = Input(  # free form
+    bot=bot,
+    question="Issue description please?",
+    on_answer="Ok, description noted: {}",
+    on_retry="Please enter a one-line description of the issue",
+    on_cancel="Ok, forget about the description",
+    key='description')
 
 sequence = Sequence(machines=[order_id, description])
 sequence.start()
 
-# interact locally
-#
-engine.run()
+engine.run()  # until Ctl-C
