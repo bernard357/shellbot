@@ -39,16 +39,14 @@ Multiple questions are adressed in this example:
 - How to create a channel on some external event? Here we wait for a link to be
   triggered over the internet. This can done directly from the command line
   with CURL, from a web browser, or from a button connected to the internet, or
-  from an application on a mobile device. When this occurs, a channel is created,
-  participants are added, and people can interact immediately.
-  Look at the class ``Trigger`` below, and at the bottom of the script, to see
-  how this is implemented.
+  from an application on a mobile device. When this occurs, a channel is
+  created, participants are added, and people can interact immediately.
+  Look at the class ``Handler`` below to see how this is implemented.
 
 - How to implement a linear process? The typical use case is to let joining
   people interact in the channel, then involve some support experts, then
-  call stakeholders for a decision. These are reflected in the chat channel
-  with commands ``state`` and ``next``. Related code is in the ``steps``
-  subdirectory.
+  call stakeholders for a decision. This is reflected in the chat channel
+  with command ``step``.
 
 
 A typical dialog could be like the following::
@@ -97,14 +95,10 @@ import logging
 from multiprocessing import Process, Queue
 import time
 
-from shellbot import Engine, ShellBot, Context, Server, Notifier, Wrapper
+from shellbot import Engine, Context, Server, Notifier, Wrapper
 from shellbot.machines import Steps
 
 Context.set_logger()
-
-#
-# load configuration
-#
 
 settings = {
 
@@ -130,12 +124,14 @@ settings = {
         {
             'label': u'Level 1',
             'message': u'Initial capture of information',
-            'content': u'If you are on the shop floor:\n'
-                + u'* Take a picture of the faulty part\n'
-                + u'* Describe the issue in the chat box\n'
-                + u'\n'
-                + u'As a Stress engineer, engage with shop floor and ask questions.'
-                + u' To engage with the design team, type **step** in the chat box.'
+            'content': (u'If you are on the shop floor:\n'
+                        u'* Take a picture of the faulty part\n'
+                        u'* Describe the issue in the chat box\n'
+                        u'\n'
+                        u'As a Stress engineer, '
+                        u'engage with shop floor and ask questions.'
+                        u' To engage with the design team, '
+                        u'type **step** in the chat box.')
         },
 
         {
@@ -163,22 +159,18 @@ context = Context(settings)
 context.check('server.trigger', '/trigger')
 context.check('server.hook', '/hook')
 
-#
-# manage custom state machines
-#
 
-class MyFactory(object):
+class MyFactory(object):  # provide state machine to group channels
+
     def __init__(self, steps):
         self.steps = steps
+
     def get_machine(self, bot):
         if bot.channel.is_group:
             return Steps(bot=bot, steps=self.steps)
 
-#
-# create a bot and load commands
-#
 
-engine = Engine(
+engine = Engine(  # use Cisco Spark and setup the environment
     type='spark',
     context=context,
     configure=True,
@@ -186,11 +178,8 @@ engine = Engine(
     machine_factory=MyFactory(steps=context.get('process.steps')),
     ears=Queue(),)
 
-#
-# create a web server to receive trigger
-#
 
-server = Server(context=context, check=True)
+server = Server(context=context, check=True)  # set web front-end
 
 server.add_route(Notifier(queue=engine.ears,
                           notification={'type': 'event', 'trigger': 'click'},
@@ -199,9 +188,8 @@ server.add_route(Notifier(queue=engine.ears,
 server.add_route(Wrapper(callable=engine.get_hook(),
                          route=context.get('server.hook')))
 
-# add some event handler
-#
-class Handler(object):
+
+class Handler(object):  # receive web triggers as events from the listener
 
     def __init__(self, engine):
         self.engine = engine
@@ -220,8 +208,7 @@ class Handler(object):
 
 
 handler = Handler(engine)
-engine.register('inbound', handler)  # receive clicks via listener
+engine.register('inbound', handler)
 
-# launch multiple processes to do the job
-#
-engine.run(server=server)
+print(u"Trigger this web server from a browser at /trigger")
+engine.run(server=server)  # until Ctl-C
