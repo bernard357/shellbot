@@ -30,8 +30,8 @@ Multiple questions are adressed in this example:
   as the Cisco Spark token (see below). Or variables can be set directly
   from within the script itself, as ``CHAT_ROOM_TITLE`` in this example.
 
-- How to create or to delete a channel? This is done with ``engine.get_bot()`` and
-  with ``bot.dispose()`` respectively.
+- How to create or to delete a channel? This is done with ``engine.get_bot()``
+  and with ``bot.dispose()`` respectively.
 
 - How to post a notification? Use ``bot.say()`` right after a call
   to ``engine.get_bot()``.
@@ -70,12 +70,11 @@ import os
 import random
 import time
 
-from shellbot import Engine, ShellBot, Context, Command
+from shellbot import Engine, Context
 Context.set_logger()
 
-# a function to create a random sentence
-#
 def some_message():
+    """Creates random sentence"""
 
     s_nouns = ["A dude", "My mom", "The king", "Some guy",
                "A cat with rabies", "A sloth", "Your homie",
@@ -100,26 +99,17 @@ def some_message():
                                  random.choice(p_nouns).lower(),
                                  random.choice(infinitives))
 
-# create a bot and configure it
-#
 os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
 engine = Engine(type='spark', configure=True)
 
-# create a chat channel
-#
-bot = engine.get_bot(reset=True)  # safe, one single process
+bot = engine.get_bot(reset=True)  # create a group channel
 
-# send notifications to the channel
-#
-for index in range(7):
-
+for index in range(7):  # send notifications to the channel
     bot.say(some_message())
     time.sleep(5)
 
 bot.say(u"Nothing more to say")
 
-# wait for manual interruption
-#
 print("Press Ctl-C to stop this program")
 try:
     while True:
@@ -127,6 +117,4 @@ try:
 except KeyboardInterrupt:
     pass
 
-# delete the chat channel
-#
-bot.dispose()
+bot.dispose()  # delete the initial group channel
