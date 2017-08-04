@@ -44,26 +44,20 @@ For example, if you run this script under Linux or macOs::
 
     python hello_simulator.py
 
-
 """
 
 import logging
 import os
 
-from shellbot import Engine, ShellBot, Context, Command
-from shellbot.spaces import SpaceFactory
+from shellbot import Engine, Context, Command
 Context.set_logger(level=logging.INFO)
 
-# create a local bot and load command
-#
 class Hello(Command):
     keyword = 'hello'
     information_message = u"Hello, World!"
 
 engine = Engine(command=Hello(), type='local')
 
-# simulate the execution of commands
-#
 engine.space.push(['help', 'hello', 'help help'])
 
 engine.configure()
