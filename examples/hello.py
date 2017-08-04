@@ -23,8 +23,12 @@ In this example we create a shell with one simple command: hello
 
 Multiple questions are adressed in this example:
 
+- How to change the banner? Shellbot support bare text, rich content, and even
+  some upload, all together. This can be changed by adjusting some environment
+  variables, as shown below.
+
 - How to build a basic command that displays a message? Look at the
- command ``hello`` below, this is really done in some lines of code.
+  command ``hello`` below, this is really done in some lines of code.
 
 - How to provide with rich content? Here we use Markdown so that input
   provided by the end user is smartly reflected by the bot.
@@ -35,11 +39,8 @@ Multiple questions are adressed in this example:
 - How to use Cisco Spark? As shown below, the platform is selected during
   the initialisation of the engine. Here we put ``type='spark'`` and that's it.
   Ok, in addition to this code you also have to set some variables to make it
-  work, but this is configuration done outside the code itself.
+  work, but this is regular configuration, done outside the code itself.
 
-- How to change the banner? Shellbot support bare text, rich content, and even
-  some upload, all together. This is done with some environment variables, as
-  shown below.
 
 To run this script you have to provide a custom configuration, or set
 environment variables instead::
@@ -61,17 +62,15 @@ ngrok for exposing services to the Internet::
     export SERVER_URL="http://1a107f21.ngrok.io"
     python hello.py
 
-
 """
 
 import os
 
-from shellbot import Engine, ShellBot, Context, Command
+from shellbot import Engine, Context, Command
 Context.set_logger()
 
-# create a bot and load command
-#
-class Hello(Command):
+
+class Hello(Command):  # the origin of everything, right?
     keyword = 'hello'
     information_message = u"Hello, World!"
 
@@ -86,24 +85,19 @@ class Hello(Command):
         if attachment:
             bot.say(content=self.attachment_content.format(attachment))
 
+
 engine = Engine(type='spark', command=Hello())
 
-# load configuration
-#
 os.environ['CHAT_ROOM_TITLE'] = 'Hello tutorial'
 os.environ['BOT_BANNER_TEXT'] = u"Type '@{} help' for more information"
-os.environ['BOT_BANNER_CONTENT'] = u"Hello there! Type ``@{} help`` at any time to get more information on available commands."
-os.environ['BOT_BANNER_FILE'] = "https://upload.wikimedia.org/wikipedia/commons/5/5e/Sunrise_Matobo_Zimbabwe.jpg"
-engine.configure()
+os.environ['BOT_BANNER_CONTENT'] = (u"Hello there! "
+                                    u"Type ``@{} help`` at any time and  get "
+                                    u"more information on available commands.")
+os.environ['BOT_BANNER_FILE'] = \
+    "http://skinali.com.ua/img/gallery/19/thumbs/thumb_m_s_7369.jpg"
 
-# create a chat channel
-#
-engine.bond(reset=True)
+engine.configure()  # ensure that all components are ready
 
-# run the bot
-#
-engine.run()
-
-# delete the chat channel when the bot is stopped
-#
-engine.dispose()
+engine.bond(reset=True)  # create a group channel for this example
+engine.run()  # until Ctl-C
+engine.dispose()  # delete the initial group channel
