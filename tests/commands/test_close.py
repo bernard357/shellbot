@@ -57,7 +57,7 @@ class CloseTests(unittest.TestCase):
             c.execute(my_bot)
             self.assertTrue(my_bot.dispose.called)
 
-        self.assertEqual(my_engine.mouth.get().text, u'Closing this space')
+        self.assertEqual(my_engine.mouth.get().text, u'Closing this channel')
         with self.assertRaises(Exception):
             my_engine.mouth.get_nowait()
 

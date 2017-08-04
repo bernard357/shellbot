@@ -45,5 +45,5 @@ class Close(Command):
         messages with one or multiple ``bot.say("Whatever response")``.
 
         """
-        bot.say("Closing this space")
+        bot.say("Closing this channel")
         bot.dispose()
