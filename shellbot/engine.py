@@ -755,7 +755,11 @@ class Engine(object):
         logging.debug(u"Switching off")
         self.context.set('general.switch', 'off')
         time.sleep(1)
-        self.listener.join()
+
+        try:
+            self.listener.join()
+        except AssertionError:
+            pass  # if listener process was not started
 
     def on_stop(self):
         """
