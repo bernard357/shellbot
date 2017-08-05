@@ -7,6 +7,7 @@ The documentation of Shellbot
 
    README
    SETUP
+   EXAMPLES
    CONTRIBUTING
    QUESTIONS
    Documentation extracted from the code <shellbot>
@@ -18,4 +19,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
