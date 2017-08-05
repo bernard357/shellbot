@@ -8,6 +8,9 @@ Submodules
 
    shellbot.machines.base
    shellbot.machines.input
+   shellbot.machines.menu
+   shellbot.machines.sequence
+   shellbot.machines.steps
 
 Module contents
 ---------------

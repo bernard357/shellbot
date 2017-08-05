@@ -7,11 +7,8 @@ Submodules
 .. toctree::
 
    shellbot.routes.base
-   shellbot.routes.form
-   shellbot.routes.hello
-   shellbot.routes.index
-   shellbot.routes.notify
-   shellbot.routes.static
+   shellbot.routes.notifier
+   shellbot.routes.text
    shellbot.routes.wrapper
 
 Module contents
