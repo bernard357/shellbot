@@ -22,18 +22,13 @@ that they are pushed to a pipeline for background execution.
 With this concept, you can get a dialog similar to the following::
 
     > buzz explore Mercury
-
     Ok, I am working on it
     #1 - Departing to Mercury
-
     > buzz blast Neptune
-
     Ok, will work on it as soon as possible
     #1 - Approaching Mercury
     #1 - Landed on Mercury
-
     > buzz planets
-
     Available destinations:
     - Venus
     - Moon
@@ -73,7 +68,7 @@ How can a command interact with the rocket?
 -------------------------------------------
 
 The command delegates a new mission with a simple function call, like for
-example in the command ``exlore``::
+example in the command ``explore``::
 
     class Explore(Command):
         keyword = u'explore'
@@ -98,7 +93,7 @@ On rocket side, the mission is pushed to a queue for later processing::
 
         self.inbox.put((action, planet))
 
-Within the rocket instance, the process is continuously monitoring the
+Within the rocket instance, a process is continuously monitoring the
 ``inbox`` queue to pick up new missions and to execute them, one at a time.
 
 How to store data separately for each bot?
@@ -113,11 +108,6 @@ used in this example for listing available planets::
     engine.set(
         'bot.store.planets',
         ['Mercury', 'Venus', 'Moon', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'])
-
-Keep in mind that the list of available planets evolve over time,
-since some of them can be nuked by end users. So, if Mercury is blasted in one
-channel, and Neptune in another channel, there is a need for independent
-management of planets across bots.
 
 The function ``bot.recall()`` can then be used to retrieve the list of
 planets. This is exactly what is done for the command ``planets``::
@@ -147,6 +137,12 @@ code similar to this::
     items = self.bot.recall('planets', [])
     items.remove(planet)
     self.bot.remember('planets', items)
+
+Keep in mind that the list of available planets evolve over time,
+since some of them can be nuked by end users. So, if Mercury is blasted in one
+channel, and Neptune in another channel, there is a need for independent
+management of planets across bots. This is exactly what ``bot.remember()`` and
+``bot.recall()`` provide, hopefully.
 
 Commands: planets, explore, blast
 ---------------------------------

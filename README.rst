@@ -94,6 +94,9 @@ The Batman example
       engine.run()  # until Ctl-C
       engine.dispose()  # delete the initial group channel
 
+Are you looking for practical documentation?
+:doc:`EXAMPLES`
+
 Quick installation
 ------------------
 
