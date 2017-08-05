@@ -19,14 +19,6 @@ from shellbot import Command
 
 
 class Blast(Command):
-    """
-    Blasts a planet and comes back
-
-    >>>command = Blast()
-    >>>shell.load_command(command)
-
-    """
-
     keyword = u'blast'
     information_message = u'Blast a planet and come back'
     usage_message = u'blast <destination>'

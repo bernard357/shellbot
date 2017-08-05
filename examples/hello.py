@@ -43,7 +43,7 @@ Multiple questions are adressed in this example:
 
 
 To run this script you have to provide a custom configuration, or set
-environment variables instead::
+environment variables instead:
 
 - ``CHANNEL_DEFAULT_PARTICIPANTS`` - Mention at least your e-mail address
 - ``CISCO_SPARK_BOT_TOKEN`` - Received from Cisco Spark on bot registration
@@ -75,7 +75,7 @@ class Hello(Command):  # the origin of everything, right?
     information_message = u"Hello, World!"
 
     feedback_content = u"Hello, **{}**!"
-    attachment_content = u"Thanks for the upload of `{}`"
+    thanks_content = u"Thanks for the upload of `{}`"
 
     def execute(self, bot, arguments=None, attachment=None, url=None, **kwargs):
 
@@ -83,7 +83,7 @@ class Hello(Command):  # the origin of everything, right?
             arguments if arguments else 'World'))
 
         if attachment:
-            bot.say(content=self.attachment_content.format(attachment))
+            bot.say(content=self.thanks_content.format(attachment))
 
 
 engine = Engine(type='spark', command=Hello())

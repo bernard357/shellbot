@@ -19,14 +19,6 @@ from shellbot import Command
 
 
 class Explore(Command):
-    """
-    Explores a planet and comes back
-
-    >>>command = Explore()
-    >>>shell.load_command(command)
-
-    """
-
     keyword = u'explore'
     information_message = u'Explore a planet and come back'
     usage_message = u'explore <destination>'

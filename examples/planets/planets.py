@@ -19,16 +19,9 @@ from shellbot import Command
 
 
 class Planets(Command):
-    """
-    Displays the list of available planets
-
-    >>>command = Planets()
-    >>>shell.load_command(command)
-
-    """
-
     keyword = u'planets'
     information_message = u'List reachable planets'
+
     list_header = u"Available destinations:"
 
     def execute(self, bot, arguments=None, **kwargs):

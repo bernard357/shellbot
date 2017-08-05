@@ -24,22 +24,22 @@ time to execute. How to deal with long-lasting transactions?
 
 Also, this example support following commands:
 
+- command: planets
+- list available destinations
+
 - command: explore <planet>
 - you then track in real-time the progress of the mission
 
 - command: blast <planet>
 - similar to exploration, except that the planet is nuked
 
-- command: planets
-- list available destinations
-
 
 Multiple questions are adressed in this example:
 
 - How to handle long-lasting transactions? Commands should be written with
-  responsiveness in mind. If some heavy processing is considered, this should be
-  implemented in a separate object. The shell command would only trigger it, built
-  not run it. Below we explain how we implement long flights in space with
+  responsiveness in mind. If some heavy processing is considered, this should
+  be implemented in a separate object. The shell command would only trigger it,
+  but not run it. Below we explain how we implement long flights in space with
   shellbot, so keep reading!
 
 - How to store data for each bot? In this example, the list of available
@@ -95,7 +95,7 @@ in the chat box. And of course, every rocket is runnning a separate process
 to pick up new missions and to execute them.
 
 To run this script you have to provide a custom configuration, or set
-environment variables instead::
+environment variables instead:
 
 - ``CHANNEL_DEFAULT_PARTICIPANTS`` - Mention at least your e-mail address
 - ``CISCO_SPARK_BOT_TOKEN`` - Received from Cisco Spark on bot registration

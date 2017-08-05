@@ -67,7 +67,7 @@ This is required so that the software can receive all events for a chat space.
 Without it, the bot may not see who is leaving or joining.
 
 For example, if you run this script under Linux or macOs with support from
-ngrok for exposing services to the Internet::
+ngrok for exposing services to the Internet:
 
     export CHANNEL_DEFAULT_PARTICIPANTS="alice@acme.com"
     export CISCO_SPARK_BOT_TOKEN="<token id from Cisco Spark for Developers>"
