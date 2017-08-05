@@ -3,6 +3,16 @@
 History
 -------
 
+17.8.5
+~~~~~~
+* Add tutorials to the on-line documentation (based on examples)
+* Bot can now be invited to any direct or group channel by end-user
+* Complete review of the internal design of processes, etc.
+* Major revamp of the code
+* Travis-CI passed on python 2.7 and 3.5
+* 94% test coverage
+* 3094 python statements
+
 17.6.6
 ~~~~~~
 * Add example Hotel California to demonstrate automated join and leave events
