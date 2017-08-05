@@ -94,9 +94,6 @@ The Batman example
       engine.run()  # until Ctl-C
       engine.dispose()  # delete the initial group channel
 
-Are you looking for practical documentation?
-:doc:`EXAMPLES`
-
 Quick installation
 ------------------
 
@@ -131,13 +128,12 @@ Credits
 * Cookiecutter_
 * `cookiecutter-pypackage`_
 
-.. _securitybot: https://github.com/dropbox/securitybot
 .. _`Shellbot at ReadTheDocs`: http://shellbot-for-cisco-spark.readthedocs.io/en/latest/
 .. _`Shellbot at PyPi`: https://pypi.python.org/pypi/shellbot
 .. _`Shellbot at GitHub`: https://github.com/bernard357/shellbot
 .. _`Apache License (2.0)`: http://www.apache.org/licenses/LICENSE-2.0
-.. _`Bernard Paques`: https://github.com/bernard357
-.. _`Anthony Shaw`: https://github.com/tonybaloney
+
+.. _securitybot: https://github.com/dropbox/securitybot
 .. _Bottle: https://pypi.python.org/pypi/bottle
 .. _ciscosparkapi: https://pypi.python.org/pypi/ciscosparkapi
 .. _PyYAML: https://pypi.python.org/pypi/PyYAML
