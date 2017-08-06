@@ -306,7 +306,7 @@ class ShellBot(object):
         discard it, as if the parameter had the value ``False``.
 
         """
-        assert person not in (None, '')
+        assert person
         assert is_moderator in (True, False)
         if self.id:
             self.space.add_participant(id=self.id,
@@ -332,7 +332,7 @@ class ShellBot(object):
         :type person: str
 
         """
-        assert person not in (None, '')
+        assert person
         if self.id:
             self.space.remove_participant(id=self.id, person=person)
 

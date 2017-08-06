@@ -197,7 +197,7 @@ class MachineFactory(object):
                                                      'Machine')
 
         """
-        assert self.module not in (None, '')  # need python module name
+        assert self.module  # need python module name
         try:
             handle = importlib.import_module(self.module)
             logging.debug(u"Loading machine '{}'".format(self.module))

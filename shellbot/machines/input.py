@@ -199,7 +199,7 @@ class Input(Machine):
             assert domain_name == 'acme.com'
 
         """
-        assert question not in (None, '') or question_content not in (None, '')
+        assert question or question_content
         self.question = question
         self.question_content = question_content
 
@@ -300,7 +300,7 @@ class Input(Machine):
         content = self.on_answer_content.format(input) if self.on_answer_content else None
         file = self.on_answer_file if self.on_answer_file else None
 
-        if text in (None, '') and content in (None, ''):
+        if not text and not content:
             text = self.ANSWER_MESSAGE.format(input)
 
         self.bot.say(text)
@@ -319,7 +319,7 @@ class Input(Machine):
         content = self.on_retry_content if self.on_retry_content else None
         file = self.on_retry_file if self.on_retry_file else None
 
-        if text in (None, '') and content in (None, ''):
+        if not text and not content:
             text = self.RETRY_MESSAGE
 
         self.bot.say(text)
@@ -338,7 +338,7 @@ class Input(Machine):
         content = self.on_cancel_content if self.on_cancel_content else None
         file = self.on_cancel_file if self.on_cancel_file else None
 
-        if text in (None, '') and content in (None, ''):
+        if not text and not content:
             text = self.CANCEL_MESSAGE
 
         self.bot.say(text)
@@ -437,13 +437,13 @@ class Input(Machine):
         if needed. It can extract information from the provided mask
         or regular expression, and save it for later use.
         """
-        if arguments in (None, ''):
+        if not arguments:
             self.say_retry()
             return
 
         arguments = self.filter(text=arguments)
 
-        if arguments in (None, ''):
+        if not arguments:
             self.say_retry()
             return
 
@@ -534,8 +534,8 @@ class Input(Machine):
             assert po == '2413v'
 
         """
-        assert mask not in (None, '')
-        assert text not in (None, '')
+        assert mask
+        assert text
 
         logging.debug(u"Searching for mask '{}'".format(mask))
         mask = mask.replace('+', 'pLuS')
@@ -589,8 +589,8 @@ class Input(Machine):
             assert domain_name == 'acme.com'
 
         """
-        assert regex not in (None, '')
-        assert text not in (None, '')
+        assert regex
+        assert text
 
         logging.debug(u"Searching for expression '{}'".format(regex))
         pattern = re.compile(regex, re.I)

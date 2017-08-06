@@ -174,10 +174,10 @@ class SparkSpace(Space):
         Here we create a new space powered by Cisco Spark service, and use
         settings under the key ``spark`` in the context of this bot.
         """
-        assert prefix not in (None, '')
+        assert prefix
         self.prefix = prefix
 
-        if token not in (None, ''):
+        if token:
             self.set('token', token)
 
         self.api = None
@@ -291,7 +291,7 @@ class SparkSpace(Space):
         logging.debug(u"Loading Cisco Spark API")
 
         bot_token = self.get('token')
-        assert bot_token not in (None, '')  # some token is needed
+        assert bot_token  # some token is needed
 
         self.api = None
         try:
@@ -389,7 +389,7 @@ class SparkSpace(Space):
         This function returns a representation of the local channel.
 
         """
-        assert title not in (None, '')
+        assert title
         assert self.api is not None  # connect() is prerequisite
 
         teamId = None
@@ -425,7 +425,7 @@ class SparkSpace(Space):
         Note: This function looks only into group rooms. To get a direct room
         use ``get_by_person()`` instead.
         """
-        assert title not in (None, '')
+        assert title
         assert self.api is not None  # connect() is prerequisite
 
         logging.info(u"Looking for Cisco Spark room '{}'".format(title))
@@ -453,7 +453,7 @@ class SparkSpace(Space):
         :return: Channel instance or None
 
         """
-        assert id not in (None, '')
+        assert id
         assert self.api is not None  # connect() is prerequisite
 
         logging.info(u"Using Cisco Spark room '{}'".format(id))
@@ -483,7 +483,7 @@ class SparkSpace(Space):
         returned. Else the value ``None``is returned.
 
         """
-        assert label not in (None, '')
+        assert label
         assert self.api is not None  # connect() is prerequisite
 
         logging.info(
@@ -534,7 +534,7 @@ class SparkSpace(Space):
         :type id: str
 
         """
-        assert id not in (None, '')
+        assert id
         assert self.api is not None  # connect() is prerequisite
 
         logging.info(u"Deleting Cisco Spark room '{}'".format(id))
@@ -563,7 +563,7 @@ class SparkSpace(Space):
         })
 
         """
-        assert name not in (None, '')
+        assert name
         assert self.api is not None  # connect() is prerequisite
 
         logging.info(u"Looking for Cisco Spark team '{}'".format(name))
@@ -593,7 +593,7 @@ class SparkSpace(Space):
 
         Note: this function returns all participants, except the bot itself.
         """
-        assert id not in (None, '')  # target channel is required
+        assert id  # target channel is required
 
         logging.debug(
             u"Looking for Cisco Spark room participants")
@@ -633,8 +633,8 @@ class SparkSpace(Space):
         :type is_moderator: True or False
 
         """
-        assert id not in (None, '')  # target channel is required
-        assert person not in (None, '')
+        assert id  # target channel is required
+        assert person
         assert is_moderator in (True, False)
         assert self.api is not None  # connect() is prerequisite
 
@@ -658,8 +658,8 @@ class SparkSpace(Space):
         :type person: str
 
         """
-        assert id not in (None, '')  # target channel is required
-        assert person not in (None, '')  # target person
+        assert id  # target channel is required
+        assert person  # target person
         assert self.api is not None  # connect() is prerequisite
 
         @retry(u"Unable to remove participant '{}'".format(person), silent=True)
@@ -742,13 +742,13 @@ class SparkSpace(Space):
         assert self.api is not None  # connect() is prerequisite
 
         logging.info(u"Posting message")
-        if text not in (None, ''):
+        if text:
             logging.debug(u"- text: {}".format(
                 text[:50] + (text[50:] and '..')))
-        if content not in (None, ''):
+        if content:
             logging.debug(u"- content: {}".format(
                 content[:50] + (content[50:] and '..')))
-        if file not in (None, ''):
+        if file:
             logging.debug(u"- file: {}".format(
                 file[:50] + (file[50:] and '..')))
 
@@ -797,7 +797,7 @@ class SparkSpace(Space):
         will be notified of new invitations.
 
         """
-        assert hook_url not in (None, '')
+        assert hook_url
         assert self.api is not None  # connect() is prerequisite
 
         self.deregister()

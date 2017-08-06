@@ -37,7 +37,7 @@ class Todo(Command):
         if self.engine.factory is None:
             raise AttributeError(u'Todo factory has not been initialised')
 
-        if arguments in (None, ''):
+        if not arguments:
             bot.say(u"usage: {}".format(self.usage_message))
             return
 

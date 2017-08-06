@@ -41,12 +41,12 @@ class Update(Command):
         :type arguments: str or ``None``
 
         """
-        if arguments in (None, ''):
+        if not arguments:
             bot.say(self.no_arg, content=self.no_arg)
             return
 
         input = bot.recall('input')
-        if input in (None, {}):
+        if not input:
             bot.say(self.no_input)
             return
 

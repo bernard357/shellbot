@@ -162,7 +162,7 @@ class Space(object):
                 ...
 
         """
-        assert prefix not in (None, '')
+        assert prefix
         self.prefix = prefix
 
     def on_start(self):
@@ -338,7 +338,7 @@ class Space(object):
                 return Channel(handle.attributes)
 
         """
-        assert title not in (None, '')
+        assert title
         raise NotImplementedError()
 
     def get_by_title(self, title=None, **kwargs):
@@ -363,7 +363,7 @@ class Space(object):
                     return Channel(handle.attributes)
 
         """
-        assert title not in (None, '')
+        assert title
         return None
 
     def get_by_id(self, id, **kwargs):
@@ -388,7 +388,7 @@ class Space(object):
                     return Channel(handle.attributes)
 
         """
-        assert id not in (None, '')
+        assert id
         return None
 
     def get_by_person(self, label, **kwargs):
@@ -413,7 +413,7 @@ class Space(object):
                     return Channel(handle.attributes)
 
         """
-        assert label not in (None, '')
+        assert label
         return None
 
     def update(self, channel, **kwargs):
@@ -471,7 +471,7 @@ class Space(object):
 
         Note: this function returns all participants, except the bot itself.
         """
-        assert id not in (None, '')  # target channel is required
+        assert id  # target channel is required
         raise NotImplementedError()
 
     def add_participants(self, id, persons=[]):
@@ -517,8 +517,8 @@ class Space(object):
                 self.api.memberships.create(id=id, person=person)
 
         """
-        assert id not in (None, '')  # target channel is required
-        assert person not in (None, '')
+        assert id  # target channel is required
+        assert person
         assert is_moderator in (True, False)
         raise NotImplementedError()
 
@@ -558,8 +558,8 @@ class Space(object):
                 self.api.memberships.delete(id=id, person=person)
 
         """
-        assert id not in (None, '')  # target channel is required
-        assert person not in (None, '')
+        assert id  # target channel is required
+        assert person
         raise NotImplementedError()
 
     def list_messages(self,
@@ -611,7 +611,7 @@ class Space(object):
                     do_something_with_attachment(message.url)
 
         """
-        assert id not in (None, '')
+        assert id
         assert quantity > 0
         assert with_attachment in (True, False)
 

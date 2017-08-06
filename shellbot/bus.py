@@ -174,7 +174,7 @@ class Subscriber(object):
         address=self.context.get('bus.address')
         logging.debug(u"Subscribing at {}".format(address))
 
-        assert channels not in (None, [], ())
+        assert channels
         if isinstance(channels, string_types):
             channels = [channels]
         self.channels = channels
@@ -372,11 +372,11 @@ class Publisher(Process):
         handled asynchronously. Therefore, when the function returns there is
         no guarantee that message has been transmitted nor received.
         """
-        assert channels not in (None, '', [], ())
+        assert channels
         if isinstance(channels, string_types):
             channels = [channels]
 
-        assert message not in (None, '')
+        assert message
         text = json.dumps(message)
         for channel in channels:
             item = channel + ' ' + text

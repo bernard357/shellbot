@@ -37,7 +37,7 @@ class Done(Command):
         if self.engine.factory is None:
             raise AttributeError(u'Todo factory has not been initialised')
 
-        if arguments in (None, ''):
+        if not arguments:
             index = 1
         else:
             index = self.engine.factory.parse(arguments)

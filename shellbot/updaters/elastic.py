@@ -48,7 +48,7 @@ class ElasticsearchUpdater(Updater):
         Writes inbound events to Elasticsearch
         """
         self.host = host
-        self.index = index if index not in (None, '') else 'shellbot'
+        self.index = index if index else 'shellbot'
 
     def get_host(self):
         """
@@ -56,7 +56,7 @@ class ElasticsearchUpdater(Updater):
 
         :rtype: str
         """
-        if self.host not in (None, ''):
+        if self.host:
             return self.host
 
         return self.engine.get('elasticsearch.updater.host', 'localhost:9200')

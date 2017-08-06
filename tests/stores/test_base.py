@@ -26,7 +26,7 @@ class MyStore(Store):
         return self.values.get(key, None)
 
     def _clear(self, key):
-        if key in (None, ''):
+        if not key:
             self.values.clear()
         else:
             self.values[key] = None

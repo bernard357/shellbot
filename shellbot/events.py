@@ -54,7 +54,7 @@ class Event(object):
         attribute is missing.
 
         """
-        if attributes in (None, ''):
+        if not attributes:
             self.__dict__['attributes'] = {}
 
         elif isinstance(attributes, string_types):
@@ -212,7 +212,7 @@ class Message(Event):
 
         """
         content = self.attributes.get('content')
-        if content not in (None, ''):
+        if content:
             return content
 
         return self.__getattr__('text')

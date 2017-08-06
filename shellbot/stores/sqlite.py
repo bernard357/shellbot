@@ -60,11 +60,11 @@ class SqliteStore(Store):
         Here we create a new store powered by Sqlite, and use
         settings under the key ``sqlite`` in the context of this bot.
         """
-        assert prefix not in (None, '')
+        assert prefix
         self.prefix = prefix
         self.id = id if id else '*id'
 
-        if db not in (None, ''):
+        if db:
             self.context.set(self.prefix+'.db', db)
 
     def check(self):
@@ -88,7 +88,7 @@ class SqliteStore(Store):
         :type id: str
 
         """
-        if id not in (None, ''):
+        if id:
             self.id = id
 
         handle = self.get_db()
@@ -184,7 +184,7 @@ class SqliteStore(Store):
         """
         handle = handle if handle else self.get_db()
 
-        if key in (None, ''):
+        if not key:
             cursor = handle.cursor()
             cursor.execute("DELETE FROM store WHERE context=?",
                            (self.id,))

@@ -80,7 +80,7 @@ example in the command ``explore``::
             Explores a planet and comes back
             """
 
-            if arguments in (None, ''):
+            if not arguments:
                 bot.say(u"usage: {}".format(self.usage_message))
                 return
 

@@ -145,7 +145,7 @@ class Menu(Input):
         """
         super(Menu, self).on_init(**kwargs)
 
-        assert options not in (None, '')
+        assert options
         assert len(options) > 0
         self.options = options
 

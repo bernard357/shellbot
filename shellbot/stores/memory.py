@@ -104,7 +104,7 @@ class MemoryStore(Store):
             store._clear()
 
         """
-        if key in (None, ''):
+        if not key:
             self.values.clear()
         else:
             self.values[key] = None

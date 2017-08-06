@@ -402,7 +402,7 @@ class Store(object):
             {'PO Number': '1234A'}
 
         """
-        assert label not in (None, '')
+        assert label
 
         with self.lock:
             value = self.from_text(self._get(key))

@@ -543,7 +543,7 @@ class Engine(object):
         """
         logging.debug(u"Registering to '{}' dispatch".format(event))
 
-        assert event not in (None, '')
+        assert event
         assert isinstance(event, string_types)
         if event not in self.registered.keys():
             self.registered[event] = []
@@ -806,7 +806,7 @@ class Engine(object):
         on successful channel creation or lookup. In other terms, this function
         can be called safely from any process for the creation of a channel.
         """
-        if title in (None, ''):
+        if not title:
             title=self.space.configured_title()
 
         logging.debug(u"Bonding to channel '{}'".format(title))
@@ -850,7 +850,7 @@ class Engine(object):
         :type: title: str
 
         """
-        if title in (None, ''):
+        if not title:
             title=self.space.configured_title()
 
         logging.debug(u"Disposing channel '{}'".format(title))

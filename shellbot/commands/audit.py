@@ -90,7 +90,7 @@ class Audit(Command):
         elif arguments =='off':
             self.audit_off(bot)
 
-        elif arguments in (None, ''):
+        elif not arguments:
             self.audit_status(bot)
 
         else:

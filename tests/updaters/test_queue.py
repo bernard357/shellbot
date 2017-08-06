@@ -38,13 +38,13 @@ class UpdaterTests(unittest.TestCase):
         logging.info('***** on_init')
 
         u = QueueUpdater()
-        self.assertTrue(u.queue not in (None, ''))
+        self.assertTrue(u.queue)
 
         u = QueueUpdater(queue=None)
-        self.assertTrue(u.queue not in (None, ''))
+        self.assertTrue(u.queue)
 
         u = QueueUpdater(queue='')
-        self.assertTrue(u.queue not in (None, ''))
+        self.assertTrue(u.queue)
 
         q = Queue()
         u = QueueUpdater(queue=q)

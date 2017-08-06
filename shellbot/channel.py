@@ -81,7 +81,7 @@ class Channel(object):
         attribute is missing.
 
         """
-        if attributes in (None, ''):
+        if not attributes:
             self.__dict__['attributes'] = {}
 
         elif isinstance(attributes, string_types):

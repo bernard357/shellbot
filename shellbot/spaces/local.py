@@ -79,7 +79,7 @@ class LocalSpace(Space):
         typing 'hello world' in the chat space.
 
         """
-        assert prefix not in (None, '')
+        assert prefix
         self.prefix = prefix
 
         self.input = []
@@ -105,7 +105,7 @@ class LocalSpace(Space):
 
         This function is used to simulate input user to the bot.
         """
-        if input in (None, ''):
+        if not input:
             return
         if isinstance(input, string_types):
             input = [input]
@@ -175,7 +175,7 @@ class LocalSpace(Space):
         This function returns a representation of the local channel.
 
         """
-        assert title not in (None, '')
+        assert title
 
         attributes = {
             'id': '*local',
@@ -194,7 +194,7 @@ class LocalSpace(Space):
         :return: Channel instance or None
 
         """
-        assert title not in (None, '')
+        assert title
         attributes = {
             'id': '*local',
             'title': title,
@@ -212,7 +212,7 @@ class LocalSpace(Space):
         :return: Channel instance or None
 
         """
-        assert id not in (None, '')
+        assert id
         attributes = {
             'id': id,
             'title': self.configured_title(),
@@ -252,7 +252,7 @@ class LocalSpace(Space):
 
         Note: this function returns all participants, except the bot itself.
         """
-        assert id not in (None, '')  # target channel is required
+        assert id  # target channel is required
         return self.participants
 
     def add_participant(self, id, person, is_moderator=False):
@@ -269,8 +269,8 @@ class LocalSpace(Space):
         :type is_moderator: True or False
 
         """
-        assert id not in (None, '')  # target channel is required
-        assert person not in (None, '')
+        assert id  # target channel is required
+        assert person
         assert is_moderator in (True, False)
         self.participants.append(person)
 
@@ -285,8 +285,8 @@ class LocalSpace(Space):
         :type person: str
 
         """
-        assert id not in (None, '')  # target channel is required
-        assert person not in (None, '')
+        assert id  # target channel is required
+        assert person
         self.participants.remove(person)
 
     def walk_messages(self,

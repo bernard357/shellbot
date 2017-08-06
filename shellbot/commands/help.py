@@ -43,7 +43,7 @@ class Help(Command):
         if self.engine.shell.commands == []:
             bot.say(u"No command has been found.")
 
-        elif arguments in (None, ''):
+        elif not arguments:
             lines = []
 
             for key in self.engine.shell.commands:

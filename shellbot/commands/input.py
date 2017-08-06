@@ -41,7 +41,7 @@ class Input(Command):
 
         """
         input = bot.recall('input')
-        if input in (None, {}):
+        if not input:
             bot.say(self.no_input_message)
             return
 
