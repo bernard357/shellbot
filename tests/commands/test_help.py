@@ -221,9 +221,10 @@ class HelpTests(unittest.TestCase):
 
         c = Help(self.engine)
 
-        self.engine.configure_from_path(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            + '/test_settings/regular.yaml')
+        self.engine.configure_from_path(os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            'test_settings',
+            'regular.yaml'))
 
         self.engine.shell = Shell(engine=self.engine)
         self.engine.load_command('shellbot.commands.help')

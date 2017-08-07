@@ -14,8 +14,10 @@ from shellbot.events import Message
 from shellbot.updaters import FileUpdater
 
 my_engine = Engine()
-my_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/local'
-my_file = my_path + '/file_updater.log'
+my_path = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    'local')
+my_file = os.path.join(my_path, 'file_updater.log')
 
 
 class UpdaterTests(unittest.TestCase):
@@ -71,16 +73,18 @@ class UpdaterTests(unittest.TestCase):
         logging.info('***** on_bond')
 
         try:
-            os.rmdir(my_path+'/on_bond')
+            os.rmdir(os.path.join(my_path, 'on_bond'))
         except:
             pass
 
-        u = FileUpdater(path=my_path+'/on_bond/file.log')
+        u = FileUpdater(path=os.path.join(my_path,
+                                          'on_bond',
+                                          'file.log'))
         u.on_bond(bot='*dummy')
-        self.assertTrue(os.path.isdir(my_path+'/on_bond'))
+        self.assertTrue(os.path.isdir(os.path.join(my_path, 'on_bond')))
 
         try:
-            os.rmdir(my_path+'/on_bond')
+            os.rmdir(os.path.join(my_path, 'on_bond'))
         except:
             pass
 

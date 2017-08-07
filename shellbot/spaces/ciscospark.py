@@ -1043,7 +1043,8 @@ class SparkSpace(Space):
         """
         Copies a shared document locally
         """
-        path = tempfile.gettempdir()+'/'+self.name_attachment(url, token=token)
+        path = os.path.join(tempfile.gettempdir(),
+                            self.name_attachment(url, token=token))
         logging.debug(u"- writing to {}".format(path))
         with open(path, "w+b") as handle:
             handle.write(self.get_attachment(url, token=token))

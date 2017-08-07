@@ -76,11 +76,12 @@ class SpaceUpdater(Updater):
         logging.debug(event.attributes)
 
         if event.get('url'):
-            file = self.space.download_attachment(event.url)
-            message = u"{}: {}".format(event.from_label, os.path.basename(file))
+            attachment = self.space.download_attachment(event.url)
+            message = u"{}: {}".format(event.from_label,
+                                       os.path.basename(attachment))
 
             self.mouth.put(Vibes(text=message,
-                                 file=file))
+                                 file=attachment))
 
         else:
             self.mouth.put(self.format(event))

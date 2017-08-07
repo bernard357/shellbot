@@ -68,9 +68,10 @@ class DefaultTests(unittest.TestCase):
 
         logging.info("***** execute named list")
 
-        self.engine.configure_from_path(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            + '/test_settings/regular.yaml')
+        self.engine.configure_from_path(os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            'test_settings',
+            'regular.yaml'))
 
         c = Default(self.engine)
 
