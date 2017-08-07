@@ -174,7 +174,7 @@ class Subscriber(object):
         address=self.context.get('bus.address')
         logging.debug(u"Subscribing at {}".format(address))
 
-        assert channels
+        assert channels or channels == ''
         if isinstance(channels, string_types):
             channels = [channels]
         self.channels = channels
