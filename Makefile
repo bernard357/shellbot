@@ -64,6 +64,7 @@ coverage:
 
 docs:
 	@rm -f docs/shellbot.rst
+	@rm -f docs/shellbot.*.rst
 	@rm -f docs/modules.rst
 	sphinx-apidoc -o docs/ shellbot --separate
 	$(MAKE) -C docs clean
