@@ -166,11 +166,9 @@ class Menu(Input):
         text = self.question if self.question else None
 
         if text:
-            index = 1
             text += '\n'
-            for option in self.options:
-                text += u"{}. {}\n".format(index, option)
-                index += 1
+            for (index, option) in enumerate(self.options):
+                text += u"{}. {}\n".format(index+1, option)
 
         self.bot.say(text)
 

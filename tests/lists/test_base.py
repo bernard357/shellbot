@@ -46,11 +46,9 @@ class ListTests(unittest.TestCase):
 
         logging.info('***** __iter__')
 
-        list = List(items=['a', 'b', 'c'])
-        index = 0
-        for item in list:
+        my_items = List(items=['a', 'b', 'c'])
+        for (index, item) in enumerate(my_items):
             assert item == ['a', 'b', 'c'][index]
-            index += 1
 
 
 if __name__ == '__main__':

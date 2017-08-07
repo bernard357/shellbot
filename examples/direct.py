@@ -131,15 +131,16 @@ class MyInput(Input):  # transition from direct channel to group channel
         )
 
         self.bot.say(u"- replicating documents to the group channel...")
-        counter = 0
-        for message in self.bot.space.list_messages(id=self.bot.id,
-                                                    quantity=1,
-                                                    with_attachment=True):
+        for counter, message in enumerate(
+                self.bot.space.list_messages(id=self.bot.id,
+                                             quantity=1,
+                                             with_attachment=True)):
+
             if not counter:
                 self.bot.space.post_message(channel.id,
                                             text="Documents gathered so far:")
-            counter += 1
-            self.bot.say(u"- replicating document #{}...".format(counter))
+
+            self.bot.say(u"- replicating document #{}...".format(counter+1))
 
             name = self.bot.space.name_attachment(message.url)
             logging.debug(u"- attachment: {}".format(name))

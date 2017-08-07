@@ -39,10 +39,8 @@ class Todos(Command):
 
         if len(self.engine.factory.items):
             lines = []
-            index = 1
-            for item in self.engine.factory.items:
-                lines.append(u"#{} {}".format(index, item))
-                index += 1
+            for (index, item) in enumerate(self.engine.factory.items):
+                lines.append(u"#{} {}".format(index+1, item))
             bot.say(self.list_header
                          + '\n- ' + '\n- '.join(lines))
         else:

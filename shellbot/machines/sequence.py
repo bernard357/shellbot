@@ -210,17 +210,14 @@ class Sequence(object):
         logging.info(u"Beginning of the sequence")
         self.set('is_running', True)
 
-        index = 0
-        while index < len(self.machines):
+        for (index, machine) in enumerate(self.machines):
 
             logging.info(u"- running machine #{}".format(index+1))
             self.set('_index', index)
-            machine = self.machines[index]
 
             process = machine.start()
             if process:
                 process.join()
-            index += 1
 
             if not self.is_running:
                 break
