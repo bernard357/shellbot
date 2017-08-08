@@ -31,7 +31,7 @@ project_root = os.path.dirname(cwd)
 sys.path.insert(0, project_root)
 
 # list here modules that sphinx is not able to import
-autodoc_mock_imports = ['builtins', 'ciscosparkapi', 'elasticsearch', 'requests', 'zmq']
+autodoc_mock_imports = ['builtins', 'ciscosparkapi', 'elasticsearch', 'zmq']
 
 import mock
 for mod_name in autodoc_mock_imports:
