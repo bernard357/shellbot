@@ -744,13 +744,13 @@ class SparkSpace(Space):
         logging.info(u"Posting message")
         if text:
             logging.debug(u"- text: {}".format(
-                text[:50] + (text[50:] and '..')))
+                text[:50] + (text[50:] and '...')))
         if content:
             logging.debug(u"- content: {}".format(
-                content[:50] + (content[50:] and '..')))
+                content[:50] + (content[50:] and '...')))
         if file:
             logging.debug(u"- file: {}".format(
-                file[:50] + (file[50:] and '..')))
+                file[:50] + (file[50:] and '...')))
 
         @retry(u"Unable to post message", silent=True)
         def do_it():
