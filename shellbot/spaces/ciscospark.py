@@ -17,12 +17,14 @@
 
 from bottle import request
 from functools import wraps
+from io import BytesIO
 import itertools
 import logging
 from multiprocessing import Process, Queue
 import os
 import re
 import requests
+import shutil
 from six import string_types
 import tempfile
 import time
@@ -1046,8 +1048,9 @@ class SparkSpace(Space):
         path = os.path.join(tempfile.gettempdir(),
                             self.name_attachment(url, token=token))
         logging.debug(u"- writing to {}".format(path))
-        with open(path, "w+b") as handle:
-            handle.write(self.get_attachment(url, token=token))
+        with open(path, "wb") as handle:
+            shutil.copyfileobj(self.get_attachment(url, token=token),
+                               handle)
 
         return path
 
@@ -1084,6 +1087,10 @@ class SparkSpace(Space):
     def get_attachment(self, url, token=None, response=None):
         """
         Retrieves a document attached to a room
+
+        :return: a stream of BytesIO
+        :rtype: BytesIO
+
         """
         logging.debug(u"- fetching {}".format(url))
 
@@ -1103,7 +1110,7 @@ class SparkSpace(Space):
 #        logging.debug(u"- headers: {}".format(response.headers))
 #        logging.debug(u"- encoding: {}".format(response.encoding))
         logging.debug(u"- length: {}".format(len(response.content)))
-        return response.content
+        return BytesIO(response.content)
 
     def on_join(self, item, queue=None):
         """

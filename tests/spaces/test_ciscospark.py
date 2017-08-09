@@ -4,6 +4,7 @@
 import unittest
 from bottle import request
 import gc
+from io import BytesIO
 import json
 import logging
 import mock
@@ -806,13 +807,14 @@ class SparkSpaceTests(unittest.TestCase):
                 return 'some_file.pdf'
 
             def get_attachment(self, url, token=None):
-                return b'hello world'
+                return BytesIO(b'hello world')
 
         space = MySpace(context=self.context)
         outcome = space.download_attachment(url='/dummy')
 
-        with open(outcome, "r+b") as handle:
-            self.assertEqual(handle.read(), space.get_attachment('/dummy'))
+        with open(outcome, "rb") as handle:
+            self.assertEqual(handle.read(),
+                             space.get_attachment('/dummy').read())
 
         try:
             os.remove(outcome)
@@ -856,18 +858,21 @@ class SparkSpaceTests(unittest.TestCase):
 
         self.space.token = None
         response = MyResponse(headers={})
-        self.assertEqual(self.space.get_attachment(url='/dummy', response=response),
-                         'content')
+        content = self.space.get_attachment(url='/dummy',
+                                            response=response).getvalue()
+        self.assertEqual(content, 'content')
 
         self.space.token = '*void'
         response = MyResponse(headers={})
-        self.assertEqual(self.space.get_attachment(url='/dummy', response=response),
-                         'content')
+        content = self.space.get_attachment(url='/dummy',
+                                            response=response).getvalue()
+        self.assertEqual(content, 'content')
 
         self.space.token = None
         response = MyResponse(status_code=400, headers={})
         with self.assertRaises(Exception):
-            name = self.space.get_attachment(url='/dummy', response=response)
+            content = self.space.get_attachment(url='/dummy',
+                                                response=response)
 
     def test_on_join(self):
 
