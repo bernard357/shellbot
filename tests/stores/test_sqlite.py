@@ -16,10 +16,10 @@ class SqliteStoreTests(unittest.TestCase):
 
     def setUp(self):
         self.context = Context()
-        self.db_name = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                    '..',
-                                    'local',
-                                    'store.db')
+        self.db_name = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            'local',
+            'store.db')
 
     def tearDown(self):
         del self.context

@@ -217,8 +217,10 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(self.engine.get('server.hook'), '/hook')
 
         self.engine.context.clear()
-        self.engine.configure_from_path(os.path.dirname(os.path.abspath(__file__))
-                                      + '/test_settings/regular.yaml')
+        self.engine.configure_from_path(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            'test_settings',
+            'regular.yaml'))
         self.assertEqual(self.engine.get('bot.on_enter'), 'How can I help you?')
         self.assertEqual(self.engine.get('bot.on_exit'), 'Bye for now')
         self.assertEqual(self.engine.get('local.title'), 'Support channel')
