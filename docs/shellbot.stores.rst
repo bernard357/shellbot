@@ -1,5 +1,5 @@
-shellbot.stores package
-=======================
+shellbot\.stores package
+========================
 
 Submodules
 ----------

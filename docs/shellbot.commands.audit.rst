@@ -1,5 +1,5 @@
-shellbot.commands.audit module
-==============================
+shellbot\.commands\.audit module
+================================
 
 .. automodule:: shellbot.commands.audit
     :members:

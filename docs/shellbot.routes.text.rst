@@ -1,5 +1,5 @@
-shellbot.routes.text module
-===========================
+shellbot\.routes\.text module
+=============================
 
 .. automodule:: shellbot.routes.text
     :members:

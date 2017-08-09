@@ -1,5 +1,5 @@
-shellbot.routes.base module
-===========================
+shellbot\.routes\.base module
+=============================
 
 .. automodule:: shellbot.routes.base
     :members:

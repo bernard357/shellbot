@@ -1,5 +1,5 @@
-shellbot.updaters.queue module
-==============================
+shellbot\.updaters\.queue module
+================================
 
 .. automodule:: shellbot.updaters.queue
     :members:

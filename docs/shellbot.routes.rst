@@ -1,5 +1,5 @@
-shellbot.routes package
-=======================
+shellbot\.routes package
+========================
 
 Submodules
 ----------

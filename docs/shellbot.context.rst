@@ -1,5 +1,5 @@
-shellbot.context module
-=======================
+shellbot\.context module
+========================
 
 .. automodule:: shellbot.context
     :members:

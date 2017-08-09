@@ -1,5 +1,5 @@
-shellbot.machines.sequence module
-=================================
+shellbot\.machines\.sequence module
+===================================
 
 .. automodule:: shellbot.machines.sequence
     :members:

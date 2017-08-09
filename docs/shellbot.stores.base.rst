@@ -1,5 +1,5 @@
-shellbot.stores.base module
-===========================
+shellbot\.stores\.base module
+=============================
 
 .. automodule:: shellbot.stores.base
     :members:

@@ -1,5 +1,5 @@
-shellbot.machines.steps module
-==============================
+shellbot\.machines\.steps module
+================================
 
 .. automodule:: shellbot.machines.steps
     :members:

@@ -1,5 +1,5 @@
-shellbot.updaters package
-=========================
+shellbot\.updaters package
+==========================
 
 Submodules
 ----------

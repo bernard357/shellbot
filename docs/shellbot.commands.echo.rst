@@ -1,5 +1,5 @@
-shellbot.commands.echo module
-=============================
+shellbot\.commands\.echo module
+===============================
 
 .. automodule:: shellbot.commands.echo
     :members:

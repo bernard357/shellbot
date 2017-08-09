@@ -1,5 +1,5 @@
-shellbot.commands.default module
-================================
+shellbot\.commands\.default module
+==================================
 
 .. automodule:: shellbot.commands.default
     :members:

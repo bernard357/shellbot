@@ -1,5 +1,5 @@
-shellbot.spaces.ciscospark module
-=================================
+shellbot\.spaces\.ciscospark module
+===================================
 
 .. automodule:: shellbot.spaces.ciscospark
     :members:

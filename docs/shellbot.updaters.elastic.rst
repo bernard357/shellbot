@@ -1,5 +1,5 @@
-shellbot.updaters.elastic module
-================================
+shellbot\.updaters\.elastic module
+==================================
 
 .. automodule:: shellbot.updaters.elastic
     :members:

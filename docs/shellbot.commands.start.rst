@@ -1,5 +1,5 @@
-shellbot.commands.start module
-==============================
+shellbot\.commands\.start module
+================================
 
 .. automodule:: shellbot.commands.start
     :members:

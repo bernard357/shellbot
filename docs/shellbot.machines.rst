@@ -1,5 +1,5 @@
-shellbot.machines package
-=========================
+shellbot\.machines package
+==========================
 
 Submodules
 ----------

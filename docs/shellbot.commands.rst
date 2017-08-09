@@ -1,5 +1,5 @@
-shellbot.commands package
-=========================
+shellbot\.commands package
+==========================
 
 Submodules
 ----------

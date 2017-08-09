@@ -1,5 +1,5 @@
-shellbot.commands.version module
-================================
+shellbot\.commands\.version module
+==================================
 
 .. automodule:: shellbot.commands.version
     :members:

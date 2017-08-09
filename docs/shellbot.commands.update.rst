@@ -1,5 +1,5 @@
-shellbot.commands.update module
-===============================
+shellbot\.commands\.update module
+=================================
 
 .. automodule:: shellbot.commands.update
     :members:

@@ -1,5 +1,5 @@
-shellbot.spaces package
-=======================
+shellbot\.spaces package
+========================
 
 Submodules
 ----------

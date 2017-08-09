@@ -1,5 +1,5 @@
-shellbot.updaters.space module
-==============================
+shellbot\.updaters\.space module
+================================
 
 .. automodule:: shellbot.updaters.space
     :members:

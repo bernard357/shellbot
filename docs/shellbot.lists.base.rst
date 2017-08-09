@@ -1,5 +1,5 @@
-shellbot.lists.base module
-==========================
+shellbot\.lists\.base module
+============================
 
 .. automodule:: shellbot.lists.base
     :members:

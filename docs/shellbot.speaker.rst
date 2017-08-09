@@ -1,5 +1,5 @@
-shellbot.speaker module
-=======================
+shellbot\.speaker module
+========================
 
 .. automodule:: shellbot.speaker
     :members:

@@ -1,5 +1,5 @@
-shellbot.commands.noop module
-=============================
+shellbot\.commands\.noop module
+===============================
 
 .. automodule:: shellbot.commands.noop
     :members:

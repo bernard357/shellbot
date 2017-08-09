@@ -1,5 +1,5 @@
-shellbot.spaces.local module
-============================
+shellbot\.spaces\.local module
+==============================
 
 .. automodule:: shellbot.spaces.local
     :members:

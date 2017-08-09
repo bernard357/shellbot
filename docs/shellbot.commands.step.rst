@@ -1,5 +1,5 @@
-shellbot.commands.step module
-=============================
+shellbot\.commands\.step module
+===============================
 
 .. automodule:: shellbot.commands.step
     :members:

@@ -1,5 +1,5 @@
-shellbot.lists package
-======================
+shellbot\.lists package
+=======================
 
 Submodules
 ----------

@@ -1,5 +1,5 @@
-shellbot.machines.input module
-==============================
+shellbot\.machines\.input module
+================================
 
 .. automodule:: shellbot.machines.input
     :members:

@@ -1,5 +1,5 @@
-shellbot.listener module
-========================
+shellbot\.listener module
+=========================
 
 .. automodule:: shellbot.listener
     :members:

@@ -1,5 +1,5 @@
-shellbot.updaters.file module
-=============================
+shellbot\.updaters\.file module
+===============================
 
 .. automodule:: shellbot.updaters.file
     :members:

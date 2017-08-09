@@ -1,5 +1,5 @@
-shellbot.commands.close module
-==============================
+shellbot\.commands\.close module
+================================
 
 .. automodule:: shellbot.commands.close
     :members:

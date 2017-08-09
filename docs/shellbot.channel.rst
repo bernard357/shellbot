@@ -1,5 +1,5 @@
-shellbot.channel module
-=======================
+shellbot\.channel module
+========================
 
 .. automodule:: shellbot.channel
     :members:

@@ -1,5 +1,5 @@
-shellbot.commands.upload module
-===============================
+shellbot\.commands\.upload module
+=================================
 
 .. automodule:: shellbot.commands.upload
     :members:

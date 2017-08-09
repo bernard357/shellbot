@@ -1,5 +1,5 @@
-shellbot.server module
-======================
+shellbot\.server module
+=======================
 
 .. automodule:: shellbot.server
     :members:

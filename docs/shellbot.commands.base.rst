@@ -1,5 +1,5 @@
-shellbot.commands.base module
-=============================
+shellbot\.commands\.base module
+===============================
 
 .. automodule:: shellbot.commands.base
     :members:

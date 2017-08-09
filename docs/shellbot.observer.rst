@@ -1,5 +1,5 @@
-shellbot.observer module
-========================
+shellbot\.observer module
+=========================
 
 .. automodule:: shellbot.observer
     :members:

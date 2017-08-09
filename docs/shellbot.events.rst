@@ -1,5 +1,5 @@
-shellbot.events module
-======================
+shellbot\.events module
+=======================
 
 .. automodule:: shellbot.events
     :members:

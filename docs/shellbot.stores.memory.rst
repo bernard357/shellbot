@@ -1,5 +1,5 @@
-shellbot.stores.memory module
-=============================
+shellbot\.stores\.memory module
+===============================
 
 .. automodule:: shellbot.stores.memory
     :members:

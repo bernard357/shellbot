@@ -1,5 +1,5 @@
-shellbot.commands.empty module
-==============================
+shellbot\.commands\.empty module
+================================
 
 .. automodule:: shellbot.commands.empty
     :members:

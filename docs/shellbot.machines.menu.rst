@@ -1,5 +1,5 @@
-shellbot.machines.menu module
-=============================
+shellbot\.machines\.menu module
+===============================
 
 .. automodule:: shellbot.machines.menu
     :members:

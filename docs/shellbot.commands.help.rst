@@ -1,5 +1,5 @@
-shellbot.commands.help module
-=============================
+shellbot\.commands\.help module
+===============================
 
 .. automodule:: shellbot.commands.help
     :members:

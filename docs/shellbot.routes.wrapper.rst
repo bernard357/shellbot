@@ -1,5 +1,5 @@
-shellbot.routes.wrapper module
-==============================
+shellbot\.routes\.wrapper module
+================================
 
 .. automodule:: shellbot.routes.wrapper
     :members:

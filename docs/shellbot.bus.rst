@@ -1,5 +1,5 @@
-shellbot.bus module
-===================
+shellbot\.bus module
+====================
 
 .. automodule:: shellbot.bus
     :members:

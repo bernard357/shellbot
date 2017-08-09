@@ -1,5 +1,5 @@
-shellbot.commands.sleep module
-==============================
+shellbot\.commands\.sleep module
+================================
 
 .. automodule:: shellbot.commands.sleep
     :members:

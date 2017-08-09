@@ -1,5 +1,5 @@
-shellbot.machines.base module
-=============================
+shellbot\.machines\.base module
+===============================
 
 .. automodule:: shellbot.machines.base
     :members:
