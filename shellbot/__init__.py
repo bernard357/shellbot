@@ -31,7 +31,7 @@ from .routes.base import Route
 from .routes.notifier import Notifier
 from .routes.wrapper import Wrapper
 
-__version__ = '17.8.5'
+__version__ = '17.8.6'
 
 __all__ = [
     '__version__',
