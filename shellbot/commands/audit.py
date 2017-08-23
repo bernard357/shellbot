@@ -22,6 +22,7 @@ from threading import Timer
 from .base import Command
 from shellbot.updaters import Updater
 from shellbot.events import Message
+from shellbot.i18n import _
 
 
 class Audit(Command):
@@ -54,21 +55,21 @@ class Audit(Command):
 
     """
 
-    keyword = u'audit'
-    information_message = u'Check and change audit status'
-    usage_message = u'audit [on|off]'
+    keyword = _(u'audit')
+    information_message = _(u'Check and change audit status')
+    usage_message = _(u'audit [on|off]')
 
     in_direct = False  # do not audit 1:1 interactions
 
-    disabled_message = u'Audit has not been enabled.'
+    disabled_message = _(u'Audit has not been enabled.')
 
-    on_message = u'Chat interactions are currently audited.'
-    off_message = u'Chat interactions are not audited.'
-    already_on_message = u'Chat interactions are already audited.'
-    already_off_message = u'Chat interactions are already private.'
+    on_message = _(u'Chat interactions are currently audited.')
+    off_message = _(u'Chat interactions are not audited.')
+    already_on_message = _(u'Chat interactions are already audited.')
+    already_off_message = _(u'Chat interactions are already private.')
 
     off_duration = 60  # after this time off, back to auditing on
-    temporary_off_message = u"Please note that auditing will restart after {}"
+    temporary_off_message = _(u"Please note that auditing will restart after {}")
 
     def execute(self, bot, arguments=None, **kwargs):
         """
@@ -94,7 +95,7 @@ class Audit(Command):
             self.audit_status(bot)
 
         else:
-            bot.say(u"usage: {}".format(self.usage_message))
+            bot.say(_(u"usage: {}").format(self.usage_message))
 
     def audit_on(self, bot):
         """

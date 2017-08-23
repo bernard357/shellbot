@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from shellbot.i18n import _
 from .base import Command
 
 
@@ -23,8 +24,8 @@ class Version(Command):
     Displays software version
     """
 
-    keyword = u'version'
-    information_message = u'Display software version'
+    keyword = _(u'version')
+    information_message = _(u'Display software version')
     is_hidden = True
 
     def execute(self, bot, arguments=None, **kwargs):
@@ -38,5 +39,5 @@ class Version(Command):
         :type arguments: str or ``None``
 
         """
-        bot.say(u"{} version {}".format(self.engine.name,
-                                        self.engine.version))
+        bot.say(_(u"{} version {}").format(self.engine.name,
+                                           self.engine.version))

@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from shellbot.i18n import _
 from .base import Command
 
 
@@ -26,8 +27,8 @@ class Close(Command):
     >>>shell.load_command(close)
 
     """
-    keyword = 'close'
-    information_message = u"Close this space"
+    keyword = _(u'close')
+    information_message = _(u"Close this space")
 
     in_direct = False  # do not allow command to close a direct channel
 
@@ -45,5 +46,5 @@ class Close(Command):
         messages with one or multiple ``bot.say("Whatever response")``.
 
         """
-        bot.say("Closing this channel")
+        bot.say(_(u"Closing this channel"))
         bot.dispose()

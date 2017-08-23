@@ -84,7 +84,7 @@ class Command(object):
             magic = shell.command('magic')
             magic.execute(bot, arguments='rub the lamp')
 
-        For commands that can handle file attachments, you could use 
+        For commands that can handle file attachments, you could use
         following approach::
 
             def execute(self,

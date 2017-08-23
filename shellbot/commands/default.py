@@ -17,6 +17,7 @@
 
 import time
 
+from shellbot.i18n import _
 from .base import Command
 
 
@@ -31,12 +32,12 @@ class Default(Command):
     In other cases, the end user is advised that the command is unknown.
     """
 
-    keyword = u'*default'
-    information_message = u'Handle unmatched command'
+    keyword = _(u'*default')
+    information_message = _(u'Handle unmatched commands')
     is_hidden = True
 
-    participants_message = u"Adding participants from '{}'"
-    default_message = u"Sorry, I do not know how to handle '{}'"
+    participants_message = _(u"Adding participants from '{}'")
+    default_message = _(u"Sorry, I do not know how to handle '{}'")
 
     def execute(self, bot, arguments=None, **kwargs):
         """

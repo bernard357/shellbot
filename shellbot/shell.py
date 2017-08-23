@@ -268,9 +268,9 @@ class Shell(object):
         verb = tokens.pop(0)
         if len(verb) < 1:
             if received and received.url:
-                verb = '*upload'
+                verb = _(u'*upload')
             else:
-                verb = '*empty'
+                verb = _(u'*empty')
 
         kwargs = {}
 
@@ -308,9 +308,9 @@ class Shell(object):
                     logging.debug(u"- command cannot be used in this channel")
                     bot.say(sorry_message.format(verb))
 
-            elif '*default' in self._commands.keys():
+            elif _(u'*default') in self._commands.keys():
                 kwargs['arguments'] = line  # provide full input line
-                command = self._commands['*default']
+                command = self._commands[_(u'*default')]
                 command.execute(bot, **kwargs)
 
             else:

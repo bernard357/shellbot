@@ -17,7 +17,9 @@
 
 import logging
 
+from shellbot.i18n import _
 from .base import Command
+
 
 class Start(Command):
     """
@@ -49,8 +51,8 @@ class Start(Command):
 
     """
 
-    keyword = 'start'
-    information_message = u"Start a new sequence"
+    keyword = _(u'start')
+    information_message = _(u"Start a new sequence")
 
     in_direct = True
     in_group = False
@@ -73,7 +75,7 @@ class Start(Command):
         Note: this command has no effect on a running machine.
         """
         if not bot.machine:
-            bot.say(u"No state machine is available")
+            bot.say(_(u"No state machine is available"))
 
         elif not bot.machine.restart(arguments=arguments, **kwargs):
-            bot.say(u"Cannot restart the state machine")
+            bot.say(_(u"Cannot restart the state machine"))

@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from shellbot.i18n import _
 from .base import Command
 
 
@@ -23,10 +24,10 @@ class Help(Command):
     Lists available commands and related usage information
     """
 
-    keyword = u'help'
-    information_message = u'Show commands and usage'
-    usage_message = u'help <command>'
-    usage_template = u"usage: {}"
+    keyword = _(u'help')
+    information_message = _(u'Show commands and usage')
+    usage_message = _(u'help <command>')
+    usage_template = _(u"usage: {}")
 
     def execute(self, bot, arguments=None, **kwargs):
         """
@@ -41,7 +42,7 @@ class Help(Command):
         """
 
         if self.engine.shell.commands == []:
-            bot.say(u"No command has been found.")
+            bot.say(_(u"No command has been found."))
 
         elif not arguments:
             lines = []
@@ -61,21 +62,21 @@ class Help(Command):
                 first = next(iter(item))
                 lines.append(u"{} - {}".format(
                     name,
-                    u"add participants ({}, ...)".format(first)))
+                    _(u"add participants ({}, ...)").format(first)))
 
             if lines:
                 bot.say(
-                    'Available commands:\n'
+                    _('Available commands:') + '\n'
                     + '\n'.join(lines))
 
         else:
             command = self.engine.shell.command(arguments)
 
             if not command:
-                bot.say(u"This command is unknown.")
+                bot.say(_(u"This command is unknown."))
 
             elif not self.allow(bot, command):
-                bot.say(u"This command is unknown.")
+                bot.say(_(u"This command is unknown."))
 
             else:
                 lines = []

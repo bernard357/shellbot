@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from shellbot.i18n import _
 from .base import Command
 
 
@@ -23,8 +24,8 @@ class Noop(Command):
     Does absolutely nothing
     """
 
-    keyword = u'pass'
-    information_message = u'Do absolutely nothing'
+    keyword = _(u'pass')
+    information_message = _(u'Do absolutely nothing')
     is_hidden = True
 
     def execute(self, bot, arguments=None, **kwargs):

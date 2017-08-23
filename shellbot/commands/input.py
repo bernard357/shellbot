@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from shellbot.i18n import _
 from .base import Command
 
 
@@ -23,11 +24,11 @@ class Input(Command):
     Displays input data
     """
 
-    keyword = u'input'
-    information_message = u'Display all input'
+    keyword = _(u'input')
+    information_message = _(u'Display all input')
 
-    no_input_message = u'There is nothing to display'
-    input_header =u'Input:'
+    no_input_message = _(u'There is nothing to display')
+    input_header = _(u'Input:')
 
     def execute(self, bot, arguments=None, **kwargs):
         """

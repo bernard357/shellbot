@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from shellbot.i18n import _
 from .base import Command
 
 
@@ -23,8 +24,8 @@ class Empty(Command):
     Handles empty command
     """
 
-    keyword = u'*empty'
-    information_message = u'Handle empty command'
+    keyword = _(u'*empty')
+    information_message = _(u'Handle empty command')
     is_hidden = True
 
     def execute(self, bot, arguments=None, **kwargs):
@@ -42,7 +43,7 @@ class Empty(Command):
             self.help_command = self.engine.shell.command('help')
 
         if self.help_command is None:
-            bot.say(u"No help command has been found.")
+            bot.say(_(u"No help command has been found."))
 
         else:
             self.help_command.execute(bot)

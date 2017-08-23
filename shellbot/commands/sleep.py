@@ -17,6 +17,7 @@
 
 import time
 
+from shellbot.i18n import _
 from .base import Command
 
 
@@ -25,9 +26,9 @@ class Sleep(Command):
     Sleeps for a while
     """
 
-    keyword = u'sleep'
-    information_message = u'Sleep for a while'
-    usage_message = u'sleep <n>'
+    keyword = _(u'sleep')
+    information_message = _(u'Sleep for a while')
+    usage_message = _(u'sleep <n>')
     is_hidden = True
 
     DEFAULT_DELAY = 1.0

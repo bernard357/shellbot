@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from shellbot.i18n import _
 from .base import Command
 
 
@@ -23,12 +24,12 @@ class Update(Command):
     Update input data
     """
 
-    keyword = u'update'
-    information_message = u'Update input content'
+    keyword = _(u'update')
+    information_message = _(u'Update input content')
 
-    no_arg = u'Thanks to provide the key and the data'
-    no_input = u'There is nothing to update, input is empty'
-    ok_msg = u'Update successfuly done'
+    no_arg = _(u'Thanks to provide the key and the data')
+    no_input = _(u'There is nothing to update, input is empty')
+    ok_msg = _(u'Update successfuly done')
 
     def execute(self, bot, arguments=None, **kwargs):
         """

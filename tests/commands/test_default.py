@@ -48,7 +48,7 @@ class DefaultTests(unittest.TestCase):
         c = Default(self.engine)
 
         self.assertEqual(c.keyword, u'*default')
-        self.assertEqual(c.information_message, u'Handle unmatched command')
+        self.assertEqual(c.information_message, u'Handle unmatched commands')
         self.assertEqual(c.usage_message, None)
         self.assertTrue(c.is_hidden)
 

@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from shellbot.i18n import _
 from .base import Command
 
 
@@ -23,8 +24,8 @@ class Echo(Command):
     Echoes input string
     """
 
-    keyword = u'echo'
-    information_message = u'Echo input string'
+    keyword = _(u'echo')
+    information_message = _(u'Echo input string')
     is_hidden = True
 
     def execute(self, bot, arguments=None, **kwargs):

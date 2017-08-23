@@ -17,7 +17,9 @@
 
 import logging
 
+from shellbot.i18n import _
 from .base import Command
+
 
 class Step(Command):
     """
@@ -45,8 +47,8 @@ class Step(Command):
 
     """
 
-    keyword = u'step'
-    information_message = u'Move process to next step'
+    keyword = _(u'step')
+    information_message = _(u'Move process to next step')
 
     event = 'next'  # understood by machines/steps
 
@@ -70,4 +72,4 @@ class Step(Command):
                              arguments=arguments,
                              **kwargs)
         else:
-            bot.say(u"No state machine is available")
+            bot.say(_(u"No state machine is available"))

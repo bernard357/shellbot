@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from shellbot.i18n import _
 from .base import Command
 
 
@@ -23,11 +24,11 @@ class Upload(Command):
     Handles a bare file upload
     """
 
-    keyword = u'*upload'
-    information_message = u'Handle file upload'
+    keyword = _(u'*upload')
+    information_message = _(u'Handle file upload')
     is_hidden = True
 
-    feedback_message = u"Thank you for the information shared!"
+    feedback_message = _(u"Thank you for the information shared!")
 
     def execute(self, bot, attachment, url, arguments=None, **kwargs):
         """
