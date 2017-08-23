@@ -20,6 +20,7 @@ from multiprocessing import Manager, Process, Queue
 import re
 import time
 
+from shellbot.i18n import _
 from .input import Input
 
 
@@ -89,7 +90,7 @@ class Menu(Input):
 
     """
 
-    RETRY_MESSAGE = u"Invalid input, please enter your choice as a number"
+    RETRY_MESSAGE = _(u"Invalid input, please enter your choice as a number")
 
     def on_init(self,
                 options=[],

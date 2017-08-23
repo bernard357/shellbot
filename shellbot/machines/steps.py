@@ -18,6 +18,7 @@
 import logging
 from six import string_types
 
+from shellbot.i18n import _
 from .base import Machine
 
 
@@ -297,10 +298,11 @@ class Step(object):
         :type index: int
 
         """
-        self.label = attributes.get('label', u'Step {}'.format(index))
+        self.label = attributes.get('label',
+                                    _(u'Step {}').format(index))
 
         self.message = attributes.get('message',
-                                      u'(no description is available)')
+                                      _(u'(no description is available)'))
 
         self.content = attributes.get('content', None)
 
@@ -333,7 +335,7 @@ class Step(object):
 
         """
         bot.say(
-            u"Current state: {} - {}".format(self.label, self.message))
+            _(u"Current state: {} - {}").format(self.label, self.message))
 
     def trigger(self, bot):
         """
@@ -355,7 +357,7 @@ class Step(object):
 
         """
         bot.say(
-            u"New state: {} - {}".format(self.label, self.message))
+            _(u"New state: {} - {}").format(self.label, self.message))
 
         if self.content or self.file:
             bot.say(' ',

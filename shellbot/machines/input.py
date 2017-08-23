@@ -20,6 +20,7 @@ from multiprocessing import Manager, Process, Queue
 import re
 import time
 
+from shellbot.i18n import _
 from .base import Machine
 
 
@@ -76,9 +77,9 @@ class Input(Machine):
         machine.start()
 
     """
-    ANSWER_MESSAGE = u"Ok, this has been noted"
-    RETRY_MESSAGE = u"Invalid input, please retry"
-    CANCEL_MESSAGE = u"Ok, forget about it"
+    ANSWER_MESSAGE = _(u"Ok, this has been noted")
+    RETRY_MESSAGE = _(u"Invalid input, please retry")
+    CANCEL_MESSAGE = _(u"Ok, forget about it")
 
     RETRY_DELAY = 20.0  # amount of seconds between retries
     CANCEL_DELAY = 40.0   # amount of seconds before time out
@@ -638,9 +639,10 @@ class Input(Machine):
         logging.debug(u"Receiving inbound message")
 
         message = kwargs('message')
-        self.bot.say(u"Received {}: {} (from {})".format(message['input']['key'],
-                                                    message['input']['value'],
-                                                    message['from']))
+        self.bot.say(_(u"Received {}: {} (from {})").format(
+            message['input']['key'],
+            message['input']['value'],
+            message['from']))
 
     def cancel(self):
         """
