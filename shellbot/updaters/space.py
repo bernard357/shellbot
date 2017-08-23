@@ -20,6 +20,7 @@ from multiprocessing import Queue
 import os
 
 from shellbot.context import Context
+from shellbot.i18n import _
 from shellbot.speaker import Speaker, Vibes
 from .base import Updater
 from shellbot.spaces import SparkSpace
@@ -50,7 +51,7 @@ class SpaceUpdater(Updater):
         self.space.connect()
 
         title = u"{} - {}".format(
-            self.space.configured_title(), u"Audited content")
+            self.space.configured_title(), _(u"Audited content"))
 
         self.space.bond(title=title)
 
@@ -77,8 +78,8 @@ class SpaceUpdater(Updater):
 
         if event.get('url'):
             attachment = self.space.download_attachment(event.url)
-            message = u"{}: {}".format(event.from_label,
-                                       os.path.basename(attachment))
+            message = _(u"{}: {}").format(event.from_label,
+                                          os.path.basename(attachment))
 
             self.mouth.put(Vibes(text=message,
                                  file=attachment))
@@ -103,17 +104,19 @@ class SpaceUpdater(Updater):
         """
         if event.type == 'message':
 
-            if event.content == event.text:
-                return u"{}: {}".format(event.from_label, event.text)
+            text = _(u"{}: {}")
 
-            return Vibes(text=u"{}: {}".format(event.from_label, event.text),
-                         content=u"{}: {}".format(event.from_label, event.content),
+            if event.content == event.text:
+                return text.format(event.from_label, event.text)
+
+            return Vibes(text=text.format(event.from_label, event.text),
+                         content=text.format(event.from_label, event.content),
                          file=None)
 
         if event.type == 'join':
-            return u"{} has joined".format(event.actor_label)
+            return _(u"{} has joined").format(event.actor_label)
 
         if event.type == 'leave':
-            return u"{} has left".format(event.actor_label)
+            return _(u"{} has left").format(event.actor_label)
 
-        return u"an unknown event has been received"
+        return _(u"an unknown event has been received")
