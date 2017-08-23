@@ -23,6 +23,7 @@ import sys
 import time
 import yaml
 
+from .i18n import _
 from .speaker import Vibes
 
 
@@ -280,7 +281,7 @@ class ShellBot(object):
         """
         Exits a channel
         """
-        text = self.engine.get('bot.on_exit', u"Bot is leaving this channel")
+        text = self.engine.get('bot.on_exit', _(u"Bot is leaving this channel"))
         self.say(text)
 
     def add_participants(self, persons=[]):

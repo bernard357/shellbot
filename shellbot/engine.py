@@ -27,6 +27,7 @@ import weakref
 from .bot import ShellBot
 from .bus import Bus
 from .context import Context
+from .i18n import _
 from .lists import ListFactory
 from .listener import Listener
 from .observer import Observer
@@ -476,7 +477,7 @@ class Engine(object):
         :rtype: str
 
         """
-        return self.get('bot.name', 'Shelly')
+        return self.get('bot.name', _('Shelly'))
 
     @property
     def version(self):
@@ -487,7 +488,7 @@ class Engine(object):
         :rtype: str
 
         """
-        return self.get('bot.version', '*unknown*')
+        return self.get('bot.version', _('*unknown*'))
 
     def register(self, event, instance):
         """

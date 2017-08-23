@@ -21,6 +21,7 @@ from six import string_types
 import time
 
 from shellbot.events import Event, Message
+from shellbot.i18n import _
 
 class Observer(Process):
     """
@@ -71,7 +72,7 @@ class Observer(Process):
         try:
             self.engine.set('observer.counter', 0)
             while self.engine.get('general.switch', 'on') == 'on':
-                
+
                 if not self.engine.fan:
                     break
 
@@ -130,25 +131,28 @@ class Observer(Process):
                 logging.debug(u"- no updater available -- thrown away")
                 return
 
-        current = self.engine.get(u"audit.switch.{}".format(item.channel_id), 'off')
-        previous = self.engine.get(u"audit.previous-switch.{}".format(item.channel_id), 'off')
-        self.engine.set(u"audit.previous-switch.{}".format(item.channel_id), current)
+        current = self.engine.get(
+            u"audit.switch.{}".format(item.channel_id), 'off')
+        previous = self.engine.get(
+            u"audit.previous-switch.{}".format(item.channel_id), 'off')
+        self.engine.set(
+            u"audit.previous-switch.{}".format(item.channel_id), current)
 
         if current == 'on' and previous == 'off':
 
-            updater.put(Message({'text': "========== AUDIT ON ==========",
+            updater.put(Message({'text': _("========== AUDIT ON =========="),
                                  'from_id': self.engine.get('bot.id'),
                                  'channel_id': item.channel_id}))
 
         elif current == 'off' and previous == 'on':
 
-            updater.put(Message({'text': "========== AUDIT OFF ==========",
+            updater.put(Message({'text': _("========== AUDIT OFF =========="),
                                  'from_id': self.engine.get('bot.id'),
                                  'channel_id': item.channel_id}))
 
 
         if current != 'on':
-            logging.debug(u"- audit has not been activated for this channel -- thrown away")
+            logging.debug(u"- no audit for this channel -- thrown away")
             return
 
         updater.put(item)

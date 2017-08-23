@@ -22,6 +22,7 @@ from multiprocessing import Process, Queue
 from six import string_types
 
 from shellbot.commands import Default
+from shellbot.i18n import _
 
 
 class Shell(object):
@@ -290,6 +291,8 @@ class Shell(object):
         if bot.channel is None:
             return
 
+        sorry_message = _(u"Sorry, I do not know how to handle '{}'")
+
         try:
             if verb in self._commands.keys():
                 command = self._commands[verb]
@@ -303,7 +306,7 @@ class Shell(object):
                 else:
 
                     logging.debug(u"- command cannot be used in this channel")
-                    bot.say(u"Sorry, I do not know how to handle '{}'".format(verb))
+                    bot.say(sorry_message.format(verb))
 
             elif '*default' in self._commands.keys():
                 kwargs['arguments'] = line  # provide full input line
@@ -311,8 +314,8 @@ class Shell(object):
                 command.execute(bot, **kwargs)
 
             else:
-                bot.say(u"Sorry, I do not know how to handle '{}'".format(verb))
+                bot.say(sorry_message.format(verb))
 
         except Exception:
-            bot.say(u"Sorry, I do not know how to handle '{}'".format(verb))
+            bot.say(sorry_message.format(verb))
             raise
