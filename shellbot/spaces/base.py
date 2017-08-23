@@ -21,6 +21,8 @@ import os
 from six import string_types
 import time
 
+from shellbot.i18n import _
+
 
 class Space(object):
     """
@@ -108,7 +110,7 @@ class Space(object):
 
     }
 
-    DEFAULT_SPACE_TITLE = u'Collaboration space'
+    DEFAULT_SPACE_TITLE = _(u'Collaboration space')
 
     PULL_INTERVAL = 0.05  # time between pulls, when not hooked
 

@@ -24,6 +24,7 @@ import time
 
 from shellbot.channel import Channel
 from shellbot.events import Message
+from shellbot.i18n import _
 from .base import Space
 
 
@@ -93,7 +94,7 @@ class LocalSpace(Space):
         """
         Adds processing on engine start
         """
-        sys.stdout.write(u"Type 'help' for guidance, or Ctl-C to exit.\n")
+        sys.stdout.write(_(u"Type 'help' for guidance, or Ctl-C to exit.")+'\n')
         sys.stdout.flush()
 
     def push(self, input):
@@ -123,7 +124,7 @@ class LocalSpace(Space):
         to simulate user input. Else stdin is read one line at a time.
         """
         self.context.check(self.prefix+'.title',
-                            'Collaboration space', filter=True)
+                           _(u'Collaboration space'), filter=True)
         self.context.check(self.prefix+'.participants',
                            '$CHANNEL_DEFAULT_PARTICIPANTS', filter=True)
 
