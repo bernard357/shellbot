@@ -860,13 +860,13 @@ class SparkSpaceTests(unittest.TestCase):
         response = MyResponse(headers={})
         content = self.space.get_attachment(url='/dummy',
                                             response=response).getvalue()
-        self.assertEqual(content, 'content')
+        self.assertEqual(content, b'content')
 
         self.space.token = '*void'
         response = MyResponse(headers={})
         content = self.space.get_attachment(url='/dummy',
                                             response=response).getvalue()
-        self.assertEqual(content, 'content')
+        self.assertEqual(content, b'content')
 
         self.space.token = None
         response = MyResponse(status_code=400, headers={})
