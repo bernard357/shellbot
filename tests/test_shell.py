@@ -132,6 +132,24 @@ class ShellTests(unittest.TestCase):
         self.assertEqual(shell.commands, ['help'])
         self.assertEqual(shell.command('help'), help)
 
+        self.engine.context.clear()
+        shell = Shell(engine=self.engine)
+        from shellbot.commands.empty import Empty
+        class FunkyCommand(Empty):
+            keyword = 'FunKy'
+        command = FunkyCommand(self.engine)
+        shell.load_command(command)
+        self.assertEqual(command.engine, self.engine)
+        self.assertEqual(command.keyword, 'funky')
+        self.assertEqual(shell.commands, ['funky'])
+        self.assertEqual(shell.command('Funky'), command)
+        self.assertEqual(shell.command('fUnky'), command)
+        self.assertEqual(shell.command('fuNky'), command)
+        self.assertEqual(shell.command('funKy'), command)
+        self.assertEqual(shell.command('funkY'), command)
+        self.assertEqual(shell.command('FunKy'), command)
+        self.assertEqual(shell.command('funky'), command)
+
     def test_load_commands(self):
 
         logging.info('***** load_commands')

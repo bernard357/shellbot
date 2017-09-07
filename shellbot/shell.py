@@ -113,6 +113,9 @@ class Shell(object):
             >>>print(shell.command('help').information_message)
 
         """
+        if keyword:
+            keyword = keyword.lower()  # align across devices
+
         return self._commands.get(keyword, None)
 
     def load_default_commands(self):
@@ -204,6 +207,8 @@ class Shell(object):
 
         command.engine = self.engine
 
+        command.keyword = command.keyword.lower()  # align across devices
+
         if command.keyword in self._commands.keys():
             logging.debug(u"Command '{}' has been replaced".format(
                 command.keyword))
@@ -271,6 +276,7 @@ class Shell(object):
                 verb = _(u'*upload')
             else:
                 verb = _(u'*empty')
+        verb = verb.lower()  # align across devices
 
         kwargs = {}
 
