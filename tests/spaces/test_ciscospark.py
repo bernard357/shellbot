@@ -854,7 +854,7 @@ class SparkSpaceTests(unittest.TestCase):
                 self.status_code = status_code
                 self.headers = headers
                 self.encoding = 'encoding'
-                self.content = 'content'
+                self.content = b'content'
 
         self.space.token = None
         response = MyResponse(headers={})
