@@ -87,7 +87,6 @@ import os
 import time
 
 from shellbot import Engine, Context, Command
-Context.set_logger()
 
 
 class Batman(Command):  # a command that displays static text
@@ -126,15 +125,19 @@ class Batsuicide(Command):  # a command only for group channels
         bot.dispose()
 
 
-engine = Engine(  # use Cisco Spark and load shell commands
-    type='spark',
-    commands=[Batman(), Batcave(), Batsignal(), Batsuicide()])
+if __name__ == '__main__':
 
-os.environ['BOT_ON_ENTER'] = 'You can now chat with Batman'
-os.environ['BOT_ON_EXIT'] = 'Batman is now quitting the room, bye'
-os.environ['CHAT_ROOM_TITLE'] = 'Chat with Batman'
-engine.configure()  # ensure that all components are ready
+    Context.set_logger()
 
-engine.bond(reset=True)  # create a group channel for this example
-engine.run()  # until Ctl-C
-engine.dispose()  # delete the initial group channel
+    engine = Engine(  # use Cisco Spark and load shell commands
+        type='spark',
+        commands=[Batman(), Batcave(), Batsignal(), Batsuicide()])
+
+    os.environ['BOT_ON_ENTER'] = 'You can now chat with Batman'
+    os.environ['BOT_ON_EXIT'] = 'Batman is now quitting the room, bye'
+    os.environ['CHAT_ROOM_TITLE'] = 'Chat with Batman'
+    engine.configure()  # ensure that all components are ready
+
+    engine.bond(reset=True)  # create a group channel for this example
+    engine.run()  # until Ctl-C
+    engine.dispose()  # delete the initial group channel

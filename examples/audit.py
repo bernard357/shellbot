@@ -85,7 +85,6 @@ import os
 
 from shellbot import Engine, Context
 from shellbot.updaters import FileUpdater
-Context.set_logger()
 
 
 class UpdaterFactory(object):  # create one updater per group channel
@@ -93,14 +92,18 @@ class UpdaterFactory(object):  # create one updater per group channel
         return FileUpdater(path='./updater-{}.log'.format(id))
 
 
-engine = Engine(  # use Cisco Spark and setup audit environment
-    type='spark',
-    command='shellbot.commands.audit',
-    updater_factory=UpdaterFactory())
+if __name__ == '__main__':
 
-os.environ['CHAT_ROOM_TITLE'] = 'Audit tutorial'
-engine.configure()  # ensure all components are ready
+    Context.set_logger()
 
-engine.bond(reset=True)  # create a group channel for this example
-engine.run()  # until Ctl-C
-engine.dispose()  # delete the initial group channel
+    engine = Engine(  # use Cisco Spark and setup audit environment
+        type='spark',
+        command='shellbot.commands.audit',
+        updater_factory=UpdaterFactory())
+
+    os.environ['CHAT_ROOM_TITLE'] = 'Audit tutorial'
+    engine.configure()  # ensure all components are ready
+
+    engine.bond(reset=True)  # create a group channel for this example
+    engine.run()  # until Ctl-C
+    engine.dispose()  # delete the initial group channel
