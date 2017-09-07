@@ -71,7 +71,6 @@ import random
 import time
 
 from shellbot import Engine, Context
-Context.set_logger()
 
 def some_message():
     """Creates random sentence"""
@@ -99,22 +98,26 @@ def some_message():
                                  random.choice(p_nouns).lower(),
                                  random.choice(infinitives))
 
-os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
-engine = Engine(type='spark', configure=True)
+if __name__ == '__main__':
 
-bot = engine.get_bot(reset=True)  # create a group channel
+    Context.set_logger()
 
-for index in range(7):  # send notifications to the channel
-    bot.say(some_message())
-    time.sleep(5)
+    os.environ['CHAT_ROOM_TITLE'] = 'Notifications'
+    engine = Engine(type='spark', configure=True)
 
-bot.say(u"Nothing more to say")
+    bot = engine.get_bot(reset=True)  # create a group channel
 
-print("Press Ctl-C to stop this program")
-try:
-    while True:
-        time.sleep(0.01)
-except KeyboardInterrupt:
-    pass
+    for index in range(7):  # send notifications to the channel
+        bot.say(some_message())
+        time.sleep(5)
 
-bot.dispose()  # delete the initial group channel
+    bot.say(u"Nothing more to say")
+
+    print("Press Ctl-C to stop this program")
+    try:
+        while True:
+            time.sleep(0.01)
+    except KeyboardInterrupt:
+        pass
+
+    bot.dispose()  # delete the initial group channel

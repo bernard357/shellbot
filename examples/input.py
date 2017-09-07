@@ -47,31 +47,34 @@ import os
 
 from shellbot import Engine, Context
 from shellbot.machines import Input, Sequence
-Context.set_logger()
 
-engine = Engine(type='local', command='shellbot.commands.input')
-engine.configure()  # ensure that all components are ready
+if __name__ == '__main__':
 
-bot = engine.get_bot()  # get generic group channel for this bot
+    Context.set_logger()
 
-order_id = Input(  # use a mask to validate input
-    bot=bot,
-    question="PO number please?",
-    mask="9999A",
-    on_answer="Ok, PO number has been noted: {}",
-    on_retry="PO number should have 4 digits and a letter",
-    on_cancel="Ok, forget about the PO number",
-    key='order.id')
+    engine = Engine(type='local', command='shellbot.commands.input')
+    engine.configure()  # ensure that all components are ready
 
-description = Input(  # free form
-    bot=bot,
-    question="Issue description please?",
-    on_answer="Ok, description noted: {}",
-    on_retry="Please enter a one-line description of the issue",
-    on_cancel="Ok, forget about the description",
-    key='description')
+    bot = engine.get_bot()  # get generic group channel for this bot
 
-sequence = Sequence(machines=[order_id, description])
-sequence.start()
+    order_id = Input(  # use a mask to validate input
+        bot=bot,
+        question="PO number please?",
+        mask="9999A",
+        on_answer="Ok, PO number has been noted: {}",
+        on_retry="PO number should have 4 digits and a letter",
+        on_cancel="Ok, forget about the PO number",
+        key='order.id')
 
-engine.run()  # until Ctl-C
+    description = Input(  # free form
+        bot=bot,
+        question="Issue description please?",
+        on_answer="Ok, description noted: {}",
+        on_retry="Please enter a one-line description of the issue",
+        on_cancel="Ok, forget about the description",
+        key='description')
+
+    sequence = Sequence(machines=[order_id, description])
+    sequence.start()
+
+    engine.run()  # until Ctl-C

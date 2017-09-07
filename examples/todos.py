@@ -82,25 +82,28 @@ import os
 
 from shellbot import Engine, Context
 from todos import TodoFactory
-Context.set_logger()
 
-factory = TodoFactory([
-    'write down the driving question',
-    'gather facts and related information',
-    'identify information gaps and document assumptions',
-    'formulate scenarios',
-    'select the most appropriate scenario',
-])
+if __name__ == '__main__':
 
-engine = Engine(  # use Cisco Spark and load shell commands
-    type='spark', 
-    commands=TodoFactory.commands())
-engine.factory = factory
+    Context.set_logger()
 
-os.environ['BOT_ON_ENTER'] = 'What do you want to do today?'
-os.environ['CHAT_ROOM_TITLE'] = 'Manage todos'
-engine.configure()  # ensure that all components are ready
+    factory = TodoFactory([
+        'write down the driving question',
+        'gather facts and related information',
+        'identify information gaps and document assumptions',
+        'formulate scenarios',
+        'select the most appropriate scenario',
+    ])
 
-engine.bond(reset=True)  # create a group channel for this example
-engine.run()  # until Ctl-C
-engine.dispose()  # delete the initial group channel
+    engine = Engine(  # use Cisco Spark and load shell commands
+        type='spark',
+        commands=TodoFactory.commands())
+    engine.factory = factory
+
+    os.environ['BOT_ON_ENTER'] = 'What do you want to do today?'
+    os.environ['CHAT_ROOM_TITLE'] = 'Manage todos'
+    engine.configure()  # ensure that all components are ready
+
+    engine.bond(reset=True)  # create a group channel for this example
+    engine.run()  # until Ctl-C
+    engine.dispose()  # delete the initial group channel

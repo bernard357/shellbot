@@ -50,15 +50,20 @@ import logging
 import os
 
 from shellbot import Engine, Context, Command
-Context.set_logger(level=logging.INFO)
+
 
 class Hello(Command):
     keyword = 'hello'
     information_message = u"Hello, World!"
 
-engine = Engine(command=Hello(), type='local')
 
-engine.space.push(['help', 'hello', 'help help'])
+if __name__ == '__main__':
 
-engine.configure()
-engine.run()
+    Context.set_logger(level=logging.INFO)
+
+    engine = Engine(command=Hello(), type='local')
+
+    engine.space.push(['help', 'hello', 'help help'])
+
+    engine.configure()
+    engine.run()

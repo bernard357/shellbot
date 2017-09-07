@@ -49,13 +49,10 @@ import time
 
 from shellbot import Engine, Context
 from shellbot.machines import Input
-Context.set_logger()
 
-#
-# specify the state machine to use
-#
 
 class MyFactory(object):
+
     def get_machine(self, bot):
             return Input(bot=bot,
                          question="PO number please?",
@@ -65,17 +62,7 @@ class MyFactory(object):
                          on_cancel="Ok, forget about the PO number",
                          key='order.id')
 
-#
-# create a bot and configure it
-#
-engine = Engine(type='spark',
-                command='shellbot.commands.input',
-                machine_factory=MyFactory())
-os.environ['CHAT_ROOM_TITLE'] = '*dummy'
-engine.configure()
 
-# add some event handler
-#
 class Handler(object):
 
     def __init__(self, engine):
@@ -112,13 +99,20 @@ class Handler(object):
             received.actor_label, bot.title))
 
 
-handler = Handler(engine)
-engine.register('enter', handler)
-engine.register('exit', handler)
-engine.register('join', handler)
-engine.register('leave', handler)
+if __name__ == '__main__':
 
-#
-# run the server
-#
-engine.run()
+    Context.set_logger()
+
+    engine = Engine(type='spark',
+                    command='shellbot.commands.input',
+                    machine_factory=MyFactory())
+    os.environ['CHAT_ROOM_TITLE'] = '*dummy'
+    engine.configure()
+
+    handler = Handler(engine)
+    engine.register('enter', handler)
+    engine.register('exit', handler)
+    engine.register('join', handler)
+    engine.register('leave', handler)
+
+    engine.run()

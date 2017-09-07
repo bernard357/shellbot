@@ -82,7 +82,6 @@ import os
 import time
 
 from shellbot import Engine, Context, Command
-Context.set_logger()
 
 
 class Open(Command):  # do not allow people to leave
@@ -126,13 +125,6 @@ class Hotel(Command):  # reflect current state of the bot
             bot.say('Hotel California will keep you here forever!')
 
 
-engine = Engine(type='spark', commands=[Open(), Close(), Hotel()])
-
-os.environ['BOT_ON_ENTER'] = 'On a dark desert highway, cool wind in my hair...'
-os.environ['CHAT_ROOM_TITLE'] = 'Hotel California'
-engine.configure()  # ensure that all components are ready
-
-
 class Magic(object):  # add stickiness to the hotel
 
     def __init__(self, engine):
@@ -173,10 +165,21 @@ class Magic(object):  # add stickiness to the hotel
                               u'but you can **never** leave!').format(
                                 received.actor_address, received.actor_label))
 
-magic = Magic(engine=engine)  # monitor newcomers and leavers
-engine.register('join', magic)
-engine.register('leave', magic)
 
-engine.bond(reset=True)  # create a group channel for this example
-engine.run()  # until Ctl-C
-engine.dispose()  # delete the initial group channel
+if __name__ == '__main__':
+
+    Context.set_logger()
+
+    engine = Engine(type='spark', commands=[Open(), Close(), Hotel()])
+
+    os.environ['BOT_ON_ENTER'] = 'On a dark desert highway, cool wind in my hair...'
+    os.environ['CHAT_ROOM_TITLE'] = 'Hotel California'
+    engine.configure()  # ensure that all components are ready
+
+    magic = Magic(engine=engine)  # monitor newcomers and leavers
+    engine.register('join', magic)
+    engine.register('leave', magic)
+
+    engine.bond(reset=True)  # create a group channel for this example
+    engine.run()  # until Ctl-C
+    engine.dispose()  # delete the initial group channel

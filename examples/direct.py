@@ -101,7 +101,6 @@ import time
 
 from shellbot import Engine, Context
 from shellbot.machines import MachineFactory, Input
-Context.set_logger()
 
 
 class MyInput(Input):  # transition from direct channel to group channel
@@ -189,15 +188,19 @@ class MyMachineFactory(MachineFactory):  # provide machines to direct channels
         return None
 
 
-engine = Engine(type='spark',  # use Cisco Spark and setup the environment
-                commands=['shellbot.commands.input',
-                          'shellbot.commands.start',
-                          'shellbot.commands.close',
-                          ],
-                machine_factory=MyMachineFactory())
+if __name__ == '__main__':
 
-os.environ['CHAT_ROOM_TITLE'] = '*dummy'
-engine.configure()  # ensure that all components are ready
+    Context.set_logger()
 
-print(u"Go to Cisco Spark and engage with the bot in a direct channel")
-engine.run()  # until Ctl-C
+    engine = Engine(type='spark',  # use Cisco Spark and setup the environment
+                    commands=['shellbot.commands.input',
+                              'shellbot.commands.start',
+                              'shellbot.commands.close',
+                              ],
+                    machine_factory=MyMachineFactory())
+
+    os.environ['CHAT_ROOM_TITLE'] = '*dummy'
+    engine.configure()  # ensure that all components are ready
+
+    print(u"Go to Cisco Spark and engage with the bot in a direct channel")
+    engine.run()  # until Ctl-C

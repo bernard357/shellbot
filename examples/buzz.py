@@ -121,7 +121,6 @@ import os
 from shellbot import Engine, ShellBot, Context
 from planets import PlanetFactory
 from planets.rocket import Rocket
-Context.set_logger()
 
 
 class FlyingBot(ShellBot):  # add a rocket to each bot
@@ -130,25 +129,29 @@ class FlyingBot(ShellBot):  # add a rocket to each bot
         self.rocket.start()
 
 
-engine = Engine(type='spark',  # use Cisco Spark and setup flying envronment
-                commands=PlanetFactory.commands(),
-                driver=FlyingBot)
+if __name__ == '__main__':
 
-os.environ['BOT_ON_ENTER'] = 'Hello Buzz, welcome to Cape Canaveral'
-os.environ['BOT_ON_EXIT'] = 'Batman is now quitting the room, bye'
-os.environ['CHAT_ROOM_TITLE'] = 'Buzz flights'
-engine.configure()  # ensure that all components are ready
+    Context.set_logger()
 
-engine.set('bot.store.planets', ['Mercury',
-                                 'Venus',
-                                 'Moon',
-                                 'Mars',
-                                 'Jupiter',
-                                 'Saturn',
-                                 'Uranus',
-                                 'Neptune',
-                                 ])
+    engine = Engine(type='spark',  # use Cisco Spark and setup flying envronment
+                    commands=PlanetFactory.commands(),
+                    driver=FlyingBot)
 
-engine.bond(reset=True)  # create a group channel for this example
-engine.run()  # until Ctl-C
-engine.dispose()  # delete the initial group channel
+    os.environ['BOT_ON_ENTER'] = 'Hello Buzz, welcome to Cape Canaveral'
+    os.environ['BOT_ON_EXIT'] = 'Batman is now quitting the room, bye'
+    os.environ['CHAT_ROOM_TITLE'] = 'Buzz flights'
+    engine.configure()  # ensure that all components are ready
+
+    engine.set('bot.store.planets', ['Mercury',
+                                     'Venus',
+                                     'Moon',
+                                     'Mars',
+                                     'Jupiter',
+                                     'Saturn',
+                                     'Uranus',
+                                     'Neptune',
+                                     ])
+
+    engine.bond(reset=True)  # create a group channel for this example
+    engine.run()  # until Ctl-C
+    engine.dispose()  # delete the initial group channel

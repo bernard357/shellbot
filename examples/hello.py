@@ -67,7 +67,6 @@ ngrok for exposing services to the Internet::
 import os
 
 from shellbot import Engine, Context, Command
-Context.set_logger()
 
 
 class Hello(Command):  # the origin of everything, right?
@@ -86,18 +85,23 @@ class Hello(Command):  # the origin of everything, right?
             bot.say(content=self.thanks_content.format(attachment))
 
 
-engine = Engine(type='spark', command=Hello())
+if __name__ == '__main__':
 
-os.environ['CHAT_ROOM_TITLE'] = 'Hello tutorial'
-os.environ['BOT_BANNER_TEXT'] = u"Type '@{} help' for more information"
-os.environ['BOT_BANNER_CONTENT'] = (u"Hello there! "
-                                    u"Type ``@{} help`` at any time and  get "
-                                    u"more information on available commands.")
-os.environ['BOT_BANNER_FILE'] = \
-    "http://skinali.com.ua/img/gallery/19/thumbs/thumb_m_s_7369.jpg"
+    Context.set_logger()
 
-engine.configure()  # ensure that all components are ready
+    engine = Engine(type='spark', command=Hello())
 
-engine.bond(reset=True)  # create a group channel for this example
-engine.run()  # until Ctl-C
-engine.dispose()  # delete the initial group channel
+    os.environ['CHAT_ROOM_TITLE'] = 'Hello tutorial'
+    os.environ['BOT_BANNER_TEXT'] = u"Type '@{} help' for more information"
+    os.environ['BOT_BANNER_CONTENT'] = (u"Hello there! "
+                                        u"Type ``@{} help`` at any time "
+                                        u"and get more information "
+                                        u"on available commands.")
+    os.environ['BOT_BANNER_FILE'] = \
+        "http://skinali.com.ua/img/gallery/19/thumbs/thumb_m_s_7369.jpg"
+
+    engine.configure()  # ensure that all components are ready
+
+    engine.bond(reset=True)  # create a group channel for this example
+    engine.run()  # until Ctl-C
+    engine.dispose()  # delete the initial group channel

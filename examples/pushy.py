@@ -98,67 +98,6 @@ import time
 from shellbot import Engine, Context, Server, Notifier, Wrapper
 from shellbot.machines import Steps
 
-Context.set_logger()
-
-settings = {
-
-    'bot': {
-        'on_enter': 'Welcome to this on-demand collaborative room',
-        'on_exit': 'Bot is now quitting the room, bye',
-    },
-
-    'spark': {
-        'room': 'On-demand collaboration',
-    },
-
-    'server': {
-        'url': '$SERVER_URL',
-        'trigger': '/trigger',
-        'hook': '/hook',
-        'binding': '0.0.0.0',
-        'port': 8080,
-    },
-
-    'process.steps': [
-
-        {
-            'label': u'Level 1',
-            'message': u'Initial capture of information',
-            'content': (u'If you are on the shop floor:\n'
-                        u'* Take a picture of the faulty part\n'
-                        u'* Describe the issue in the chat box\n'
-                        u'\n'
-                        u'As a Stress engineer, '
-                        u'engage with shop floor and ask questions.'
-                        u' To engage with the design team, '
-                        u'type **step** in the chat box.')
-        },
-
-        {
-            'label': u'Level 2',
-            'message': u'Escalation to technical experts',
-            'participants': 'guillain@gmail.com',
-        },
-
-        {
-            'label': u'Level 3',
-            'message': u'Escalation to decision stakeholders',
-            'participants': 'bernard.paques@laposte.net',
-        },
-
-        {
-            'label': u'Terminated',
-            'message': u'Process is closed, yet conversation can continue',
-        },
-
-    ],
-
-}
-
-context = Context(settings)
-context.check('server.trigger', '/trigger')
-context.check('server.hook', '/hook')
-
 
 class MyFactory(object):  # provide state machine to group channels
 
@@ -168,25 +107,6 @@ class MyFactory(object):  # provide state machine to group channels
     def get_machine(self, bot):
         if bot.channel.is_group:
             return Steps(bot=bot, steps=self.steps)
-
-
-engine = Engine(  # use Cisco Spark and setup the environment
-    type='spark',
-    context=context,
-    configure=True,
-    commands=['shellbot.commands.step', 'shellbot.commands.close'],
-    machine_factory=MyFactory(steps=context.get('process.steps')),
-    ears=Queue(),)
-
-
-server = Server(context=context, check=True)  # set web front-end
-
-server.add_route(Notifier(queue=engine.ears,
-                          notification={'type': 'event', 'trigger': 'click'},
-                          route=context.get('server.trigger')))
-
-server.add_route(Wrapper(callable=engine.get_hook(),
-                         route=context.get('server.hook')))
 
 
 class Handler(object):  # receive web triggers as events from the listener
@@ -207,8 +127,89 @@ class Handler(object):  # receive web triggers as events from the listener
                 self.bot.say(u'Click {}'.format(counter))
 
 
-handler = Handler(engine)
-engine.register('inbound', handler)
+if __name__ == '__main__':
 
-print(u"Trigger this web server from a browser at /trigger")
-engine.run(server=server)  # until Ctl-C
+    Context.set_logger()
+
+    settings = {
+
+        'bot': {
+            'on_enter': 'Welcome to this on-demand collaborative room',
+            'on_exit': 'Bot is now quitting the room, bye',
+        },
+
+        'spark': {
+            'room': 'On-demand collaboration',
+        },
+
+        'server': {
+            'url': '$SERVER_URL',
+            'trigger': '/trigger',
+            'hook': '/hook',
+            'binding': '0.0.0.0',
+            'port': 8080,
+        },
+
+        'process.steps': [
+
+            {
+                'label': u'Level 1',
+                'message': u'Initial capture of information',
+                'content': (u'If you are on the shop floor:\n'
+                            u'* Take a picture of the faulty part\n'
+                            u'* Describe the issue in the chat box\n'
+                            u'\n'
+                            u'As a Stress engineer, '
+                            u'engage with shop floor and ask questions.'
+                            u' To engage with the design team, '
+                            u'type **step** in the chat box.')
+            },
+
+            {
+                'label': u'Level 2',
+                'message': u'Escalation to technical experts',
+                'participants': 'guillain@gmail.com',
+            },
+
+            {
+                'label': u'Level 3',
+                'message': u'Escalation to decision stakeholders',
+                'participants': 'bernard.paques@laposte.net',
+            },
+
+            {
+                'label': u'Terminated',
+                'message': u'Process is closed, yet conversation can continue',
+            },
+
+        ],
+
+    }
+
+    context = Context(settings)
+    context.check('server.trigger', '/trigger')
+    context.check('server.hook', '/hook')
+
+    engine = Engine(  # use Cisco Spark and setup the environment
+        type='spark',
+        context=context,
+        configure=True,
+        commands=['shellbot.commands.step', 'shellbot.commands.close'],
+        machine_factory=MyFactory(steps=context.get('process.steps')),
+        ears=Queue(),)
+
+
+    server = Server(context=context, check=True)  # set web front-end
+
+    server.add_route(Notifier(queue=engine.ears,
+                              notification={'type': 'event', 'trigger': 'click'},
+                              route=context.get('server.trigger')))
+
+    server.add_route(Wrapper(callable=engine.get_hook(),
+                             route=context.get('server.hook')))
+
+    handler = Handler(engine)
+    engine.register('inbound', handler)
+
+    print(u"Trigger this web server from a browser at /trigger")
+    engine.run(server=server)  # until Ctl-C
