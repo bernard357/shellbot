@@ -70,7 +70,7 @@ class ListFactory(object):
         retrieve the first list with `The Famous Four` or with
         `the famous four`. This is spacially convenient for lists used
         as commands, when invoked from a mobile device.
-        
+
         """
         settings = self.context.get('general.lists', [])
 
@@ -151,7 +151,7 @@ class ListFactory(object):
         for name in self.lists.keys():
             list = self.lists[name]
             if list.as_command:
-                yield name
+                yield list.name
 
     def apply_to_list(self, name, apply):
         """
