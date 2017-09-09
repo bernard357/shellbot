@@ -154,6 +154,7 @@ Ready to contribute? Here's how to set up Shellbot for local development
     $ mkvirtualenv shellbot
     $ cd shellbot/
     $ pip install -e .
+    $ pip install -r requirements_test.txt
 
 4. Create a branch for local development::
 
