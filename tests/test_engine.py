@@ -238,7 +238,7 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(items, [])
 
         names = self.engine.list_factory.list_commands()
-        self.assertEqual(sorted(names), ['supportteam'])
+        self.assertEqual(sorted(names), ['SupportTeam'])
 
     def test_configuration_2(self):
 

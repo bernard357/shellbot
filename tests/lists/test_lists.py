@@ -200,7 +200,7 @@ class ListFactoryTests(unittest.TestCase):
         factory.configure()
 
         names = [x for x in factory.list_commands()]
-        self.assertEqual(sorted(names), ['supportteam'])
+        self.assertEqual(sorted(names), ['SupportTeam'])
 
     def test_apply_to_list(self):
 
