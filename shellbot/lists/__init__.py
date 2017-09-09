@@ -116,6 +116,7 @@ class ListFactory(object):
 
         items = attributes.get('items', [])
         list = List(items=items)
+        list.name = attributes.get('name')
         list.as_command = attributes.get('as_command', False)
         return list
 
