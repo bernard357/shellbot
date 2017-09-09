@@ -46,7 +46,7 @@ class ListFactory(object):
         """
         Loads lists as defined in context
 
-        This function looks for the key ``general.lists`` and below in the
+        This function looks for the key ``lists`` and below in the
         context, and creates a dictionary of named lists.
 
         Example configuration in YAML format::
@@ -65,6 +65,12 @@ class ListFactory(object):
                     - service.desk@acme.com
                     - supervisor@brother.mil
 
+        Note that list names are all put to lower case internally, for easy
+        subsequent references. With the previous examples, you can
+        retrieve the first list with `The Famous Four` or with
+        `the famous four`. This is spacially convenient for lists used
+        as commands, when invoked from a mobile device.
+        
         """
         settings = self.context.get('general.lists', [])
 
@@ -80,6 +86,8 @@ class ListFactory(object):
                 logging.warning(u"Missing attribute 'name' in list")
                 logging.debug(u"- {}".format(str(attributes)))
                 continue
+
+            name = name.lower()  # align across chat devices
 
             self.lists[name] = self.build_list(attributes)
 
@@ -128,6 +136,9 @@ class ListFactory(object):
                 number = get_phone_number(person)
                 send_sms(important_message, number)
         """
+        if name:
+            name = name.lower()  # align across chat devices
+
         return self.lists.get(name, [])
 
     def list_commands(self):

@@ -86,7 +86,7 @@ lists:
 """
 
 
-class StoreFactoryTests(unittest.TestCase):
+class ListFactoryTests(unittest.TestCase):
 
     def setUp(self):
         self.context = Context()
@@ -117,7 +117,7 @@ class StoreFactoryTests(unittest.TestCase):
         self.context.apply(settings)
         factory = ListFactory(context=self.context)
         factory.configure()
-        self.assertEqual(sorted(factory.lists.keys()), ['SupportTeam', 'The Famous Four'])
+        self.assertEqual(sorted(factory.lists.keys()), ['supportteam', 'the famous four'])
 
         settings = yaml.load(dict_instead_of_list_yaml )
         self.context.clear()
@@ -179,7 +179,13 @@ class StoreFactoryTests(unittest.TestCase):
         list = factory.get_list("The Famous Four")
         self.assertEqual(list.items, ['alice@acme.com', 'bob@project.org', 'celine@secret.mil', 'dude@bangkok.travel'])
 
+        list = factory.get_list("the famous four")
+        self.assertEqual(list.items, ['alice@acme.com', 'bob@project.org', 'celine@secret.mil', 'dude@bangkok.travel'])
+
         list = factory.get_list("SupportTeam")
+        self.assertEqual(list.items, ['service.desk@acme.com', 'supervisor@brother.mil'])
+
+        list = factory.get_list("supportteam")
         self.assertEqual(list.items, ['service.desk@acme.com', 'supervisor@brother.mil'])
 
     def test_list_commands(self):
@@ -194,7 +200,7 @@ class StoreFactoryTests(unittest.TestCase):
         factory.configure()
 
         names = [x for x in factory.list_commands()]
-        self.assertEqual(sorted(names), ['SupportTeam'])
+        self.assertEqual(sorted(names), ['supportteam'])
 
     def test_apply_to_list(self):
 
@@ -220,10 +226,9 @@ class StoreFactoryTests(unittest.TestCase):
                               apply=lambda x: my_counter.consume(x))
         self.assertEqual(my_counter.value, 2)
 
-        factory.apply_to_list(name='SupportTeam',
+        factory.apply_to_list(name='supportteam',
                               apply=lambda x: my_counter.consume(x))
         self.assertEqual(my_counter.value, 4)
-
 
 
 if __name__ == '__main__':
