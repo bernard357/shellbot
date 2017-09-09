@@ -622,6 +622,7 @@ class ListenerTests(unittest.TestCase):
         listener.DEFER_DURATION = 0.0
 
         listener.run()
+        time.sleep(0.01)
 
         self.assertEqual(self.engine.get('listener.counter'), 7)
         with self.assertRaises(Exception):
