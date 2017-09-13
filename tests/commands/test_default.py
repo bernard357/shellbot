@@ -75,13 +75,24 @@ class DefaultTests(unittest.TestCase):
 
         c = Default(self.engine)
 
-        c.execute(self.bot, 'The Famous Four')
+        c.execute(self.bot, 'The Famous Four')  #  as_command not set
         self.assertEqual(self.engine.mouth.get().text,
                          u"Sorry, I do not know how to handle 'The Famous Four'")
         with self.assertRaises(Exception):
             self.engine.mouth.get_nowait()
 
-        c.execute(self.bot, 'SupportTeam')
+        class DirectChannel(object):
+            is_direct = True
+
+        self.bot.channel = DirectChannel()
+        c.execute(self.bot, 'SupportTeam')  # as_command in direct channel
+        self.assertEqual(self.engine.mouth.get().text,
+                         u"Sorry, I do not know how to handle 'SupportTeam'")
+        with self.assertRaises(Exception):
+            self.engine.mouth.get_nowait()
+
+        self.bot.channel.is_direct = False
+        c.execute(self.bot, 'SupportTeam')  # as_command in group channel
         self.assertEqual(self.engine.mouth.get().text,
                          u"Adding participants from 'SupportTeam'")
         with self.assertRaises(Exception):

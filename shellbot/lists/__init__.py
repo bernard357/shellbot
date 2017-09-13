@@ -110,7 +110,6 @@ class ListFactory(object):
         the named list appears in the list of shell commands. Members of the
         list are added to a channel when the name of the list is submitted to
         the shell.
-
         """
         assert isinstance(attributes, dict)
 

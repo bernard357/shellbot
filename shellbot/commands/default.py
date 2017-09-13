@@ -51,12 +51,18 @@ class Default(Command):
 
         Arguments provided should include all of the user input, including
         the first token that has not been recognised as a valid command.
+
+        If arguments match a named list, then items of the
+        list are added as participants to the channel. This applies only:
+        - if the named list has the attribute ``as_command``
+        - and if this is not a direct channel (limited to 1:1 interactions)
         """
         list = bot.engine.list_factory.get_list(arguments)
-        if list and list.as_command:
-            bot.say(self.participants_message.format(arguments))
-            persons = [x for x in list]
-            bot.add_participants(persons)
+        if list and list.as_command and not bot.channel.is_direct:
+
+                bot.say(self.participants_message.format(arguments))
+                persons = [x for x in list]
+                bot.add_participants(persons)
 
         else:
             bot.say(self.default_message.format(arguments))
