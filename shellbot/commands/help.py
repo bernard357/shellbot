@@ -57,12 +57,14 @@ class Help(Command):
                         command.keyword,
                         command.information_message))
 
-            for name in self.engine.list_factory.list_commands():
-                item = self.engine.list_factory.get_list(name)
-                first = next(iter(item))
-                lines.append(u"{} - {}".format(
-                    name,
-                    _(u"add participants ({}, ...)").format(first)))
+            if not bot.channel.is_direct:  # cannot turn 1:1 to group
+
+                for name in self.engine.list_factory.list_commands():
+                    item = self.engine.list_factory.get_list(name)
+                    first = next(iter(item))
+                    lines.append(u"{} - {}".format(
+                        name,
+                        _(u"add participants ({}, ...)").format(first)))
 
             if lines:
                 bot.say(

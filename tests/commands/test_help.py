@@ -229,6 +229,20 @@ class HelpTests(unittest.TestCase):
         self.engine.shell = Shell(engine=self.engine)
         self.engine.load_command('shellbot.commands.help')
 
+        class MyChannel(object):
+            is_direct = True
+
+        self.bot.channel = MyChannel()
+        c.execute(self.bot)
+
+        self.assertEqual(
+            self.engine.mouth.get().text,
+            u"Available commands:\nhelp - Show commands and usage")
+
+        with self.assertRaises(Exception):
+            self.engine.mouth.get_nowait()
+
+        self.bot.channel.is_direct = False
         c.execute(self.bot)
 
         self.assertEqual(

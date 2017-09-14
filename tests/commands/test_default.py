@@ -81,10 +81,10 @@ class DefaultTests(unittest.TestCase):
         with self.assertRaises(Exception):
             self.engine.mouth.get_nowait()
 
-        class DirectChannel(object):
+        class MyChannel(object):
             is_direct = True
 
-        self.bot.channel = DirectChannel()
+        self.bot.channel = MyChannel()
         c.execute(self.bot, 'SupportTeam')  # as_command in direct channel
         self.assertEqual(self.engine.mouth.get().text,
                          u"Sorry, I do not know how to handle 'SupportTeam'")
