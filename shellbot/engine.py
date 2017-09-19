@@ -834,7 +834,7 @@ class Engine(object):
                 return
 
             if not participants:
-                participants = self.space.get('participants', [])
+                participants = self.space.context.get('space.participants', [])
             self.space.add_participants(id=channel.id, persons=participants)
 
         self.bots_to_load.add(channel.id)  # handled by the listener

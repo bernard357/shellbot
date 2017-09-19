@@ -39,17 +39,17 @@ process:
 
     initial: T100
 
-# local space settings
+# space settings
 #
-local:
+space:
+
+    # we use a local space
+    #
+    type: local
 
     # the title of the local space handled by this bot
     #
     title: Support channel
-
-    # the title of the team associated with the room
-    #
-    team: Support service
 
     # pre-defined participants
     #

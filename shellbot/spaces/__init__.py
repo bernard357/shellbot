@@ -34,7 +34,8 @@ class SpaceFactory(object):
     Example::
 
         my_context = Context(settings={
-            'spark': {
+            'space': {
+                'type': "spark",
                 'room': 'My preferred room',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
@@ -95,10 +96,11 @@ class SpaceFactory(object):
         A ``ValueError`` is raised if no type could be identified.
         """
 
-        for type in sorted(self.types.keys()):
-            if context.has(prefix=type):
-                logging.debug(u"- sensing space of type {}".format(type))
-                return type
+        type = context.get('space.type', 'space')
+
+        if type and type in self.types.keys():
+            logging.debug(u"- sensing space of type {}".format(type))
+            return type
 
         raise ValueError(
             u"No space type could be identified from configuration")

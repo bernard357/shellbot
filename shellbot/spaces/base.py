@@ -149,23 +149,19 @@ class Space(object):
 
         self.on_init(**kwargs)
 
-    def on_init(self, prefix='space', **kwargs):
+    def on_init(self, **kwargs):
         """
         Handles extended initialisation parameters
-
-        :param prefix: the main keyword for configuration of this space
-        :type prefix: str
 
         This function should be expanded in sub-class, where necessary.
 
         Example::
 
-            def on_init(self, prefix='secondary.space', **kwargs):
+            def on_init(self, ex_parameter='extra', **kwargs):
                 ...
 
         """
-        assert prefix
-        self.prefix = prefix
+        pass
 
     def on_start(self):
         """
@@ -191,63 +187,6 @@ class Space(object):
         """
         self.deregister()
 
-    def get(self, key, default=None):
-        """
-        Retrieves the value of one configuration key
-
-        :param key: name of the value
-        :type key: str
-
-        :param default: default value
-        :type default: any serializable type is accepted
-
-        :return: the actual value, or the default value, or None
-
-        This function is a proxy for underlying context. It combines
-        the configuration prefix for this instance with the provided key
-        before lookup. Typically, if the prefix is ``special_space`` and the
-        function is called with key ``id``, then the function actually looks
-        for the attribute ``special_space.id``.
-
-        Example::
-
-            configured_title = space.get('title')
-
-        This function is safe on multiprocessing and multithreading.
-
-        """
-        try:
-            return self.context.get(self.prefix+'.'+key, default)
-        except AttributeError:
-            return default
-
-    def set(self, key, value):
-        """
-        Changes the value of one configuration key
-
-        :param key: name of the value
-        :type key: str
-
-        :param value: new value
-        :type value: any serializable type is accepted
-
-        This function is a proxy for underlying context. It combines
-        the configuration prefix for this instance with the provided key
-        before change. Typically, if the prefix is ``special_space`` and the
-        function is called with key ``title``, then the function actually sets
-        the attribute ``special_space.title``.
-
-        Example::
-
-            space.set('some_key', 'some_value')
-            ...
-            value = space.get('some_key')  # 'some_value'
-
-        This function is safe on multiprocessing and multithreading.
-
-        """
-        self.context.set(self.prefix+'.'+key, value)
-
     def configure(self, settings={}):
         """
         Changes settings of the space
@@ -270,7 +209,7 @@ class Space(object):
         Example::
 
             def check(self):
-                self.engine.context.check(self.prefix+'.title',
+                self.engine.context.check('space.title',
                                           is_mandatory=True)
 
         """
@@ -286,7 +225,7 @@ class Space(object):
         This function should be rewritten in sub-classes if
         space title does not come from ``space.title`` parameter.
         """
-        return self.get('title', self.DEFAULT_SPACE_TITLE)
+        return self.context.get('space.title', self.DEFAULT_SPACE_TITLE)
 
     def connect(self, **kwargs):
         """

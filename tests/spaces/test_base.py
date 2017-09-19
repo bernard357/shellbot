@@ -39,7 +39,6 @@ class SpaceTests(unittest.TestCase):
         logging.info("*** init")
 
         logging.debug("- default init")
-        self.assertEqual(self.space.prefix, 'space')
         self.assertEqual(self.space.ears, None)
         self.assertEqual(self.space.fan, None)
 
@@ -47,15 +46,12 @@ class SpaceTests(unittest.TestCase):
         space = Space(context=self.context, weird='w')
         with self.assertRaises(AttributeError):
             self.assertEqual(space.weird, 'w')
-        self.assertEqual(space.prefix, 'space')
 
         logging.debug("- extended parameters")
         class ExSpace(Space):
             def on_init(self,
-                        prefix='space',
                         ex_token=None,
                         **kwargs):
-                self.prefix = prefix
                 self.token = ex_token
 
         space = ExSpace(context=self.context,
@@ -72,15 +68,14 @@ class SpaceTests(unittest.TestCase):
             self.assertTrue(space.ex_unknown is not None)
 
         logging.debug("- initialised via configuration")
-        space = LocalSpace(context=self.context, prefix='my.space')
+        space = LocalSpace(context=self.context)
         space.configure({
-            'my.space': {
+            'space': {
                 'title': 'Another title',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
             }
         })
-        self.assertEqual(space.prefix, 'my.space')
         self.assertEqual(space.configured_title(), 'Another title')
 
     def test_on_start(self):
@@ -95,50 +90,13 @@ class SpaceTests(unittest.TestCase):
 
         self.space.on_stop()
 
-    def test_get(self):
-
-        logging.info("*** get")
-
-        space = LocalSpace(context=self.context, prefix='my.space')
-        space.configure({
-            'my.space': {
-                'title': 'Another title',
-                'participants':
-                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
-            }
-        })
-        self.assertEqual(space.get('title'), 'Another title')
-        self.assertEqual(
-            space.get('participants'),
-            ['alan.droit@azerty.org', 'bob.nard@support.tv'])
-        self.assertEqual(space.get('*unknown', '*default'), '*default')
-
-    def test_set(self):
-
-        logging.info("*** set")
-
-        space = Space(context=self.context)
-        space.prefix = 'a_special_space'
-
-        space.set('id', '*id')
-        self.assertEqual(self.context.get('a_special_space.id'), '*id')
-        self.assertEqual(space.get('id'), '*id')
-
-        space.set('title', '*title')
-        self.assertEqual(self.context.get('a_special_space.title'), '*title')
-        self.assertEqual(space.get('title'), '*title')
-
-        space.set('_other', ['a', 'b', 'c'])
-        self.assertEqual(self.context.get('a_special_space._other'), ['a', 'b', 'c'])
-        self.assertEqual(space.get('_other'), ['a', 'b', 'c'])
-
     def test_configure(self):
 
         logging.info("*** configure")
 
         class ExSpace(Space):
             def check(self):
-                self.context.check(self.prefix+'.title', is_mandatory=True)
+                self.context.check('space.title', is_mandatory=True)
 
         settings = {'space.key': 'my value'}
 
@@ -153,17 +111,16 @@ class SpaceTests(unittest.TestCase):
 
         logging.info("*** configured_title")
 
-        space = Space(context=self.context, prefix='alien')
+        space = Space(context=self.context)
 
         self.assertEqual(space.configured_title(),
                          space.DEFAULT_SPACE_TITLE)
 
-        settings = {'alien.title': 'my channel'}
+        settings = {'space.title': 'my channel'}
 
         space.configure(settings=settings)
-        self.assertEqual(self.context.get('alien.title'), 'my channel')
-        self.assertEqual(space.prefix, 'alien')
-        self.assertEqual(space.get('title'), 'my channel')
+        self.assertEqual(self.context.get('space.title'), 'my channel')
+        self.assertEqual(space.context.get('space.title'), 'my channel')
         self.assertEqual(space.configured_title(), 'my channel')
 
     def test_connect(self):

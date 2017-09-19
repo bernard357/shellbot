@@ -157,30 +157,21 @@ class SparkSpace(Space):
     }
 
     def on_init(self,
-                prefix='spark',
                 token=None,
                 **kwargs):
         """
         Handles extended initialisation parameters
-
-        :param prefix: the main keyword for configuration of this space
-        :type prefix: str
 
         :param token: bot authentication token for the Cisco Spark API
         :type token: str
 
         Example::
 
-            space = SparkSpace(context=context, prefix='spark.audit')
+            space = SparkSpace(context=context)
 
-        Here we create a new space powered by Cisco Spark service, and use
-        settings under the key ``spark`` in the context of this bot.
         """
-        assert prefix
-        self.prefix = prefix
-
         if token:
-            self.set('token', token)
+            self.context.set('space.token', token)
 
         self.api = None
         self.audit_api = None
@@ -191,10 +182,11 @@ class SparkSpace(Space):
         """
         Checks settings of the space
 
-        This function reads key ``spark`` and below, and update
+        This function reads key ``space`` and below, and update
         the context accordingly::
 
-           space.configure({'spark': {
+           space.configure({'space': {
+               'type': 'spark',
                'room': 'My preferred room',
                'participants':
                   ['alan.droit@azerty.org', 'bob.nard@support.tv'],
@@ -204,36 +196,36 @@ class SparkSpace(Space):
 
         This can also be written in a more compact form::
 
-           space.configure({'spark.room': 'My preferred room',
-               'spark.token': '$MY_BOT_TOKEN',
+           space.configure({'space.room': 'My preferred room',
+               'space.token': '$MY_BOT_TOKEN',
                })
 
         This function handles following parameters:
 
-        * ``spark.room`` - title of the associated Cisco Spark room.
+        * ``space.room`` - title of the associated Cisco Spark room.
           This can refer to an environment variable if it starts
           with ``$``, e.g., ``$ROOM_TITLE``.
 
-        * ``spark.participants`` - list of initial participants. This can
+        * ``space.participants`` - list of initial participants. This can
           be taken from ``$CHANNEL_DEFAULT_PARTICIPANTS`` from the
           environment.
 
-        * ``spark.team`` - title of a team associated with this room
+        * ``space.team`` - title of a team associated with this room
 
-        * ``spark.token`` - private token of the bot, given by Cisco Spark.
+        * ``space.token`` - private token of the bot, given by Cisco Spark.
           Instead of putting the real value of the token you are encouraged
           to use an environment variable instead,
           e.g., ``$MY_BOT_TOKEN``.
-          If ``spark.token`` is not provided, then the function looks for an
+          If ``space.token`` is not provided, then the function looks for an
           environment variable ``CISCO_SPARK_BOT_TOKEN``.
 
-        * ``spark.audit_token`` - token to be used for the audit of chat events.
+        * ``space.audit_token`` - token to be used for the audit of chat events.
           It is recommended that a token of a person is used, so that the
           visibility is maximised for the proper audit of events.
           Instead of putting the real value of the token you are encouraged
           to use an environment variable instead,
           e.g., ``$MY_AUDIT_TOKEN``.
-          If ``spark.audit_token`` is not provided, then the function looks
+          If ``space.audit_token`` is not provided, then the function looks
           for an environment variable ``CISCO_SPARK_AUDIT_TOKEN``.
 
         If a single value is provided for ``participants`` then it is turned
@@ -241,25 +233,25 @@ class SparkSpace(Space):
 
         Example::
 
-            >>>space.configure({'spark.participants': 'bobby@jah.com'})
-            >>>space.context.get('spark.participants')
+            >>>space.configure({'space.participants': 'bobby@jah.com'})
+            >>>space.context.get('space.participants')
             ['bobby@jah.com']
 
         """
-        self.context.check(self.prefix+'.room',
+        self.context.check('space.room',
                            is_mandatory=True, filter=True)
-        self.context.check(self.prefix+'.participants',
+        self.context.check('space.participants',
                            '$CHANNEL_DEFAULT_PARTICIPANTS', filter=True)
-        self.context.check(self.prefix+'.team')
-        self.context.check(self.prefix+'.token',
+        self.context.check('space.team')
+        self.context.check('space.token',
                            '$CISCO_SPARK_BOT_TOKEN', filter=True)
 
-        self.context.check(self.prefix+'.audit_token',
+        self.context.check('space.audit_token',
                            '$CISCO_SPARK_AUDIT_TOKEN', filter=True)
 
-        values = self.context.get(self.prefix+'.participants')
+        values = self.context.get('space.participants')
         if isinstance(values, string_types):
-            self.context.set(self.prefix+'.participants', [values])
+            self.context.set('space.participants', [values])
 
     def configured_title(self):
         """
@@ -271,7 +263,7 @@ class SparkSpace(Space):
         This function should be rewritten in sub-classes if
         space title does not come from ``space.room`` parameter.
         """
-        return self.get('room', self.DEFAULT_SPACE_TITLE)
+        return self.context.get('space.room', self.DEFAULT_SPACE_TITLE)
 
     def connect(self, factory=None, **kwargs):
         """
@@ -292,7 +284,7 @@ class SparkSpace(Space):
 
         logging.debug(u"Loading Cisco Spark API")
 
-        bot_token = self.get('token')
+        bot_token = self.context.get('space.token')
         assert bot_token  # some token is needed
 
         self.api = None
@@ -304,7 +296,7 @@ class SparkSpace(Space):
             logging.error(u"Unable to load Cisco Spark API")
             logging.exception(feedback)
 
-        audit_token = self.get('audit_token')
+        audit_token = self.context.get('space.audit_token')
         self.audit_api = None
         if audit_token:
             try:
@@ -1029,9 +1021,9 @@ class SparkSpace(Space):
             message.url = url
 
             if message.hook == 'shellbot-audit':
-                token = self.get('audit_token', '*no*token')
+                token = self.context.get('space.audit_token', '*no*token')
             else:
-                token = self.get('token', '*no*token')
+                token = self.context.get('space.token', '*no*token')
 
             message.attachment = self.name_attachment(url, token=token)
 
@@ -1061,7 +1053,7 @@ class SparkSpace(Space):
         logging.debug(u"- sensing {}".format(url))
 
         if not token:
-            token = self.get('token', '*no*token')
+            token = self.context.get('space.token', '*no*token')
 
         headers = {}
         headers['Authorization'] = 'Bearer '+token
@@ -1095,7 +1087,7 @@ class SparkSpace(Space):
         logging.debug(u"- fetching {}".format(url))
 
         if not token:
-            token = self.get('token', '*no*token')
+            token = self.context.get('space.token', '*no*token')
 
         headers = {}
         headers['Authorization'] = 'Bearer '+token

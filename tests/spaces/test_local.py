@@ -50,7 +50,6 @@ class LocalSpaceTests(unittest.TestCase):
 
         logging.info("***** init")
 
-        self.assertEqual(self.space.prefix, 'space')
         self.assertEqual(self.space.participants, [])
         self.assertEqual(self.space.input, [])
 

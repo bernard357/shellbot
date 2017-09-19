@@ -223,8 +223,8 @@ class EngineTests(unittest.TestCase):
             'regular.yaml'))
         self.assertEqual(self.engine.get('bot.on_enter'), 'How can I help you?')
         self.assertEqual(self.engine.get('bot.on_exit'), 'Bye for now')
-        self.assertEqual(self.engine.get('local.title'), 'Support channel')
-        self.assertEqual(self.engine.get('local.participants'),
+        self.assertEqual(self.engine.get('space.title'), 'Support channel')
+        self.assertEqual(self.engine.get('space.participants'),
                          ['joe.bar@acme.com', 'super.support@help.org'])
         self.assertEqual(self.engine.get('server.url'), None)
         self.assertEqual(self.engine.get('server.hook'), None)
@@ -632,7 +632,7 @@ class EngineTests(unittest.TestCase):
         logging.info('*** run ***')
 
         engine = Engine(context=self.context)
-        engine.space=LocalSpace(engine=engine)
+        engine.space=LocalSpace(context=self.context)
 
         engine.start = mock.Mock()
         engine.space.run = mock.Mock()
@@ -660,7 +660,7 @@ class EngineTests(unittest.TestCase):
         logging.info('*** start ***')
 
         engine = Engine(context=self.context)
-        engine.space=LocalSpace(engine=engine)
+        engine.space=LocalSpace(context=self.context)
 
         engine.start_processes = mock.Mock()
         engine.on_start = mock.Mock()

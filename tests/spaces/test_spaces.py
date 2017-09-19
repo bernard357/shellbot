@@ -66,7 +66,8 @@ class SpaceFactoryTests(unittest.TestCase):
         logging.info("***** build Cisco Spark space from settings")
 
         self.context.apply(settings={  # from settings to member attributes
-            'spark': {
+            'space': {
+                'type': 'spark',
                 'room': 'My preferred channel',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
@@ -76,9 +77,12 @@ class SpaceFactoryTests(unittest.TestCase):
         })
 
         space = SpaceFactory.build(context=self.context)
-        self.assertEqual(space.get('token'), 'hkNWEtMJNkODVGlZWU1NmYtyY')
-        self.assertEqual(self.context.get('spark.room'), 'My preferred channel')
-        self.assertEqual(space.configured_title(), 'My preferred channel')
+        self.assertEqual(space.context.get('space.token'),
+                         'hkNWEtMJNkODVGlZWU1NmYtyY')
+        self.assertEqual(space.context.get('space.room'),
+                         'My preferred channel')
+        self.assertEqual(space.configured_title(),
+                         'My preferred channel')
 
     def test_sense_space(self):
 
@@ -103,6 +107,7 @@ class SpaceFactoryTests(unittest.TestCase):
 
         self.context.apply(settings={  # sense='local'
             'space': {
+                'type': 'local',
                 'title': 'My preferred channel',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
@@ -110,14 +115,15 @@ class SpaceFactoryTests(unittest.TestCase):
             }
         })
 
-        self.assertEqual(SpaceFactory.sense(self.context), 'space')
+        self.assertEqual(SpaceFactory.sense(self.context), 'local')
 
     def test_sense_spark(self):
 
         logging.info("***** sense Cisco Spark space")
 
         self.context.apply(settings={  # sense='spark'
-            'spark': {
+            'space': {
+                'type': 'spark',
                 'room': 'My preferred channel',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
@@ -129,60 +135,13 @@ class SpaceFactoryTests(unittest.TestCase):
 
         self.assertEqual(SpaceFactory.sense(self.context), 'spark')
 
-    def test_sense_alphabetical(self):
-
-        logging.info("***** sense first space in alphabetical order")
-
-        self.context.apply(settings={  # 'space' is coming before 'spark'
-            'spark': {
-                'room': 'My preferred channel',
-                'participants':
-                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
-                'team': 'Anchor team',
-                'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
-                'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
-            },
-
-            'space': {
-                'room': 'My preferred channel',
-                'participants':
-                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
-                'team': 'Anchor team',
-                'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
-                'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
-            },
-        })
-
-        self.assertEqual(SpaceFactory.sense(self.context), 'space')
-
-        self.context.apply(settings={  # 'space' is coming before 'spark'
-            'space': {
-                'room': 'My preferred channel',
-                'participants':
-                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
-                'team': 'Anchor team',
-                'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
-                'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
-            },
-
-            'spark': {
-                'room': 'My preferred channel',
-                'participants':
-                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
-                'team': 'Anchor team',
-                'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
-                'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
-            },
-        })
-
-        self.assertEqual(SpaceFactory.sense(self.context), 'space')
-
     def test_sense_void(self):
 
         logging.info("***** sense nothing on bad configuration")
 
         self.context.apply(settings={  # no recognizable space type
-            'not_a_space_type': {
+            'space': {
+                'type': 'not_a_space_type',
                 'room': 'My preferred channel',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
@@ -191,14 +150,6 @@ class SpaceFactoryTests(unittest.TestCase):
                 'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
             },
 
-            'neither_me': {
-                'room': 'My preferred channel',
-                'participants':
-                    ['alan.droit@azerty.org', 'bob.nard@support.tv'],
-                'team': 'Anchor team',
-                'token': 'hkNWEtMJNkODk3ZDZLOGQ0OVGlZWU1NmYtyY',
-                'fuzzy_token': '$MY_FUZZY_SPARK_TOKEN',
-            },
         })
 
         with self.assertRaises(ValueError):
@@ -209,20 +160,17 @@ class SpaceFactoryTests(unittest.TestCase):
         logging.info("***** get generic space")
 
         space = SpaceFactory.get(type='space')
-        self.assertEqual(space.prefix, 'space')
 
         space = SpaceFactory.get(type='space', context='c', weird='w')
         self.assertEqual(space.context, 'c')
         with self.assertRaises(AttributeError):
             self.assertEqual(space.weird, 'w')
-        self.assertEqual(space.prefix, 'space')
 
     def test_get_local(self):
 
         logging.info("***** get local space")
 
         space = SpaceFactory.get(type='local', input=['hello', 'world'])
-        self.assertEqual(space.prefix, 'space')
         self.assertEqual(space.participants, [])
 
     def test_get_spark(self):
@@ -230,7 +178,7 @@ class SpaceFactoryTests(unittest.TestCase):
         logging.info("***** get Cisco Spark space")
 
         space = SpaceFactory.get(type='spark', context=self.context, token='b')
-        self.assertEqual(space.get('token'), 'b')
+        self.assertEqual(space.context.get('space.token'), 'b')
 
     def test_get_unknown(self):
 

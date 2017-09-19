@@ -214,20 +214,20 @@ class SparkSpaceTests(unittest.TestCase):
 
         logging.info("*** on_init")
 
-        self.assertEqual(self.space.prefix, 'spark')
-        self.assertEqual(self.space.get('token'), None)
+        self.assertEqual(self.space.context.get('space.token'), None)
         self.assertEqual(self.space.api, None)
         self.assertEqual(self.space._last_message_id, 0)
 
         space = SparkSpace(context=self.context, token='b')
-        self.assertEqual(space.get('token'), 'b')
+        self.assertEqual(space.context.get('space.token'), 'b')
 
     def test_configure(self):
 
         logging.info("*** configure")
 
         settings={  # from settings to member attributes
-            'spark': {
+            'space': {
+                'type': 'spark',
                 'room': 'My preferred room',
                 'participants':
                     ['alan.droit@azerty.org', 'bob.nard@support.tv'],
@@ -235,21 +235,22 @@ class SparkSpaceTests(unittest.TestCase):
             }
         }
         self.space.configure(settings=settings)
-        self.assertEqual(self.space.get('room'), 'My preferred room')
+        self.assertEqual(self.space.context.get('space.room'), 'My preferred room')
         self.assertEqual(self.space.configured_title(), 'My preferred room')
-        self.assertEqual(self.space.get('participants'),
+        self.assertEqual(self.space.context.get('space.participants'),
             ['alan.droit@azerty.org', 'bob.nard@support.tv'])
-        self.assertEqual(self.space.get('token'), 'hkNWEtMJNkODVGlZWU1NmYtyY')
+        self.assertEqual(self.space.context.get('space.token'), 'hkNWEtMJNkODVGlZWU1NmYtyY')
 
         self.space.context.clear()
         self.space.configure({
-            'spark': {
+            'space': {
+                'type': 'spark',
                 'room': 'My preferred room',
                 'participants': 'alan.droit@azerty.org',
             }
         })
-        self.assertEqual(self.space.get('room'), 'My preferred room')
-        self.assertEqual(self.space.get('participants'),
+        self.assertEqual(self.space.context.get('space.room'), 'My preferred room')
+        self.assertEqual(self.space.context.get('space.participants'),
             ['alan.droit@azerty.org'])
 
         with self.assertRaises(KeyError):  # missing key
@@ -270,17 +271,17 @@ class SparkSpaceTests(unittest.TestCase):
         def my_factory(access_token):
             return FakeApi(access_token=access_token)
 
-        self.space.set('token', None)
+        self.space.context.set('space.token', None)
         with self.assertRaises(AssertionError):
             self.space.connect()
 
-        self.space.set('token', 'a')
+        self.space.context.set('space.token', 'a')
         self.space.connect(factory=my_factory)
         self.assertEqual(self.space.api.token, 'a')
         self.assertEqual(self.space.audit_api, None)
 
-        self.space.set('token', 'a')
-        self.space.set('audit_token', 'b')
+        self.space.context.set('space.token', 'a')
+        self.space.context.set('space.audit_token', 'b')
         self.space.connect(factory=my_factory)
         self.assertEqual(self.space.api.token, 'a')
         self.assertEqual(self.space.audit_api.token, 'b')

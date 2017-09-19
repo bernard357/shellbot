@@ -55,22 +55,12 @@ class LocalSpace(Space):
 
     DEFAULT_PROMPT = u'> '
 
-    def on_init(self, prefix='space', input=None, **kwargs):
+    def on_init(self, input=None, **kwargs):
         """
         Handles extended initialisation parameters
 
-        :param prefix: the main keyword for configuration of this space
-        :type prefix: str
-
         :param input: Lines of text to be submitted to the chat
         :type input: str or list of str
-
-        Example::
-
-            space = LocalSpace(context=context, prefix='local.audit')
-
-        Here we create a new local space, and use
-        settings under the key ``local.audit`` in the context of this bot.
 
         Example::
 
@@ -80,9 +70,6 @@ class LocalSpace(Space):
         typing 'hello world' in the chat space.
 
         """
-        assert prefix
-        self.prefix = prefix
-
         self.input = []
         self.push(input)
 
@@ -123,9 +110,9 @@ class LocalSpace(Space):
         If some content has been provided during initialisation, it is used
         to simulate user input. Else stdin is read one line at a time.
         """
-        self.context.check(self.prefix+'.title',
+        self.context.check('space.title',
                            _(u'Collaboration space'), filter=True)
-        self.context.check(self.prefix+'.participants',
+        self.context.check('space.participants',
                            '$CHANNEL_DEFAULT_PARTICIPANTS', filter=True)
 
         self.context.set('server.binding', None)  # no web server at all
