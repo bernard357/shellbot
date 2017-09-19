@@ -12,3 +12,4 @@ are new to shellbot it is recommended that you start by the beginning.
    EXAMPLES.hello
    EXAMPLES.batman
    EXAMPLES.buzz
+   EXAMPLES.hotel_california
