@@ -11,6 +11,7 @@ import sys
 import time
 
 from shellbot import Context, Engine, ShellBot, MachineFactory
+from shellbot.i18n import _, customization
 from shellbot.spaces import Space, LocalSpace, SparkSpace
 
 
@@ -66,7 +67,6 @@ class EngineTests(unittest.TestCase):
                              mouth=Queue())
         self.space = LocalSpace(context=self.context)
         self.engine.space = self.space
-
 
     def tearDown(self):
         del self.space
@@ -194,6 +194,11 @@ class EngineTests(unittest.TestCase):
                 'on_exit': 'Bye!',
             },
 
+            'customized': {
+                'hello world': "What'up, Doc?",
+                'another string': 'Bye!',
+            },
+
             'space': {
                 'title': 'space name',
                 'participants': ['joe.bar@acme.com'],
@@ -215,6 +220,9 @@ class EngineTests(unittest.TestCase):
                          ['joe.bar@acme.com'])
         self.assertEqual(self.engine.get('server.url'), 'http://to.no.where')
         self.assertEqual(self.engine.get('server.hook'), '/hook')
+
+        self.assertEqual(_('hello world'), "What'up, Doc?")
+        self.assertEqual(_('not customized'), 'not customized')
 
         self.engine.context.clear()
         self.engine.configure_from_path(os.path.join(

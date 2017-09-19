@@ -27,7 +27,7 @@ import weakref
 from .bot import ShellBot
 from .bus import Bus
 from .context import Context
-from .i18n import _
+from .i18n import _, customization
 from .lists import ListFactory
 from .listener import Listener
 from .observer import Observer
@@ -256,6 +256,7 @@ class Engine(object):
         """
 
         self.context = context if context else Context()
+        customization.context = self.context
 
         self.mouth = mouth
         self.speaker = Speaker(engine=self)

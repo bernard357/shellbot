@@ -13,4 +13,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-_ = lambda s: s
+class Customization(object):
+    """
+    Changes static strings used by shellbot
+
+    Throughout the full shellbot code the function ``_()`` is used for
+    both internationalization and for customization.
+    """
+
+    def __init__(self, context=None):
+        """
+        Changes static strings used by shellbot
+
+        :param context: the settings of this engine
+
+        """
+        self.context = context
+        self.actual_strings = {}  # cache of strings used by shellbot
+
+    def _(self, text):
+        """
+        Returns a customized string
+
+        :param text: string used in the source code
+        :return: customized string
+
+        """
+
+        customized = self.actual_strings.get(text)
+        if customized:
+            return customized
+
+        if self.context:
+            customized = self.context.get('customized.'+text, text)
+        else:
+            customized = text
+
+        self.actual_strings[text] = customized  # cache for next lookup
+        return customized
+
+customization = Customization()
+
+def _(text):
+    """
+    The default behavior is to not change strings at all
+    """
+    return customization._(text)
