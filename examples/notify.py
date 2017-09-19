@@ -24,22 +24,28 @@ There is no command in the shell at all, and the bot is not even started.
 
 Multiple questions are adressed in this example:
 
-- How to create a bot and configure it in one line? The simplest approach
-  is to set environment variables and then to create the bot. This can be
-  done externally, before running the program, for secret variables such
-  as the Cisco Spark token (see below). Or variables can be set directly
-  from within the script itself, as ``CHAT_ROOM_TITLE`` in this example.
+- How to create a bot and configure it in one line? The simplest approach is to
+  set environment variables and then to create the bot. This can be done
+  externally, before running the program, for secret variables such as the
+  Cisco Spark token (see below). Or variables can be set directly from within
+  the script itself, as ``CHAT_ROOM_TITLE`` in this example.
 
-- How to create or to delete a channel? This is done with ``engine.get_bot()``
-  and with ``bot.dispose()`` respectively.
+- How to create or to delete a channel? When you access a bot for the first
+  time it is created automatically in the back-end platform. From a software
+  perspective, call ``engine.get_bot()`` and this will give you a bot instance.
 
-- How to post a notification? Use ``bot.say()`` right after a call
-  to ``engine.get_bot()``.
+  The bot itself can be used when you have to delete a channel, with a call of
+  ``bot.dispose()``.
 
-- Why do we not start the bot? There is no call to ``bot.run()`` below
-  because there is no need for an active shell. The program updates a channel,
-  but is not interactive and cannot answer send to it. Of course, it is easy
-  to implement a couple of commands and evolve towards a responsive bot.
+- How to post a notification? Use ``bot.say()`` on the bot instance. Messages
+  posted can feature bare or rich text, and you can also upload an image or
+  a document file.
+
+- Why do we not start the bot? There is no call to 
+  ``bot.run()`` here because there is no need for an active shell.
+  The program updates a channel, however is not interactive and cannot answer
+  messages send to it. Of course, it is easy to implement a couple of commands
+  at some point so that you evolve towards a responsive bot.
 
 
 To run this script you have to provide a custom configuration, or set
