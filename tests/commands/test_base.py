@@ -37,7 +37,7 @@ class BaseTests(unittest.TestCase):
         my_engine.shell.configure(settings={
             u'hello': u'world',
         })
-        self.assertEqual(my_engine.get('general.hello'), u'world')
+        self.assertEqual(my_engine.get('hello'), u'world')
 
         self.assertEqual(c.keyword, None)
         self.assertEqual(c.information_message, None)

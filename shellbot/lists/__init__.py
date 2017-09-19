@@ -72,7 +72,7 @@ class ListFactory(object):
         as commands, when invoked from a mobile device.
 
         """
-        settings = self.context.get('general.lists', [])
+        settings = self.context.get('lists', [])
 
         for attributes in settings:
 

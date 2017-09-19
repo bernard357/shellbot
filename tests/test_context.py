@@ -43,7 +43,7 @@ class ContextTests(unittest.TestCase):
 
     def test_apply(self):
 
-        self.assertEqual(self.context.get('general.port'), None)
+        self.assertEqual(self.context.get('port'), None)
 
         settings = {
             'spark': {'CISCO_SPARK_BTTN_BOT': 'who_knows'},
@@ -55,7 +55,7 @@ class ContextTests(unittest.TestCase):
 
         self.context.apply(settings)
 
-        self.assertEqual(self.context.get('general.DEBUG'), True)
+        self.assertEqual(self.context.get('DEBUG'), True)
         self.assertEqual(self.context.get('spark.CISCO_SPARK_BTTN_BOT'),
                          'who_knows')
         self.assertEqual(self.context.get('spark.room'), 'title')
@@ -69,7 +69,7 @@ class ContextTests(unittest.TestCase):
 
     def test_clear(self):
 
-        self.assertEqual(self.context.get('general.port'), None)
+        self.assertEqual(self.context.get('port'), None)
 
         settings = {
             'spark': {'CISCO_SPARK_BTTN_BOT': 'who_knows'},
@@ -80,7 +80,7 @@ class ContextTests(unittest.TestCase):
 
         self.context.apply(settings)
 
-        self.assertEqual(self.context.get('general.DEBUG'), True)
+        self.assertEqual(self.context.get('DEBUG'), True)
         self.assertEqual(self.context.get('spark.CISCO_SPARK_BTTN_BOT'),
                          'who_knows')
         self.assertEqual(self.context.get('spark.room'), 'title')
@@ -89,7 +89,7 @@ class ContextTests(unittest.TestCase):
 
         self.context.clear()
 
-        self.assertEqual(self.context.get('general.DEBUG'), None)
+        self.assertEqual(self.context.get('DEBUG'), None)
         self.assertEqual(self.context.get('spark.CISCO_SPARK_BTTN_BOT'), None)
         self.assertEqual(self.context.get('spark.room'), None)
         self.assertEqual(self.context.get('server.port'), None)

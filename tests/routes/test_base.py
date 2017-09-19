@@ -25,7 +25,7 @@ class RouteTests(unittest.TestCase):
         context = Context(settings)
 
         r = Route(context)
-        self.assertEqual(r.context.get('general.hello'), u'world')
+        self.assertEqual(r.context.get('hello'), u'world')
         self.assertEqual(r.route, None)
 
         with self.assertRaises(NotImplementedError):

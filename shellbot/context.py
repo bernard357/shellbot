@@ -71,10 +71,8 @@ class Context(object):
                 if isinstance(settings[key], dict):
                     for label in settings[key].keys():
                         self.values[key+'.'+label] = settings[key].get(label)
-                elif len(key.split('.')) > 1:
-                    self.values[key] = settings[key]
                 else:
-                    self.values['general.'+key] = settings[key]
+                    self.values[key] = settings[key]
 
     def clear(self):
         """
