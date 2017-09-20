@@ -2,8 +2,8 @@
 Shellbot: Python Chat Bot Framework
 ===================================
 
-.. image:: https://readthedocs.org/projects/shellbot-for-cisco-spark/badge/?version=latest
-   :target: http://shellbot-for-cisco-spark.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/shellbot-framework/badge/?version=latest
+   :target: http://shellbot-framework.readthedocs.io/en/latest/?badge=latest
 
 .. image:: https://img.shields.io/pypi/v/shellbot.svg
    :target: https://pypi.python.org/pypi/shellbot
@@ -128,7 +128,7 @@ Credits
 * Cookiecutter_
 * `cookiecutter-pypackage`_
 
-.. _`Shellbot at ReadTheDocs`: http://shellbot-for-cisco-spark.readthedocs.io/en/latest/
+.. _`Shellbot at ReadTheDocs`: http://shellbot-framework.readthedocs.io/en/latest/
 .. _`Shellbot at PyPi`: https://pypi.python.org/pypi/shellbot
 .. _`Shellbot at GitHub`: https://github.com/bernard357/shellbot
 .. _`Apache License (2.0)`: http://www.apache.org/licenses/LICENSE-2.0

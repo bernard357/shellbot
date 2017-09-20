@@ -193,7 +193,7 @@ Before you submit a pull request, check that it meets these guidelines:
 .. _`a Pull Request`: https://help.github.com/articles/about-pull-requests/
 .. _`Pull Requests are listed from the original project page`: https://github.com/bernard357/shellbot/pulls
 .. _`the GitHub issues`: https://github.com/bernard357/shellbot/issues
-.. _`Shellbot primary documentation`: http://shellbot-for-cisco-spark.readthedocs.io/en/latest/
+.. _`Shellbot primary documentation`: http://shellbot-framework.readthedocs.io/en/latest/
 .. _`GitHub`: https://github.com/
 .. _`Shellbot repository at GitHub`: https://github.com/bernard357/shellbot
 .. _`Shellbot issues at GitHub`: https://github.com/bernard357/shellbot/issues
