@@ -139,7 +139,7 @@ class Listener(Process):
             self.engine.set('vacuum.stamp', time.time())
 
             if self.engine.bots:
-                id = random.choice(self.engine.bots.keys())
+                id = random.choice(list(self.engine.bots.keys()))
             # if id:
             #     logging.debug(u"- to vacuum: {}".format(id))
 
