@@ -226,8 +226,8 @@ class Subscriber(object):
 
         try:
             flags = zmq.NOBLOCK if not block else 0
-            snippet = self.socket.recv(flags=flags)
-            (channel, text) = snippet.split(b' ', 1)
+            snippet = str(self.socket.recv(flags=flags))
+            (channel, text) = snippet.split(' ', 1)
             return json.loads(text)
         except zmq.error.Again:
             return None
