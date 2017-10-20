@@ -143,7 +143,7 @@ class SparkSpace(Space):
 
     DEFAULT_SETTINGS = {
 
-        'spark': {
+        'space': {
             'room': '$CHAT_ROOM_TITLE',
         },
 
@@ -1083,6 +1083,10 @@ class SparkSpace(Space):
         :return: a stream of BytesIO
         :rtype: BytesIO
 
+        #TODO: stream from requests
+        response = requests.get(url, stream=True)
+        response.decode_content = True
+        shutil.copyfileobj(response.raw, target)
         """
         logging.debug(u"- fetching {}".format(url))
 
