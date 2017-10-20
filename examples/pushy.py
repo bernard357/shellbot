@@ -138,7 +138,7 @@ if __name__ == '__main__':
             'on_exit': 'Bot is now quitting the room, bye',
         },
 
-        'spark': {
+        'space': {
             'room': 'On-demand collaboration',
         },
 
