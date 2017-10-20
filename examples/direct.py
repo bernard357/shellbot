@@ -151,7 +151,7 @@ class MyInput(Input):  # transition from direct channel to group channel
         self.bot.say(u"- adding participants to the group channel...")
         participants = self.bot.space.list_participants(self.bot.id)
 
-        for person in self.bot.space.get('participants', []):
+        for person in self.bot.engine.get('space.participants', []):
             participants.add(person)
 
         self.bot.space.add_participants(id=channel.id, persons=participants)
