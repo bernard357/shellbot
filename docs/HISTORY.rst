@@ -3,6 +3,16 @@
 History
 -------
 
+17.10.20
+~~~~~~
+* Add "notify" and "Hotel California" to the on-line documentation
+* Various improvements of the code
+* Early introduction of i18n
+* Switched to python 3.6 as primary development environment
+* Travis-CI passed on python 2.7 and 3.5
+* 94% test coverage
+* 3129 python statements
+
 17.8.5
 ~~~~~~
 * Add tutorials to the on-line documentation (based on examples)
