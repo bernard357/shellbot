@@ -81,7 +81,7 @@ class BusTests(unittest.TestCase):
         subscriber.socket = mock.Mock()
         with mock.patch.object(subscriber.socket,
                                'recv',
-                               return_value='dummy {"hello": "world"}') as mocked:
+                               return_value=b'dummy {"hello": "world"}') as mocked:
 
             message = subscriber.get()
             self.assertEqual(message, {u'hello': u'world'})
