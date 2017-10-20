@@ -25,6 +25,7 @@ Submodules
    shellbot.context
    shellbot.engine
    shellbot.events
+   shellbot.i18n
    shellbot.listener
    shellbot.observer
    shellbot.server
