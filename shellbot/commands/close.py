@@ -27,10 +27,15 @@ class Close(Command):
     >>>shell.load_command(close)
 
     """
-    keyword = _(u'close')
-    information_message = _(u"Close this space")
 
     in_direct = False  # do not allow command to close a direct channel
+
+    def on_init(self):
+        """
+        Localize strings for this command
+        """
+        self.keyword = _(u'close')
+        self.information_message = _(u"Close this space")
 
     def execute(self, bot, arguments=None, **kwargs):
         """

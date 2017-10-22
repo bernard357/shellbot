@@ -11,7 +11,7 @@ import sys
 import time
 
 from shellbot import Context, Engine, ShellBot, MachineFactory
-from shellbot.i18n import _, customization
+from shellbot.i18n import _, localization as l10n
 from shellbot.spaces import Space, LocalSpace, SparkSpace
 
 
@@ -194,7 +194,7 @@ class EngineTests(unittest.TestCase):
                 'on_exit': 'Bye!',
             },
 
-            'customized': {
+            'localized': {
                 'hello world': "What'up, Doc?",
                 'another string': 'Bye!',
             },
@@ -222,7 +222,7 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(self.engine.get('server.hook'), '/hook')
 
         self.assertEqual(_('hello world'), "What'up, Doc?")
-        self.assertEqual(_('not customized'), 'not customized')
+        self.assertEqual(_('not localized'), 'not localized')
 
         self.engine.context.clear()
         self.engine.configure_from_path(os.path.join(

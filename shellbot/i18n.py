@@ -13,12 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-class Customization(object):
+import logging
+
+
+class Localization(object):
     """
     Changes static strings used by shellbot
 
     Throughout the full shellbot code the function ``_()`` is used for
-    both internationalization and for customization.
+    both internationalization and for localization.
+
+    credit: https://www.w3.org/International/questions/qa-i18n
     """
 
     def __init__(self, context=None):
@@ -28,6 +33,17 @@ class Customization(object):
         :param context: the settings of this engine
 
         """
+        self.set_context(context)
+
+    def set_context(self, context):
+        """
+        Use context settings for program localization
+
+        :param context: the settings of this engine
+
+        This function also resets previous localizations
+        """
+        logging.debug('Resetting localized strings')
         self.context = context
         self.actual_strings = {}  # cache of strings used by shellbot
 
@@ -40,22 +56,22 @@ class Customization(object):
 
         """
 
-        customized = self.actual_strings.get(text)
-        if customized:
-            return customized
+        localized = self.actual_strings.get(text)
+        if localized:
+            return localized
 
         if self.context:
-            customized = self.context.get('customized.'+text, text)
+            localized = self.context.get('localized.'+text, text)
         else:
-            customized = text
+            localized = text
 
-        self.actual_strings[text] = customized  # cache for next lookup
-        return customized
+        self.actual_strings[text] = localized  # cache for next lookup
+        return localized
 
-customization = Customization()
+localization = Localization()
 
 def _(text):
     """
     The default behavior is to not change strings at all
     """
-    return customization._(text)
+    return localization._(text)

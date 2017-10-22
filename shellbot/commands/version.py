@@ -24,9 +24,14 @@ class Version(Command):
     Displays software version
     """
 
-    keyword = _(u'version')
-    information_message = _(u'Display software version')
     is_hidden = True
+
+    def on_init(self):
+        """
+        Localize strings for this command
+        """
+        self.keyword = _(u'version')
+        self.information_message = _(u'Display software version')
 
     def execute(self, bot, arguments=None, **kwargs):
         """

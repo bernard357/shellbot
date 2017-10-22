@@ -24,11 +24,15 @@ class Input(Command):
     Displays input data
     """
 
-    keyword = _(u'input')
-    information_message = _(u'Display all input')
+    def on_init(self):
+        """
+        Localize strings for this command
+        """
+        self.keyword = _(u'input')
+        self.information_message = _(u'Display all input')
 
-    no_input_message = _(u'There is nothing to display')
-    input_header = _(u'Input:')
+        self.no_input_message = _(u'There is nothing to display')
+        self.input_header = _(u'Input:')
 
     def execute(self, bot, arguments=None, **kwargs):
         """

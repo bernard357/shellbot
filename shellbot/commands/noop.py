@@ -24,9 +24,14 @@ class Noop(Command):
     Does absolutely nothing
     """
 
-    keyword = _(u'pass')
-    information_message = _(u'Do absolutely nothing')
     is_hidden = True
+
+    def on_init(self):
+        """
+        Localize strings for this command
+        """
+        self.keyword = _(u'pass')
+        self.information_message = _(u'Do absolutely nothing')
 
     def execute(self, bot, arguments=None, **kwargs):
         """

@@ -19,10 +19,10 @@ import logging
 from multiprocessing import Process, Queue
 from threading import Timer
 
+from shellbot.i18n import _
 from .base import Command
 from shellbot.updaters import Updater
 from shellbot.events import Message
-from shellbot.i18n import _
 
 
 class Audit(Command):
@@ -55,21 +55,28 @@ class Audit(Command):
 
     """
 
-    keyword = _(u'audit')
-    information_message = _(u'Check and change audit status')
-    usage_message = _(u'audit [on|off]')
-
     in_direct = False  # do not audit 1:1 interactions
 
-    disabled_message = _(u'Audit has not been enabled.')
-
-    on_message = _(u'Chat interactions are currently audited.')
-    off_message = _(u'Chat interactions are not audited.')
-    already_on_message = _(u'Chat interactions are already audited.')
-    already_off_message = _(u'Chat interactions are already private.')
-
     off_duration = 60  # after this time off, back to auditing on
-    temporary_off_message = _(u"Please note that auditing will restart after {}")
+
+    def on_init(self):
+        """
+        Localize strings for this command and register event
+        """
+        self.keyword = _(u'audit')
+        self.information_message = _(u'Check and change audit status')
+        self.usage_message = _(u'audit [on|off]')
+
+        self.disabled_message = _(u'Audit has not been enabled.')
+
+        self.on_message = _(u'Chat interactions are currently audited.')
+        self.off_message = _(u'Chat interactions are not audited.')
+        self.already_on_message = _(u'Chat interactions are already audited.')
+        self.already_off_message = _(u'Chat interactions are already private.')
+
+        self.temporary_off_message = _(u"Please note that auditing will restart after {}")
+
+        self.engine.register('bond', self)
 
     def execute(self, bot, arguments=None, **kwargs):
         """
@@ -152,12 +159,6 @@ class Audit(Command):
         :rtype: bool
         """
         return self.engine.get('audit.has_been_armed', False)
-
-    def on_init(self):
-        """
-        Registers callback from bot
-        """
-        self.engine.register('bond', self)
 
     def on_bond(self, bot):
         """

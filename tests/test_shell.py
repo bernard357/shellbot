@@ -10,6 +10,7 @@ import os
 import sys
 
 from shellbot import Context, Engine, Shell, Vibes
+from shellbot.i18n import _, localization as l10n
 from shellbot.events import Message
 
 
@@ -136,7 +137,8 @@ class ShellTests(unittest.TestCase):
         shell = Shell(engine=self.engine)
         from shellbot.commands.empty import Empty
         class FunkyCommand(Empty):
-            keyword = 'FunKy'
+            def on_init(self):
+                self.keyword = 'FunKy'
         command = FunkyCommand(self.engine)
         shell.load_command(command)
         self.assertEqual(command.engine, self.engine)
@@ -176,15 +178,24 @@ class ShellTests(unittest.TestCase):
         settings = {
             'shell': {'commands': ['shellbot.commands.help',
                                    'shellbot.commands.noop']},
+
+            'localized': {
+                'help': 'aide',
+
+                },
         }
+        context=Context(settings)
+        l10n.set_context(context)
 
         shell = Shell(engine=self.engine)
         shell.configure(settings)
 
         self.assertEqual(
             shell.commands,
-            ['*default', '*empty', '*upload',
-             'echo', 'help', 'pass', 'sleep', 'version'])
+            ['*default', '*empty', '*upload', 'aide',
+             'echo', 'pass', 'sleep', 'version'])
+
+        l10n.set_context(self.engine.context)
 
     def test_vocabulary(self):
 
@@ -263,6 +274,107 @@ class ShellTests(unittest.TestCase):
             u'Thank you for the information shared!')
         with self.assertRaises(Exception):
             print(shell.engine.mouth.get_nowait())
+
+    def test_vocabulary_localized(self):
+
+        logging.info('***** localized vocabulary')
+
+        settings = {
+            'localized': {
+                'help': 'aide',
+                'help <command>': u'aide <commande>',
+                'Show commands and usage': u'Liste les commandes et leur usage',
+                'Available commands:': 'Commandes disponibles :',
+                "Sorry, I do not know how to handle '{}'": \
+                    u"Désolé, je ne sais pas traiter '{}'",
+                'usage: {}': u'utilisation : {}',
+                u'Thank you for the information shared!': \
+                    u"Merci pour le partage d'informations !",
+
+                },
+        }
+        context=Context(settings)
+        l10n.set_context(context)
+
+        shell = Shell(engine=self.engine)
+        shell.load_default_commands()
+
+        self.assertEqual(len(shell.commands), 8)
+        self.assertEqual(shell.line, None)
+        self.assertEqual(shell.count, 0)
+
+        shell.do('*inconnu*', received=self.message)
+        self.assertEqual(shell.line, '*inconnu*')
+        self.assertEqual(shell.count, 1)
+        self.assertEqual(shell.engine.mouth.get().text,
+                         u"Désolé, je ne sais pas traiter '*inconnu*'")
+        with self.assertRaises(Exception):
+            shell.engine.mouth.get_nowait()
+
+        shell.do('echo hello world', received=self.message)
+        self.assertEqual(shell.line, 'echo hello world')
+        self.assertEqual(shell.count, 2)
+        self.assertEqual(shell.engine.mouth.get().text, 'hello world')
+        with self.assertRaises(Exception):
+            shell.engine.mouth.get_nowait()
+
+        shell.do('aide aide', received=self.message)
+        self.assertEqual(shell.line, 'aide aide')
+        self.assertEqual(shell.count, 3)
+        self.assertEqual(shell.engine.mouth.get().text,
+                         u'aide - Liste les commandes et leur usage\n'
+                         + u'utilisation : aide <commande>')
+        with self.assertRaises(Exception):
+            print(shell.engine.mouth.get_nowait())
+
+        shell.do('pass', received=self.message)
+        self.assertEqual(shell.line, 'pass')
+        self.assertEqual(shell.count, 4)
+        with self.assertRaises(Exception):
+            shell.engine.mouth.get_nowait()
+
+        shell.do('sleep .0103', received=self.message)
+        self.assertEqual(shell.line, 'sleep .0103')
+        self.assertEqual(shell.count, 5)
+        self.engine.set('worker.busy', True)
+        shell.do('sleep .0201', received=self.message)
+        self.assertEqual(shell.line, 'sleep .0201')
+        self.assertEqual(shell.count, 6)
+        self.engine.set('worker.busy', False)
+        with self.assertRaises(Exception):
+            print(shell.engine.mouth.get_nowait())
+
+        shell.do('version', received=self.message)
+        self.assertEqual(shell.line, 'version')
+        self.assertEqual(shell.count, 7)
+        self.assertEqual(shell.engine.mouth.get().text, u'Shelly version *unknown*')
+        with self.assertRaises(Exception):
+            shell.engine.mouth.get_nowait()
+
+        shell.do('', received=self.message)
+        self.assertEqual(shell.line, '')
+        self.assertEqual(shell.count, 8)
+        self.assertEqual(
+            shell.engine.mouth.get().text,
+            u'Commandes disponibles :\n'
+            + u'aide - Liste les commandes et leur usage')
+        with self.assertRaises(Exception):
+            print(shell.engine.mouth.get_nowait())
+
+        shell.do('', received=self.upload)
+        self.assertEqual(shell.line, '')
+        self.assertEqual(shell.count, 9)
+        self.assertEqual(
+            shell.engine.mouth.get().text,
+            u"Merci pour le partage d'informations !")
+        with self.assertRaises(Exception):
+            print(shell.engine.mouth.get_nowait())
+
+        print("**************************")
+        print(l10n.actual_strings)
+        print("**************************")
+
+        l10n.set_context(self.engine.context)
 
     def test_empty(self):
 

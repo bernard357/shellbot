@@ -32,12 +32,17 @@ class Default(Command):
     In other cases, the end user is advised that the command is unknown.
     """
 
-    keyword = _(u'*default')
-    information_message = _(u'Handle unmatched commands')
     is_hidden = True
 
-    participants_message = _(u"Adding participants from '{}'")
-    default_message = _(u"Sorry, I do not know how to handle '{}'")
+    def on_init(self):
+        """
+        Localize strings for this command
+        """
+        self.keyword = _(u'*default')
+        self.information_message = _(u'Handle unmatched commands')
+
+        self.participants_message = _(u"Adding participants from '{}'")
+        self.default_message = _(u"Sorry, I do not know how to handle '{}'")
 
     def execute(self, bot, arguments=None, **kwargs):
         """

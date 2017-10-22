@@ -47,10 +47,14 @@ class Step(Command):
 
     """
 
-    keyword = _(u'step')
-    information_message = _(u'Move process to next step')
-
     event = 'next'  # understood by machines/steps
+
+    def on_init(self):
+        """
+        Localize strings for this command
+        """
+        self.keyword = _(u'step')
+        self.information_message = _(u'Move process to next step')
 
     def execute(self, bot, arguments=None, **kwargs):
         """

@@ -24,9 +24,14 @@ class Echo(Command):
     Echoes input string
     """
 
-    keyword = _(u'echo')
-    information_message = _(u'Echo input string')
     is_hidden = True
+
+    def on_init(self):
+        """
+        Localize strings for this command
+        """
+        self.keyword = _(u'echo')
+        self.information_message = _(u'Echo input string')
 
     def execute(self, bot, arguments=None, **kwargs):
         """

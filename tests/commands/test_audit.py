@@ -148,12 +148,12 @@ class AuditTests(unittest.TestCase):
         logging.info('***** on_off')
 
         class MyAudit(Audit):
-            def on_init(self):
-                self.expected = False
+
             def watchdog(self, bot, **kwargs):
                 self.expected = True
 
         c = MyAudit(my_engine)
+        c.expected = False
         c.off_duration = 0.001
         c.engine = mock.Mock()
         c.on_off(my_bot)

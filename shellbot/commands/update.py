@@ -24,12 +24,16 @@ class Update(Command):
     Update input data
     """
 
-    keyword = _(u'update')
-    information_message = _(u'Update input content')
+    def on_init(self):
+        """
+        Localize strings for this command
+        """
+        self.keyword = _(u'update')
+        self.information_message = _(u'Update input content')
 
-    no_arg = _(u'Thanks to provide the key and the data')
-    no_input = _(u'There is nothing to update, input is empty')
-    ok_msg = _(u'Update successfuly done')
+        self.no_arg = _(u'Thanks to provide the key and the data')
+        self.no_input = _(u'There is nothing to update, input is empty')
+        self.ok_msg = _(u'Update successfuly done')
 
     def execute(self, bot, arguments=None, **kwargs):
         """

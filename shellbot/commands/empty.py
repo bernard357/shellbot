@@ -24,9 +24,14 @@ class Empty(Command):
     Handles empty command
     """
 
-    keyword = _(u'*empty')
-    information_message = _(u'Handle empty command')
     is_hidden = True
+
+    def on_init(self):
+        """
+        Localize strings for this command
+        """
+        self.keyword = _(u'*empty')
+        self.information_message = _(u'Handle empty command')
 
     def execute(self, bot, arguments=None, **kwargs):
         """
@@ -40,7 +45,7 @@ class Empty(Command):
 
         """
         if not hasattr(self, 'help_command'):
-            self.help_command = self.engine.shell.command('help')
+            self.help_command = self.engine.shell.command(_('help'))
 
         if self.help_command is None:
             bot.say(_(u"No help command has been found."))

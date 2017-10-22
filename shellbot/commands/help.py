@@ -24,10 +24,14 @@ class Help(Command):
     Lists available commands and related usage information
     """
 
-    keyword = _(u'help')
-    information_message = _(u'Show commands and usage')
-    usage_message = _(u'help <command>')
-    usage_template = _(u"usage: {}")
+    def on_init(self):
+        """
+        Localize strings for this command
+        """
+        self.keyword = _(u'help')
+        self.information_message = _(u'Show commands and usage')
+        self.usage_message = _(u'help <command>')
+        self.usage_template = _(u"usage: {}")
 
     def execute(self, bot, arguments=None, **kwargs):
         """

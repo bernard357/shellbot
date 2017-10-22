@@ -51,11 +51,15 @@ class Start(Command):
 
     """
 
-    keyword = _(u'start')
-    information_message = _(u"Start a new sequence")
-
     in_direct = True
     in_group = False
+
+    def on_init(self):
+        """
+        Localize strings for this command
+        """
+        self.keyword = _(u'start')
+        self.information_message = _(u"Start a new sequence")
 
     def execute(self, bot, arguments=None, **kwargs):
         """

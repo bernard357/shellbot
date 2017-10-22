@@ -23,12 +23,16 @@ class Upload(Command):
     """
     Handles a bare file upload
     """
-
-    keyword = _(u'*upload')
-    information_message = _(u'Handle file upload')
+    
     is_hidden = True
 
-    feedback_message = _(u"Thank you for the information shared!")
+    def on_init(self):
+        """
+        Localize strings for this command
+        """
+        self.keyword = _(u'*upload')
+        self.information_message = _(u'Handle file upload')
+        self.feedback_message = _(u"Thank you for the information shared!")
 
     def execute(self, bot, attachment, url, arguments=None, **kwargs):
         """

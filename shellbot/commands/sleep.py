@@ -26,12 +26,17 @@ class Sleep(Command):
     Sleeps for a while
     """
 
-    keyword = _(u'sleep')
-    information_message = _(u'Sleep for a while')
-    usage_message = _(u'sleep <n>')
     is_hidden = True
 
     DEFAULT_DELAY = 1.0
+
+    def on_init(self):
+        """
+        Localize strings for this command
+        """
+        self.keyword = _(u'sleep')
+        self.information_message = _(u'Sleep for a while')
+        self.usage_message = _(u'sleep <n>')
 
     def execute(self, bot, arguments=None, **kwargs):
         """
